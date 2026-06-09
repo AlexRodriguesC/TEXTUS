@@ -1,0 +1,167 @@
+plugins {
+	id 'java'
+	id 'groovy'
+	id 'jacoco'
+	id 'org.springframework.boot' version '4.0.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.asciidoctor.jvm.convert' version '4.0.5'
+	id 'org.flywaydb.flyway' version '10.0.0'
+	id 'com.diffplug.spotless' version '8.6.0'
+}
+
+group = 'ch.supsi'
+version = '0.0.1-SNAPSHOT'
+description = 'TEXTUS-backend'
+
+spotless {
+	java {
+		target 'src/**/*.java'
+		palantirJavaFormat('2.50.0')
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		endWithNewline()
+		toggleOffOn()
+	}
+	groovyGradle {
+		target '*.gradle'
+		greclipse()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	format 'misc', {
+		target '**/*.yml', '**/*.yaml', '**/*.md', '**/.gitignore'
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
+// auto-run on compile
+tasks.withType(JavaCompile).configureEach {
+	finalizedBy spotlessApply
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+	// BOMs (must be declared before their managed dependencies)
+	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0')
+
+	// Spring Boot
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-batch-jdbc'
+	implementation 'org.springframework.boot:spring-boot-batch-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation "org.springframework.boot:spring-boot-starter-log4j2"
+	implementation 'org.springframework.boot:spring-boot-autoconfigure:4.1.0'
+
+	// Database
+	implementation 'org.springframework.boot:spring-boot-starter-flyway:4.1.0'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly    'org.postgresql:postgresql'
+
+	// PDF processing
+	implementation 'org.apache.pdfbox:pdfbox:3.0.7'
+	implementation 'com.github.jai-imageio:jai-imageio-jpeg2000:1.4.0'
+	implementation 'net.sourceforge.tess4j:tess4j:5.19.0'
+
+	// NLP
+	implementation 'com.github.pemistahl:lingua:1.2.2'
+
+	// Spring AI
+	implementation 'org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-client-chat'
+
+	// API docs
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+
+	// Dev / compile-only
+	compileOnly         'org.projectlombok:lombok'
+	compileOnly         'org.jetbrains:annotations:26.1.0'
+	developmentOnly     'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Test
+	testImplementation      'org.springframework.boot:spring-boot-starter-restdocs'
+	testImplementation      'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testCompileOnly         'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly         'org.junit.platform:junit-platform-launcher'
+	testImplementation      'org.springframework.boot:spring-boot-starter-test'
+	testImplementation      'org.apache.groovy:groovy:5.0.3'
+	testImplementation      'org.spockframework:spock-core:2.4-groovy-5.0'
+	testImplementation      'org.spockframework:spock-spring:2.4-groovy-5.0'
+	testImplementation      'org.springframework.boot:spring-boot-starter-webmvc-test:4.0.0'
+	testImplementation      'org.springframework.boot:spring-boot-testcontainers:4.1.0'
+	testImplementation      'org.testcontainers:spock:1.21.4'
+	testImplementation      'org.testcontainers:testcontainers-spock:2.0.5'
+	testImplementation      'org.testcontainers:postgresql:1.21.4'
+}
+
+test {
+	useJUnitPlatform()
+	include 'ch/supsi/textusbackend/unit/**'
+	exclude 'ch/supsi/textusbackend/integration/**'
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+configurations.configureEach {
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+}
+
+tasks.named('test') {
+	outputs.dir snippetsDir
+	useJUnitPlatform()
+}
+
+tasks.register('integrationTest', Test) {
+	description = 'Runs integration tests.'
+	group = 'verification'
+	useJUnitPlatform()
+	failOnNoDiscoveredTests = false
+
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	include 'ch/supsi/textusbackend/integration/**'
+	shouldRunAfter test
+
+	finalizedBy tasks.named('jacocoIntegrationTestReport')
+}
+
+tasks.register('jacocoIntegrationTestReport', JacocoReport) {
+	dependsOn tasks.named('integrationTest')
+
+	executionData fileTree(layout.buildDirectory).include(
+			"jacoco/integrationTest.exec",
+			"outputs/unit_test_code_coverage/integrationTest.exec"
+			)
+
+	sourceDirectories.setFrom files(sourceSets.main.allSource.srcDirs)
+	classDirectories.setFrom files(sourceSets.main.output)
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}

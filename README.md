@@ -9,6 +9,9 @@
 
 This is an example file with maximal choices selected.
 
+-- uses UV, installation: https://docs.s3it.uzh.ch/general/uv/
+-- uses just, installation: https://github.com/casey/just
+
 This is a long description.
 
 ## Table of Contents
