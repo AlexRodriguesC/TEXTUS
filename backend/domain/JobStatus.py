@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class JobStatus(Enum):
+    ENQUEUED = "ENQUEUED"
+    EXTRACTING_INDEX = "EXTRACTING_INDEX"
+    CHUNKING = "CHUNKING"
+    SUMMARIZING = "SUMMARIZING"
+    DONE = "DONE"

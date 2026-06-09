@@ -19,6 +19,7 @@ def create_app() -> FastAPI:
 
     application.container = container
     application.include_router(book_api)
+
     return application
 
 app = create_app()

@@ -38,4 +38,4 @@ async def upload_book(
             detail=f"File of size {file_size} exceeds max allowed size of {max_size_mb} MB!",
         )
 
-    return await pdf_service.handle_upload(file)
+    return await pdf_service.handle_upload(file.file)
