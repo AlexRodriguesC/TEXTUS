@@ -1,24 +1,24 @@
+from logging import Logger
+
 from backend.huey_app import huey
+from backend.service.pipeline.chunk_extraction_step import extract_chunks
+from backend.service.pipeline.cleanup_step import cleanup
+from backend.service.pipeline.index_extraction_step import extract_index
+from backend.service.pipeline.ocr_step import ocr_if_needed
+from backend.service.pipeline.summary_extraction_step import extract_summaries
+
+log = Logger(__name__)
+
 
 def schedule_pipeline_for(book_id: str, job_id: str):
-    pipeline = extract_index.then(extract_chunks).then(extract_summaries).then(cleanup)
+    log.info(f"Scheduling processing pipeline for book {book_id} and job {job_id}")
+
+    pipeline = (
+        ocr_if_needed.s(book_id, job_id)
+        .then(extract_index.s(book_id, job_id))
+        .then(extract_chunks.s(book_id, job_id))
+        .then(extract_summaries.s(book_id, job_id))
+        .then(cleanup.s(book_id, job_id))
+    )
+
     huey.enqueue(pipeline)
-
-@huey.task(retries=2, retry_delay=60, name="index_extraction")
-def extract_index(book_id: str, job_id: str):
-    return ""
-
-
-@huey.task(retries=2, retry_delay=60, name="chunking")
-def extract_chunks(book_id: str, job_id: str):
-    return ""
-
-
-@huey.task(retries=2, retry_delay=60, name="summary_extraction")
-def extract_summaries(book_id: str, job_id: str):
-    return ""
-
-
-@huey.task(retries=2, retry_delay=60, name="cleanup")
-def cleanup(book_id: str, job_id: str):
-    return ""

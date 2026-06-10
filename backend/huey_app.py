@@ -1,4 +1,5 @@
 from huey import RedisHuey
+
 from backend.config import ApplicationSettings
 
 settings = ApplicationSettings()

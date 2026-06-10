@@ -9,9 +9,7 @@ from backend.service.PDFService import PDFService
 
 
 class Container(containers.DeclarativeContainer):
-    application_settings = providers.Singleton(
-        ApplicationSettings
-    )
+    application_settings = providers.Singleton(ApplicationSettings)
 
     r = providers.Singleton(
         redis.Redis,
@@ -21,23 +19,14 @@ class Container(containers.DeclarativeContainer):
         decode_responses=True,
     )
 
-    pdf_data_access = providers.Singleton(
-        PDFDataAccess,
-        redis=r
-    )
+    pdf_data_access = providers.Singleton(PDFDataAccess, redis=r)
 
-    pdf_file_storage = providers.Singleton(
-        PDFFileStorage
-    )
+    pdf_file_storage = providers.Singleton(PDFFileStorage)
 
     ai_client = providers.Singleton(
         openai.OpenAI,
         api_key=application_settings.provided.api_key,
-        base_url=application_settings.provided.provider_url
+        base_url=application_settings.provided.provider_url,
     )
 
-    pdf_service = providers.Singleton(
-        PDFService,
-        pdf_data_access=pdf_data_access,
-        pdf_file_storage=pdf_file_storage
-    )
+    pdf_service = providers.Singleton(PDFService, pdf_data_access=pdf_data_access, pdf_file_storage=pdf_file_storage)

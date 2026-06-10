@@ -1,10 +1,11 @@
-import pytest
-from unittest.mock import AsyncMock
-from fastapi.testclient import TestClient
 from http import HTTPStatus
+from unittest.mock import AsyncMock
 
-from backend.main import app
+import pytest
+from fastapi.testclient import TestClient
+
 from backend.config import ApplicationSettings
+from backend.main import app
 
 client = TestClient(app)
 

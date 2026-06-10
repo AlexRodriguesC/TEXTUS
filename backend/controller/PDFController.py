@@ -1,26 +1,28 @@
-from typing import Annotated
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-from dependency_injector.wiring import inject, Provide
 from http import HTTPStatus
+from typing import Annotated
 
-from backend.containers import Container
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+
 from backend.config import ApplicationSettings
+from backend.containers import Container
 from backend.service import PDFService
 
 book_api = APIRouter(prefix="/api/v1")
 
+
 @book_api.post("/books", status_code=HTTPStatus.CREATED)
 @inject
 async def upload_book(
-        file: Annotated[UploadFile, File(description="Book file")],
-        settings: Annotated[
-            ApplicationSettings,
-            Depends(Provide[Container.application_settings]),
-        ],
-        pdf_service: Annotated[
-            PDFService,
-            Depends(Provide[Container.pdf_service]),
-        ],
+    file: Annotated[UploadFile, File(description="Book file")],
+    settings: Annotated[
+        ApplicationSettings,
+        Depends(Provide[Container.application_settings]),
+    ],
+    pdf_service: Annotated[
+        PDFService,
+        Depends(Provide[Container.pdf_service]),
+    ],
 ):
     if file.content_type != "application/pdf":
         raise HTTPException(
@@ -38,4 +40,4 @@ async def upload_book(
             detail=f"File of size {file_size} exceeds max allowed size of {max_size_mb} MB!",
         )
 
-    return await pdf_service.handle_upload(file.file)
+    return await pdf_service.handle_upload(file)
