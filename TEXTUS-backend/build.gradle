@@ -1,62 +1,114 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '4.0.6'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.asciidoctor.jvm.convert' version '4.0.5'
+	id 'java'
+	id 'org.springframework.boot' version '4.0.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.asciidoctor.jvm.convert' version '4.0.5'
+	id 'org.flywaydb.flyway' version '10.0.0'
+	id 'com.diffplug.spotless' version '8.6.0'
 }
 
 group = 'ch.supsi'
 version = '0.0.1-SNAPSHOT'
 description = 'TEXTUS-backend'
 
+spotless {
+	java {
+		target 'src/**/*.java'
+		palantirJavaFormat('2.50.0')
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		endWithNewline()
+		toggleOffOn()
+	}
+	groovyGradle {
+		target '*.gradle'
+		greclipse()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	format 'misc', {
+		target '**/*.yml', '**/*.yaml', '**/*.md', '**/.gitignore'
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
+// auto-run on compile
+tasks.withType(JavaCompile).configureEach {
+	finalizedBy spotlessApply
+}
+
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 ext {
-    set('snippetsDir', file("build/generated-snippets"))
+	set('snippetsDir', file("build/generated-snippets"))
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-neo4j'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
-    implementation 'org.springframework.boot:spring-boot-data-jpa'
-    implementation "org.springframework.boot:spring-boot-starter-log4j2"
-    implementation 'com.github.librepdf:openpdf:3.0.5'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    runtimeOnly 'org.postgresql:postgresql'
+	// ── BOMs (must be declared before their managed dependencies) ──────────────
+	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0')
 
-    compileOnly 'org.projectlombok:lombok'
-    compileOnly 'org.jetbrains:annotations:26.1.0'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-neo4j-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-restdocs'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testAnnotationProcessor 'org.projectlombok:lombok'
+	// ── Spring Boot ────────────────────────────────────────────────────────────
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-batch-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation "org.springframework.boot:spring-boot-starter-log4j2"
+	implementation 'org.springframework.boot:spring-boot-autoconfigure:4.1.0'
+
+	// ── Database ───────────────────────────────────────────────────────────────
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly    'org.postgresql:postgresql'
+
+	// ── PDF processing ─────────────────────────────────────────────────────────
+	implementation 'org.apache.pdfbox:pdfbox:3.0.7'
+	implementation 'com.github.jai-imageio:jai-imageio-jpeg2000:1.4.0'
+	implementation 'net.sourceforge.tess4j:tess4j:5.19.0'
+
+	// ── NLP ────────────────────────────────────────────────────────────────────
+	implementation 'com.github.pemistahl:lingua:1.2.2'
+
+	// ── Spring AI ──────────────────────────────────────────────────────────────
+	implementation 'org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-client-chat'
+
+	// ── API docs ───────────────────────────────────────────────────────────────
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+
+	// ── Dev / compile-only ─────────────────────────────────────────────────────
+	compileOnly         'org.projectlombok:lombok'
+	compileOnly         'org.jetbrains:annotations:26.1.0'
+	developmentOnly     'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// ── Test ───────────────────────────────────────────────────────────────────
+	testImplementation      'org.springframework.boot:spring-boot-starter-restdocs'
+	testImplementation      'org.springframework.restdocs:spring-restdocs-mockmvc'
+	testCompileOnly         'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly         'org.junit.platform:junit-platform-launcher'
 }
 
 configurations.all {
-    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 }
 
 tasks.named('test') {
-    outputs.dir snippetsDir
-    useJUnitPlatform()
+	outputs.dir snippetsDir
+	useJUnitPlatform()
 }
 
 tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
+	inputs.dir snippetsDir
+	dependsOn test
 }

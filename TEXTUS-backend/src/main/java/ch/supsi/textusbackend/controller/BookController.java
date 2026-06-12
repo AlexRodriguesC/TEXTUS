@@ -31,19 +31,32 @@ public class BookController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload a book", description = """
-            Uploads a single book file for asynchronous processing.
-            Supported file types depend on the server-side processing pipeline.
-            The file must be sent as multipart/form-data using the field name 'book'.
-            """)
+    @Operation(
+            summary = "Upload a book",
+            description =
+                    """
+                            Uploads a single book file for asynchronous processing.
+                            Supported file types depend on the server-side processing pipeline.
+                            The file must be sent as multipart/form-data using the field name 'book'.
+                            """)
     @ApiResponses({
-                    @ApiResponse(responseCode = "202", description = "Book accepted for processing"),
-                    @ApiResponse(responseCode = "400", description = "Invalid request or missing file"),
-                    @ApiResponse(responseCode = "413", description = "Uploaded file is too large"),
-                    @ApiResponse(responseCode = "415", description = "Unsupported media type"),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(responseCode = "202", description = "Book accepted for processing"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or missing file"),
+        @ApiResponse(responseCode = "413", description = "Uploaded file is too large"),
+        @ApiResponse(responseCode = "415", description = "Unsupported media type"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Void> uploadBook(@Parameter(description = "The book file to upload", required = true, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(type = "string", format = "binary"))) @RequestPart("book") @NotNull MultipartFile book) {
+    public ResponseEntity<Void> uploadBook(
+            @Parameter(
+                            description = "The book file to upload",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestPart("book")
+                    @NotNull
+                    MultipartFile book) {
         if (book.isEmpty() || book.getSize() >= 500L * 1024 * 1024) {
             return ResponseEntity.badRequest().build();
         }

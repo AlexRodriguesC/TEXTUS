@@ -1,11 +1,10 @@
 package ch.supsi.textusbackend.model;
 
 import ch.supsi.textusbackend.exception.BookDomainException;
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.UUID;
 import java.util.regex.Pattern;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class Book {
@@ -17,7 +16,8 @@ public class Book {
         }
 
         public static BookId of(String id) {
-            Pattern UUID_REGEX = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+            Pattern UUID_REGEX =
+                    Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
             if (!UUID_REGEX.matcher(id).matches()) {
                 throw new BookDomainException("Book ID is invalid");
             }
@@ -33,7 +33,13 @@ public class Book {
     private final String storageLocation;
     private final byte[] bytes;
 
-    private Book(BookId bookId, String originalFilename, String contentType, long size, String storageLocation, byte[] bytes) {
+    private Book(
+            BookId bookId,
+            String originalFilename,
+            String contentType,
+            long size,
+            String storageLocation,
+            byte[] bytes) {
         this.bookId = bookId;
         this.originalFilename = originalFilename;
         this.contentType = contentType;
@@ -51,5 +57,4 @@ public class Book {
         BookId bookId = new BookId(UUID.randomUUID());
         return create(bookId, originalFilename, size, bytes);
     }
-
 }

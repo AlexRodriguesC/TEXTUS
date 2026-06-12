@@ -2,18 +2,18 @@ package ch.supsi.textusbackend.dataaccess;
 
 import ch.supsi.textusbackend.exception.BookDomainException;
 import ch.supsi.textusbackend.model.Book;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
 
 /**
- * FileSystem-specific {@link BookStorage} implementation, handling direct interactions with a FileSystem for book storage
+ * FileSystem-specific {@link BookStorage} implementation, handling direct interactions with a
+ * FileSystem for book storage
  */
 @Service
 public class FileSystemBookStorage implements BookStorage {
@@ -70,6 +70,12 @@ public class FileSystemBookStorage implements BookStorage {
     }
 
     @Override
+    public void update(Book book) {
+        delete(book.getBookId());
+        create(book);
+    }
+
+    @Override
     public void delete(Book.BookId bookId) {
         if (basePathDoesNotExist()) {
             logger.warn("Tried to delete book with id {} but it does not exist", bookId);
@@ -79,7 +85,7 @@ public class FileSystemBookStorage implements BookStorage {
         Path bookPath = getBookPath(bookId.toString());
         File bookFile = bookPath.toFile();
         if (!bookFile.exists()) {
-            logger.warn("Tried to delete book with id {} but it does not exist\", book.getBookId()", bookId);
+            logger.warn("Tried to delete book with id {} but it does not exist", bookId);
             return;
         }
 

@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="INFO">
+<Configuration status="WARN">
     <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - Message: %msg%n"/>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
     </Appenders>
+
     <Loggers>
-        <Root level="trace">
-            <AppenderRef ref="console"/>
+        <!-- Your app: full detail -->
+        <Logger name="ch.supsi.textusbackend" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Spring Boot essentials only -->
+        <Logger name="org.springframework.boot" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Silence everything else (RMI, JMX, Hibernate internals, Hikari noise etc.) -->
+        <Root level="WARN">
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

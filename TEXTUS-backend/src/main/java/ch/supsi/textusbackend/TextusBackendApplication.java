@@ -9,5 +9,4 @@ public class TextusBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(TextusBackendApplication.class, args);
     }
-
 }

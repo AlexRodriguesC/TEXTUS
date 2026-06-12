@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS books.book
+(
+    id    BIGSERIAL PRIMARY KEY,
+    title TEXT NOT NULL
+);

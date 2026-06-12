@@ -1,6 +1,5 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.model.Book;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -17,16 +16,11 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class ChunkContentTasklet implements Tasklet {
 
-    protected String bookId;
-
-    public ChunkContentTasklet(@Value("#{['bookId']}") String bookId) {
-        this.bookId = bookId;
-    }
+    @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
+    private String bookId;
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) throws Exception {
-        log.debug("Executing chunk content step for book with bookId {}", bookId);
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
         return null;
     }
-
 }

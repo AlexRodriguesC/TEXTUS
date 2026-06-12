@@ -10,6 +10,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -18,22 +19,23 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class CleanupTasklet implements Tasklet {
 
-    protected String bookId;
     private final BookStorage bookStorage;
 
-    public CleanupTasklet(@Value("#{['bookId']}") String bookId, BookStorage bookStorage) {
-        this.bookId = bookId;
+    @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
+    private String bookId;
+
+    @Autowired
+    public CleanupTasklet(BookStorage bookStorage) {
         this.bookStorage = bookStorage;
     }
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) throws Exception {
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
+            throws Exception {
         log.debug("Executing cleanup step for book with bookId {}", bookId);
 
-        var bookId = Book.BookId.of(this.bookId);
-        bookStorage.delete(bookId);
+        bookStorage.delete(Book.BookId.of(bookId));
 
         return RepeatStatus.FINISHED;
     }
-
 }
