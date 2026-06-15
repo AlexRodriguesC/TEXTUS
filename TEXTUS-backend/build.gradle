@@ -68,12 +68,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-autoconfigure:4.1.0'
 
 	// ── Database ───────────────────────────────────────────────────────────────
+	implementation 'org.springframework.boot:spring-boot-starter-flyway:4.1.0'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly    'org.postgresql:postgresql'
 
 	// ── PDF processing ─────────────────────────────────────────────────────────
 	implementation 'org.apache.pdfbox:pdfbox:3.0.7'
 	implementation 'com.github.jai-imageio:jai-imageio-jpeg2000:1.4.0'
+	implementation 'dev.langchain4j:langchain4j:1.16.2'
 	implementation 'net.sourceforge.tess4j:tess4j:5.19.0'
 
 	// ── NLP ────────────────────────────────────────────────────────────────────

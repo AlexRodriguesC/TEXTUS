@@ -1,7 +1,9 @@
-CREATE TABLE IF NOT EXISTS books.book_section
+CREATE TABLE IF NOT EXISTS books.index
 (
-    id      BIGSERIAL PRIMARY KEY,
-    book_id BIGINT NOT NULL REFERENCES books.book (id),
-    title   TEXT   NOT NULL,
-    content TEXT   NOT NULL
+    id BIGSERIAL PRIMARY KEY,
+    book_id BIGSERIAL NOT NULL REFERENCES books.book (id),
+    title TEXT,
+    position INT,
+    from_page INT,
+    to_page INT
 )

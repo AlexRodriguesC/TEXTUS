@@ -1,6 +1,7 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.BookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IndexStorage;
 import ch.supsi.textusbackend.model.Book;
 import ch.supsi.textusbackend.model.BookIndex;
 import ch.supsi.textusbackend.service.clients.index.IndexExtractionClient;
@@ -33,15 +34,20 @@ import org.springframework.util.MimeTypeUtils;
 public class ExtractIndexTasklet implements Tasklet {
 
     private final IndexExtractionClient indexExtractionClient;
-    private final BookStorage bookStorage;
+    private final IFileSystemBookStorage bookStorage;
+    private final IndexStorage indexStorage;
 
     @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
-    private String bookId;
+    private Long bookId;
 
     @Autowired
-    public ExtractIndexTasklet(IndexExtractionClient indexExtractionClient, BookStorage bookStorage) {
+    public ExtractIndexTasklet(
+            IndexExtractionClient indexExtractionClient,
+            IFileSystemBookStorage bookStorage,
+            IndexStorage indexStorage) {
         this.indexExtractionClient = indexExtractionClient;
         this.bookStorage = bookStorage;
+        this.indexStorage = indexStorage;
     }
 
     @Override
@@ -49,7 +55,7 @@ public class ExtractIndexTasklet implements Tasklet {
             throws Exception {
         log.debug("Executing index extraction step for book with bookId {}", bookId);
 
-        Book book = bookStorage.read(Book.BookId.of(bookId));
+        Book book = bookStorage.read(bookId);
 
         try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
             int lastPage = Math.min(20, pdfDocument.getNumberOfPages());
@@ -65,8 +71,9 @@ public class ExtractIndexTasklet implements Tasklet {
             }
 
             BookIndex bookIndex = indexExtractionClient.extractBookIndex(pageImages);
+            bookIndex = bookIndex.normalise(pdfDocument);
 
-            var abc = 123;
+            indexStorage.create(bookIndex, book.getBookId());
         }
 
         return RepeatStatus.FINISHED;

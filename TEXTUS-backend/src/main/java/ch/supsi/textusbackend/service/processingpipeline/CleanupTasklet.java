@@ -1,7 +1,6 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.BookStorage;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -19,13 +18,13 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class CleanupTasklet implements Tasklet {
 
-    private final BookStorage bookStorage;
+    private final IFileSystemBookStorage bookStorage;
 
     @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
-    private String bookId;
+    private Long bookId;
 
     @Autowired
-    public CleanupTasklet(BookStorage bookStorage) {
+    public CleanupTasklet(IFileSystemBookStorage bookStorage) {
         this.bookStorage = bookStorage;
     }
 
@@ -34,7 +33,7 @@ public class CleanupTasklet implements Tasklet {
             throws Exception {
         log.debug("Executing cleanup step for book with bookId {}", bookId);
 
-        bookStorage.delete(Book.BookId.of(bookId));
+        bookStorage.delete(bookId);
 
         return RepeatStatus.FINISHED;
     }

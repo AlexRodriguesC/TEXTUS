@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.BookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
 import ch.supsi.textusbackend.model.Book;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
@@ -44,13 +44,13 @@ public class OCRTasklet implements Tasklet {
     private String tessdataPath = "C:\\Program Files\\Tesseract-OCR\\tessdata";
 
     @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
-    private String bookId;
+    private Long bookId;
 
-    private final BookStorage bookStorage;
+    private final IFileSystemBookStorage bookStorage;
     private final LanguageDetector languageDetector;
 
     @Autowired
-    public OCRTasklet(BookStorage bookStorage, LanguageDetector languageDetector) {
+    public OCRTasklet(IFileSystemBookStorage bookStorage, LanguageDetector languageDetector) {
         this.bookStorage = bookStorage;
         this.languageDetector = languageDetector;
     }
@@ -59,7 +59,7 @@ public class OCRTasklet implements Tasklet {
             throws Exception {
         log.debug("Executing OCR step for book with bookId {}", bookId);
 
-        Book book = bookStorage.read(Book.BookId.of(bookId));
+        Book book = bookStorage.read(bookId);
 
         try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
             if (!requiresOcr(pdfDocument)) {

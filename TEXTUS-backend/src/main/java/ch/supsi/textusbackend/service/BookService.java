@@ -1,6 +1,7 @@
 package ch.supsi.textusbackend.service;
 
-import ch.supsi.textusbackend.dataaccess.BookStorage;
+import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
 import ch.supsi.textusbackend.model.Book;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -15,13 +16,19 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class BookService implements IBookService {
 
-    private final BookStorage bookStorage;
+    private final IFileSystemBookStorage bookStorage;
+    private final IDatabaseBookStorage databaseBookStorage;
     private final JobOperator jobOperator;
     private final Job pipelineJob;
 
     @Autowired
-    public BookService(BookStorage bookStorage, JobOperator asyncJobOperator, Job pipelineJob) {
+    public BookService(
+            IFileSystemBookStorage bookStorage,
+            IDatabaseBookStorage databaseBookStorage,
+            JobOperator asyncJobOperator,
+            Job pipelineJob) {
         this.bookStorage = bookStorage;
+        this.databaseBookStorage = databaseBookStorage;
         this.jobOperator = asyncJobOperator;
         this.pipelineJob = pipelineJob;
     }
@@ -38,10 +45,14 @@ public class BookService implements IBookService {
 
         Book book = Book.create(bookFile.getOriginalFilename(), bookFile.getSize(), bookBytes);
 
+        Long bookId = databaseBookStorage.create(book);
+
+        book = Book.create(bookId, book.getOriginalFilename(), book.getSize(), bookBytes);
+
         bookStorage.create(book);
 
         JobParameters jobParameters = new JobParametersBuilder()
-                .addString("BOOK_ID", book.getBookId().toString())
+                .addLong("BOOK_ID", bookId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
