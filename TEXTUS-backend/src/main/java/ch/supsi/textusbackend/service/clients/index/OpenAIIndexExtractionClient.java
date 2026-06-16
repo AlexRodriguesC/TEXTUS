@@ -33,6 +33,7 @@ public class OpenAIIndexExtractionClient extends OpenAIClient implements IndexEx
                 UserMessage.builder().text(userPromptText).media(pages).build();
         var prompt = new Prompt(userMessage);
 
-        return chatClient.prompt(prompt).call().entity(BookIndex.class);
+        var responseEntity = chatClient.prompt(prompt).call().responseEntity(BookIndex.class);
+        return responseEntity.entity();
     }
 }

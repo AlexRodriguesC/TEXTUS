@@ -1,1 +1,1 @@
-Extract the table of contents from these pages of a book if present.
+Read the provided images and return the semantic topic index as instructed.

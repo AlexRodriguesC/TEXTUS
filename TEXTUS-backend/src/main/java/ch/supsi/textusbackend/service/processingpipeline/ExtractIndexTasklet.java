@@ -71,7 +71,7 @@ public class ExtractIndexTasklet implements Tasklet {
             }
 
             BookIndex bookIndex = indexExtractionClient.extractBookIndex(pageImages);
-            bookIndex = bookIndex.normalise(pdfDocument);
+            // bookIndex = bookIndex.normalise(pdfDocument);
 
             indexStorage.create(bookIndex, book.getBookId());
         }

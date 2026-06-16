@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
-public record BookIndex(List<BookIndexEntry> children) {
+public record BookIndex(Long id, Integer page, List<BookIndexEntry> children) {
 
     public BookIndex normalise(PDDocument pdfDocument) {
-        List<BookIndexEntry> flat = flatten(children);
-        if (flat.isEmpty()) {
+        if (children.isEmpty()) {
             return this;
         }
 
@@ -17,37 +16,28 @@ public record BookIndex(List<BookIndexEntry> children) {
         List<int[]> absPages = new ArrayList<>();
         int previousRelativePage = -1;
 
-        for (BookIndexEntry entry : flat) {
+        for (BookIndexEntry entry : children) {
             int relativePage = entry.fromPage();
 
             if (previousRelativePage != -1 && relativePage < previousRelativePage) {
                 break;
             }
 
-            int absolutePage = Math.min(relativePage, pageCount);
-            absPages.add(new int[] {absolutePage});
-
+            absPages.add(new int[] {Math.min(relativePage, pageCount)});
             previousRelativePage = relativePage;
         }
 
         List<BookIndexEntry> normalised = new ArrayList<>();
+        var offset = page;
+
         for (int i = 0; i < absPages.size(); i++) {
-            int fromPage = absPages.get(i)[0];
-            int toPage = (i + 1 < absPages.size()) ? absPages.get(i + 1)[0] - 1 : pageCount;
+            int fromPage = absPages.get(i)[0] + offset;
+            int toPage = ((i + 1 < absPages.size()) ? absPages.get(i + 1)[0] - 1 : pageCount) + offset;
 
             normalised.add(new BookIndexEntry(
-                    flat.get(i).title(), i, Math.min(fromPage, toPage), Math.max(toPage, fromPage), List.of()));
+                    children.get(i).title(), i, Math.min(fromPage, toPage), Math.max(toPage, fromPage)));
         }
 
-        return new BookIndex(normalised);
-    }
-
-    private static List<BookIndexEntry> flatten(List<BookIndexEntry> entries) {
-        List<BookIndexEntry> result = new ArrayList<>();
-        for (BookIndexEntry entry : entries) {
-            result.add(new BookIndexEntry(entry.title(), entry.fromPage(), List.of()));
-            result.addAll(flatten(entry.children()));
-        }
-        return result;
+        return new BookIndex(id, page, normalised);
     }
 }

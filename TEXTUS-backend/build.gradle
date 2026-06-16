@@ -54,10 +54,10 @@ ext {
 }
 
 dependencies {
-	// ── BOMs (must be declared before their managed dependencies) ──────────────
+	// BOMs (must be declared before their managed dependencies)
 	implementation platform('org.springframework.ai:spring-ai-bom:1.0.0')
 
-	// ── Spring Boot ────────────────────────────────────────────────────────────
+	// Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
 	implementation 'org.springframework.boot:spring-boot-batch-jdbc'
@@ -67,34 +67,34 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-log4j2"
 	implementation 'org.springframework.boot:spring-boot-autoconfigure:4.1.0'
 
-	// ── Database ───────────────────────────────────────────────────────────────
+	// Database
 	implementation 'org.springframework.boot:spring-boot-starter-flyway:4.1.0'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly    'org.postgresql:postgresql'
 
-	// ── PDF processing ─────────────────────────────────────────────────────────
+	// PDF processing
 	implementation 'org.apache.pdfbox:pdfbox:3.0.7'
 	implementation 'com.github.jai-imageio:jai-imageio-jpeg2000:1.4.0'
 	implementation 'dev.langchain4j:langchain4j:1.16.2'
 	implementation 'net.sourceforge.tess4j:tess4j:5.19.0'
 
-	// ── NLP ────────────────────────────────────────────────────────────────────
+	// NLP
 	implementation 'com.github.pemistahl:lingua:1.2.2'
 
-	// ── Spring AI ──────────────────────────────────────────────────────────────
+	// Spring AI
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M8'
 	implementation 'org.springframework.ai:spring-ai-client-chat'
 
-	// ── API docs ───────────────────────────────────────────────────────────────
+	// API docs
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
 
-	// ── Dev / compile-only ─────────────────────────────────────────────────────
+	// Dev / compile-only
 	compileOnly         'org.projectlombok:lombok'
 	compileOnly         'org.jetbrains:annotations:26.1.0'
 	developmentOnly     'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
 
-	// ── Test ───────────────────────────────────────────────────────────────────
+	// Test
 	testImplementation      'org.springframework.boot:spring-boot-starter-restdocs'
 	testImplementation      'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testCompileOnly         'org.projectlombok:lombok'
@@ -105,6 +105,10 @@ dependencies {
 	testImplementation      'org.spockframework:spock-core:2.4-groovy-5.0'
 	testImplementation      'org.spockframework:spock-spring:2.4-groovy-5.0'
 	testImplementation      'org.springframework.boot:spring-boot-starter-webmvc-test:4.0.0'
+	testImplementation      'org.springframework.boot:spring-boot-testcontainers:4.1.0'
+	testImplementation      'org.testcontainers:spock:1.21.4'
+	testImplementation      'org.testcontainers:testcontainers-spock:2.0.5'
+	testImplementation      'org.testcontainers:postgresql:1.21.4'
 }
 
 test {

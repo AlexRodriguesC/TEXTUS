@@ -10,6 +10,7 @@ import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Log4j2
@@ -34,6 +35,7 @@ public class BookService implements IBookService {
     }
 
     @Override
+    @Transactional // todo: this doesn't really work
     public void createBook(MultipartFile bookFile) {
         byte[] bookBytes = null;
         try {

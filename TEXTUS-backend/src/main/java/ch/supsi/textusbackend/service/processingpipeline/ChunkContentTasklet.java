@@ -50,6 +50,7 @@ public class ChunkContentTasklet implements Tasklet {
 
         Book book = fileSystemBookStorage.read(bookId);
         BookIndex bookIndex = indexStorage.read(bookId);
+        var offset = bookIndex.page();
 
         List<String> chunks = new ArrayList<>();
 
@@ -57,8 +58,10 @@ public class ChunkContentTasklet implements Tasklet {
             PDFTextStripper stripper = new PDFTextStripper();
 
             for (BookIndexEntry entry : bookIndex.children()) {
-                stripper.setStartPage(entry.fromPage());
-                stripper.setEndPage(entry.toPage());
+                var from = entry.fromPage() + offset;
+                var to = entry.toPage() + offset;
+                stripper.setStartPage(from);
+                stripper.setEndPage(to);
 
                 String text = stripper.getText(pdfDocument);
 
