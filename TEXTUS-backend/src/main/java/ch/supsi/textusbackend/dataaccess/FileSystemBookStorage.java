@@ -52,6 +52,92 @@ public class FileSystemBookStorage implements IFileSystemBookStorage {
     }
 
     @Override
+    public String createChunk(Integer page, String content, Long bookId) {
+        String chunkId = String.valueOf(page);
+        Path chunkDirectory = getChunkDirectoryPath(bookId);
+        Path chunkPath = chunkDirectory.resolve(chunkId);
+
+        try {
+            Files.createDirectories(chunkDirectory);
+            Files.writeString(chunkPath, content);
+            return chunkId;
+        } catch (Exception e) {
+            String errorMessage = String.format("Unable to write chunk %s for book %s", chunkId, bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
+    public String readChunk(Long bookId, String chunkId) {
+        Path chunkPath = getChunkDirectoryPath(bookId).resolve(chunkId);
+
+        if (!Files.exists(chunkPath)) {
+            return null;
+        }
+
+        try {
+            return Files.readString(chunkPath);
+        } catch (Exception e) {
+            String errorMessage = String.format("Unable to read chunk %s for book %s", chunkId, bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
+    public String readNextChunk(Long bookId) {
+        Path chunkDirectory = getChunkDirectoryPath(bookId);
+
+        if (!Files.exists(chunkDirectory) || !Files.isDirectory(chunkDirectory)) {
+            return null;
+        }
+
+        try (var stream = Files.list(chunkDirectory)) {
+            Path nextChunkPath = stream.filter(Files::isRegularFile)
+                    .min((p1, p2) -> {
+                        Integer page1 = Integer.parseInt(p1.getFileName().toString());
+                        Integer page2 = Integer.parseInt(p2.getFileName().toString());
+                        return page1.compareTo(page2);
+                    })
+                    .orElse(null);
+
+            if (nextChunkPath == null) {
+                return null;
+            }
+
+            return Files.readString(nextChunkPath);
+        } catch (Exception e) {
+            String errorMessage = String.format("Unable to read next chunk for book %s", bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
+    public void deleteChunk(Long bookId, String chunkId) {
+        Path chunkPath = getChunkDirectoryPath(bookId).resolve(chunkId);
+
+        try {
+            boolean deleted = Files.deleteIfExists(chunkPath);
+
+            if (!deleted) {
+                log.warn("Tried to delete chunk {} for book {} but it does not exist", chunkId, bookId);
+            }
+
+            Path chunkDirectory = getChunkDirectoryPath(bookId);
+            if (Files.exists(chunkDirectory)
+                    && Files.list(chunkDirectory).findAny().isEmpty()) {
+                Files.deleteIfExists(chunkDirectory);
+            }
+        } catch (Exception e) {
+            String errorMessage = String.format("Unable to delete chunk %s for book %s", chunkId, bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
     public Book read(Long bookId) {
         if (basePathDoesNotExist()) {
             return null;
@@ -89,16 +175,56 @@ public class FileSystemBookStorage implements IFileSystemBookStorage {
         }
 
         Path bookPath = getBookPath(String.valueOf(bookId));
-        File bookFile = bookPath.toFile();
-        if (!bookFile.exists()) {
+        Path chunkDirectory = getChunkDirectoryPath(bookId);
+
+        boolean bookExists = Files.exists(bookPath);
+        boolean chunkDirectoryExists = Files.exists(chunkDirectory);
+
+        if (!bookExists && !chunkDirectoryExists) {
             log.warn("Tried to delete book with id {} but it does not exist", bookId);
             return;
         }
 
         try {
-            Files.delete(bookPath);
+            if (bookExists) {
+                Files.delete(bookPath);
+            }
+
+            if (chunkDirectoryExists) {
+                try (var paths = Files.walk(chunkDirectory)) {
+                    paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+            }
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete book %s", bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        if (basePathDoesNotExist()) {
+            log.warn("Tried to delete base path {} but it does not exist", basePath);
+            return;
+        }
+
+        try (var paths = Files.walk(basePath)) {
+            paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (Exception e) {
+            String errorMessage = String.format("Unable to delete base path %s", basePath);
             log.error(errorMessage, e);
             throw new BookDomainException(errorMessage);
         }
@@ -110,5 +236,9 @@ public class FileSystemBookStorage implements IFileSystemBookStorage {
 
     private Path getBookPath(String bookId) {
         return Path.of(basePath + File.separator + Path.of(bookId));
+    }
+
+    private Path getChunkDirectoryPath(Long bookId) {
+        return basePath.resolve(bookId + "_chunks");
     }
 }

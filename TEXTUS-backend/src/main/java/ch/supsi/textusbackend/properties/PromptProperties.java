@@ -9,9 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class PromptProperties {
 
-    private String indexExtractionSystem;
-    private String indexExtractionUser;
-
-    private String summarySystem;
-    private String summaryUser;
+    private String enrichmentSystem;
+    private String enrichmentUser;
 }

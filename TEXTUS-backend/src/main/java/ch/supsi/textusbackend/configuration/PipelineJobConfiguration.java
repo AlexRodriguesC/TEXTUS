@@ -1,10 +1,10 @@
 package ch.supsi.textusbackend.configuration;
 
-import ch.supsi.textusbackend.service.processingpipeline.ChunkContentTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.CleanupTasklet;
-import ch.supsi.textusbackend.service.processingpipeline.ExtractIndexTasklet;
+import ch.supsi.textusbackend.service.processingpipeline.EnrichmentTasklet;
+import ch.supsi.textusbackend.service.processingpipeline.KeyBasedMergingTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.OCRTasklet;
-import ch.supsi.textusbackend.service.processingpipeline.SummariseContentTasklet;
+import ch.supsi.textusbackend.service.processingpipeline.SegmentationTasklet;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import org.springframework.batch.core.job.Job;
@@ -28,17 +28,12 @@ public class PipelineJobConfiguration {
 
     @Bean
     public Job pipelineJob(
-            JobRepository jobRepository,
-            Step ocr,
-            Step extractIndex,
-            Step chunkContent,
-            Step summariseContent,
-            Step cleanup) {
+            JobRepository jobRepository, Step ocr, Step segment, Step enrich, Step keyBasedMerging, Step cleanup) {
         return new JobBuilder("bookProcessingJob", jobRepository)
                 .start(ocr)
-                .next(extractIndex)
-                .next(chunkContent)
-                .next(summariseContent)
+                .next(segment)
+                .next(enrich)
+                .next(keyBasedMerging)
                 .next(cleanup)
                 .build();
     }
@@ -49,27 +44,27 @@ public class PipelineJobConfiguration {
     }
 
     @Bean
-    public Step extractIndex(
+    public Step segment(
             JobRepository jobRepository,
-            PlatformTransactionManager txManager,
-            ExtractIndexTasklet extractIndexTasklet) {
-        return buildTaskletStep("extractIndex", jobRepository, txManager, extractIndexTasklet);
+            PlatformTransactionManager transactionManager,
+            SegmentationTasklet segmentationTasklet) {
+        return buildTaskletStep("segmentationTasklet", jobRepository, transactionManager, segmentationTasklet);
     }
 
     @Bean
-    public Step chunkContent(
+    public Step enrich(
             JobRepository jobRepository,
-            PlatformTransactionManager txManager,
-            ChunkContentTasklet chunkContentTasklet) {
-        return buildTaskletStep("chunkContent", jobRepository, txManager, chunkContentTasklet);
+            PlatformTransactionManager transactionManager,
+            EnrichmentTasklet enrichmentTasklet) {
+        return buildTaskletStep("enrichmentTasklet", jobRepository, transactionManager, enrichmentTasklet);
     }
 
     @Bean
-    public Step summariseContent(
+    public Step keyBasedMerging(
             JobRepository jobRepository,
-            PlatformTransactionManager txManager,
-            SummariseContentTasklet summariseContentTasklet) {
-        return buildTaskletStep("summariseContent", jobRepository, txManager, summariseContentTasklet);
+            PlatformTransactionManager transactionManager,
+            KeyBasedMergingTasklet keyBasedMergingTasklet) {
+        return buildTaskletStep("keyBasedMergingTasklet", jobRepository, transactionManager, keyBasedMergingTasklet);
     }
 
     @Bean

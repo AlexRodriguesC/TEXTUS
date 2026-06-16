@@ -7,21 +7,16 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
-import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
 @StepScope
-public class CleanupTasklet implements Tasklet {
+public class CleanupTasklet extends ProcessingTasklet {
 
     private final IFileSystemBookStorage bookStorage;
-
-    @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
-    private Long bookId;
 
     @Autowired
     public CleanupTasklet(IFileSystemBookStorage bookStorage) {

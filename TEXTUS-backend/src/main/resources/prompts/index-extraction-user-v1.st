@@ -1,1 +1,0 @@
-Read the provided images and return the semantic topic index as instructed.

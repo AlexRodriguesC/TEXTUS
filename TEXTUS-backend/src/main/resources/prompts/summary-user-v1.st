@@ -1,1 +1,0 @@
-Extract the summary from this text.
