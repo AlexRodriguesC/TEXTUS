@@ -1,6 +1,8 @@
 CREATE OR REPLACE FUNCTION books.add_chunk(
     p_book_id BIGINT,
-    p_page INT,
+    p_tokens_in INTEGER,
+    p_tokens_out INTEGER,
+    p_page INTEGER,
     p_title TEXT,
     p_summary TEXT,
     p_key TEXT,
@@ -19,8 +21,8 @@ DECLARE
     v_related_key    TEXT;
     v_found_key_id   BIGINT;
 BEGIN
-    INSERT INTO books.chunk (book_id, page, title, summary, key)
-    VALUES (p_book_id, p_page, p_title, p_summary, p_key)
+    INSERT INTO books.chunk (book_id, tokens_in, tokens_out, page, title, summary, key)
+    VALUES (p_book_id, p_tokens_in, p_tokens_out, p_page, p_title, p_summary, p_key)
     RETURNING id INTO v_chunk_i;
 
     FOREACH v_question IN ARRAY COALESCE(p_questions, '{}') LOOP

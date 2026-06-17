@@ -15,6 +15,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -26,14 +27,19 @@ import tools.jackson.core.JacksonException;
 public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentClient {
 
     private final Resource userPromptResource;
+    private final TokenCountEstimator tokenCountEstimator;
 
     @Autowired
     public OpenAIEnrichmentClient(
-            ChatClient.Builder chatBuilder, PromptProperties promptProperties, ResourceLoader resourceLoader) {
+            ChatClient.Builder chatBuilder,
+            PromptProperties promptProperties,
+            ResourceLoader resourceLoader,
+            TokenCountEstimator tokenCountEstimator) {
         super(chatBuilder
                 .defaultSystem(resourceLoader.getResource(promptProperties.getEnrichmentSystem()))
                 .build());
         this.userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
+        this.tokenCountEstimator = tokenCountEstimator;
     }
 
     @Override
@@ -55,6 +61,7 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
                 "rolling_keys",
                 rollingKeys));
 
+        var tokensIn = tokenCountEstimator.estimate(filledUserPrompt);
         var userPrompt = UserMessage.builder().text(filledUserPrompt).build();
         var prompt = new Prompt(userPrompt);
 
@@ -63,9 +70,11 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
         int maxAttempts = 5;
         Chunk chunk = null;
 
+        var tokensOut = 0;
         while (!successful) {
             try {
                 chunk = chatClient.prompt(prompt).call().entity(Chunk.class);
+                tokensOut = tokenCountEstimator.estimate(chunk.toString());
                 successful = true;
             } catch (JacksonException e) {
                 currentAttempts++;
@@ -74,12 +83,18 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
             }
         }
 
-        return chunk == null ? null : Chunk.from(chunk, normaliseEntities(chunk));
+        if (chunk != null) {
+            chunk.setTokenCountInput(tokensIn);
+            chunk.setTokenCountOutput(tokensOut);
+            chunk.setEntities(normaliseEntities(chunk));
+        }
+
+        return chunk;
     }
 
     private List<Entity> normaliseEntities(Chunk chunk) {
         var normalisedEntities = new ArrayList<Entity>();
-        var rawEntities = chunk.entities();
+        var rawEntities = chunk.getEntities();
 
         for (Entity entity : rawEntities) {
             normalisedEntities.add(entity.validate());

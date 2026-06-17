@@ -1,27 +1,54 @@
 package ch.supsi.textusbackend.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public record Chunk(
-        Integer page,
-        String title,
-        String summary,
-        List<String> keywords,
-        List<Entity> entities,
-        List<String> questions,
-        String key,
-        @JsonAlias("related_keys") List<String> relatedKeys) {
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Chunk {
 
-    public static Chunk from(Chunk chunk, List<Entity> entities) {
-        return new Chunk(
-                chunk.page,
-                chunk.title,
-                chunk.summary,
-                chunk.keywords,
-                entities,
-                chunk.questions,
-                chunk.key,
-                chunk.relatedKeys);
+    @JsonIgnore
+    private Integer tokenCountInput;
+
+    @JsonIgnore
+    private Integer tokenCountOutput;
+
+    private Integer page;
+
+    private String title;
+
+    private String summary;
+
+    private List<String> keywords;
+
+    private List<Entity> entities;
+
+    private List<String> questions;
+
+    private String key;
+
+    @JsonAlias("related_keys")
+    private List<String> relatedKeys;
+
+    @Override
+    public String toString() {
+        return "Chunk{" + "tokenCountInput="
+                + tokenCountInput + ", tokenCountOutput="
+                + tokenCountOutput + ", page="
+                + page + ", title='"
+                + title + '\'' + ", summary='"
+                + summary + '\'' + ", keywords="
+                + keywords + ", entities="
+                + entities + ", questions="
+                + questions + ", key='"
+                + key + '\'' + ", relatedKeys="
+                + relatedKeys + '}';
     }
 }

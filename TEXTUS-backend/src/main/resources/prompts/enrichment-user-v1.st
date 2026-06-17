@@ -10,12 +10,12 @@ Rolling Keys (specific subtopics seen in previous chunks):
 
 Extract the following in a single JSON response:
 {
-  "title": "Concise, information-dense title (3-8 words). Preserve the primary concept, method, phenomenon, process, or topic discussed. Avoid generic wording and prefer terminology that would help a retrieval system identify the chunk's subject without additional context.",
+  "title": "Concise, information-dense title (3-8 words). Name the main concept, rule, topic, phenomenon, process, or knowledge unit being taught. Do not describe the page format, exercise type, worksheet style, or classroom activity.",
 
-  "summary": "Self-contained semantic synopsis (40-100 words). Capture the main claims, concepts, mechanisms, relationships, reasoning, conclusions, definitions, procedures, examples, constraints, assumptions, and outcomes discussed in the chunk. Preserve information needed to understand the content without reading surrounding chunks. Prioritize educational value and retrieval relevance over brevity.",
+  "summary": "Self-contained semantic synopsis (40-100 words). Summarize what the learner is meant to understand, know, explain, recognize, or apply from this chunk. Focus on the concepts taught, definitions introduced, relationships explained, procedures demonstrated, examples used to clarify meaning, and conclusions or rules conveyed. Do not describe the teaching format, page instructions, exercise mechanics, or layout unless they are necessary to understand the underlying concept.",
 
   "keywords": [
-    "5-12 high-signal terms, phrases, jargon, concepts, methods, entities, technologies, frameworks, metrics, processes, or domain vocabulary explicitly present or strongly implied in the chunk. Include both broad and specific terms when useful for retrieval."
+    "5-12 high-signal terms, phrases, concepts, rules, methods, entities, processes, or domain vocabulary that represent what is being taught. Prefer content terms over pedagogical terms. Avoid labels about exercise type, worksheet structure, or classroom activity unless they are themselves the subject being taught."
   ],
 
   "entities": [
@@ -26,17 +26,21 @@ Extract the following in a single JSON response:
   ],
 
   "questions": [
-    "3-6 concrete questions that can be answered primarily from this chunk. Cover definitions, mechanisms, reasoning, procedures, comparisons, implications, and practical applications where relevant. Phrase questions as realistic information-seeking queries likely to be asked by users."
+    "3-6 concrete questions that can be answered primarily from this chunk about the knowledge being taught. Focus on meaning, definitions, mechanisms, reasoning, distinctions, implications, and applications. Do not generate questions about what the student is asked to do on the page unless that action is itself the topic being taught."
   ],
 
-  "key": "Specific subtopic label (2-5 words, lowercase). Represent the primary knowledge unit taught by the chunk. Prefer stable conceptual names over document-specific wording.",
+  "key": "Specific subtopic label (2-5 words, lowercase). Represent the primary concept or skill being taught, not the exercise format or page task. Prefer stable conceptual names over document-specific wording.",
 
   "related_keys": [
-    "0-5 semantically related keys that are prerequisites, dependencies, extensions, contrasts, alternatives, examples, or applications of the current key. Include relationships that would help graph-based retrieval and educational navigation."
+    "0-5 semantically related keys that represent prerequisites, dependencies, extensions, contrasts, examples, or applications of the current key in terms of subject matter being taught. Do not include relationships based only on page structure or activity format."
   ]
 }
 
 Rules:
+- Extract the underlying knowledge, not the pedagogical wrapper.
+- Ignore whether the page teaches through a writing exercise, spelling task, quiz, prompt, worksheet, dialogue, or similar format unless that format is itself the topic.
+- Do not summarize the page as a page; summarize the concepts being taught.
+- Prefer subject-matter descriptions over instructional descriptions.
 - "key" must distinguish this chunk; never use a single word or a broad document topic.
 - "related_keys" must be a subset of the provided rolling keys.
 - Return only valid JSON, with no extra text.

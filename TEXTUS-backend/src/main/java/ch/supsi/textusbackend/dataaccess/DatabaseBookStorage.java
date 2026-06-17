@@ -5,6 +5,7 @@ import ch.supsi.textusbackend.model.Book;
 import ch.supsi.textusbackend.model.Chunk;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +30,19 @@ public class DatabaseBookStorage extends DatabaseStorage implements IDatabaseBoo
     @Override
     public Long create(Chunk chunk, Long bookId) {
         return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT books.add_chunk(?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (var stmt = connection.prepareStatement("SELECT books.add_chunk(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
                 stmt.setLong(1, bookId);
-                stmt.setInt(2, chunk.page());
-                stmt.setString(3, chunk.title());
-                stmt.setString(4, chunk.summary());
-                stmt.setString(5, chunk.key());
-                stmt.setArray(6, buildArray(chunk.questions(), connection));
-                stmt.setArray(7, buildArray(chunk.keywords(), connection));
-                stmt.setArray(8, buildArray(chunk.relatedKeys(), connection));
+                stmt.setInt(2, chunk.getTokenCountInput());
+                stmt.setInt(3, chunk.getTokenCountOutput());
+
+                stmt.setInt(4, chunk.getPage());
+                stmt.setString(5, chunk.getTitle());
+                stmt.setString(6, chunk.getSummary());
+                stmt.setString(7, chunk.getKey());
+                stmt.setArray(8, buildArray(chunk.getQuestions(), connection));
+                stmt.setArray(9, buildArray(chunk.getKeywords(), connection));
+                stmt.setArray(10, buildArray(chunk.getRelatedKeys(), connection));
 
                 try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
@@ -48,6 +52,35 @@ public class DatabaseBookStorage extends DatabaseStorage implements IDatabaseBoo
                 }
             }
         });
+    }
+
+    @Override
+    public List<Chunk> readChunks(Long bookId) {
+        String sql = "select * from books.read_chunks(?)";
+
+        return jdbc.query(
+                sql,
+                (rs, rowNum) -> new Chunk(
+                        rs.getInt("tokens_in"),
+                        rs.getInt("tokens_out"),
+                        rs.getInt("page"),
+                        rs.getString("title"),
+                        rs.getString("summary"),
+                        toList(rs.getArray("keywords")),
+                        List.of(),
+                        toList(rs.getArray("questions")),
+                        rs.getString("key"),
+                        toList(rs.getArray("related_keys"))),
+                bookId);
+    }
+
+    private List<String> toList(java.sql.Array sqlArray) throws SQLException {
+        if (sqlArray == null) {
+            return List.of();
+        }
+
+        String[] values = (String[]) sqlArray.getArray();
+        return values == null ? List.of() : List.of(values);
     }
 
     @Override

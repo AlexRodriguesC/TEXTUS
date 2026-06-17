@@ -1,6 +1,7 @@
 package ch.supsi.textusbackend.model;
 
 import java.util.Arrays;
+import org.jetbrains.annotations.NotNull;
 
 public record Entity(String name, String type) {
 
@@ -11,5 +12,11 @@ public record Entity(String name, String type) {
             return new Entity(name, EntityType.CONCEPT.name());
         }
         return this;
+    }
+
+    @Override
+    @NotNull
+    public String toString() {
+        return "Entity{" + "name='" + name + '\'' + ", type='" + type + '\'' + '}';
     }
 }

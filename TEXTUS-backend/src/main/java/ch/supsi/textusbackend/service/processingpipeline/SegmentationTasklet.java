@@ -3,6 +3,10 @@ package ch.supsi.textusbackend.service.processingpipeline;
 import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
 import ch.supsi.textusbackend.exception.BookDomainException;
 import ch.supsi.textusbackend.model.Book;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -39,6 +43,26 @@ public class SegmentationTasklet extends ProcessingTasklet {
             throw new BookDomainException("Book not found: " + bookId);
         }
 
+        List<String> contents = extractBookContents(book);
+
+        contents = contents.stream()
+                .filter(s -> !s.isBlank())
+                .filter(s -> s.length() >= MIN_PAGE_TEXT_LENGTH)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        for (int page = 0; page < contents.size(); page++) {
+            String pageText = contents.get(page);
+            Integer pageNumber = page + 1;
+            String chunkId = bookFileSystemStorage.createChunk(pageNumber, pageText, bookId);
+            log.info("Created chunk {} for book {} page {}", chunkId, bookId, page);
+        }
+
+        return RepeatStatus.FINISHED;
+    }
+
+    private List<String> extractBookContents(Book book) throws IOException {
+        ArrayList<String> contents = new ArrayList<>();
+
         try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             int pageCount = pdfDocument.getNumberOfPages();
@@ -50,22 +74,10 @@ public class SegmentationTasklet extends ProcessingTasklet {
                 String rawPageText = stripper.getText(pdfDocument);
                 String pageText = normalizePageText(rawPageText);
 
-                if (pageText.isBlank()) {
-                    log.info("Skipping empty page {} for book {}", page, bookId);
-                    continue;
-                }
-
-                if (pageText.length() < MIN_PAGE_TEXT_LENGTH) {
-                    log.info("Skipping short page {} for book {} ({} chars)", page, bookId, pageText.length());
-                    continue;
-                }
-
-                String chunkId = bookFileSystemStorage.createChunk(page, pageText, bookId);
-                log.info("Created chunk {} for book {} page {}", chunkId, bookId, page);
+                contents.add(pageText);
             }
         }
-
-        return RepeatStatus.FINISHED;
+        return contents;
     }
 
     private String normalizePageText(String text) {

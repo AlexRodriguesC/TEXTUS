@@ -6,6 +6,7 @@ import ch.supsi.textusbackend.model.Chunk;
 import ch.supsi.textusbackend.properties.AppProperties;
 import ch.supsi.textusbackend.service.clients.enrichment.EnrichmentClient;
 import java.util.List;
+import java.util.Locale;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -74,24 +75,18 @@ public class EnrichmentTasklet extends ProcessingTasklet {
                 log.warn("Failed to enrich chunk for book {} and page {}", bookId, totalProcessed);
                 continue;
             }
-            enrichedChunk = new Chunk(
-                    totalProcessed + 1,
-                    enrichedChunk.title(),
-                    enrichedChunk.summary(),
-                    enrichedChunk.keywords(),
-                    enrichedChunk.entities(),
-                    enrichedChunk.questions(),
-                    enrichedChunk.key(),
-                    enrichedChunk.relatedKeys());
+
+            enrichedChunk.setPage(totalProcessed + 1);
+            enrichedChunk.setKey(enrichedChunk.getKey().toLowerCase(Locale.ROOT));
 
             databaseBookStorage.create(enrichedChunk, bookId);
 
-            fileSystemBookStorage.deleteChunk(bookId, String.valueOf(enrichedChunk.page()));
+            fileSystemBookStorage.deleteChunk(bookId, String.valueOf(enrichedChunk.getPage()));
 
-            previousSummary = enrichedChunk.summary();
+            previousSummary = enrichedChunk.getSummary();
 
-            if (enrichedChunk.key() != null && !enrichedChunk.key().isBlank()) {
-                rollingKeys.add(enrichedChunk.key());
+            if (enrichedChunk.getKey() != null && !enrichedChunk.getKey().isBlank()) {
+                rollingKeys.add(enrichedChunk.getKey().toLowerCase(Locale.ROOT));
             }
 
             if (rollingKeys.size() > appProperties.getMaxRollingKeySize()) {
@@ -101,7 +96,7 @@ public class EnrichmentTasklet extends ProcessingTasklet {
 
             processed++;
             totalProcessed++;
-            log.info("Processed enriched chunk for book {} page {}", bookId, enrichedChunk.page());
+            log.info("Processed enriched chunk for book {} page {}", bookId, enrichedChunk.getPage());
         }
 
         stepExecutionContext.putString("previousSummary", previousSummary == null ? "" : previousSummary);

@@ -2,12 +2,16 @@ package ch.supsi.textusbackend.dataaccess;
 
 import ch.supsi.textusbackend.exception.BookDomainException;
 import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.model.Chunk;
 import ch.supsi.textusbackend.properties.AppProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -63,6 +67,26 @@ public class FileSystemBookStorage implements IFileSystemBookStorage {
             return chunkId;
         } catch (Exception e) {
             String errorMessage = String.format("Unable to write chunk %s for book %s", chunkId, bookId);
+            log.error(errorMessage, e);
+            throw new BookDomainException(errorMessage);
+        }
+    }
+
+    @Override
+    public void createChunkJSON(List<Chunk> chunks, Long bookId) {
+        try {
+            Path outputFile = basePath.resolve("book_" + bookId + ".json");
+
+            Files.createDirectories(outputFile.getParent());
+
+            Map<String, Object> payload = Map.of(
+                    "bookId", bookId,
+                    "chunks", chunks);
+
+            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(outputFile.toFile(), payload);
+
+        } catch (Exception e) {
+            String errorMessage = "Unable to create chunk JSON for book " + bookId;
             log.error(errorMessage, e);
             throw new BookDomainException(errorMessage);
         }

@@ -2,11 +2,14 @@ package ch.supsi.textusbackend.configuration;
 
 import ch.supsi.textusbackend.service.processingpipeline.CleanupTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.EnrichmentTasklet;
+import ch.supsi.textusbackend.service.processingpipeline.JSONOutputTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.KeyBasedMergingTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.OCRTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.SegmentationTasklet;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
+import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -22,18 +25,30 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class PipelineJobConfiguration {
 
     @Bean
+    public TokenCountEstimator tokenCountEstimator() {
+        return new JTokkitTokenCountEstimator();
+    }
+
+    @Bean
     public LanguageDetector languageDetector() {
         return LanguageDetectorBuilder.fromAllLanguages().build();
     }
 
     @Bean
     public Job pipelineJob(
-            JobRepository jobRepository, Step ocr, Step segment, Step enrich, Step keyBasedMerging, Step cleanup) {
+            JobRepository jobRepository,
+            Step ocr,
+            Step segment,
+            Step enrich,
+            Step keyBasedMerging,
+            Step writeJSON,
+            Step cleanup) {
         return new JobBuilder("bookProcessingJob", jobRepository)
                 .start(ocr)
                 .next(segment)
                 .next(enrich)
                 .next(keyBasedMerging)
+                .next(writeJSON)
                 .next(cleanup)
                 .build();
     }
@@ -65,6 +80,14 @@ public class PipelineJobConfiguration {
             PlatformTransactionManager transactionManager,
             KeyBasedMergingTasklet keyBasedMergingTasklet) {
         return buildTaskletStep("keyBasedMergingTasklet", jobRepository, transactionManager, keyBasedMergingTasklet);
+    }
+
+    @Bean
+    public Step writeJSON(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            JSONOutputTasklet jsonOutputTasklet) {
+        return buildTaskletStep("writeJSON", jobRepository, transactionManager, jsonOutputTasklet);
     }
 
     @Bean
