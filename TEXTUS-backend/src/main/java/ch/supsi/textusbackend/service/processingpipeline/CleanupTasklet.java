@@ -24,8 +24,7 @@ public class CleanupTasklet extends ProcessingTasklet {
     }
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
-            throws Exception {
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
         log.debug("Executing cleanup step for book with bookId {}", bookId);
 
         bookStorage.delete(bookId);

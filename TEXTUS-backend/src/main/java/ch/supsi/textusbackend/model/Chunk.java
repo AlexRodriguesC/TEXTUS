@@ -37,6 +37,10 @@ public class Chunk {
     @JsonAlias("related_keys")
     private List<String> relatedKeys;
 
+    public void normaliseEntities() {
+        this.entities = entities.stream().map(Entity::validate).toList();
+    }
+
     @Override
     public String toString() {
         return "Chunk{" + "tokenCountInput="

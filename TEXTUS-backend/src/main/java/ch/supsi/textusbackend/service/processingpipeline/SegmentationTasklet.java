@@ -54,7 +54,7 @@ public class SegmentationTasklet extends ProcessingTasklet {
             String pageText = contents.get(page);
             Integer pageNumber = page + 1;
             String chunkId = bookFileSystemStorage.createChunk(pageNumber, pageText, bookId);
-            log.info("Created chunk {} for book {} page {}", chunkId, bookId, page);
+            log.info("Created chunk {} for book {}, page {}", chunkId, bookId, page);
         }
 
         return RepeatStatus.FINISHED;

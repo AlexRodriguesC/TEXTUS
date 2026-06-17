@@ -40,8 +40,8 @@ public class EnrichmentTasklet extends ProcessingTasklet {
     }
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
-            throws Exception {
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
+        log.debug("Executing enrichment step for book with bookId {}", bookId);
 
         final int MAX_CHUNKS_PER_EXECUTION = 5;
 

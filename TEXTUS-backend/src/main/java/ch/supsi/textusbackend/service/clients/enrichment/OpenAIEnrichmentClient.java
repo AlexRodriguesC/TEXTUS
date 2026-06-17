@@ -1,10 +1,8 @@
 package ch.supsi.textusbackend.service.clients.enrichment;
 
 import ch.supsi.textusbackend.model.Chunk;
-import ch.supsi.textusbackend.model.Entity;
 import ch.supsi.textusbackend.properties.PromptProperties;
 import ch.supsi.textusbackend.service.clients.OpenAIClient;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +12,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.template.TemplateRenderer;
 import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,7 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
 
     private final Resource userPromptResource;
     private final TokenCountEstimator tokenCountEstimator;
+    private final TemplateRenderer templateRenderer;
 
     @Autowired
     public OpenAIEnrichmentClient(
@@ -40,16 +40,18 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
                 .build());
         this.userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
         this.tokenCountEstimator = tokenCountEstimator;
+        this.templateRenderer = StTemplateRenderer.builder()
+                .startDelimiterToken('<')
+                .endDelimiterToken('>')
+                .build();
     }
 
     @Override
     public Chunk enrich(@Nullable String previousSummary, @NotNull String toEnrich, @NotNull List<String> rollingKeys) {
         var userPromptText = load(userPromptResource);
+
         PromptTemplate promptTemplate = PromptTemplate.builder()
-                .renderer(StTemplateRenderer.builder()
-                        .startDelimiterToken('<')
-                        .endDelimiterToken('>')
-                        .build())
+                .renderer(templateRenderer)
                 .template(userPromptText)
                 .build();
 
@@ -78,27 +80,19 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
                 successful = true;
             } catch (JacksonException e) {
                 currentAttempts++;
-                log.debug("Failed to map LLM prompt to {}, attempting new extraction...", Chunk.class, e);
+                log.debug(
+                        "Failed to map LLM prompt to {}. Attempt number: {}, attempting new extraction...",
+                        Chunk.class,
+                        currentAttempts,
+                        e);
                 if (currentAttempts > maxAttempts) throw e;
             }
         }
 
-        if (chunk != null) {
-            chunk.setTokenCountInput(tokensIn);
-            chunk.setTokenCountOutput(tokensOut);
-            chunk.setEntities(normaliseEntities(chunk));
-        }
+        chunk.setTokenCountInput(tokensIn);
+        chunk.setTokenCountOutput(tokensOut);
+        chunk.normaliseEntities();
 
         return chunk;
-    }
-
-    private List<Entity> normaliseEntities(Chunk chunk) {
-        var normalisedEntities = new ArrayList<Entity>();
-        var rawEntities = chunk.getEntities();
-
-        for (Entity entity : rawEntities) {
-            normalisedEntities.add(entity.validate());
-        }
-        return normalisedEntities;
     }
 }

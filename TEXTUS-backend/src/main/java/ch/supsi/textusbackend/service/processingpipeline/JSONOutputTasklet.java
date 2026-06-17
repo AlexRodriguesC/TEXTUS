@@ -29,8 +29,8 @@ public class JSONOutputTasklet extends ProcessingTasklet {
     }
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
-            throws Exception {
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
+        log.debug("Executing JSON output step for book with bookId {}", bookId);
 
         List<Chunk> chunks = databaseBookStorage.readChunks(bookId);
         fileSystemBookStorage.createChunkJSON(chunks, bookId);
