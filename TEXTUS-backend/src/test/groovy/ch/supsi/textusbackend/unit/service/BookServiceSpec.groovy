@@ -1,10 +1,10 @@
 package ch.supsi.textusbackend.unit.service
 
 
-import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage
+import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.textusbackend.model.Book
-import ch.supsi.textusbackend.service.BookService
+import ch.supsi.textusbackend.service.DocumentService
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParameters
 import org.springframework.batch.core.launch.JobOperator
@@ -13,18 +13,18 @@ import spock.lang.Specification
 
 class BookServiceSpec extends Specification {
 
-    IDatabaseBookStorage databaseBookStorage = Mock(IDatabaseBookStorage) {
+    IDatabaseDocumentStorage databaseBookStorage = Mock(IDatabaseDocumentStorage) {
         create(_ as Book) >> 1L
     }
-    IFileSystemBookStorage fileSystemBookStorage = Mock()
+    IFileSystemDocumentStorage fileSystemBookStorage = Mock()
     JobOperator jobOperator = Mock()
     Job pipelineJob = Mock()
-    BookService service
+    DocumentService service
 
     def setup() {
         pipelineJob.getName() >> "pipelineJob"
 
-        service = new BookService(fileSystemBookStorage, databaseBookStorage, jobOperator, pipelineJob)
+        service = new DocumentService(fileSystemBookStorage, databaseBookStorage, jobOperator, pipelineJob)
     }
 
     private MultipartFile mockFile(String name = "book.pdf", long size = 42L, byte[] bytes = "pdf-content".bytes) {
@@ -40,7 +40,7 @@ class BookServiceSpec extends Specification {
         def file = mockFile()
 
         when:
-        service.createBook(file)
+        service.parseDocument(file)
 
         then:
         1 * databaseBookStorage.create(_ as Book) >> 1L 
@@ -56,7 +56,7 @@ class BookServiceSpec extends Specification {
         }
 
         when:
-        service.createBook(file)
+        service.parseDocument(file)
 
         then:
         1 * databaseBookStorage.create(_ as Book) >> 1L
@@ -74,7 +74,7 @@ class BookServiceSpec extends Specification {
         }
 
         when:
-        service.createBook(file)
+        service.parseDocument(file)
 
         then:
         capturedParams != null
@@ -88,7 +88,7 @@ class BookServiceSpec extends Specification {
         jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("job launch failed") }
 
         when:
-        service.createBook(file)
+        service.parseDocument(file)
 
         then:
         // exception is caught and logged internally — no rethrow

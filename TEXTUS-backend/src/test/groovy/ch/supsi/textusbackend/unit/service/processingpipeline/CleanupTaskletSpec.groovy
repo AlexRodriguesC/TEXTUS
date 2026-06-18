@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.unit.service.processingpipeline
 
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.textusbackend.service.processingpipeline.CleanupTasklet
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.StepContribution
@@ -10,7 +10,7 @@ import spock.lang.Specification
 
 class CleanupTaskletSpec extends Specification {
 
-    IFileSystemBookStorage bookStorage = Mock()
+    IFileSystemDocumentStorage bookStorage = Mock()
     StepContribution stepContribution = Mock()
     ChunkContext chunkContext = Mock()
 

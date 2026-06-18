@@ -4,7 +4,7 @@ import ch.supsi.textusbackend.model.Book;
 import ch.supsi.textusbackend.model.Chunk;
 import java.util.List;
 
-public interface IFileSystemBookStorage {
+public interface IFileSystemDocumentStorage {
 
     void create(Book book);
 

@@ -1,14 +1,27 @@
 package ch.supsi.textusbackend.configuration;
 
+import ch.supsi.textusbackend.exception.PromptTemplateLoadException;
+import ch.supsi.textusbackend.model.Chunk;
+import ch.supsi.textusbackend.model.ChunkDeserializer;
+import ch.supsi.textusbackend.properties.PromptProperties;
+import ch.supsi.textusbackend.service.clients.FailureTracker;
+import ch.supsi.textusbackend.service.clients.LLMFailureTracker;
+import ch.supsi.textusbackend.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.textusbackend.service.processingpipeline.CleanupTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.EnrichmentTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.JSONOutputTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.OCRTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.SegmentationTasklet;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
-import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
-import org.springframework.ai.tokenizer.TokenCountEstimator;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -18,14 +31,58 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.FileCopyUtils;
 
 @Configuration
 public class PipelineJobConfiguration {
 
     @Bean
-    public TokenCountEstimator tokenCountEstimator() {
-        return new JTokkitTokenCountEstimator();
+    public OpenAIEnrichmentClient openAIEnrichmentClient(
+            ChatClient.Builder chatBuilder,
+            PromptProperties promptProperties,
+            ObjectMapper chunkDeserializer,
+            ResourceLoader resourceLoader) {
+
+        Resource userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
+        String userPromptText;
+
+        try (var in = userPromptResource.getInputStream();
+                var reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+            userPromptText = FileCopyUtils.copyToString(reader);
+        } catch (IOException e) {
+            throw new PromptTemplateLoadException(
+                    "Failed to load prompt template: " + userPromptResource.getDescription(), e);
+        }
+
+        StTemplateRenderer renderer = StTemplateRenderer.builder()
+                .startDelimiterToken('<')
+                .endDelimiterToken('>')
+                .build();
+
+        PromptTemplate promptTemplate = PromptTemplate.builder()
+                .renderer(renderer)
+                .template(userPromptText)
+                .build();
+
+        ChatClient chatClient = chatBuilder
+                .defaultSystem(resourceLoader.getResource(promptProperties.getEnrichmentSystem()))
+                .build();
+
+        FailureTracker failureTracker = LLMFailureTracker.create(5);
+
+        return new OpenAIEnrichmentClient(chatClient, promptTemplate, chunkDeserializer, failureTracker);
+    }
+
+    @Bean
+    public ObjectMapper chunkMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Chunk.class, new ChunkDeserializer());
+        objectMapper.registerModule(module);
+        return objectMapper;
     }
 
     @Bean

@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.exception.BookDomainException;
 import ch.supsi.textusbackend.model.Book;
 import java.io.IOException;
@@ -27,10 +27,10 @@ public class SegmentationTasklet extends ProcessingTasklet {
 
     private static final int MIN_PAGE_TEXT_LENGTH = 40;
 
-    private final IFileSystemBookStorage bookFileSystemStorage;
+    private final IFileSystemDocumentStorage bookFileSystemStorage;
 
     @Autowired
-    public SegmentationTasklet(IFileSystemBookStorage bookFileSystemStorage) {
+    public SegmentationTasklet(IFileSystemDocumentStorage bookFileSystemStorage) {
         this.bookFileSystemStorage = bookFileSystemStorage;
     }
 
@@ -38,9 +38,9 @@ public class SegmentationTasklet extends ProcessingTasklet {
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
-        Book book = bookFileSystemStorage.read(bookId);
+        Book book = bookFileSystemStorage.read(documentId);
         if (book == null) {
-            throw new BookDomainException("Book not found: " + bookId);
+            throw new BookDomainException("Book not found: " + documentId);
         }
 
         List<String> contents = extractBookContents(book);
@@ -53,8 +53,8 @@ public class SegmentationTasklet extends ProcessingTasklet {
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
             Integer pageNumber = page + 1;
-            String chunkId = bookFileSystemStorage.createChunk(pageNumber, pageText, bookId);
-            log.info("Created chunk {} for book {}, page {}", chunkId, bookId, page);
+            String chunkId = bookFileSystemStorage.createChunk(pageNumber, pageText, documentId);
+            log.info("Created chunk {} for book {}, page {}", chunkId, documentId, page);
         }
 
         return RepeatStatus.FINISHED;

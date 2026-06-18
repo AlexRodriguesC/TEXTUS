@@ -1,7 +1,7 @@
 package ch.supsi.textusbackend.unit.controller
 
-import ch.supsi.textusbackend.controller.BookController
-import ch.supsi.textusbackend.service.IBookService
+import ch.supsi.textusbackend.controller.DocumentController
+import ch.supsi.textusbackend.service.IDocumentService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -15,13 +15,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest
-class BookControllerSpec extends Specification {
+class DocumentControllerSpec extends Specification {
 
     @Autowired
     MockMvc mockMvc
 
     @SpringBean
-    IBookService bookService = Mock()
+    IDocumentService bookService = Mock()
 
     def "should return accepted for valid file"() {
         given:
@@ -35,7 +35,7 @@ class BookControllerSpec extends Specification {
 
         then:
         result.andExpect(status().isAccepted())
-        1 * bookService.createBook(_)
+        1 * bookService.parseDocument(_)
     }
 
     def "should return bad request when file is empty"() {
@@ -47,23 +47,23 @@ class BookControllerSpec extends Specification {
 
         then:
         result.andExpect(status().isBadRequest())
-        0 * bookService.createBook(_)
+        0 * bookService.parseDocument(_)
     }
 
     def "should return bad request when file is too large"() {
         given:
-        def bookService = Mock(IBookService)
-        def controller = new BookController(bookService)
+        def bookService = Mock(IDocumentService)
+        def controller = new DocumentController(bookService)
         def file = Mock(MultipartFile) {
             isEmpty() >> false
             getSize() >> 500L * 1024 * 1024
         }
 
         when:
-        def response = controller.uploadBook(file)
+        def response = controller.uploadDocument(file)
 
         then:
         response.statusCode.value() == 400
-        0 * bookService.createBook(_)
+        0 * bookService.parseDocument(_)
     }
 }

@@ -1,7 +1,7 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage;
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Chunk;
 import ch.supsi.textusbackend.properties.AppProperties;
 import ch.supsi.textusbackend.service.clients.enrichment.EnrichmentClient;
@@ -23,14 +23,14 @@ import org.springframework.stereotype.Component;
 public class EnrichmentTasklet extends ProcessingTasklet {
 
     private final AppProperties appProperties;
-    private final IDatabaseBookStorage databaseBookStorage;
-    private final IFileSystemBookStorage fileSystemBookStorage;
+    private final IDatabaseDocumentStorage databaseBookStorage;
+    private final IFileSystemDocumentStorage fileSystemBookStorage;
     private final EnrichmentClient enrichmentClient;
 
     @Autowired
     public EnrichmentTasklet(
-            IDatabaseBookStorage databaseBookStorage,
-            IFileSystemBookStorage fileSystemBookStorage,
+            IDatabaseDocumentStorage databaseBookStorage,
+            IFileSystemDocumentStorage fileSystemBookStorage,
             EnrichmentClient enrichmentClient,
             AppProperties appProperties) {
         this.databaseBookStorage = databaseBookStorage;
@@ -41,7 +41,7 @@ public class EnrichmentTasklet extends ProcessingTasklet {
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing enrichment step for book with bookId {}", bookId);
+        log.debug("Executing enrichment step for book with bookId {}", documentId);
 
         final int MAX_CHUNKS_PER_EXECUTION = 5;
 
@@ -62,26 +62,26 @@ public class EnrichmentTasklet extends ProcessingTasklet {
         int processed = 0;
 
         while (processed < MAX_CHUNKS_PER_EXECUTION) {
-            String chunkText = fileSystemBookStorage.readNextChunk(bookId);
+            String chunkText = fileSystemBookStorage.readNextChunk(documentId);
 
             if (chunkText == null || chunkText.isBlank()) {
-                log.info("No more chunks to enrich for book {}", bookId);
+                log.info("No more chunks to enrich for book {}", documentId);
                 return RepeatStatus.FINISHED;
             }
 
             Chunk enrichedChunk = enrichmentClient.enrich(previousSummary, chunkText, List.copyOf(rollingKeys));
 
             if (enrichedChunk == null) {
-                log.warn("Failed to enrich chunk for book {} and page {}", bookId, totalProcessed);
+                log.warn("Failed to enrich chunk for book {} and page {}", documentId, totalProcessed);
                 continue;
             }
 
             enrichedChunk.setPage(totalProcessed + 1);
             enrichedChunk.setKey(enrichedChunk.getKey().toLowerCase(Locale.ROOT));
 
-            databaseBookStorage.create(enrichedChunk, bookId);
+            databaseBookStorage.create(enrichedChunk, documentId);
 
-            fileSystemBookStorage.deleteChunk(bookId, String.valueOf(enrichedChunk.getPage()));
+            fileSystemBookStorage.deleteChunk(documentId, String.valueOf(enrichedChunk.getPage()));
 
             previousSummary = enrichedChunk.getSummary();
 
@@ -96,7 +96,7 @@ public class EnrichmentTasklet extends ProcessingTasklet {
 
             processed++;
             totalProcessed++;
-            log.info("Processed enriched chunk for book {} page {}", bookId, enrichedChunk.getPage());
+            log.info("Processed enriched chunk for book {} page {}", documentId, enrichedChunk.getPage());
         }
 
         stepExecutionContext.putString("previousSummary", previousSummary == null ? "" : previousSummary);

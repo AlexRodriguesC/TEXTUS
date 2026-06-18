@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend;
 
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ApplicationStoppedEventListener {
 
-    private final IFileSystemBookStorage bookStorage;
+    private final IFileSystemDocumentStorage bookStorage;
 
     @Autowired
-    public ApplicationStoppedEventListener(IFileSystemBookStorage bookStorage) {
+    public ApplicationStoppedEventListener(IFileSystemDocumentStorage bookStorage) {
         this.bookStorage = bookStorage;
     }
 

@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.unit.dataaccess
 
-import ch.supsi.textusbackend.dataaccess.FileSystemBookStorage
+import ch.supsi.textusbackend.dataaccess.FileSystemDocumentStorage
 import ch.supsi.textusbackend.exception.BookDomainException
 import ch.supsi.textusbackend.model.Book
 import ch.supsi.textusbackend.properties.AppProperties
@@ -15,7 +15,7 @@ class FileSystemBookStorageSpec extends Specification {
     @TempDir
     Path tempDir
 
-    FileSystemBookStorage storage
+    FileSystemDocumentStorage storage
     Path booksDir
 
     def setup() {
@@ -25,7 +25,7 @@ class FileSystemBookStorageSpec extends Specification {
             getBaseFilesystemPath() >> booksDir.toString()
         }
 
-        storage = new FileSystemBookStorage(appProperties)
+        storage = new FileSystemDocumentStorage(appProperties)
     }
 
     private Book mockBook(byte[] bytes = "content".bytes) {
@@ -65,7 +65,7 @@ class FileSystemBookStorageSpec extends Specification {
         def appProperties = Mock(AppProperties) {
             getBaseFilesystemPath() >> "/no/such/parent/books"
         }
-        def failingStorage = new FileSystemBookStorage(appProperties)
+        def failingStorage = new FileSystemDocumentStorage(appProperties)
 
         when:
         failingStorage.create(mockBook())

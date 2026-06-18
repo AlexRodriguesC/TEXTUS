@@ -1,6 +1,7 @@
 package ch.supsi.textusbackend.controller;
 
-import ch.supsi.textusbackend.service.IBookService;
+import ch.supsi.textusbackend.properties.AppProperties;
+import ch.supsi.textusbackend.service.IDocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,49 +20,51 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("api/v1/books")
-@Tag(name = "Books", description = "Endpoints for uploading and processing books")
-public class BookController {
+@RequestMapping("api/v1/documents")
+@Tag(name = "Documents", description = "Endpoints for uploading and processing documents")
+public class DocumentController {
 
-    private final IBookService bookService;
+    private final IDocumentService documentService;
+    private final AppProperties appProperties;
 
     @Autowired
-    public BookController(IBookService bookService) {
-        this.bookService = bookService;
+    public DocumentController(IDocumentService documentService, AppProperties appProperties) {
+        this.documentService = documentService;
+        this.appProperties = appProperties;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "Upload a book",
+            summary = "Upload a document",
             description =
                     """
-                            Uploads a single book file for asynchronous processing.
+                            Uploads a single document file for asynchronous processing.
                             Supported file types depend on the server-side processing pipeline.
-                            The file must be sent as multipart/form-data using the field name 'book'.
+                            The file must be sent as multipart/form-data using the field name 'document'.
                             """)
     @ApiResponses({
-        @ApiResponse(responseCode = "202", description = "Book accepted for processing"),
+        @ApiResponse(responseCode = "202", description = "Document accepted for processing"),
         @ApiResponse(responseCode = "400", description = "Invalid request or missing file"),
         @ApiResponse(responseCode = "413", description = "Uploaded file is too large"),
         @ApiResponse(responseCode = "415", description = "Unsupported media type"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Void> uploadBook(
+    public ResponseEntity<Void> uploadDocument(
             @Parameter(
-                            description = "The book file to upload",
+                            description = "The document file to upload",
                             required = true,
                             content =
                                     @Content(
                                             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
                                             schema = @Schema(type = "string", format = "binary")))
-                    @RequestPart("book")
+                    @RequestPart("document")
                     @NotNull
-                    MultipartFile book) {
-        if (book.isEmpty() || book.getSize() >= 500L * 1024 * 1024) {
+                    MultipartFile document) {
+        if (document.isEmpty() || document.getSize() >= appProperties.getMaxDocumentSize()) {
             return ResponseEntity.badRequest().build();
         }
 
-        bookService.createBook(book);
+        documentService.parseDocument(document);
         return ResponseEntity.accepted().build();
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class AppProperties {
 
+    private int maxDocumentSize;
+
     private String baseFilesystemPath;
 
     private int maxRollingKeySize;

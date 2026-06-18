@@ -17,17 +17,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 /**
- * FileSystem-specific {@link IFileSystemBookStorage} implementation, handling direct interactions with a
+ * FileSystem-specific {@link IFileSystemDocumentStorage} implementation, handling direct interactions with a
  * FileSystem for book storage
  */
 @Repository
 @Log4j2
-public class FileSystemBookStorage implements IFileSystemBookStorage {
+public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
 
     private final Path basePath;
 
     @Autowired
-    public FileSystemBookStorage(AppProperties appProperties) {
+    public FileSystemDocumentStorage(AppProperties appProperties) {
         this.basePath = Path.of(appProperties.getBaseFilesystemPath());
     }
 

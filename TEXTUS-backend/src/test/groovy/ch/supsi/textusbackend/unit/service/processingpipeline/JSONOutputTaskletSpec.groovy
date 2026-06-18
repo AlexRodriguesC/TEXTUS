@@ -1,7 +1,7 @@
 package ch.supsi.textusbackend.unit.service.processingpipeline
 
-import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage
+import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.textusbackend.model.Chunk
 import ch.supsi.textusbackend.service.processingpipeline.JSONOutputTasklet
 import org.springframework.batch.core.scope.context.ChunkContext
@@ -12,8 +12,8 @@ import spock.lang.Specification
 
 class JSONOutputTaskletSpec extends Specification {
 
-    IDatabaseBookStorage databaseBookStorage = Mock()
-    IFileSystemBookStorage fileSystemBookStorage = Mock()
+    IDatabaseDocumentStorage databaseBookStorage = Mock()
+    IFileSystemDocumentStorage fileSystemBookStorage = Mock()
     StepContribution stepContribution = Mock()
     ChunkContext chunkContext = Mock()
 

@@ -1,7 +1,7 @@
 package ch.supsi.textusbackend.service;
 
-import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage;
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Book;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -15,46 +15,46 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Log4j2
 @Service
-public class BookService implements IBookService {
+public class DocumentService implements IDocumentService {
 
-    private final IFileSystemBookStorage bookStorage;
-    private final IDatabaseBookStorage databaseBookStorage;
+    private final IFileSystemDocumentStorage documentStorage;
+    private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final JobOperator jobOperator;
     private final Job pipelineJob;
 
     @Autowired
-    public BookService(
-            IFileSystemBookStorage bookStorage,
-            IDatabaseBookStorage databaseBookStorage,
+    public DocumentService(
+            IFileSystemDocumentStorage documentStorage,
+            IDatabaseDocumentStorage databaseDocumentStorage,
             JobOperator asyncJobOperator,
             Job pipelineJob) {
-        this.bookStorage = bookStorage;
-        this.databaseBookStorage = databaseBookStorage;
+        this.documentStorage = documentStorage;
+        this.databaseDocumentStorage = databaseDocumentStorage;
         this.jobOperator = asyncJobOperator;
         this.pipelineJob = pipelineJob;
     }
 
     @Override
     @Transactional // todo: this doesn't really work
-    public void createBook(MultipartFile bookFile) {
-        byte[] bookBytes = null;
+    public void parseDocument(MultipartFile documentMultipart) {
+        byte[] documentBytes = null;
         try {
-            bookBytes = bookFile.getBytes();
+            documentBytes = documentMultipart.getBytes();
         } catch (Exception e) {
-            String message = String.format("Failed to read bytes for file %s", bookFile.getOriginalFilename());
+            String message = String.format("Failed to read bytes for file %s", documentMultipart.getOriginalFilename());
             log.error(message, e);
         }
 
-        Book book = Book.create(bookFile.getOriginalFilename(), bookFile.getSize(), bookBytes);
+        Book book = Book.create(documentMultipart.getOriginalFilename(), documentMultipart.getSize(), documentBytes);
 
-        Long bookId = databaseBookStorage.create(book);
+        Long bookId = databaseDocumentStorage.create(book);
 
-        book = Book.create(bookId, book.getOriginalFilename(), book.getSize(), bookBytes);
+        book = Book.create(bookId, book.getOriginalFilename(), book.getSize(), documentBytes);
 
-        bookStorage.create(book);
+        documentStorage.create(book);
 
         JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("BOOK_ID", bookId)
+                .addLong("DOCUMENT_ID", bookId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 

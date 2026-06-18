@@ -5,6 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 
 public abstract class ProcessingTasklet implements Tasklet {
 
-    @Value("#{jobParameters['BOOK_ID']}") // Injected from job params
-    protected Long bookId;
+    @Value("#{jobParameters['DOCUMENT_ID']}") // Injected from job params
+    protected Long documentId;
 }

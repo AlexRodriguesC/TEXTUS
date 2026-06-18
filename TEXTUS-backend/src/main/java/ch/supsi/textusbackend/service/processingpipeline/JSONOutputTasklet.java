@@ -1,7 +1,7 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.IDatabaseBookStorage;
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Chunk;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
@@ -19,21 +19,22 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class JSONOutputTasklet extends ProcessingTasklet {
 
-    private final IDatabaseBookStorage databaseBookStorage;
-    private final IFileSystemBookStorage fileSystemBookStorage;
+    private final IDatabaseDocumentStorage databaseBookStorage;
+    private final IFileSystemDocumentStorage fileSystemBookStorage;
 
     @Autowired
-    public JSONOutputTasklet(IDatabaseBookStorage databaseBookStorage, IFileSystemBookStorage fileSystemBookStorage) {
+    public JSONOutputTasklet(
+            IDatabaseDocumentStorage databaseBookStorage, IFileSystemDocumentStorage fileSystemBookStorage) {
         this.databaseBookStorage = databaseBookStorage;
         this.fileSystemBookStorage = fileSystemBookStorage;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing JSON output step for book with bookId {}", bookId);
+        log.debug("Executing JSON output step for book with bookId {}", documentId);
 
-        List<Chunk> chunks = databaseBookStorage.readChunks(bookId);
-        fileSystemBookStorage.createChunkJSON(chunks, bookId);
+        List<Chunk> chunks = databaseBookStorage.readChunks(documentId);
+        fileSystemBookStorage.createChunkJSON(chunks, documentId);
 
         return RepeatStatus.FINISHED;
     }

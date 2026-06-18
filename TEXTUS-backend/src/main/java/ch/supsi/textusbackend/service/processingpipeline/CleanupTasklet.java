@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -16,18 +16,18 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class CleanupTasklet extends ProcessingTasklet {
 
-    private final IFileSystemBookStorage bookStorage;
+    private final IFileSystemDocumentStorage bookStorage;
 
     @Autowired
-    public CleanupTasklet(IFileSystemBookStorage bookStorage) {
+    public CleanupTasklet(IFileSystemDocumentStorage bookStorage) {
         this.bookStorage = bookStorage;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing cleanup step for book with bookId {}", bookId);
+        log.debug("Executing cleanup step for book with bookId {}", documentId);
 
-        bookStorage.delete(bookId);
+        bookStorage.delete(documentId);
 
         return RepeatStatus.FINISHED;
     }

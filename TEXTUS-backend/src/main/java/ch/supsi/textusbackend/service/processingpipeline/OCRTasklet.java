@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
-import ch.supsi.textusbackend.dataaccess.IFileSystemBookStorage;
+import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Book;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
@@ -41,24 +41,24 @@ public class OCRTasklet extends ProcessingTasklet {
 
     private String tessdataPath = "C:\\Program Files\\Tesseract-OCR\\tessdata";
 
-    private final IFileSystemBookStorage bookStorage;
+    private final IFileSystemDocumentStorage bookStorage;
     private final LanguageDetector languageDetector;
 
     @Autowired
-    public OCRTasklet(IFileSystemBookStorage bookStorage, LanguageDetector languageDetector) {
+    public OCRTasklet(IFileSystemDocumentStorage bookStorage, LanguageDetector languageDetector) {
         this.bookStorage = bookStorage;
         this.languageDetector = languageDetector;
     }
 
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
-        log.debug("Executing OCR step for book with bookId {}", bookId);
+        log.debug("Executing OCR step for book with bookId {}", documentId);
 
-        Book book = bookStorage.read(bookId);
+        Book book = bookStorage.read(documentId);
 
         try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
             if (!requiresOcr(pdfDocument)) {
-                log.debug("Book {} does not require OCR, skipping", bookId);
+                log.debug("Book {} does not require OCR, skipping", documentId);
                 return RepeatStatus.FINISHED;
             }
 

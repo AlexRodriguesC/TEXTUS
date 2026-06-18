@@ -15,10 +15,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Log4j2
-public class DatabaseBookStorage extends DatabaseStorage implements IDatabaseBookStorage {
+public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabaseDocumentStorage {
 
     @Autowired
-    public DatabaseBookStorage(JdbcTemplate jdbc) {
+    public DatabaseDocumentStorage(JdbcTemplate jdbc) {
         super(jdbc);
     }
 
