@@ -1,6 +1,7 @@
 package ch.supsi.textusbackend.unit.controller
 
 import ch.supsi.textusbackend.controller.DocumentController
+import ch.supsi.textusbackend.properties.AppProperties
 import ch.supsi.textusbackend.service.IDocumentService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,42 +22,51 @@ class DocumentControllerSpec extends Specification {
     MockMvc mockMvc
 
     @SpringBean
-    IDocumentService bookService = Mock()
+    IDocumentService documentService = Mock()
+
+    @SpringBean
+    AppProperties appProperties = Mock() {
+        getMaxDocumentSize() >> 500L * 1024 * 1024
+    }
 
     def "should return accepted for valid file"() {
         given:
-        def file = new MockMultipartFile("book",
-                "book.pdf",
+        def file = new MockMultipartFile("document",
+                "document.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
                 "dummy-content".bytes)
 
         when:
-        def result = mockMvc.perform(multipart("/api/v1/books").file(file))
+        def result = mockMvc.perform(multipart("/api/v1/documents").file(file))
 
         then:
         result.andExpect(status().isAccepted())
-        1 * bookService.parseDocument(_)
+        1 * documentService.parseDocument(_)
     }
 
     def "should return bad request when file is empty"() {
         given:
-        def file = new MockMultipartFile("book", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0])
+        def file = new MockMultipartFile("document", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0])
 
         when:
-        def result = mockMvc.perform(multipart("/api/v1/books").file(file))
+        def result = mockMvc.perform(multipart("/api/v1/documents").file(file))
 
         then:
         result.andExpect(status().isBadRequest())
-        0 * bookService.parseDocument(_)
+        0 * documentService.parseDocument(_)
     }
 
     def "should return bad request when file is too large"() {
         given:
-        def bookService = Mock(IDocumentService)
-        def controller = new DocumentController(bookService)
+        def maxSize = 500L * 1024 * 1024
+        def documentService = Mock(IDocumentService)
+        def appProps = Mock(AppProperties) {
+            it.maxDocumentSize >> maxSize
+        }
+        def controller = new DocumentController(documentService, appProps)
         def file = Mock(MultipartFile) {
             isEmpty() >> false
-            getSize() >> 500L * 1024 * 1024
+            getSize() >> maxSize
         }
 
         when:
@@ -64,6 +74,6 @@ class DocumentControllerSpec extends Specification {
 
         then:
         response.statusCode.value() == 400
-        0 * bookService.parseDocument(_)
+        0 * documentService.parseDocument(_)
     }
 }

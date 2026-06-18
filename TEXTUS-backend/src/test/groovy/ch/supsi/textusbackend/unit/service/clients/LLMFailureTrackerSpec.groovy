@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.unit.service.clients
 
-import ch.supsi.textusbackend.exception.BookDomainException
+import ch.supsi.textusbackend.exception.DocumentDomainException
 import ch.supsi.textusbackend.service.clients.FailureTracker
 import ch.supsi.textusbackend.service.clients.LLMFailureTracker
 import spock.lang.Specification
@@ -44,7 +44,7 @@ class LLMFailureTrackerSpec extends Specification {
         2.times { i -> failureTracker.registerFailure() }
 
         then:
-        thrown(BookDomainException)
+        thrown(DocumentDomainException)
     }
 
     def "should throw if invalid max failures is provided. Case: max failure is #str"() {

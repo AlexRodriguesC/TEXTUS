@@ -1,7 +1,8 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
 import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.model.Document;
+import ch.supsi.textusbackend.properties.AppProperties;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import java.awt.image.BufferedImage;
@@ -39,34 +40,37 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class OCRTasklet extends ProcessingTasklet {
 
-    private String tessdataPath = "C:\\Program Files\\Tesseract-OCR\\tessdata";
-
-    private final IFileSystemDocumentStorage bookStorage;
+    private final IFileSystemDocumentStorage documentStorage;
     private final LanguageDetector languageDetector;
+    private final String tessdataPath;
 
     @Autowired
-    public OCRTasklet(IFileSystemDocumentStorage bookStorage, LanguageDetector languageDetector) {
-        this.bookStorage = bookStorage;
+    public OCRTasklet(
+            IFileSystemDocumentStorage documentStorage,
+            LanguageDetector languageDetector,
+            AppProperties appProperties) {
+        this.documentStorage = documentStorage;
         this.languageDetector = languageDetector;
+        this.tessdataPath = appProperties.getTessdataPath();
     }
 
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
-        log.debug("Executing OCR step for book with bookId {}", documentId);
+        log.debug("Executing OCR step for document with documentId {}", documentId);
 
-        Book book = bookStorage.read(documentId);
+        Document document = documentStorage.read(getDocumentIdAsUUID());
 
-        try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
+        try (PDDocument pdfDocument = Loader.loadPDF(document.getBytes())) {
             if (!requiresOcr(pdfDocument)) {
-                log.debug("Book {} does not require OCR, skipping", documentId);
+                log.debug("Document {} does not require OCR, skipping", documentId);
                 return RepeatStatus.FINISHED;
             }
 
             String tesseractLanguageCode = detectLanguage(pdfDocument);
             byte[] ocrPdfBytes = performOcr(pdfDocument, tesseractLanguageCode);
 
-            Book newBook = Book.create(book.getBookId(), book.getOriginalFilename(), book.getSize(), ocrPdfBytes);
-            bookStorage.update(newBook);
+            Document newDocument = Document.create(document.getDocumentId(), ocrPdfBytes);
+            documentStorage.update(newDocument);
         }
 
         return RepeatStatus.FINISHED;

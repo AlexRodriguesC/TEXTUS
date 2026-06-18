@@ -16,18 +16,18 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class CleanupTasklet extends ProcessingTasklet {
 
-    private final IFileSystemDocumentStorage bookStorage;
+    private final IFileSystemDocumentStorage documentStorage;
 
     @Autowired
-    public CleanupTasklet(IFileSystemDocumentStorage bookStorage) {
-        this.bookStorage = bookStorage;
+    public CleanupTasklet(IFileSystemDocumentStorage documentStorage) {
+        this.documentStorage = documentStorage;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing cleanup step for book with bookId {}", documentId);
+        log.debug("Executing cleanup step for document with documentId {}", documentId);
 
-        bookStorage.delete(documentId);
+        documentStorage.delete(getDocumentIdAsUUID());
 
         return RepeatStatus.FINISHED;
     }

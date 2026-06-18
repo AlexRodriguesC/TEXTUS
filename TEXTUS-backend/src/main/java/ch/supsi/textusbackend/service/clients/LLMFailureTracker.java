@@ -1,6 +1,6 @@
 package ch.supsi.textusbackend.service.clients;
 
-import ch.supsi.textusbackend.exception.BookDomainException;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,12 +22,12 @@ public class LLMFailureTracker implements FailureTracker {
     }
 
     @Override
-    public void registerFailure() throws BookDomainException {
+    public void registerFailure() throws DocumentDomainException {
         currentFailures++;
 
         if (currentFailures >= maxFailures) {
             log.error("Failed to extract LLM response {} times", currentFailures);
-            throw new BookDomainException("Failed to extract LLM response " + currentFailures + " times");
+            throw new DocumentDomainException("Failed to extract LLM response " + currentFailures + " times");
         }
     }
 

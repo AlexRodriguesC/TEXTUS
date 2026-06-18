@@ -1,8 +1,8 @@
 package ch.supsi.textusbackend.service.processingpipeline;
 
 import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.textusbackend.exception.BookDomainException;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
+import ch.supsi.textusbackend.model.Document;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,23 +27,23 @@ public class SegmentationTasklet extends ProcessingTasklet {
 
     private static final int MIN_PAGE_TEXT_LENGTH = 40;
 
-    private final IFileSystemDocumentStorage bookFileSystemStorage;
+    private final IFileSystemDocumentStorage fileSystemDocumentStorage;
 
     @Autowired
-    public SegmentationTasklet(IFileSystemDocumentStorage bookFileSystemStorage) {
-        this.bookFileSystemStorage = bookFileSystemStorage;
+    public SegmentationTasklet(IFileSystemDocumentStorage fileSystemDocumentStorage) {
+        this.fileSystemDocumentStorage = fileSystemDocumentStorage;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
-        Book book = bookFileSystemStorage.read(documentId);
-        if (book == null) {
-            throw new BookDomainException("Book not found: " + documentId);
+        Document document = fileSystemDocumentStorage.read(getDocumentIdAsUUID());
+        if (document == null) {
+            throw new DocumentDomainException("Document not found, documentId: " + documentId);
         }
 
-        List<String> contents = extractBookContents(book);
+        List<String> contents = extractContents(document);
 
         contents = contents.stream()
                 .filter(s -> !s.isBlank())
@@ -53,17 +53,17 @@ public class SegmentationTasklet extends ProcessingTasklet {
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
             Integer pageNumber = page + 1;
-            String chunkId = bookFileSystemStorage.createChunk(pageNumber, pageText, documentId);
-            log.info("Created chunk {} for book {}, page {}", chunkId, documentId, page);
+            String chunkId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
+            log.debug("Created chunk {} for document {}, page {}", chunkId, documentId, page);
         }
 
         return RepeatStatus.FINISHED;
     }
 
-    private List<String> extractBookContents(Book book) throws IOException {
+    private List<String> extractContents(Document document) throws IOException {
         ArrayList<String> contents = new ArrayList<>();
 
-        try (PDDocument pdfDocument = Loader.loadPDF(book.getBytes())) {
+        try (PDDocument pdfDocument = Loader.loadPDF(document.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             int pageCount = pdfDocument.getNumberOfPages();
 

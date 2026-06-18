@@ -6,6 +6,8 @@ import ch.supsi.textusbackend.model.ChunkDeserializer;
 import ch.supsi.textusbackend.properties.PromptProperties;
 import ch.supsi.textusbackend.service.clients.FailureTracker;
 import ch.supsi.textusbackend.service.clients.LLMFailureTracker;
+import ch.supsi.textusbackend.service.clients.LLMInputSanitizer;
+import ch.supsi.textusbackend.service.clients.StringSanitizer;
 import ch.supsi.textusbackend.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.textusbackend.service.processingpipeline.CleanupTasklet;
 import ch.supsi.textusbackend.service.processingpipeline.EnrichmentTasklet;
@@ -40,10 +42,16 @@ import org.springframework.util.FileCopyUtils;
 public class PipelineJobConfiguration {
 
     @Bean
+    public StringSanitizer stringSanitizer() {
+        return new LLMInputSanitizer();
+    }
+
+    @Bean
     public OpenAIEnrichmentClient openAIEnrichmentClient(
             ChatClient.Builder chatBuilder,
             PromptProperties promptProperties,
             ObjectMapper chunkDeserializer,
+            StringSanitizer stringSanitizer,
             ResourceLoader resourceLoader) {
 
         Resource userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
@@ -73,7 +81,8 @@ public class PipelineJobConfiguration {
 
         FailureTracker failureTracker = LLMFailureTracker.create(5);
 
-        return new OpenAIEnrichmentClient(chatClient, promptTemplate, chunkDeserializer, failureTracker);
+        return new OpenAIEnrichmentClient(
+                chatClient, failureTracker, chunkDeserializer, stringSanitizer, promptTemplate);
     }
 
     @Bean
@@ -93,7 +102,7 @@ public class PipelineJobConfiguration {
     @Bean
     public Job pipelineJob(
             JobRepository jobRepository, Step ocr, Step segment, Step enrich, Step writeJSON, Step cleanup) {
-        return new JobBuilder("bookProcessingJob", jobRepository)
+        return new JobBuilder("documentProcessingJob", jobRepository)
                 .start(ocr)
                 .next(segment)
                 .next(enrich)

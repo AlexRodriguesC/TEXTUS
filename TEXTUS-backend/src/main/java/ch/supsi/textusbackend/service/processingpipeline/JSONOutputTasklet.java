@@ -3,6 +3,7 @@ package ch.supsi.textusbackend.service.processingpipeline;
 import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Chunk;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -19,22 +20,32 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class JSONOutputTasklet extends ProcessingTasklet {
 
-    private final IDatabaseDocumentStorage databaseBookStorage;
-    private final IFileSystemDocumentStorage fileSystemBookStorage;
+    private static final String CHUNK_IDS = "CHUNK_IDS";
+
+    private final IDatabaseDocumentStorage databaseDocumentStorage;
+    private final IFileSystemDocumentStorage fileSystemDocumentStorage;
 
     @Autowired
     public JSONOutputTasklet(
-            IDatabaseDocumentStorage databaseBookStorage, IFileSystemDocumentStorage fileSystemBookStorage) {
-        this.databaseBookStorage = databaseBookStorage;
-        this.fileSystemBookStorage = fileSystemBookStorage;
+            IDatabaseDocumentStorage databaseDocumentStorage, IFileSystemDocumentStorage fileSystemDocumentStorage) {
+        this.databaseDocumentStorage = databaseDocumentStorage;
+        this.fileSystemDocumentStorage = fileSystemDocumentStorage;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing JSON output step for book with bookId {}", documentId);
+        log.debug("Executing JSON output step for document with documentId: {}", documentId);
 
-        List<Chunk> chunks = databaseBookStorage.readChunks(documentId);
-        fileSystemBookStorage.createChunkJSON(chunks, documentId);
+        var jobExecutionContext = chunkContext.getStepContext().getJobExecutionContext();
+        List<Long> chunkIds = (List<Long>) jobExecutionContext.getOrDefault(CHUNK_IDS, new ArrayList<>());
+
+        if (chunkIds.isEmpty()) {
+            log.warn("No chunk IDs found for document with documentId: {}", documentId);
+        }
+
+        List<Chunk> chunks =
+                chunkIds.stream().map(databaseDocumentStorage::read).toList();
+        fileSystemDocumentStorage.createChunkJSON(chunks, getDocumentIdAsUUID());
 
         return RepeatStatus.FINISHED;
     }

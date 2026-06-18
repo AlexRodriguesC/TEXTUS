@@ -10,23 +10,23 @@ import spock.lang.Specification
 
 class CleanupTaskletSpec extends Specification {
 
-    IFileSystemDocumentStorage bookStorage = Mock()
+    IFileSystemDocumentStorage documentStorage = Mock()
     StepContribution stepContribution = Mock()
     ChunkContext chunkContext = Mock()
 
-    CleanupTasklet cleanupTasklet = new CleanupTasklet(bookStorage)
+    CleanupTasklet cleanupTasklet = new CleanupTasklet(documentStorage)
 
-    def "should delete books and finish"() {
+    def "should delete documents and finish"() {
         given:
-        def expectedBookId = 42L
-        ReflectionTestUtils.setField(cleanupTasklet, "bookId", expectedBookId)
+        def expectedDocumentId = UUID.randomUUID()
+        ReflectionTestUtils.setField(cleanupTasklet, "documentId", expectedDocumentId.toString())
         RepeatStatus expectedStatus = RepeatStatus.FINISHED
 
         when:
         RepeatStatus actualStatus = cleanupTasklet.execute(stepContribution, chunkContext)
 
         then:
-        1 * bookStorage.delete(expectedBookId)
+        1 * documentStorage.delete(expectedDocumentId)
         expectedStatus == actualStatus
     }
 }

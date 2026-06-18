@@ -2,7 +2,8 @@ package ch.supsi.textusbackend.service;
 
 import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
+import ch.supsi.textusbackend.model.Document;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
@@ -37,24 +38,21 @@ public class DocumentService implements IDocumentService {
     @Override
     @Transactional // todo: this doesn't really work
     public void parseDocument(MultipartFile documentMultipart) {
-        byte[] documentBytes = null;
+        byte[] documentBytes;
         try {
             documentBytes = documentMultipart.getBytes();
         } catch (Exception e) {
             String message = String.format("Failed to read bytes for file %s", documentMultipart.getOriginalFilename());
             log.error(message, e);
+            throw new DocumentDomainException("Failed to get file bytes", e);
         }
 
-        Book book = Book.create(documentMultipart.getOriginalFilename(), documentMultipart.getSize(), documentBytes);
+        Document document = Document.create(documentBytes);
 
-        Long bookId = databaseDocumentStorage.create(book);
-
-        book = Book.create(bookId, book.getOriginalFilename(), book.getSize(), documentBytes);
-
-        documentStorage.create(book);
+        documentStorage.create(document);
 
         JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("DOCUMENT_ID", bookId)
+                .addString("DOCUMENT_ID", document.getDocumentId().toString())
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
@@ -63,6 +61,7 @@ public class DocumentService implements IDocumentService {
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", pipelineJob.getName());
             log.error(message, e);
+            throw new DocumentDomainException("Failed to start job", e);
         }
     }
 }

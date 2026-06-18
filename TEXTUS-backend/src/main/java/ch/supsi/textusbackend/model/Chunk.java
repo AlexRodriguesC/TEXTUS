@@ -20,8 +20,6 @@ public class Chunk {
     @JsonIgnore
     private Integer tokenCountOutput;
 
-    private Integer page;
-
     private String title;
 
     private String summary;
@@ -36,23 +34,4 @@ public class Chunk {
 
     @JsonAlias("related_keys")
     private List<String> relatedKeys;
-
-    public void normaliseEntities() {
-        this.entities = entities.stream().map(Entity::validate).toList();
-    }
-
-    @Override
-    public String toString() {
-        return "Chunk{" + "tokenCountInput="
-                + tokenCountInput + ", tokenCountOutput="
-                + tokenCountOutput + ", page="
-                + page + ", title='"
-                + title + '\'' + ", summary='"
-                + summary + '\'' + ", keywords="
-                + keywords + ", entities="
-                + entities + ", questions="
-                + questions + ", key='"
-                + key + '\'' + ", relatedKeys="
-                + relatedKeys + '}';
-    }
 }

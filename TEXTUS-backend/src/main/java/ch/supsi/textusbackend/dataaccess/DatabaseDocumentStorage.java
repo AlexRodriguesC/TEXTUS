@@ -1,7 +1,6 @@
 package ch.supsi.textusbackend.dataaccess;
 
-import ch.supsi.textusbackend.exception.BookDomainException;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
 import ch.supsi.textusbackend.model.Chunk;
 import java.sql.Array;
 import java.sql.Connection;
@@ -23,47 +22,39 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public Long create(Book book) {
-        return jdbc.queryForObject("SELECT books.create_book(?)", Long.class, book.getOriginalFilename());
-    }
-
-    @Override
-    public Long create(Chunk chunk, Long bookId) {
+    public Long create(Chunk chunk) {
         return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT books.add_chunk(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (var stmt = connection.prepareStatement("SELECT documents.add_chunk(?, ?, ?, ?, ?, ?, ?, ?)")) {
 
-                stmt.setLong(1, bookId);
-                stmt.setInt(2, chunk.getTokenCountInput());
-                stmt.setInt(3, chunk.getTokenCountOutput());
+                stmt.setInt(1, chunk.getTokenCountInput());
+                stmt.setInt(2, chunk.getTokenCountOutput());
 
-                stmt.setInt(4, chunk.getPage());
-                stmt.setString(5, chunk.getTitle());
-                stmt.setString(6, chunk.getSummary());
-                stmt.setString(7, chunk.getKey());
-                stmt.setArray(8, buildArray(chunk.getQuestions(), connection));
-                stmt.setArray(9, buildArray(chunk.getKeywords(), connection));
-                stmt.setArray(10, buildArray(chunk.getRelatedKeys(), connection));
+                stmt.setString(3, chunk.getTitle());
+                stmt.setString(4, chunk.getSummary());
+                stmt.setString(5, chunk.getKey());
+                stmt.setArray(6, buildArray(chunk.getQuestions(), connection));
+                stmt.setArray(7, buildArray(chunk.getKeywords(), connection));
+                stmt.setArray(8, buildArray(chunk.getRelatedKeys(), connection));
 
                 try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         return rs.getLong(1);
                     }
-                    throw new BookDomainException("books.add_chunk returned no id");
+                    throw new DocumentDomainException("documents.add_chunk returned no id");
                 }
             }
         });
     }
 
     @Override
-    public List<Chunk> readChunks(Long bookId) {
-        String sql = "select * from books.read_chunks(?)";
+    public Chunk read(Long chunkId) {
+        String sql = "select * from documents.read_chunk(?)";
 
-        return jdbc.query(
+        return jdbc.queryForObject(
                 sql,
                 (rs, rowNum) -> new Chunk(
                         rs.getInt("tokens_in"),
                         rs.getInt("tokens_out"),
-                        rs.getInt("page"),
                         rs.getString("title"),
                         rs.getString("summary"),
                         toList(rs.getArray("keywords")),
@@ -71,7 +62,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                         toList(rs.getArray("questions")),
                         rs.getString("key"),
                         toList(rs.getArray("related_keys"))),
-                bookId);
+                chunkId);
     }
 
     private List<String> toList(java.sql.Array sqlArray) throws SQLException {
@@ -82,17 +73,6 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         String[] values = (String[]) sqlArray.getArray();
         return values == null ? List.of() : List.of(values);
     }
-
-    @Override
-    public Book read(Long bookId) {
-        return null;
-    }
-
-    @Override
-    public void update(Book book) {}
-
-    @Override
-    public void delete(Long bookId) {}
 
     private Array buildArray(List<String> list, Connection connection) {
         var arr = list == null || list.isEmpty() ? new String[0] : list.toArray(new String[0]);

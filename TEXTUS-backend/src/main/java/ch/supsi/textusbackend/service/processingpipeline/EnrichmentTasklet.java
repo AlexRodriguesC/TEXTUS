@@ -5,6 +5,7 @@ import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.textusbackend.model.Chunk;
 import ch.supsi.textusbackend.properties.AppProperties;
 import ch.supsi.textusbackend.service.clients.enrichment.EnrichmentClient;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import lombok.extern.log4j.Log4j2;
@@ -22,66 +23,72 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class EnrichmentTasklet extends ProcessingTasklet {
 
-    private final AppProperties appProperties;
-    private final IDatabaseDocumentStorage databaseBookStorage;
-    private final IFileSystemDocumentStorage fileSystemBookStorage;
+    private static final String PREVIOUS_SUMMARY = "PREVIOUS_SUMMARY";
+    private static final String ROLLING_KEYS = "ROLLING_KEYS";
+    private static final String TOTAL_PROCESSED = "TOTAL_PROCESSED";
+    private static final String CHUNK_IDS = "CHUNK_IDS";
+
+    private final IDatabaseDocumentStorage databaseDocumentStorage;
+    private final IFileSystemDocumentStorage fileSystemDocumentStorage;
     private final EnrichmentClient enrichmentClient;
+    private final AppProperties appProperties;
 
     @Autowired
     public EnrichmentTasklet(
-            IDatabaseDocumentStorage databaseBookStorage,
-            IFileSystemDocumentStorage fileSystemBookStorage,
+            IDatabaseDocumentStorage databaseDocumentStorage,
+            IFileSystemDocumentStorage fileSystemDocumentStorage,
             EnrichmentClient enrichmentClient,
             AppProperties appProperties) {
-        this.databaseBookStorage = databaseBookStorage;
-        this.fileSystemBookStorage = fileSystemBookStorage;
+        this.databaseDocumentStorage = databaseDocumentStorage;
+        this.fileSystemDocumentStorage = fileSystemDocumentStorage;
         this.enrichmentClient = enrichmentClient;
         this.appProperties = appProperties;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing enrichment step for book with bookId {}", documentId);
-
-        final int MAX_CHUNKS_PER_EXECUTION = 5;
+        log.debug("Executing enrichment step for document with documentId {}", documentId);
 
         var stepExecutionContext =
                 chunkContext.getStepContext().getStepExecution().getExecutionContext();
 
-        String previousSummary = stepExecutionContext.containsKey("previousSummary")
-                ? stepExecutionContext.getString("previousSummary")
-                : null;
-
-        List<String> rollingKeys = stepExecutionContext.containsKey("rollingKeys")
-                ? new java.util.ArrayList<>((List<String>) stepExecutionContext.get("rollingKeys"))
-                : new java.util.ArrayList<>();
-
-        int totalProcessed =
-                stepExecutionContext.containsKey("totalProcessed") ? stepExecutionContext.getInt("totalProcessed") : 0;
+        var previousSummary = getValue(stepExecutionContext, PREVIOUS_SUMMARY, null, String.class);
+        var rollingKeys = getListValue(stepExecutionContext, ROLLING_KEYS, new ArrayList<>(), String.class);
+        var totalProcessed = getValue(stepExecutionContext, TOTAL_PROCESSED, 0, Integer.class);
 
         int processed = 0;
+        var chunkIds = getListValue(stepExecutionContext, CHUNK_IDS, new ArrayList<>(), Long.class);
 
-        while (processed < MAX_CHUNKS_PER_EXECUTION) {
-            String chunkText = fileSystemBookStorage.readNextChunk(documentId);
+        while (processed < appProperties.getMaxChunksPerStep()) {
+            String chunkText = fileSystemDocumentStorage.readNextChunk(getDocumentIdAsUUID());
 
             if (chunkText == null || chunkText.isBlank()) {
-                log.info("No more chunks to enrich for book {}", documentId);
+                log.info("No more chunks to enrich for document with documentId: {}", documentId);
+                chunkContext
+                        .getStepContext()
+                        .getStepExecution()
+                        .getJobExecution()
+                        .getExecutionContext()
+                        .put(CHUNK_IDS, chunkIds);
                 return RepeatStatus.FINISHED;
             }
 
             Chunk enrichedChunk = enrichmentClient.enrich(previousSummary, chunkText, List.copyOf(rollingKeys));
 
             if (enrichedChunk == null) {
-                log.warn("Failed to enrich chunk for book {} and page {}", documentId, totalProcessed);
+                log.warn(
+                        "Failed to enrich chunk for document with documentId: {} and page: {}",
+                        documentId,
+                        totalProcessed);
                 continue;
             }
 
-            enrichedChunk.setPage(totalProcessed + 1);
             enrichedChunk.setKey(enrichedChunk.getKey().toLowerCase(Locale.ROOT));
 
-            databaseBookStorage.create(enrichedChunk, documentId);
+            Long chunkId = databaseDocumentStorage.create(enrichedChunk);
+            chunkIds.add(chunkId);
 
-            fileSystemBookStorage.deleteChunk(documentId, String.valueOf(enrichedChunk.getPage()));
+            fileSystemDocumentStorage.deleteChunk(getDocumentIdAsUUID(), String.valueOf(totalProcessed + 1));
 
             previousSummary = enrichedChunk.getSummary();
 
@@ -90,18 +97,22 @@ public class EnrichmentTasklet extends ProcessingTasklet {
             }
 
             if (rollingKeys.size() > appProperties.getMaxRollingKeySize()) {
-                rollingKeys = new java.util.ArrayList<>(rollingKeys.subList(
+                rollingKeys = new ArrayList<>(rollingKeys.subList(
                         rollingKeys.size() - appProperties.getMaxRollingKeySize(), rollingKeys.size()));
             }
 
             processed++;
             totalProcessed++;
-            log.info("Processed enriched chunk for book {} page {}", documentId, enrichedChunk.getPage());
+            log.info(
+                    "Processed enriched chunk for document with documentId: {}, page: {}",
+                    documentId,
+                    totalProcessed + 1);
         }
 
-        stepExecutionContext.putString("previousSummary", previousSummary == null ? "" : previousSummary);
-        stepExecutionContext.putInt("totalProcessed", totalProcessed);
-        stepExecutionContext.put("rollingKeys", rollingKeys);
+        stepExecutionContext.putString(PREVIOUS_SUMMARY, previousSummary == null ? "" : previousSummary);
+        stepExecutionContext.putInt(TOTAL_PROCESSED, totalProcessed);
+        stepExecutionContext.put(ROLLING_KEYS, rollingKeys);
+        stepExecutionContext.put(CHUNK_IDS, chunkIds);
 
         return RepeatStatus.CONTINUABLE;
     }

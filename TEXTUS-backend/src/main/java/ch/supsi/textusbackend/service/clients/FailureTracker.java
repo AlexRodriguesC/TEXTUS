@@ -1,10 +1,10 @@
 package ch.supsi.textusbackend.service.clients;
 
-import ch.supsi.textusbackend.exception.BookDomainException;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
 
 public interface FailureTracker {
 
-    void registerFailure() throws BookDomainException;
+    void registerFailure() throws DocumentDomainException;
 
     void resetFailures();
 }

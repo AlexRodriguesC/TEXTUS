@@ -1,119 +1,236 @@
 package ch.supsi.textusbackend.unit.service.clients
 
 import ch.supsi.textusbackend.model.Chunk
-import ch.supsi.textusbackend.properties.PromptProperties
+import ch.supsi.textusbackend.service.clients.FailureTracker
+import ch.supsi.textusbackend.service.clients.LLMInputSanitizer
 import ch.supsi.textusbackend.service.clients.enrichment.OpenAIEnrichmentClient
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.messages.AssistantMessage
+import org.springframework.ai.chat.metadata.ChatResponseMetadata
+import org.springframework.ai.chat.metadata.Usage
+import org.springframework.ai.chat.model.ChatResponse
+import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.chat.prompt.Prompt
-import org.springframework.ai.tokenizer.TokenCountEstimator
-import org.springframework.core.io.Resource
-import org.springframework.core.io.ResourceLoader
+import org.springframework.ai.chat.prompt.PromptTemplate
 import spock.lang.Specification
-import tools.jackson.core.JacksonException
+import spock.lang.Subject
 
 class OpenAIEnrichmentClientSpec extends Specification {
 
-    ChatClient.Builder chatBuilder = Mock()
     ChatClient chatClient = Mock()
-    PromptProperties promptProperties = Mock()
-    ResourceLoader resourceLoader = Mock()
-    TokenCountEstimator tokenCountEstimator = Mock()
-    Resource systemResource = Mock()
-    Resource userResource = Mock()
     ChatClient.ChatClientRequestSpec requestSpec = Mock()
     ChatClient.CallResponseSpec callSpec = Mock()
+    PromptTemplate promptTemplate = Mock()
+    ObjectMapper chunkDeserializer = Mock()
+    FailureTracker failureTracker = Mock()
 
-    OpenAIEnrichmentClient openAIEnrichmentClient
+    @Subject
+    OpenAIEnrichmentClient client
 
-    static final String USER_PROMPT_TEMPLATE =
-            "prev=<prev_summary> text=<page_text> keys=<rolling_keys>"
-
-    static Chunk aChunk() {
-        def c = new Chunk()
-        c.setSummary("summary")
-        c.setEntities([])
-        c.setKeywords([])
-        return c
-    }
+    static final String RENDERED_PROMPT = "rendered prompt"
+    static final String RAW_JSON = '{"key":"rasterization"}'
+    static final String TO_ENRICH = "Rasterization converts 3D primitives to 2D pixels."
+    static final List<String> ROLLING_KEYS = ["pipeline", "shading"]
 
     def setup() {
-        promptProperties.getEnrichmentSystem() >> "classpath:system.txt"
-        promptProperties.getEnrichmentUser() >> "classpath:user.txt"
-        resourceLoader.getResource("classpath:system.txt") >> systemResource
-        resourceLoader.getResource("classpath:user.txt") >> userResource
-        systemResource.getInputStream() >> new ByteArrayInputStream("system prompt".bytes)
-        userResource.getInputStream() >> new ByteArrayInputStream(USER_PROMPT_TEMPLATE.bytes)
-
-        chatBuilder.defaultSystem(systemResource) >> chatBuilder
-        chatBuilder.build() >> chatClient
+        client = new OpenAIEnrichmentClient(chatClient, failureTracker, chunkDeserializer, new LLMInputSanitizer(), promptTemplate)
+        promptTemplate.render(_ as Map) >> RENDERED_PROMPT
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callSpec
-
-        tokenCountEstimator.estimate(_ as String) >> 42
-
-        openAIEnrichmentClient = new OpenAIEnrichmentClient(chatBuilder, promptProperties, resourceLoader, tokenCountEstimator)
     }
 
-    def "should return chunk with expected properties"() {
+    private ChatResponse buildChatResponse(String text, int tokensIn = 10, int tokensOut = 5) {
+        def message = Mock(AssistantMessage) { getText() >> text }
+        def generation = Mock(Generation) { getOutput() >> message }
+        def usage = Mock(Usage) {
+            getPromptTokens() >> tokensIn
+            getCompletionTokens() >> tokensOut
+        }
+        def metadata = Mock(ChatResponseMetadata) { getUsage() >> usage }
+        Mock(ChatResponse) {
+            getResult() >> generation
+            getMetadata() >> metadata
+        }
+    }
+
+    private static Chunk baseChunk() {
+        def chunk = new Chunk()
+        chunk.setTitle("Rasterization")
+        chunk.setSummary("Converts 3D primitives to pixels")
+        chunk.setKey("rasterization")
+        chunk.setKeywords(["pipeline"])
+        chunk.setQuestions(["What is rasterization?"])
+        chunk.setRelatedKeys([])
+        chunk.setEntities([])
+        chunk
+    }
+
+    def "returns enriched chunk with token counts on successful response"() {
         given:
-        def expectedChunk = aChunk()
-        callSpec.entity(Chunk.class) >> expectedChunk
+        def chatResponse = buildChatResponse(RAW_JSON, 20, 8)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
 
         when:
-        def result = openAIEnrichmentClient.enrich("prev summary", "page text", ["key1", "key2"])
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
 
         then:
-        result == expectedChunk
+        result.tokenCountInput == 20
+        result.tokenCountOutput == 8
+        result.key == "rasterization"
+    }
+
+    def "passes previousSummary to prompt template when provided"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
+
+        when:
+        client.enrich("Previous page summary", TO_ENRICH, ROLLING_KEYS)
+
+        then:
+        1 * promptTemplate.render({ Map m ->
+            m["prev_summary"] == "Previous page summary" &&
+                    m["page_text"] == TO_ENRICH &&
+                    m["rolling_keys"] == ROLLING_KEYS
+        }) >> RENDERED_PROMPT
+    }
+
+    def "substitutes N/A for previousSummary when null"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
+
+        when:
+        client.enrich(null, TO_ENRICH, ROLLING_KEYS)
+
+        then:
+        1 * promptTemplate.render({ Map m -> m["prev_summary"] == "N/A" }) >> RENDERED_PROMPT
+    }
+
+    def "resets failure tracker after successful enrichment"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
+
+        when:
+        client.enrich(null, TO_ENRICH, ROLLING_KEYS)
+
+        then:
+        1 * failureTracker.resetFailures()
+    }
+
+    def "sets token counts from usage metadata"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON, 42, 17)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
+
+        when:
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
+
+        then:
         result.tokenCountInput == 42
-        result.tokenCountOutput == 42
+        result.tokenCountOutput == 17
     }
 
-    def "should substitute N/A when previousSummary is null"() {
+    def "retries when chatResponse is null, succeeds on second attempt"() {
         given:
-        callSpec.entity(Chunk.class) >> aChunk()
+        def goodResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >>> [null, goodResponse]
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
 
         when:
-        def result = openAIEnrichmentClient.enrich(null, "page text", [])
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
 
         then:
-        noExceptionThrown()
+        _ * failureTracker.registerFailure()
         result != null
     }
 
-    def "should not throw exception if it fails to map LLM prompt less than max times"() {
+    def "retries when getResult returns null, succeeds on second attempt"() {
         given:
-        def successChunk = aChunk()
-        // fail 4 times (< maxAttempts=5), succeed on the 5th call
-        callSpec.entity(Chunk.class) >> { throw Mock(JacksonException) } >> { throw Mock(JacksonException) } >> { throw Mock(JacksonException) } >> { throw Mock(JacksonException) } >> successChunk
+        def nullResultResponse = Mock(ChatResponse) { getResult() >> null }
+        def goodResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >>> [nullResultResponse, goodResponse]
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
 
         when:
-        def result = openAIEnrichmentClient.enrich("prev", "text", [])
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
 
         then:
-        noExceptionThrown()
-        result == successChunk
+        _ * failureTracker.registerFailure()
+        result != null
     }
 
-    def "should propagate exception if it fails to map LLM prompt too many times"() {
+    def "retries when getText returns null, succeeds on second attempt"() {
         given:
-        callSpec.entity(Chunk.class) >> { throw Mock(JacksonException) }
+        def nullTextMessage = Mock(AssistantMessage) { getText() >> null }
+        def nullTextGeneration = Mock(Generation) { getOutput() >> nullTextMessage }
+        def nullTextResponse = Mock(ChatResponse) { getResult() >> nullTextGeneration }
+        def goodResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >>> [nullTextResponse, goodResponse]
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> baseChunk()
 
         when:
-        openAIEnrichmentClient.enrich("prev", "text", [])
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
 
         then:
-        thrown(JacksonException)
+        _ * failureTracker.registerFailure()
+        result != null
     }
 
-    def "should call normaliseEntities on the returned chunk"() {
+    def "retries on JsonProcessingException and succeeds on second attempt"() {
         given:
-        def chunk = Spy(aChunk())
-        callSpec.entity(Chunk.class) >> chunk
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        def callCount = 0
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> {
+            if (callCount++ == 0) throw Mock(JsonProcessingException)
+            baseChunk()
+        }
 
         when:
-        openAIEnrichmentClient.enrich("prev", "text", [])
+        def result = client.enrich(null, TO_ENRICH, ROLLING_KEYS)
 
         then:
-        1 * chunk.normaliseEntities()
+        1 * failureTracker.registerFailure()
+        result != null
+    }
+
+    def "registers a failure for each JsonProcessingException before succeeding"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        def callCount = 0
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> {
+            if (callCount++ < 2) throw Mock(JsonProcessingException)
+            baseChunk()
+        }
+
+        when:
+        client.enrich(null, TO_ENRICH, ROLLING_KEYS)
+
+        then:
+        2 * failureTracker.registerFailure()
+    }
+
+    def "FailureTracker exception propagates out of enrich"() {
+        given:
+        def chatResponse = buildChatResponse(RAW_JSON)
+        callSpec.chatResponse() >> chatResponse
+        chunkDeserializer.readValue(RAW_JSON, Chunk.class) >> { throw Mock(JsonProcessingException) }
+        failureTracker.registerFailure() >> { throw new RuntimeException("Too many failures") }
+
+        when:
+        client.enrich(null, TO_ENRICH, ROLLING_KEYS)
+
+        then:
+        thrown(RuntimeException)
     }
 }

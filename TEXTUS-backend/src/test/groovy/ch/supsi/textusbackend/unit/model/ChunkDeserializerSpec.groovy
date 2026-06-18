@@ -23,7 +23,6 @@ class ChunkDeserializerSpec extends Specification {
         given:
         def json = """
         {
-            "page": 3,
             "title": "Rasterization",
             "summary": "Conversion of 3D primitives to 2D image",
             "key": "rasterization",
@@ -40,7 +39,6 @@ class ChunkDeserializerSpec extends Specification {
         Chunk chunk = mapper.readValue(json, Chunk.class)
 
         then:
-        chunk.page == 3
         chunk.title == "Rasterization"
         chunk.summary == "Conversion of 3D primitives to 2D image"
         chunk.key == "rasterization"
@@ -71,7 +69,6 @@ class ChunkDeserializerSpec extends Specification {
         Chunk chunk = mapper.readValue(json, Chunk.class)
 
         then:
-        chunk.page == 1
         chunk.title == "Phong Shading"
         chunk.keywords == []
         chunk.questions == []
@@ -244,65 +241,6 @@ class ChunkDeserializerSpec extends Specification {
         then:
         def ex = thrown(JsonParseException)
         ex.message.contains("key")
-    }
-
-    def "throws when page is missing"() {
-        given:
-        def json = """
-        {
-            "title": "Z-Buffer",
-            "summary": "Depth testing mechanism",
-            "key": "z-buffer",
-            "keywords": [], "questions": [], "related_keys": [], "entities": []
-        }
-        """
-
-        when:
-        mapper.readValue(json, Chunk.class)
-
-        then:
-        def ex = thrown(JsonParseException)
-        ex.message.contains("page")
-    }
-
-    def "throws when page is null"() {
-        given:
-        def json = """
-        {
-            "page": null,
-            "title": "Z-Buffer",
-            "summary": "Depth testing mechanism",
-            "key": "z-buffer",
-            "keywords": [], "questions": [], "related_keys": [], "entities": []
-        }
-        """
-
-        when:
-        mapper.readValue(json, Chunk.class)
-
-        then:
-        def ex = thrown(JsonParseException)
-        ex.message.contains("page")
-    }
-
-    def "throws when page is not a number"() {
-        given:
-        def json = """
-        {
-            "page": "three",
-            "title": "Z-Buffer",
-            "summary": "Depth testing mechanism",
-            "key": "z-buffer",
-            "keywords": [], "questions": [], "related_keys": [], "entities": []
-        }
-        """
-
-        when:
-        mapper.readValue(json, Chunk.class)
-
-        then:
-        def ex = thrown(JsonParseException)
-        ex.message.contains("page")
     }
 
     def "throws when string list field is missing"(String field) {

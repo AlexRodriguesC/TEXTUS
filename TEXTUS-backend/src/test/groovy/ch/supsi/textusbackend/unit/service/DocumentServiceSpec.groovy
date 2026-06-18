@@ -3,7 +3,8 @@ package ch.supsi.textusbackend.unit.service
 
 import ch.supsi.textusbackend.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.textusbackend.dataaccess.IFileSystemDocumentStorage
-import ch.supsi.textusbackend.model.Book
+import ch.supsi.textusbackend.exception.DocumentDomainException
+import ch.supsi.textusbackend.model.Document
 import ch.supsi.textusbackend.service.DocumentService
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParameters
@@ -11,12 +12,10 @@ import org.springframework.batch.core.launch.JobOperator
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
 
-class BookServiceSpec extends Specification {
+class DocumentServiceSpec extends Specification {
 
-    IDatabaseDocumentStorage databaseBookStorage = Mock(IDatabaseDocumentStorage) {
-        create(_ as Book) >> 1L
-    }
-    IFileSystemDocumentStorage fileSystemBookStorage = Mock()
+    IDatabaseDocumentStorage databaseDocumentStorage = Mock(IDatabaseDocumentStorage)
+    IFileSystemDocumentStorage fileSystemDocumentStorage = Mock()
     JobOperator jobOperator = Mock()
     Job pipelineJob = Mock()
     DocumentService service
@@ -24,10 +23,10 @@ class BookServiceSpec extends Specification {
     def setup() {
         pipelineJob.getName() >> "pipelineJob"
 
-        service = new DocumentService(fileSystemBookStorage, databaseBookStorage, jobOperator, pipelineJob)
+        service = new DocumentService(fileSystemDocumentStorage, databaseDocumentStorage, jobOperator, pipelineJob)
     }
 
-    private MultipartFile mockFile(String name = "book.pdf", long size = 42L, byte[] bytes = "pdf-content".bytes) {
+    private MultipartFile mockFile(String name = "document.pdf", long size = 42L, byte[] bytes = "pdf-content".bytes) {
         Mock(MultipartFile) {
             getOriginalFilename() >> name
             getSize() >> size
@@ -35,7 +34,7 @@ class BookServiceSpec extends Specification {
         }
     }
 
-    def "should create book and start job"() {
+    def "should start job"() {
         given:
         def file = mockFile()
 
@@ -43,14 +42,13 @@ class BookServiceSpec extends Specification {
         service.parseDocument(file)
 
         then:
-        1 * databaseBookStorage.create(_ as Book) >> 1L 
         1 * jobOperator.start(pipelineJob, _ as JobParameters)
     }
 
-    def "should throw exception if it fails to get bytes from book file"() {
+    def "should throw exception if it fails to get bytes from document file"() {
         given:
         def file = Mock(MultipartFile) {
-            getOriginalFilename() >> "book.pdf"
+            getOriginalFilename() >> "document.pdf"
             getSize() >> 42L
             getBytes() >> { throw new IOException("disk read failure") }
         }
@@ -59,8 +57,7 @@ class BookServiceSpec extends Specification {
         service.parseDocument(file)
 
         then:
-        1 * databaseBookStorage.create(_ as Book) >> 1L
-        1 * jobOperator.start(pipelineJob, _ as JobParameters)
+        thrown(DocumentDomainException)
     }
 
     def "should start job with right job parameters"() {
@@ -78,7 +75,7 @@ class BookServiceSpec extends Specification {
 
         then:
         capturedParams != null
-        capturedParams.getLong("BOOK_ID") != null
+        capturedParams.getString("DOCUMENT_ID") != null
         capturedParams.getLong("TRIGGERED_AT") != null
     }
 
@@ -91,8 +88,6 @@ class BookServiceSpec extends Specification {
         service.parseDocument(file)
 
         then:
-        // exception is caught and logged internally — no rethrow
-        noExceptionThrown()
-        1 * databaseBookStorage.create(_ as Book) >> 1L
+        thrown(DocumentDomainException)
     }
 }

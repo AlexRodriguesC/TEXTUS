@@ -11,17 +11,17 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ApplicationStoppedEventListener {
 
-    private final IFileSystemDocumentStorage bookStorage;
+    private final IFileSystemDocumentStorage fileSystemDocumentStorage;
 
     @Autowired
-    public ApplicationStoppedEventListener(IFileSystemDocumentStorage bookStorage) {
-        this.bookStorage = bookStorage;
+    public ApplicationStoppedEventListener(IFileSystemDocumentStorage fileSystemDocumentStorage) {
+        this.fileSystemDocumentStorage = fileSystemDocumentStorage;
     }
 
     @EventListener(ContextClosedEvent.class)
     public void onContextClosed() {
         log.debug("Handling context closed event...");
 
-        bookStorage.deleteAll();
+        fileSystemDocumentStorage.deleteAll();
     }
 }

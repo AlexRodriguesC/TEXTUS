@@ -1,28 +1,27 @@
 package ch.supsi.textusbackend.dataaccess;
 
-import ch.supsi.textusbackend.model.Book;
 import ch.supsi.textusbackend.model.Chunk;
+import ch.supsi.textusbackend.model.Document;
 import java.util.List;
+import java.util.UUID;
 
 public interface IFileSystemDocumentStorage {
 
-    void create(Book book);
+    void create(Document document);
 
-    String createChunk(Integer page, String content, Long bookId);
+    String createChunk(Integer page, String content, UUID documentId);
 
-    void createChunkJSON(List<Chunk> chunks, Long bookId);
+    void createChunkJSON(List<Chunk> chunks, UUID documentId);
 
-    String readChunk(Long bookId, String chunkId);
+    String readNextChunk(UUID documentId);
 
-    String readNextChunk(Long bookId);
+    void deleteChunk(UUID documentId, String chunkId);
 
-    void deleteChunk(Long bookId, String chunkId);
+    Document read(UUID documentId);
 
-    Book read(Long bookId);
+    void update(Document document);
 
-    void update(Book book);
-
-    void delete(Long bookId);
+    void delete(UUID documentId);
 
     void deleteAll();
 }

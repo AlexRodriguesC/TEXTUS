@@ -11,6 +11,11 @@ public class AppProperties {
 
     private int maxDocumentSize;
 
+    private int maxChunksPerStep;
+
+    private String tessdataPath;
+    private int ocrThreshold;
+
     private String baseFilesystemPath;
 
     private int maxRollingKeySize;

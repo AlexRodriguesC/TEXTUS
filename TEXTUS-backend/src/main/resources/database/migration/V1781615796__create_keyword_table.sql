@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS books.keyword (
+CREATE TABLE IF NOT EXISTS documents.keyword (
     id BIGSERIAL PRIMARY KEY,
-    chunk_id BIGSERIAL NOT NULL REFERENCES books.chunk(id),
+    chunk_id BIGSERIAL NOT NULL REFERENCES documents.chunk(id),
     keyword TEXT
 )

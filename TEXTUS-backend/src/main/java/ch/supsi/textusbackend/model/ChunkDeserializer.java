@@ -23,7 +23,6 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
 
         Chunk chunk = new Chunk();
 
-        chunk.setPage(getInt(root, "page"));
         chunk.setTitle(getText(root, "title"));
         chunk.setSummary(getText(root, "summary"));
         chunk.setKey(getText(root, "key"));
@@ -32,7 +31,7 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
         chunk.setQuestions(getStringList(root, "questions"));
         chunk.setRelatedKeys(getStringList(root, "related_keys"));
 
-        chunk.setEntities(getEntities(root, "entities"));
+        chunk.setEntities(getEntities(root));
 
         return chunk;
     }
@@ -47,18 +46,6 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
                     null, "Expected string for field '%s' but got: %s".formatted(field, node.getNodeType()));
         }
         return node.asText();
-    }
-
-    private Integer getInt(JsonNode root, String field) throws JsonParseException {
-        JsonNode node = root.get(field);
-        if (node == null || node.isNull()) {
-            throw new JsonParseException("Expected integer field '%s'".formatted(field));
-        }
-        if (!node.isNumber() || !node.canConvertToInt()) {
-            throw new JsonParseException(
-                    null, "Expected integer for field '%s' but got: %s".formatted(field, node.getNodeType()));
-        }
-        return node.intValue();
     }
 
     private List<String> getStringList(JsonNode root, String field) throws JsonParseException {
@@ -83,14 +70,14 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
         return result;
     }
 
-    private List<Entity> getEntities(JsonNode root, String field) throws JsonParseException {
-        JsonNode node = root.get(field);
+    private List<Entity> getEntities(JsonNode root) throws JsonParseException {
+        JsonNode node = root.get("entities");
         if (node == null || node.isNull()) {
-            throw new JsonParseException("Expected entities list field '%s'".formatted(field));
+            throw new JsonParseException("Expected entities list field '%s'".formatted("entities"));
         }
         if (!node.isArray()) {
             throw new JsonParseException(
-                    null, "Expected array for field '%s' but got: %s".formatted(field, node.getNodeType()));
+                    null, "Expected array for field '%s' but got: %s".formatted("entities", node.getNodeType()));
         }
         List<Entity> result = new ArrayList<>();
         for (int i = 0; i < node.size(); i++) {
@@ -98,10 +85,10 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
             if (item.isNull()) continue;
             if (!item.isObject()) {
                 throw new JsonParseException(
-                        null, "Expected object at '%s[%d]' but got: %s".formatted(field, i, item.getNodeType()));
+                        null, "Expected object at '%s[%d]' but got: %s".formatted("entities", i, item.getNodeType()));
             }
-            String name = getRequiredText(item, "name", field + "[" + i + "]");
-            String type = getRequiredText(item, "type", field + "[" + i + "]");
+            String name = getRequiredText(item, "name", "entities" + "[" + i + "]");
+            String type = getRequiredText(item, "type", "entities" + "[" + i + "]");
             result.add(new Entity(name, type).validate());
         }
         return result;

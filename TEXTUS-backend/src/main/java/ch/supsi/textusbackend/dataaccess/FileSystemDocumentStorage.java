@@ -1,8 +1,8 @@
 package ch.supsi.textusbackend.dataaccess;
 
-import ch.supsi.textusbackend.exception.BookDomainException;
-import ch.supsi.textusbackend.model.Book;
+import ch.supsi.textusbackend.exception.DocumentDomainException;
 import ch.supsi.textusbackend.model.Chunk;
+import ch.supsi.textusbackend.model.Document;
 import ch.supsi.textusbackend.properties.AppProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
@@ -12,13 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 /**
  * FileSystem-specific {@link IFileSystemDocumentStorage} implementation, handling direct interactions with a
- * FileSystem for book storage
+ * FileSystem for document storage
  */
 @Repository
 @Log4j2
@@ -32,33 +33,33 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
     }
 
     @Override
-    public void create(Book book) {
+    public void create(Document document) {
         if (basePathDoesNotExist()) {
             try {
                 Files.createDirectory(basePath);
             } catch (Exception e) {
                 String errorMessage = String.format("Unable to create directory %s", basePath);
                 log.error(errorMessage, e);
-                throw new BookDomainException(errorMessage);
+                throw new DocumentDomainException(errorMessage);
             }
         }
 
-        String bookId = book.getBookId().toString();
-        Path bookPath = getBookPath(bookId);
+        String documentId = document.getDocumentId().toString();
+        Path documentPath = getDocumentPath(documentId);
 
         try {
-            Files.write(bookPath, book.getBytes());
+            Files.write(documentPath, document.getBytes());
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to write book %s", bookId);
+            String errorMessage = String.format("Unable to write document %s", documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
     @Override
-    public String createChunk(Integer page, String content, Long bookId) {
+    public String createChunk(Integer page, String content, UUID documentId) {
         String chunkId = String.valueOf(page);
-        Path chunkDirectory = getChunkDirectoryPath(bookId);
+        Path chunkDirectory = getChunkDirectoryPath(documentId);
         Path chunkPath = chunkDirectory.resolve(chunkId);
 
         try {
@@ -66,52 +67,33 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             Files.writeString(chunkPath, content);
             return chunkId;
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to write chunk %s for book %s", chunkId, bookId);
+            String errorMessage = String.format("Unable to write chunk %s for document %s", chunkId, documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
     @Override
-    public void createChunkJSON(List<Chunk> chunks, Long bookId) {
+    public void createChunkJSON(List<Chunk> chunks, UUID documentId) {
         try {
-            Path outputFile = basePath.resolve("book_" + bookId + ".json");
+            Path outputFile = basePath.resolve("document_" + documentId + ".json");
 
             Files.createDirectories(outputFile.getParent());
 
-            Map<String, Object> payload = Map.of(
-                    "bookId", bookId,
-                    "chunks", chunks);
+            Map<String, Object> payload = Map.of("chunks", chunks);
 
             new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(outputFile.toFile(), payload);
 
         } catch (Exception e) {
-            String errorMessage = "Unable to create chunk JSON for book " + bookId;
+            String errorMessage = "Unable to create chunk JSON for document " + documentId;
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
     @Override
-    public String readChunk(Long bookId, String chunkId) {
-        Path chunkPath = getChunkDirectoryPath(bookId).resolve(chunkId);
-
-        if (!Files.exists(chunkPath)) {
-            return null;
-        }
-
-        try {
-            return Files.readString(chunkPath);
-        } catch (Exception e) {
-            String errorMessage = String.format("Unable to read chunk %s for book %s", chunkId, bookId);
-            log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
-        }
-    }
-
-    @Override
-    public String readNextChunk(Long bookId) {
-        Path chunkDirectory = getChunkDirectoryPath(bookId);
+    public String readNextChunk(UUID documentId) {
+        Path chunkDirectory = getChunkDirectoryPath(documentId);
 
         if (!Files.exists(chunkDirectory) || !Files.isDirectory(chunkDirectory)) {
             return null;
@@ -132,86 +114,86 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
 
             return Files.readString(nextChunkPath);
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to read next chunk for book %s", bookId);
+            String errorMessage = String.format("Unable to read next chunk for document %s", documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
     @Override
-    public void deleteChunk(Long bookId, String chunkId) {
-        Path chunkPath = getChunkDirectoryPath(bookId).resolve(chunkId);
+    public void deleteChunk(UUID documentId, String chunkId) {
+        Path chunkPath = getChunkDirectoryPath(documentId).resolve(chunkId);
 
         try {
             boolean deleted = Files.deleteIfExists(chunkPath);
 
             if (!deleted) {
-                log.warn("Tried to delete chunk {} for book {} but it does not exist", chunkId, bookId);
+                log.warn("Tried to delete chunk {} for document {} but it does not exist", chunkId, documentId);
             }
 
-            Path chunkDirectory = getChunkDirectoryPath(bookId);
+            Path chunkDirectory = getChunkDirectoryPath(documentId);
             if (Files.exists(chunkDirectory)
                     && Files.list(chunkDirectory).findAny().isEmpty()) {
                 Files.deleteIfExists(chunkDirectory);
             }
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to delete chunk %s for book %s", chunkId, bookId);
+            String errorMessage = String.format("Unable to delete chunk %s for document %s", chunkId, documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
     @Override
-    public Book read(Long bookId) {
+    public Document read(UUID documentId) {
         if (basePathDoesNotExist()) {
             return null;
         }
 
-        Path bookPath = getBookPath(String.valueOf(bookId));
-        File bookFile = bookPath.toFile();
-        if (!bookFile.exists()) {
+        Path documentPath = getDocumentPath(String.valueOf(documentId));
+        File documentFile = documentPath.toFile();
+        if (!documentFile.exists()) {
             return null;
         }
 
-        byte[] bookBytes;
-        try (InputStream in = new FileInputStream(bookFile)) {
-            bookBytes = in.readAllBytes();
+        byte[] documentBytes;
+        try (InputStream in = new FileInputStream(documentFile)) {
+            documentBytes = in.readAllBytes();
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to read book %s", bookId);
+            String errorMessage = String.format("Unable to read document %s", documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
 
-        return Book.create(bookId, bookFile.getName(), bookBytes.length, bookBytes);
+        return Document.create(documentId, documentBytes);
     }
 
     @Override
-    public void update(Book book) {
-        delete(book.getBookId());
-        create(book);
+    public void update(Document document) {
+        delete(document.getDocumentId());
+        create(document);
     }
 
     @Override
-    public void delete(Long bookId) {
+    public void delete(UUID documentId) {
         if (basePathDoesNotExist()) {
-            log.warn("Tried to delete book with id {} but it does not exist", bookId);
+            log.warn("Tried to delete document with id {} but it does not exist", documentId);
             return;
         }
 
-        Path bookPath = getBookPath(String.valueOf(bookId));
-        Path chunkDirectory = getChunkDirectoryPath(bookId);
+        Path documentPath = getDocumentPath(String.valueOf(documentId));
+        Path chunkDirectory = getChunkDirectoryPath(documentId);
 
-        boolean bookExists = Files.exists(bookPath);
+        boolean documentExists = Files.exists(documentPath);
         boolean chunkDirectoryExists = Files.exists(chunkDirectory);
 
-        if (!bookExists && !chunkDirectoryExists) {
-            log.warn("Tried to delete book with id {} but it does not exist", bookId);
+        if (!documentExists && !chunkDirectoryExists) {
+            log.warn("Tried to delete document with id {} but it does not exist", documentId);
             return;
         }
 
         try {
-            if (bookExists) {
-                Files.delete(bookPath);
+            if (documentExists) {
+                Files.delete(documentPath);
             }
 
             if (chunkDirectoryExists) {
@@ -220,15 +202,16 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
                         try {
                             Files.delete(path);
                         } catch (Exception e) {
+                            // todo: ?????? substitute with actual exception that makes sense..
                             throw new RuntimeException(e);
                         }
                     });
                 }
             }
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to delete book %s", bookId);
+            String errorMessage = String.format("Unable to delete document %s", documentId);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
@@ -250,7 +233,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete base path %s", basePath);
             log.error(errorMessage, e);
-            throw new BookDomainException(errorMessage);
+            throw new DocumentDomainException(errorMessage);
         }
     }
 
@@ -258,11 +241,15 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         return !Files.exists(basePath);
     }
 
-    private Path getBookPath(String bookId) {
-        return Path.of(basePath + File.separator + Path.of(bookId));
+    private Path getDocumentPath(String documentId) {
+        return Path.of(basePath + File.separator + Path.of(documentId));
     }
 
-    private Path getChunkDirectoryPath(Long bookId) {
-        return basePath.resolve(bookId + "_chunks");
+    private Path getChunkDirectoryPath(Long documentId) {
+        return basePath.resolve(documentId + "_chunks");
+    }
+
+    private Path getChunkDirectoryPath(UUID documentId) {
+        return basePath.resolve(documentId + "_chunks");
     }
 }

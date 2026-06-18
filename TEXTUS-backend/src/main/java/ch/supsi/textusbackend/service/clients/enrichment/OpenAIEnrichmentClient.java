@@ -3,6 +3,7 @@ package ch.supsi.textusbackend.service.clients.enrichment;
 import ch.supsi.textusbackend.model.Chunk;
 import ch.supsi.textusbackend.service.clients.FailureTracker;
 import ch.supsi.textusbackend.service.clients.OpenAIClient;
+import ch.supsi.textusbackend.service.clients.StringSanitizer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -26,16 +27,19 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
     private final PromptTemplate promptTemplate;
     private final FailureTracker failureTracker;
     private final ObjectMapper chunkDeserializer;
+    private final StringSanitizer stringSanitizer;
 
     public OpenAIEnrichmentClient(
             ChatClient chatClient,
-            PromptTemplate promptTemplate,
+            FailureTracker failureTracker,
             ObjectMapper chunkDeserializer,
-            FailureTracker failureTracker) {
+            StringSanitizer stringSanitizer,
+            PromptTemplate promptTemplate) {
         super(chatClient);
         this.promptTemplate = promptTemplate;
         this.chunkDeserializer = chunkDeserializer;
         this.failureTracker = failureTracker;
+        this.stringSanitizer = stringSanitizer;
     }
 
     @Override
@@ -69,7 +73,8 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
                     continue;
                 }
 
-                chunk = chunkDeserializer.readValue(generation, Chunk.class);
+                String sanitized = stringSanitizer.sanitize(generation);
+                chunk = chunkDeserializer.readValue(sanitized, Chunk.class);
 
                 Usage usage = chatResponse.getMetadata().getUsage();
                 chunk.setTokenCountInput(usage.getPromptTokens());
@@ -85,7 +90,6 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
             }
         }
 
-        chunk.normaliseEntities();
         failureTracker.resetFailures();
 
         return chunk;
