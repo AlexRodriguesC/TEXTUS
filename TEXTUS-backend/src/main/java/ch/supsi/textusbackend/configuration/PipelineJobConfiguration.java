@@ -24,8 +24,6 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.EnableJdbcJobRepository;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -41,8 +39,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.FileCopyUtils;
 
 @Configuration
-@EnableBatchProcessing
-@EnableJdbcJobRepository(dataSourceRef = "batchDataSource")
 public class PipelineJobConfiguration {
 
     @Bean
@@ -152,8 +148,11 @@ public class PipelineJobConfiguration {
 
     private TaskletStep buildTaskletStep(
             String stepName, JobRepository jobRepository, PlatformTransactionManager txManager, Tasklet tasklet) {
-        return new StepBuilder(stepName, jobRepository)
+
+        var stepBuilder = new StepBuilder(stepName, jobRepository)
                 .tasklet(tasklet, txManager)
                 .build();
+
+        return stepBuilder;
     }
 }

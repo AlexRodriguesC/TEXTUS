@@ -113,6 +113,9 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+	include 'ch/supsi/textusbackend/unit/**'
+	include 'ch/supsi/textusbackend/integration/**'
+	finalizedBy jacocoTestReport
 }
 
 jacocoTestReport {
@@ -123,7 +126,7 @@ jacocoTestReport {
 	}
 }
 
-configurations.all {
+configurations.configureEach {
 	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 }
 
@@ -132,7 +135,32 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-tasks.named('asciidoctor') {
-	inputs.dir snippetsDir
-	dependsOn test
+tasks.register('integrationTest', Test) {
+	description = 'Runs integration tests.'
+	group = 'verification'
+	useJUnitPlatform()
+
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	include 'ch/supsi/textusbackend/integration/**'
+	shouldRunAfter test
+
+	finalizedBy tasks.named('jacocoIntegrationTestReport')
+}
+
+tasks.register('jacocoIntegrationTestReport', JacocoReport) {
+	dependsOn tasks.named('integrationTest')
+
+	executionData fileTree(layout.buildDirectory).include(
+			"jacoco/integrationTest.exec",
+			"outputs/unit_test_code_coverage/integrationTest.exec"
+			)
+
+	sourceDirectories.setFrom files(sourceSets.main.allSource.srcDirs)
+	classDirectories.setFrom files(sourceSets.main.output)
+	reports {
+		xml.required = true
+		html.required = true
+	}
 }
