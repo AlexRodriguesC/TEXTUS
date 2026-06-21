@@ -23,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        working-directory: TEXTUS-backend
+        working-directory: apps/document-service
         run: ./gradlew clean test jacocoTestReport
 
       - name: Upload unit test reports
@@ -55,7 +55,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run integration tests
-        working-directory: TEXTUS-backend
+        working-directory: apps/document-service
         run: ./gradlew integrationTest jacocoIntegrationTestReport
 
       - name: Upload integration test reports
