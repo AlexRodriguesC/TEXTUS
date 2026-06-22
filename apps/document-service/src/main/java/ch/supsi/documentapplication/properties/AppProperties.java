@@ -19,4 +19,6 @@ public class AppProperties {
     private String baseFilesystemPath;
 
     private int maxRollingKeySize;
+
+    private int maxLLMFailures;
 }

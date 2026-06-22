@@ -47,45 +47,6 @@ public class PipelineJobConfiguration {
     }
 
     @Bean
-    public OpenAIEnrichmentClient openAIEnrichmentClient(
-            ChatClient.Builder chatBuilder,
-            PromptProperties promptProperties,
-            ObjectMapper chunkDeserializer,
-            StringSanitizer stringSanitizer,
-            ResourceLoader resourceLoader) {
-
-        Resource userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
-        String userPromptText;
-
-        try (var in = userPromptResource.getInputStream();
-                var reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            userPromptText = FileCopyUtils.copyToString(reader);
-        } catch (IOException e) {
-            throw new PromptTemplateLoadException(
-                    "Failed to load prompt template: " + userPromptResource.getDescription(), e);
-        }
-
-        StTemplateRenderer renderer = StTemplateRenderer.builder()
-                .startDelimiterToken('<')
-                .endDelimiterToken('>')
-                .build();
-
-        PromptTemplate promptTemplate = PromptTemplate.builder()
-                .renderer(renderer)
-                .template(userPromptText)
-                .build();
-
-        ChatClient chatClient = chatBuilder
-                .defaultSystem(resourceLoader.getResource(promptProperties.getEnrichmentSystem()))
-                .build();
-
-        FailureTracker failureTracker = LLMFailureTracker.create(5);
-
-        return new OpenAIEnrichmentClient(
-                chatClient, failureTracker, chunkDeserializer, stringSanitizer, promptTemplate);
-    }
-
-    @Bean
     public ObjectMapper chunkMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();

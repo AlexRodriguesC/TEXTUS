@@ -26,10 +26,6 @@ public class Chunk {
 
     private List<String> keywords;
 
-    private List<Entity> entities;
-
-    private List<String> questions;
-
     private String key;
 
     @JsonAlias("related_keys")

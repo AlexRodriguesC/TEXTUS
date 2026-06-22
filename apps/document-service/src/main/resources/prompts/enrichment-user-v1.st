@@ -18,17 +18,6 @@ Extract the following in a single JSON response:
     "5-12 high-signal terms, phrases, concepts, rules, methods, entities, processes, or domain vocabulary that represent what is being taught. Prefer content terms over pedagogical terms. Avoid labels about exercise type, worksheet structure, or classroom activity unless they are themselves the subject being taught."
   ],
 
-  "entities": [
-    {
-      "name": "Canonical entity name as stated or unambiguously implied in the text. Use the most specific identifiable form.",
-      "type": "PERSON | ORG | LOC | TECH | CONCEPT | EVENT | METRIC"
-    }
-  ],
-
-  "questions": [
-    "3-6 concrete questions that can be answered primarily from this chunk about the knowledge being taught. Focus on meaning, definitions, mechanisms, reasoning, distinctions, implications, and applications. Do not generate questions about what the student is asked to do on the page unless that action is itself the topic being taught."
-  ],
-
   "key": "Specific subtopic label (2-5 words, lowercase). Represent the primary concept or skill being taught, not the exercise format or page task. Prefer stable conceptual names over document-specific wording.",
 
   "related_keys": [

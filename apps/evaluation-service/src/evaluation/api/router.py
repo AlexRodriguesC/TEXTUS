@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from evaluation.api.routes import evaluation
+from src.evaluation.api.routes.evaluation import router
 
 api_router = APIRouter()
-api_router.include_router(evaluation.router)
+api_router.include_router(router)

@@ -24,7 +24,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     @Override
     public Long create(Chunk chunk) {
         return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT documents.add_chunk(?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (var stmt = connection.prepareStatement("SELECT documents.add_chunk(?, ?, ?, ?, ?, ?, ?)")) {
 
                 stmt.setInt(1, chunk.getTokenCountInput());
                 stmt.setInt(2, chunk.getTokenCountOutput());
@@ -32,9 +32,8 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                 stmt.setString(3, chunk.getTitle());
                 stmt.setString(4, chunk.getSummary());
                 stmt.setString(5, chunk.getKey());
-                stmt.setArray(6, buildArray(chunk.getQuestions(), connection));
-                stmt.setArray(7, buildArray(chunk.getKeywords(), connection));
-                stmt.setArray(8, buildArray(chunk.getRelatedKeys(), connection));
+                stmt.setArray(6, buildArray(chunk.getKeywords(), connection));
+                stmt.setArray(7, buildArray(chunk.getRelatedKeys(), connection));
 
                 try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
@@ -58,8 +57,6 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                         rs.getString("title"),
                         rs.getString("summary"),
                         toList(rs.getArray("keywords")),
-                        List.of(),
-                        toList(rs.getArray("questions")),
                         rs.getString("key"),
                         toList(rs.getArray("related_keys"))),
                 chunkId);

@@ -7,7 +7,6 @@ CREATE OR REPLACE FUNCTION documents.read_chunk(p_chunk_id BIGINT)
                 title        TEXT,
                 summary      TEXT,
                 key          TEXT,
-                questions    TEXT[],
                 keywords     TEXT[],
                 related_keys TEXT[]
             )
@@ -22,9 +21,6 @@ BEGIN
                c.title,
                c.summary,
                c.key,
-               COALESCE((SELECT array_agg(q.question ORDER BY q.id)
-                         FROM documents.question q
-                         WHERE q.chunk_id = c.id), '{}'::TEXT[]),
                COALESCE((SELECT array_agg(k.keyword ORDER BY k.id)
                          FROM documents.keyword k
                          WHERE k.chunk_id = c.id), '{}'::TEXT[]),

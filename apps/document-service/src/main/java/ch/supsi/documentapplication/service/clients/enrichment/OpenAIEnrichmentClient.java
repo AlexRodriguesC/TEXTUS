@@ -62,11 +62,7 @@ public class OpenAIEnrichmentClient extends OpenAIClient implements EnrichmentCl
             try {
                 ChatResponse chatResponse = chatClient.prompt(prompt).call().chatResponse();
 
-                String generation = Optional.ofNullable(chatResponse)
-                        .map(ChatResponse::getResult)
-                        .map(Generation::getOutput)
-                        .map(AbstractMessage::getText)
-                        .orElse(null);
+                String generation = getRawGeneration(chatResponse);
 
                 if (generation == null) {
                     failureTracker.registerFailure();

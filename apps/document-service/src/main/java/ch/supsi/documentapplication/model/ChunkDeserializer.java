@@ -25,13 +25,10 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
 
         chunk.setTitle(getText(root, "title"));
         chunk.setSummary(getText(root, "summary"));
+
         chunk.setKey(getText(root, "key"));
-
         chunk.setKeywords(getStringList(root, "keywords"));
-        chunk.setQuestions(getStringList(root, "questions"));
         chunk.setRelatedKeys(getStringList(root, "related_keys"));
-
-        chunk.setEntities(getEntities(root));
 
         return chunk;
     }
@@ -68,42 +65,5 @@ public class ChunkDeserializer extends StdDeserializer<Chunk> {
             result.add(item.asText());
         }
         return result;
-    }
-
-    private List<Entity> getEntities(JsonNode root) throws JsonParseException {
-        JsonNode node = root.get("entities");
-        if (node == null || node.isNull()) {
-            throw new JsonParseException("Expected entities list field '%s'".formatted("entities"));
-        }
-        if (!node.isArray()) {
-            throw new JsonParseException(
-                    null, "Expected array for field '%s' but got: %s".formatted("entities", node.getNodeType()));
-        }
-        List<Entity> result = new ArrayList<>();
-        for (int i = 0; i < node.size(); i++) {
-            JsonNode item = node.get(i);
-            if (item.isNull()) continue;
-            if (!item.isObject()) {
-                throw new JsonParseException(
-                        null, "Expected object at '%s[%d]' but got: %s".formatted("entities", i, item.getNodeType()));
-            }
-            String name = getRequiredText(item, "name", "entities" + "[" + i + "]");
-            String type = getRequiredText(item, "type", "entities" + "[" + i + "]");
-            result.add(new Entity(name, type).validate());
-        }
-        return result;
-    }
-
-    private String getRequiredText(JsonNode parent, String field, String context) throws JsonParseException {
-        JsonNode node = parent.get(field);
-        if (node == null || node.isNull()) {
-            throw new JsonParseException(null, "Missing required field '%s' in %s".formatted(field, context));
-        }
-        if (!node.isTextual()) {
-            throw new JsonParseException(
-                    null,
-                    "Expected string for field '%s' in %s but got: %s".formatted(field, context, node.getNodeType()));
-        }
-        return node.asText();
     }
 }

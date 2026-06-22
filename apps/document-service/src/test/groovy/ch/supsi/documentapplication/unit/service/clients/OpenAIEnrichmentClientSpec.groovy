@@ -61,9 +61,7 @@ class OpenAIEnrichmentClientSpec extends Specification {
         chunk.setSummary("Converts 3D primitives to pixels")
         chunk.setKey("rasterization")
         chunk.setKeywords(["pipeline"])
-        chunk.setQuestions(["What is rasterization?"])
         chunk.setRelatedKeys([])
-        chunk.setEntities([])
         chunk
     }
 

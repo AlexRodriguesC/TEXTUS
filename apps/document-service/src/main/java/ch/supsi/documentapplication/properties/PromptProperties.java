@@ -11,4 +11,8 @@ public class PromptProperties {
 
     private String enrichmentSystem;
     private String enrichmentUser;
+
+    private String mindMapSystem;
+    private String mindMapUser;
+
 }

@@ -113,8 +113,8 @@ dependencies {
 
 test {
 	useJUnitPlatform()
-	include 'ch/supsi/textusbackend/unit/**'
-	exclude 'ch/supsi/textusbackend/integration/**'
+	include 'ch/supsi/documentapplication/unit/**'
+	exclude 'ch/supsi/documentapplication/integration/**'
 	finalizedBy jacocoTestReport
 }
 
@@ -144,7 +144,7 @@ tasks.register('integrationTest', Test) {
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
 
-	include 'ch/supsi/textusbackend/integration/**'
+	include 'ch/supsi/documentapplication/integration/**'
 	shouldRunAfter test
 
 	finalizedBy tasks.named('jacocoIntegrationTestReport')
