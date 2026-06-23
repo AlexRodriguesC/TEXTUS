@@ -1,0 +1,14 @@
+{
+  "language": {
+    "combobox": {
+      "placeholder": "Cambia Lingua",
+      "notfound": "Nessuna lingua disponibile"
+    }
+  },
+  "login": {
+    "login": "Accedi",
+    "info": "Accedi al tuo account",
+    "sub": "Inserisci qui sotto la tua email per accedere al tuo account",
+    "sign-up": "Registrati"
+  }
+}

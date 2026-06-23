@@ -1,39 +1,58 @@
-import {createRootRoute, createRoute, Outlet} from '@tanstack/react-router'
+import { createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
 import NotFoundPage from '../pages/not-found/NotFoundPage'
-import LoginPage from "../pages/login/LoginPage.tsx";
-import RegistrationPage from "../pages/registration/RegistrationPage.tsx";
-import PathConstants from "./pathConstants.ts";
-import Layout from "../Layout.tsx";
-import Layout2 from "../Layout2.tsx";
+import LoginPage from '../pages/login/LoginPage'
+import RegistrationPage from '../pages/registration/RegistrationPage'
+import PathConstants from './pathConstants'
+import MainLayout from '../MainLayout'
+import AuthLayout from '../AuthLayout'
 
+// Single root route - no layout here
 const rootRoute = createRootRoute({
-    component: () => (
-        <Layout>
-            <Outlet/>
-        </Layout>
-    ),
     notFoundComponent: NotFoundPage,
 })
 
-const rootRoutes2 = createRootRoute(({
-    component: () => {
-        <Layout2>
-            <Outlet/>
-        </Layout2>
-    },
-    notFoundComponent: NotFoundPage
-}))
+// MainLayout route for auth pages (login, register)
+const authLayoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    id: 'auth',
+    component: () => (
+        <AuthLayout>
+            <Outlet />
+        </AuthLayout>
+    ),
+})
+
+// MainLayout route for main app pages
+const mainLayoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    id: 'main',
+    component: () => (
+        <MainLayout>
+            <Outlet />
+        </MainLayout>
+    ),
+})
 
 const loginRoute = createRoute({
-    getParentRoute: () => rootRoutes2,
+    getParentRoute: () => authLayoutRoute,
     path: PathConstants.LOGIN,
     component: LoginPage,
 })
 
 const registerRoute = createRoute({
-    getParentRoute: () => rootRoutes2,
+    getParentRoute: () => authLayoutRoute,
     path: PathConstants.REGISTER,
     component: RegistrationPage,
 })
 
-export const routeTree = rootRoutes2.addChildren([loginRoute, registerRoute])
+// Add your future main app pages under mainLayoutRoute
+const homeRoute = createRoute({
+    getParentRoute: () => mainLayoutRoute,
+    path: '/',
+    component: () => <div>Home</div>,
+})
+
+export const routeTree = rootRoute.addChildren([
+    authLayoutRoute.addChildren([loginRoute, registerRoute]),
+    mainLayoutRoute.addChildren([homeRoute]),
+])
