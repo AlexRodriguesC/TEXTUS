@@ -1,10 +1,12 @@
-import {Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Label } from "@/components/ui/label";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import * as React from "react";
 import { Eye, EyeClosed } from 'lucide-react';
 import {useTranslation} from "react-i18next";
+import {Link} from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
 
 function LoginPage() {
     const {t} = useTranslation();
@@ -60,8 +62,10 @@ function LoginPage() {
                 <Button type="submit" className="w-full">
                     Login
                 </Button>
-                <Button variant="outline" className="w-full">
-                    {t('login.sign-up')}
+                <Button asChild variant="outline" className="w-full">
+                    <Link to={PathConstants.REGISTER}>
+                        {t('login.sign-up')}
+                    </Link>
                 </Button>
             </CardFooter>
         </Card>

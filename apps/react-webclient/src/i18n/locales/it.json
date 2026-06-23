@@ -10,5 +10,16 @@
     "info": "Accedi al tuo account",
     "sub": "Inserisci qui sotto la tua email per accedere al tuo account",
     "sign-up": "Registrati"
+  },
+  "registration": {
+    "register": "Registrati",
+    "info": "Crea il tuo account",
+    "sub": "Inserisci i tuoi dati qui sotto per creare il tuo account",
+    "sign-in": "Accedi"
+  },
+  "home": {
+    "tagline": "La conoscenza, pensata <bold>per te</bold>",
+    "start": "Inizia",
+    "account": "Ho già un account"
   }
 }

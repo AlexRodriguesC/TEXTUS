@@ -10,5 +10,16 @@
     "info": "Login to your account",
     "sub": "Enter your email below to login to your account",
     "sign-up": "Sign up"
+  },
+  "registration": {
+    "register": "Register",
+    "info": "Create your account",
+    "sub": "Enter your details below to create your account",
+    "sign-in": "Sign in"
+  },
+  "home": {
+    "tagline": "Knowledge, made <bold>personal</bold>",
+    "start": "Start",
+    "account": "I already have an account"
   }
 }

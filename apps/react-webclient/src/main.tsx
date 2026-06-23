@@ -5,13 +5,16 @@ import './index.css'
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {routeTree} from "./routing/routeTree.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
+import {ThemeProvider} from "@/provider/ThemeProvider.tsx";
 
 const router = createRouter({routeTree})
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <TooltipProvider>
-            <RouterProvider router={router}/>
+            <ThemeProvider>
+                <RouterProvider router={router}/>
+            </ThemeProvider>
         </TooltipProvider>
     </StrictMode>,
 )

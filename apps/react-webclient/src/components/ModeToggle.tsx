@@ -1,15 +1,13 @@
 import {Moon, Sun} from 'lucide-react'
-import * as React from "react";
-import {Button} from "@/components/ui/button.tsx";
+import {Button} from "@/components/ui/button.tsx";;
+import {useTheme} from "@/hooks/useTheme.tsx";
 
 export function ModeToggle() {
-    const [isDarkMode, setDarkMode] = React.useState(true);
-    const onClick = () => setDarkMode(prev => !prev);
-
+    const {theme, toggleTheme} = useTheme();
 
     return <>
-        <Button variant={"ghost"} onClick={onClick}>
-            {isDarkMode ? <Moon size={32}/> : <Sun size={32}/>}
+        <Button size={"icon"} variant={"ghost"} onClick={toggleTheme}>
+            {theme === 'light' ? <Moon size={32}/> : <Sun size={32}/>}
         </Button>
     </>
 }

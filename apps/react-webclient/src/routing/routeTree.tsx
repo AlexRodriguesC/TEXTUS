@@ -5,6 +5,7 @@ import RegistrationPage from '../pages/registration/RegistrationPage'
 import PathConstants from './pathConstants'
 import MainLayout from '../MainLayout'
 import AuthLayout from '../AuthLayout'
+import HomePage from "@/pages/HomePage.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({
@@ -45,11 +46,10 @@ const registerRoute = createRoute({
     component: RegistrationPage,
 })
 
-// Add your future main app pages under mainLayoutRoute
 const homeRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: '/',
-    component: () => <div>Home</div>,
+    component: HomePage,
 })
 
 export const routeTree = rootRoute.addChildren([

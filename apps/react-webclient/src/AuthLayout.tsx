@@ -1,18 +1,10 @@
-import Logo from "./components/Logo.tsx";
 import * as React from "react";
-import {LanguageComboBox} from "./components/LanguageComboBox.tsx";
-import {ModeToggle} from "@/components/ModeToggle.tsx";
+import Navbar from "@/components/Navbar.tsx";
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex min-h-screen flex-col overflow-hidden overflow-y-hidden">
-            <div className="flex shrink-0 items-center justify-between px-6 py-4 md:px-16">
-                <Logo />
-                <div className={"flex flex-row gap-2"}>
-                    <ModeToggle />
-                    <LanguageComboBox />
-                </div>
-            </div>
+        <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8 py-2">
+            <Navbar/>
             <main className="flex flex-1 items-center justify-center">
                 {children}
             </main>
