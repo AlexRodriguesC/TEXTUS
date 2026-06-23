@@ -15,6 +15,9 @@ import lombok.Setter;
 public class Chunk {
 
     @JsonIgnore
+    private Long id;
+
+    @JsonIgnore
     private Integer tokenCountInput;
 
     @JsonIgnore

@@ -1,9 +1,10 @@
-package ch.supsi.documentapplication.service;
+package ch.supsi.documentapplication.service.document;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
@@ -18,24 +19,24 @@ import org.springframework.web.multipart.MultipartFile;
 public class DocumentService implements IDocumentService {
 
     private final IFileSystemDocumentStorage documentStorage;
-    private final IDatabaseDocumentStorage databaseDocumentStorage;
+    private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job pipelineJob;
 
     @Autowired
     public DocumentService(
             IFileSystemDocumentStorage documentStorage,
-            IDatabaseDocumentStorage databaseDocumentStorage,
+            IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
             Job pipelineJob) {
         this.documentStorage = documentStorage;
-        this.databaseDocumentStorage = databaseDocumentStorage;
+        this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.pipelineJob = pipelineJob;
     }
 
     @Override
-    public void parseDocument(MultipartFile documentMultipart) {
+    public void createDocument(MultipartFile documentMultipart, Long spaceId) {
         byte[] documentBytes;
         try {
             documentBytes = documentMultipart.getBytes();
@@ -45,12 +46,19 @@ public class DocumentService implements IDocumentService {
             throw new DocumentDomainException("Failed to get file bytes", e);
         }
 
+        Space space = spaceStorage.read(spaceId);
+
+        if (space == null) {
+            throw new DocumentDomainException("Space not found");
+        }
+
         Document document = Document.create(documentBytes);
 
         documentStorage.create(document);
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", document.getDocumentId().toString())
+                .addString("SPACE_ID", spaceId.toString())
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 

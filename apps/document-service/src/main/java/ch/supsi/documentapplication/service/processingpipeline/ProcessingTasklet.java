@@ -11,8 +11,15 @@ public abstract class ProcessingTasklet implements Tasklet {
     @Value("#{jobParameters['DOCUMENT_ID']}")
     protected String documentId;
 
+    @Value("#{jobParameters['SPACE_ID']}")
+    protected String spaceId;
+
     protected UUID getDocumentIdAsUUID() {
         return UUID.fromString(documentId);
+    }
+
+    protected Long getSpaceIdAsLong() {
+        return Long.valueOf(spaceId);
     }
 
     @SuppressWarnings("unchecked")

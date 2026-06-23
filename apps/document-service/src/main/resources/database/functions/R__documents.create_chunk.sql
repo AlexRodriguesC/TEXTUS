@@ -1,4 +1,5 @@
-CREATE OR REPLACE FUNCTION documents.add_chunk(
+CREATE OR REPLACE FUNCTION documents.create_chunk(
+    p_space_id BIGINT,
     p_tokens_in INTEGER,
     p_tokens_out INTEGER,
     p_title TEXT,
@@ -12,18 +13,25 @@ CREATE OR REPLACE FUNCTION documents.add_chunk(
 AS
 $$
 DECLARE
-    v_chunk_i        BIGINT;
+    v_chunk_id       BIGINT;
     v_keyword        TEXT;
     v_related_key    TEXT;
     v_found_key_id   BIGINT;
 BEGIN
-    INSERT INTO documents.chunk (tokens_in, tokens_out, title, summary, key)
-    VALUES (p_tokens_in, p_tokens_out, p_title, p_summary, p_key)
-    RETURNING id INTO v_chunk_i;
+    -- Validate space exists
+    IF NOT EXISTS (
+        SELECT 1 FROM documents.space WHERE id = p_space_id
+    ) THEN
+        RAISE EXCEPTION 'Space with id % not found', p_space_id;
+    END IF;
+
+    INSERT INTO documents.chunk (space_id, tokens_in, tokens_out, title, summary, key)
+    VALUES (p_space_id, p_tokens_in, p_tokens_out, p_title, p_summary, p_key)
+    RETURNING id INTO v_chunk_id;
 
     FOREACH v_keyword IN ARRAY COALESCE(p_keywords, '{}') LOOP
             INSERT INTO documents.keyword (chunk_id, keyword)
-            VALUES (v_chunk_i, v_keyword);
+            VALUES (v_chunk_id, v_keyword);
         END LOOP;
 
     FOREACH v_related_key IN ARRAY COALESCE(p_related_keys, '{}') LOOP
@@ -37,14 +45,14 @@ BEGIN
 
             IF v_found_key_id IS NULL THEN
                 INSERT INTO documents.key (chunk_id, key)
-                VALUES (v_chunk_i, v_related_key)
+                VALUES (v_chunk_id, v_related_key)
                 RETURNING id INTO v_found_key_id;
             END IF;
 
             INSERT INTO documents.chunk_key (chunk_id, key_id)
-            VALUES (v_chunk_i, v_found_key_id);
+            VALUES (v_chunk_id, v_found_key_id);
         END LOOP;
 
-    RETURN v_chunk_i;
+    RETURN v_chunk_id;
 END;
 $$;

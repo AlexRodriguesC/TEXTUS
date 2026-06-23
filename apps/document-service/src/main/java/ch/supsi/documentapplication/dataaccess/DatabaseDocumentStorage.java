@@ -22,24 +22,25 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public Long create(Chunk chunk) {
+    public Long create(Chunk chunk, Long spaceId) {
         return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT documents.add_chunk(?, ?, ?, ?, ?, ?, ?)")) {
+            try (var stmt = connection.prepareStatement("SELECT documents.create_chunk(?, ?, ?, ?, ?, ?, ?, ?)")) {
 
-                stmt.setInt(1, chunk.getTokenCountInput());
-                stmt.setInt(2, chunk.getTokenCountOutput());
+                stmt.setLong(1, spaceId);
+                stmt.setInt(2, chunk.getTokenCountInput());
+                stmt.setInt(3, chunk.getTokenCountOutput());
 
-                stmt.setString(3, chunk.getTitle());
-                stmt.setString(4, chunk.getSummary());
-                stmt.setString(5, chunk.getKey());
-                stmt.setArray(6, buildArray(chunk.getKeywords(), connection));
-                stmt.setArray(7, buildArray(chunk.getRelatedKeys(), connection));
+                stmt.setString(4, chunk.getTitle());
+                stmt.setString(5, chunk.getSummary());
+                stmt.setString(6, chunk.getKey());
+                stmt.setArray(7, buildArray(chunk.getKeywords(), connection));
+                stmt.setArray(8, buildArray(chunk.getRelatedKeys(), connection));
 
                 try (var rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         return rs.getLong(1);
                     }
-                    throw new DocumentDomainException("documents.add_chunk returned no id");
+                    throw new DocumentDomainException("documents.create_chunk returned no id");
                 }
             }
         });
@@ -52,6 +53,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbc.queryForObject(
                 sql,
                 (rs, rowNum) -> new Chunk(
+                        rs.getLong("id"),
                         rs.getInt("tokens_in"),
                         rs.getInt("tokens_out"),
                         rs.getString("title"),

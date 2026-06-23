@@ -1,14 +1,9 @@
 package ch.supsi.documentapplication.configuration;
 
-import ch.supsi.documentapplication.exception.PromptTemplateLoadException;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.ChunkDeserializer;
-import ch.supsi.documentapplication.properties.PromptProperties;
-import ch.supsi.documentapplication.service.clients.FailureTracker;
-import ch.supsi.documentapplication.service.clients.LLMFailureTracker;
 import ch.supsi.documentapplication.service.clients.LLMInputSanitizer;
 import ch.supsi.documentapplication.service.clients.StringSanitizer;
-import ch.supsi.documentapplication.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.documentapplication.service.processingpipeline.CleanupTasklet;
 import ch.supsi.documentapplication.service.processingpipeline.EnrichmentTasklet;
 import ch.supsi.documentapplication.service.processingpipeline.JSONOutputTasklet;
@@ -18,12 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -33,10 +22,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.FileCopyUtils;
 
 @Configuration
 public class PipelineJobConfiguration {

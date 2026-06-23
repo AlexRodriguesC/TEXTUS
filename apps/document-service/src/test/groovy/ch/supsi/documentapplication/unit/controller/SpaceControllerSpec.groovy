@@ -1,0 +1,98 @@
+package ch.supsi.documentapplication.unit.controller
+
+import ch.supsi.documentapplication.controller.SpaceController
+import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.service.ISpaceService
+import ch.supsi.documentapplication.service.document.IDocumentService
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.spockframework.spring.SpringBean
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.web.multipart.MultipartFile
+import spock.lang.Specification
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+
+@WebMvcTest(SpaceController)
+class SpaceControllerSpec extends Specification {
+
+    @Autowired
+    MockMvc mockMvc
+
+    @SpringBean
+    ISpaceService spaceService = Mock()
+
+    @SpringBean
+    IDocumentService documentService = Mock()
+
+    @SpringBean
+    AppProperties appProperties = Mock() {
+        getMaxDocumentSize() >> 500L * 1024 * 1024
+    }
+
+    def "should return 200 and space id when space is created"() {
+        given:
+        def body = new ObjectMapper().writeValueAsString([name: "My Space", description: "A test space"])
+        spaceService.create("My Space", "A test space") >> 42L
+
+        when:
+        def result = mockMvc.perform(
+                post("/api/v1/spaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+
+        then:
+        result.andExpect(status().isOk())
+        result.andExpect(jsonPath('$.id').value(42))
+    }
+
+    def "should return 202 for valid file upload"() {
+        given:
+        def file = new MockMultipartFile("document", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "content".bytes)
+
+        when:
+        def result = mockMvc.perform(
+                multipart("/api/v1/spaces/1/documents").file(file))
+
+        then:
+        result.andExpect(status().isAccepted())
+        1 * documentService.createDocument(_, 1L)
+    }
+
+    def "should return 400 when file is empty"() {
+        given:
+        def file = new MockMultipartFile("document", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0])
+
+        when:
+        def result = mockMvc.perform(
+                multipart("/api/v1/spaces/1/documents").file(file))
+
+        then:
+        result.andExpect(status().isBadRequest())
+        0 * documentService.createDocument(_, _)
+    }
+
+    def "should return 400 when file exceeds max size"() {
+        given:
+        def maxSize = 500L * 1024 * 1024
+        def appProps = Mock(AppProperties) { it.maxDocumentSize >> maxSize }
+        def controller = new SpaceController(appProps, Mock(ISpaceService), Mock(IDocumentService))
+        def file = Mock(MultipartFile) {
+            isEmpty() >> false
+            getSize() >> maxSize
+        }
+
+        when:
+        def response = controller.uploadDocument(file, 1L)
+
+        then:
+        response.statusCode.value() == 400
+        0 * documentService.createDocument(_, _)
+    }
+}

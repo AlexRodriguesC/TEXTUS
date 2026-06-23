@@ -14,5 +14,4 @@ public class PromptProperties {
 
     private String mindMapSystem;
     private String mindMapUser;
-
 }

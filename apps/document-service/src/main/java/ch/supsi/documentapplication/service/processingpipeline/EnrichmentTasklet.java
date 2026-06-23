@@ -85,7 +85,7 @@ public class EnrichmentTasklet extends ProcessingTasklet {
 
             enrichedChunk.setKey(enrichedChunk.getKey().toLowerCase(Locale.ROOT));
 
-            Long chunkId = databaseDocumentStorage.create(enrichedChunk);
+            Long chunkId = databaseDocumentStorage.create(enrichedChunk, getSpaceIdAsLong());
             chunkIds.add(chunkId);
 
             fileSystemDocumentStorage.deleteChunk(getDocumentIdAsUUID(), String.valueOf(totalProcessed + 1));

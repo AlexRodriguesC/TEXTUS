@@ -1,12 +1,11 @@
 package ch.supsi.documentapplication.service.clients;
 
+import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
-
-import java.util.Optional;
 
 public abstract class OpenAIClient {
 

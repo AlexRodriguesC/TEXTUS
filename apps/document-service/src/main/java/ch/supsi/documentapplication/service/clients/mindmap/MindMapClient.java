@@ -1,12 +1,10 @@
 package ch.supsi.documentapplication.service.clients.mindmap;
 
 import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.MindMapNode;
-
+import ch.supsi.documentapplication.model.MindMap;
 import java.util.List;
 
 public interface MindMapClient {
 
-    MindMapNode extractMindMap(List<Chunk> chunks);
-
+    MindMap extractMindMap(List<Chunk> chunks);
 }
