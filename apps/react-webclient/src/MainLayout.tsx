@@ -3,6 +3,7 @@ import * as React from "react";
 import Navbar from "@/components/Navbar.tsx";
 import {MeshGradientBackground} from "@/components/ui/mesh-gradient.tsx";
 import {useTheme} from "@/hooks/useTheme.tsx";
+import Profile from "@/components/Profile.tsx";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const { theme } = useTheme();

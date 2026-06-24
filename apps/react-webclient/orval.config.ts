@@ -17,11 +17,9 @@ export default defineConfig({
                     name: 'customInstance',
                 },
                 query: {
-                    useQuery: true,
-                    useMutation: true,
                     version: 5,               // TanStack Query v5
                 },
             },
-        },
+        }
     },
 });

@@ -1,4 +1,5 @@
 import PathConstants from "@/routing/pathConstants.ts";
+import {Link} from "@tanstack/react-router";
 
 type LogoProps = {
     size?: 'sm' | 'md' | 'lg'
@@ -12,10 +13,10 @@ const sizeMap = {
 
 function Logo({ size = 'md' }: LogoProps) {
     return (
-        <a className="flex flex-row items-center gap-2" href={PathConstants.LOGIN}>
+        <Link className="flex flex-row items-center gap-2" to={PathConstants.HOME}>
             <img src="/book.png" alt="logo" className={`${sizeMap[size]} object-contain`} />
             <div className="font-playfair font-bold">TEXTUS</div>
-        </a>
+        </Link>
     )
 }
 
