@@ -9,7 +9,7 @@ type NavbarProps = {
 
 function Navbar({ children }: NavbarProps) {
     return (
-        <div className="flex shrink-0 items-center justify-between px-6 py-4 md:px-16">
+        <div className="flex shrink-0 items-center justify-between">
             <Logo />
             {children}
             <div className="flex flex-row gap-2">

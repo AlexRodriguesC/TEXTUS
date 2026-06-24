@@ -4,8 +4,8 @@ import LoginPage from '../pages/login/LoginPage'
 import RegistrationPage from '../pages/registration/RegistrationPage'
 import PathConstants from './pathConstants'
 import MainLayout from '../MainLayout'
-import AuthLayout from '../AuthLayout'
 import HomePage from "@/pages/HomePage.tsx";
+import SpacesPage from "@/pages/SpacesPage.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({
@@ -17,9 +17,9 @@ const authLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     id: 'auth',
     component: () => (
-        <AuthLayout>
+        <MainLayout>
             <Outlet />
-        </AuthLayout>
+        </MainLayout>
     ),
 })
 
@@ -52,7 +52,13 @@ const homeRoute = createRoute({
     component: HomePage,
 })
 
+const spacesRoute = createRoute({
+    getParentRoute: () => mainLayoutRoute,
+    path: PathConstants.SPACES,
+    component: SpacesPage
+})
+
 export const routeTree = rootRoute.addChildren([
     authLayoutRoute.addChildren([loginRoute, registerRoute]),
-    mainLayoutRoute.addChildren([homeRoute]),
+    mainLayoutRoute.addChildren([homeRoute, spacesRoute]),
 ])

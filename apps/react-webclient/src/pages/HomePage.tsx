@@ -7,20 +7,25 @@ function HomePage() {
     const {t} = useTranslation();
 
     return (
-        <div className="flex flex-row items-center gap-8">
-            <img src="./book_pile.png" alt="Pile of books" width={400} height={400} />
-            <div className="flex flex-col items-center gap-8">
-                <Trans
-                    i18nKey="home.tagline"
-                    components={{
-                        bold: <span className="font-bold" />,
-                    }}
-                />
-                <div className="flex w-full flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-6 md:flex-row md:gap-8">
+            <img
+                src="/book_pile.png"
+                alt="Pile of books"
+                className="aspect-square size-48 md:size-80 lg:size-128"
+            />
+            <div className="flex flex-col items-center gap-4">
+                <div className="text-center text-2xl md:text-3xl lg:text-4xl">
+                    <Trans
+                        i18nKey="home.tagline"
+                        components={{
+                            bold: <span className="font-bold" />,
+                        }}
+                    />
+                </div>
+                <div className="flex w-full max-w-xs flex-col gap-2 md:max-w-sm">
                     <Button asChild className="w-full" variant="default">
                         <Link to="/pippo">{t("home.start")}</Link>
                     </Button>
-
                     <Button asChild className="w-full" variant="secondary">
                         <Link to={PathConstants.LOGIN}>{t("home.account")}</Link>
                     </Button>
