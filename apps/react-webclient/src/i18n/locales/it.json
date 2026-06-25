@@ -21,5 +21,24 @@
     "tagline": "La conoscenza, pensata <bold>per te</bold>",
     "start": "Inizia",
     "account": "Ho già un account"
+  },
+  "spaces": {
+    "add": {
+      "success": "Spazio creato con successo.",
+      "error": "Si è verificato un errore.",
+      "message": "Aggiungi spazio",
+      "title": "Crea un nuovo spazio",
+      "field": {
+        "name": "Nome",
+        "description": "Descrizione"
+      },
+      "description": "Assegna un nome al tuo spazio e, se vuoi, una descrizione.",
+      "defaultName": "Il mio spazio",
+      "defaultDescription": "Una bella descrizione"
+    }
+  },
+  "button": {
+    "add": "Aggiungi",
+    "cancel": "Annulla"
   }
 }

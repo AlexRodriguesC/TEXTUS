@@ -1,5 +1,5 @@
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
-import {Label } from "@/components/ui/label";
+import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import * as React from "react";
@@ -29,7 +29,7 @@ function LoginPage() {
     React.useEffect(() => {
         if (!isSuccess || !data) return;
 
-        login({ username, token: data.token });
+        login({ username, token: data.data.token });
 
         const timer = setTimeout(() => {
             navigate({ to: PathConstants.HOME });

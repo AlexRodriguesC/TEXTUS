@@ -21,5 +21,24 @@
     "tagline": "Knowledge, made <bold>personal</bold>",
     "start": "Start",
     "account": "I already have an account"
+  },
+  "spaces": {
+    "add": {
+      "success": "Space created successfully.",
+      "error": "Something went wrong.",
+      "message": "Add Space",
+      "title": "Create a new space",
+      "field": {
+        "name": "Name",
+        "description": "Description"
+      },
+      "description": "Give your space a name and an optional description.",
+      "defaultName": "My space",
+      "defaultDescription": "A cool description"
+    }
+  },
+  "button": {
+    "add": "Add",
+    "cancel": "Cancel"
   }
 }

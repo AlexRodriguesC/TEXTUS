@@ -1,11 +1,11 @@
-import { createRootRoute, createRoute, Outlet } from '@tanstack/react-router'
+import {createRootRoute, createRoute, Outlet} from '@tanstack/react-router'
 import NotFoundPage from '../pages/not-found/NotFoundPage'
 import LoginPage from '../pages/login/LoginPage'
 import RegistrationPage from '../pages/registration/RegistrationPage'
 import PathConstants from './pathConstants'
 import MainLayout from '../MainLayout'
 import HomePage from "@/pages/HomePage.tsx";
-import SpacesPage from "@/pages/SpacesPage.tsx";
+import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({

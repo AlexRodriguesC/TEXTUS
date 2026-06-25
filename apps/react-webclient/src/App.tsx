@@ -1,4 +1,3 @@
-
 import {ThemeProvider} from "@/provider/ThemeProvider.tsx";
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {routeTree} from "@/routing/routeTree.tsx";
@@ -7,6 +6,7 @@ import {AuthContext, type User} from "@/context/AuthContext.tsx";
 import {QueryClient, QueryClientContext} from "@tanstack/react-query";
 import * as React from "react";
 import {useCallback, useMemo} from "react";
+import {Toaster} from "@/components/ui/sonner.tsx";
 
 const router = createRouter({routeTree})
 
@@ -47,6 +47,7 @@ function App() {
             <QueryClientContext value={queryClient}>
                 <TooltipProvider>
                     <ThemeProvider>
+                        <Toaster/>
                         <RouterProvider router={router}/>
                     </ThemeProvider>
                 </TooltipProvider>
