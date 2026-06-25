@@ -24,7 +24,7 @@ function HomePage() {
                 </div>
                 <div className="flex w-full max-w-xs flex-col gap-2 md:max-w-sm">
                     <Button asChild className="w-full" variant="default">
-                        <Link to="/pippo">{t("home.start")}</Link>
+                        <Link to={PathConstants.SPACES}>{t("home.start")}</Link>
                     </Button>
                     <Button asChild className="w-full" variant="secondary">
                         <Link to={PathConstants.LOGIN}>{t("home.account")}</Link>

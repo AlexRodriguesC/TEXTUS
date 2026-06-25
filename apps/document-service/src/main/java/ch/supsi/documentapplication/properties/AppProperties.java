@@ -21,4 +21,6 @@ public class AppProperties {
     private int maxRollingKeySize;
 
     private int maxLLMFailures;
+
+    private String secretKey;
 }

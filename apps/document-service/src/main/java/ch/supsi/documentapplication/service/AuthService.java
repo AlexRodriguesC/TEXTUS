@@ -2,30 +2,37 @@ package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseUserStorage;
 import ch.supsi.documentapplication.model.User;
+import ch.supsi.documentapplication.properties.AppProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 import javax.crypto.SecretKey;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthService {
+public class AuthService implements UserDetailsService {
 
+    private final String secretKey;
     private final IDatabaseUserStorage databaseUserStorage;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthService(IDatabaseUserStorage databaseUserStorage, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            AppProperties appProperties, IDatabaseUserStorage databaseUserStorage, PasswordEncoder passwordEncoder) {
+        this.secretKey = appProperties.getSecretKey();
         this.databaseUserStorage = databaseUserStorage;
         this.passwordEncoder = passwordEncoder;
     }
-
-    private final String SECRET_KEY = "secretkey123secretkey123secretkey123"; // min 32 chars for HS256
 
     public String register(User user) {
         if (databaseUserStorage.readUser(user.getUsername()).isPresent()) {
@@ -37,7 +44,7 @@ public class AuthService {
     }
 
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String username) {
@@ -68,5 +75,19 @@ public class AuthService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    @Override
+    public @NotNull UserDetails loadUserByUsername(@NotNull String username) throws UsernameNotFoundException {
+        Optional<User> optUser = databaseUserStorage.readUser(username);
+        if (optUser.isEmpty()) {
+            throw new UsernameNotFoundException(username);
+        }
+        var user = optUser.get();
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .build();
     }
 }

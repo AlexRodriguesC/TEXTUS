@@ -1,25 +1,10 @@
-import { useEffect } from "react";
-import { useUser, type User } from "./useUser";
-import { useLocalStorage } from "./useLocalStorage";
+import {AuthContext} from "@/context/AuthContext.tsx";
+import * as React from "react";
 
-export const useAuth = () => {
-    const { user, addUser, removeUser, setUser } = useUser();
-    const { getItem } = useLocalStorage();
-
-    useEffect(() => {
-        const user = getItem("user");
-        if (user) {
-            addUser(JSON.parse(user));
-        }
-    }, [addUser, getItem]);
-
-    const login = (user: User) => {
-        addUser(user);
-    };
-
-    const logout = () => {
-        removeUser();
-    };
-
-    return { user, login, logout, setUser };
-};
+export function useAuth() {
+    const ctx = React.useContext(AuthContext)
+    if (ctx === undefined) {
+        throw new Error("useUser() must be used within a UserProvider");
+    }
+    return ctx
+}

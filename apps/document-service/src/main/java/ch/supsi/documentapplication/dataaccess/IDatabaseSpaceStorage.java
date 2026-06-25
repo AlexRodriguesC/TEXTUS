@@ -1,14 +1,17 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Space;
+import java.util.List;
 
 public interface IDatabaseSpaceStorage {
 
-    Long create(String name, String description);
+    Long create(String owner, String name, String description);
 
     Space read(Long id);
 
-    void update(String name, String description);
+    List<Space> readAll(String owner);
 
-    void delete(Long id);
+    void update(Long spaceId, String name, String description);
+
+    void delete(Long spaceId);
 }

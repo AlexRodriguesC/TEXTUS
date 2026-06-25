@@ -39,7 +39,7 @@ class SpaceControllerSpec extends Specification {
     def "should return 200 and space id when space is created"() {
         given:
         def body = new ObjectMapper().writeValueAsString([name: "My Space", description: "A test space"])
-        spaceService.create("My Space", "A test space") >> 42L
+        spaceService.create("pippo", "My Space", "A test space") >> 42L
 
         when:
         def result = mockMvc.perform(

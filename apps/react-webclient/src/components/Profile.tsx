@@ -3,12 +3,14 @@ import {UserRound} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
-    DropdownMenuTrigger
+    DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
-import {Button} from "@/components/ui/button.tsx";
+import {Link} from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
+import {useAuth} from "@/hooks/useAuth.tsx";
 
 function Profile() {
+    const {user, logout} = useAuth()
 
     return (
         <div>
@@ -16,17 +18,28 @@ function Profile() {
                 <DropdownMenuTrigger asChild>
                     <Avatar>
                         <AvatarFallback><UserRound/></AvatarFallback>
-                        <AvatarBadge className="bg-green-600 dark:bg-green-800" />
+                        <AvatarBadge className={user ? "bg-green-600 dark:bg-green-800" : "bg-red-600 dark:bg-red-800"} />
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-40" align="start">
-                    <DropdownMenuGroup>
-                        <DropdownMenuLabel className={"w-full"}>Logged as: pippo@abc.ch</DropdownMenuLabel>
-                        <DropdownMenuItem asChild className={"w-full"}>
-                            <Button type={"button"} variant={"destructive"}>Logout</Button>
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
+                    {user ? (
+                        <DropdownMenuGroup>
+                            <DropdownMenuLabel>Logged as: {user.username}</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={logout}>
+                                Logout
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    ) : (
+                        <DropdownMenuGroup>
+                            <DropdownMenuLabel>Not logged</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                                <Link to={PathConstants.LOGIN}>Login</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link to={PathConstants.REGISTER}>Register</Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

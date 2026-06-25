@@ -1,12 +1,18 @@
 import { createContext } from "react";
-import type {User} from "../hooks/useUser";
+
+export type User = {
+    username: string,
+    token?: string
+}
 
 interface AuthContext {
-    user: User | null;
-    setUser: (user: User | null) => void;
+    user: User | null,
+    login: (user: User) => void,
+    logout: () => void
 }
 
 export const AuthContext = createContext<AuthContext>({
     user: null,
-    setUser: () => {},
+    login: () => null,
+    logout: () => null
 });

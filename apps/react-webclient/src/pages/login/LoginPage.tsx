@@ -1,4 +1,4 @@
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Label } from "@/components/ui/label";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -9,19 +9,34 @@ import {Link, useNavigate} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import {useLogin} from "@/api/generated/authentication/authentication.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
+import {useAuth} from "@/hooks/useAuth.tsx";
 
 function LoginPage() {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {mutate, isPending, isError, isSuccess} = useLogin()
+    const {mutate, isPending, isError, isSuccess, data} = useLogin()
+    const {login} = useAuth()
 
     const [isPasswordShown, setIsPasswordShown] = React.useState(false);
     const [username, setUsername] = React.useState("");
     const [password, setPassword] = React.useState("");
 
-    const login = () => {
+
+    const handleLogin = () => {
         mutate({data: {username: username, password: password}});
     }
+
+    React.useEffect(() => {
+        if (!isSuccess || !data) return;
+
+        login({ username, token: data.token });
+
+        const timer = setTimeout(() => {
+            navigate({ to: PathConstants.HOME });
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [isSuccess, data, username, login, navigate]);
 
     if (isPending) {
         return (
@@ -39,15 +54,14 @@ function LoginPage() {
                 <CardContent className={"flex flex-row items-center gap-8"}>
                     <XIcon color={"red"}/><div>{t("login.wrong")}</div>
                 </CardContent>
+                <CardFooter>
+                    <Button onClick={handleLogin}>Try again</Button>
+                </CardFooter>
             </Card>
         )
     }
 
     if (isSuccess) {
-        setTimeout(() => {
-            navigate({ to: PathConstants.HOME })
-        }, 2000)
-
         return (
             <Card>
                 <CardContent>
@@ -69,7 +83,7 @@ function LoginPage() {
             <CardContent>
                 <form onSubmit={(e) => {
                     e.preventDefault();
-                    login();
+                    handleLogin();
                 }}>
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col gap-6">
@@ -106,11 +120,11 @@ function LoginPage() {
                         </div>
                         <div className="flex flex-col gap-2">
                             <Button type="submit" className="w-full">
-                                {t("registration.register")}
+                                {t("login.login")}
                             </Button>
                             <Button asChild variant="outline" className="w-full">
                                 <Link to={PathConstants.REGISTER}>
-                                    {t('registration.sign-in')}
+                                    {t('login.sign-up')}
                                 </Link>
                             </Button>
                         </div>

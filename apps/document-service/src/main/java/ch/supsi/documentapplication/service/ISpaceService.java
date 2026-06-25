@@ -1,6 +1,15 @@
 package ch.supsi.documentapplication.service;
 
+import ch.supsi.documentapplication.model.Space;
+import java.util.List;
+
 public interface ISpaceService {
 
-    Long create(String name, String description);
+    Long create(String owner, String name, String description);
+
+    List<Space> getSpaces(String owner);
+
+    void delete(String username, Long spaceId);
+
+    void update(String username, Long spaceId, String name, String description);
 }

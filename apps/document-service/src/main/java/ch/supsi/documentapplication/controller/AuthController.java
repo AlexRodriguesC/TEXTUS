@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.controller;
 
+import ch.supsi.documentapplication.controller.DTO.response.TokenResponseDTO;
 import ch.supsi.documentapplication.model.User;
 import ch.supsi.documentapplication.service.AuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,14 +29,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<@NotNull String> login(@RequestBody User user) {
+    public ResponseEntity<@NotNull TokenResponseDTO> login(@RequestBody User user) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-        return ResponseEntity.ok(authService.generateToken(user.getUsername()));
+        return ResponseEntity.ok(new TokenResponseDTO(authService.generateToken(user.getUsername())));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<@NotNull String> register(@RequestBody User user) {
-        return ResponseEntity.ok(authService.register(user));
+    public ResponseEntity<@NotNull TokenResponseDTO> register(@RequestBody User user) {
+        return ResponseEntity.ok(new TokenResponseDTO(authService.register(user)));
     }
 }

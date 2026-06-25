@@ -88,7 +88,7 @@ export function MeshGradientBackground({
       {/* Content layer */}
       {children && <div className="relative z-10 h-full w-full">{children}</div>}
 
-      <style jsx>{`
+      <style>{`
         @keyframes meshMove1 {
           0%, 100% {
             transform: translate(0%, 0%) scale(1);

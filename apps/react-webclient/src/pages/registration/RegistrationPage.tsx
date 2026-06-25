@@ -1,6 +1,6 @@
 import {useTranslation} from "react-i18next";
 import * as React from "react";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Eye, EyeClosed, XIcon} from "lucide-react";
@@ -9,11 +9,13 @@ import PathConstants from "@/routing/pathConstants.ts";
 import {Link, useNavigate} from "@tanstack/react-router";
 import {useRegister} from "@/api/generated/authentication/authentication.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
+import {useAuth} from "@/hooks/useAuth.tsx";
 
 function RegistrationPage() {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {mutate, isPending, isError, isSuccess} = useRegister();
+    const {mutate, isPending, isError, isSuccess, data} = useRegister();
+    const { login } = useAuth();
 
     const [isPasswordShown, setIsPasswordShown] = React.useState(false);
     const [username, setUsername]= React.useState("");
@@ -27,6 +29,18 @@ function RegistrationPage() {
         e.preventDefault();
         register();
     }
+
+    React.useEffect(() => {
+        if (!isSuccess || !data) return;
+
+        login({ username, token: data.token });
+
+        const timer = setTimeout(() => {
+            navigate({ to: PathConstants.HOME });
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [isSuccess, data, username, login, navigate]);
 
     if (isPending) {
         return (
@@ -44,15 +58,14 @@ function RegistrationPage() {
                 <CardContent className={"flex flex-row items-center gap-8"}>
                     <XIcon color={"red"}/><div>{t("registration.wrong")}</div>
                 </CardContent>
+                <CardFooter>
+                    <Button onClick={register}>Try again</Button>
+                </CardFooter>
             </Card>
         )
     }
 
     if (isSuccess) {
-        setTimeout(() => {
-            navigate({ to: PathConstants.HOME })
-        }, 2000)
-
         return (
             <Card>
                 <CardContent>
