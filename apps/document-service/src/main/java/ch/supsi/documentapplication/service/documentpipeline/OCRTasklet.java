@@ -1,23 +1,10 @@
-package ch.supsi.documentapplication.service.processingpipeline;
+package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.properties.AppProperties;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
 import lombok.extern.log4j.Log4j2;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
@@ -34,6 +21,15 @@ import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
 @Log4j2
 @Component
@@ -97,22 +93,24 @@ public class OCRTasklet extends ProcessingTasklet {
         PDFRenderer renderer = new PDFRenderer(pdfDocument);
 
         int threads = Math.min(4, Runtime.getRuntime().availableProcessors());
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
-        Semaphore semaphore = new Semaphore(threads);
 
-        List<Future<File>> futures = new ArrayList<>();
         long ocrStart = System.currentTimeMillis();
+        List<Future<File>> futures = new ArrayList<>();
 
-        for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {
-            final int idx = i;
-            semaphore.acquire();
-            futures.add(executor.submit(() -> ocrPage(idx, renderer, tesseractLanguageCode, semaphore)));
-        }
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads);) {
+            Semaphore semaphore = new Semaphore(threads);
 
-        executor.shutdown();
-        boolean terminated = executor.awaitTermination(1L, TimeUnit.HOURS);
-        if (!terminated) {
-            log.error("OCR executor did not terminate gracefully within timeout");
+            for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {
+                final int idx = i;
+                semaphore.acquire();
+                futures.add(executor.submit(() -> ocrPage(idx, renderer, tesseractLanguageCode, semaphore)));
+            }
+
+            executor.shutdown();
+            boolean terminated = executor.awaitTermination(1L, TimeUnit.HOURS);
+            if (!terminated) {
+                log.error("OCR executor did not terminate gracefully within timeout");
+            }
         }
 
         long ocrDuration = System.currentTimeMillis() - ocrStart;

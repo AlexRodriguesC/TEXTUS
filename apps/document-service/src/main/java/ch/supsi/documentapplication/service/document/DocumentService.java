@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.service.document;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
@@ -49,7 +50,7 @@ public class DocumentService implements IDocumentService {
         Space space = spaceStorage.read(spaceId);
 
         if (space == null) {
-            throw new DocumentDomainException("Space not found");
+            throw NotFoundException.spaceNotFoundException(spaceId);
         }
 
         Document document = Document.create(documentBytes);
@@ -67,7 +68,7 @@ public class DocumentService implements IDocumentService {
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", pipelineJob.getName());
             log.error(message, e);
-            throw new DocumentDomainException("Failed to start job", e);
+            throw DocumentDomainException.jobFailedException(e);
         }
     }
 }

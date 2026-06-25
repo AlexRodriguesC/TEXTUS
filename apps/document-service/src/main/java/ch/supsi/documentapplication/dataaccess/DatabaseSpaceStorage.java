@@ -1,14 +1,17 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 @Log4j2
@@ -74,6 +77,16 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .param("description", description)
                 .query()
                 .singleValue();
+    }
+
+    @Override
+    public void updateMindMapStatus(Long spaceId, MindMapStatus status) {
+
+    }
+
+    @Override
+    public void saveMindMap(Long spaceId, MindMap mindMap) {
+
     }
 
     @Override

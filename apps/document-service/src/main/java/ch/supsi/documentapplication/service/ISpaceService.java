@@ -1,6 +1,10 @@
 package ch.supsi.documentapplication.service;
 
+import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.Space;
+import jakarta.validation.constraints.NotNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 public interface ISpaceService {
@@ -12,4 +16,9 @@ public interface ISpaceService {
     void delete(String username, Long spaceId);
 
     void update(String username, Long spaceId, String name, String description);
+
+    void createMindMap(String username, @NotNull Long spaceId);
+
+    @Nullable
+    MindMap getMindMap(String username, @NotNull Long spaceId);
 }

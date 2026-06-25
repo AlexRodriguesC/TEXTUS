@@ -4,6 +4,9 @@ import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO
 import ch.supsi.documentapplication.controller.DTO.request.UpdateSpaceRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ReadSpaceResponseDTO;
+import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ISpaceService;
 import ch.supsi.documentapplication.service.document.IDocumentService;
@@ -15,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/spaces")
@@ -108,6 +112,101 @@ public class SpaceController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/mind-map")
+    @Operation(
+            summary = "Create a mind-map for the specified space",
+            description =
+                    """
+                    Starts asynchronous mind-map generation for the specified space.
+                    The mind-map is created from the documents currently associated with the space.
+                    The request is accepted for background processing and the result may not be immediately available.
+                    """)
+    @ApiResponses({
+        @ApiResponse(responseCode = "202", description = "Mind-map generation accepted"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or the space cannot be processed"),
+        @ApiResponse(responseCode = "404", description = "Space not found"),
+        @ApiResponse(responseCode = "409", description = "A mind-map generation is already in progress for this space"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<MindMap> extractMindMap(
+            @Parameter(description = "The ID of the space to create the mind map for", required = true)
+                    @jakarta.validation.constraints.NotNull
+                    @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
+        String username = authentication.getName();
+        spaceService.createMindMap(username, spaceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/mind-map")
+    @Operation(
+            summary = "Get the mind-map for the specified space",
+            description =
+                    """
+                    Returns the current mind-map for the specified space.
+                    If no mind-map has been generated yet for the space, the endpoint returns 404.
+                    """)
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Mind-map retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Space or mind-map not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<MindMap> getMindMap(
+            @Parameter(description = "The ID of the space to retrieve the mind map for", required = true)
+                    @jakarta.validation.constraints.NotNull
+                    @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
+
+        String username = authentication.getName();
+        return ResponseEntity.ok(spaceService.getMindMap(username, spaceId));
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/mind-map/status")
+    @Operation(
+            summary = "Get the mind-map processing status for the specified space",
+            description =
+                    """
+                    Returns the current processing status of the mind-map for the specified space.
+                    The response indicates whether mind-map generation is pending, in progress, completed, or failed.
+                    """)
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Mind-map status retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Space not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<MindMapStatus> getMindMapStatus(
+            @Parameter(description = "The ID of the space to retrieve the mind-map status for", required = true)
+                    @jakarta.validation.constraints.NotNull
+                    @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
+        return ResponseEntity.ok(MindMapStatus.DONE);
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/documents/status")
+    @Operation(
+            summary = "Get document processing statuses for the specified space",
+            description =
+                    """
+                    Returns the processing status of all documents associated with the specified space.
+                    Each document status indicates whether processing is pending, in progress, completed, or failed.
+                    """)
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Document statuses retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Space not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<List<DocumentStatus>> getDocumentStatuses(
+            @Parameter(description = "The ID of the space to retrieve document statuses for", required = true)
+                    @jakarta.validation.constraints.NotNull
+                    @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
+        return ResponseEntity.ok(List.of());
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{spaceId}/documents")
     @Operation(
             summary = "Upload a document to the specified space",
@@ -143,6 +242,7 @@ public class SpaceController {
             return ResponseEntity.badRequest().build();
         }
 
+        // todo: ensure owner of...lol
         documentService.createDocument(document, spaceId);
         return ResponseEntity.accepted().build();
     }

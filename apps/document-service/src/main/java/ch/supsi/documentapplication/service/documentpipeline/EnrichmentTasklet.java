@@ -1,13 +1,10 @@
-package ch.supsi.documentapplication.service.processingpipeline;
+package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.clients.enrichment.EnrichmentClient;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -17,6 +14,10 @@ import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @Log4j2
 @Component

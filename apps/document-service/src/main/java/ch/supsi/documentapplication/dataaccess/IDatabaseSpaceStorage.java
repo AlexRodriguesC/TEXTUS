@@ -1,6 +1,9 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
+
 import java.util.List;
 
 public interface IDatabaseSpaceStorage {
@@ -12,6 +15,10 @@ public interface IDatabaseSpaceStorage {
     List<Space> readAll(String owner);
 
     void update(Long spaceId, String name, String description);
+
+    void updateMindMapStatus(Long spaceId, MindMapStatus status);
+
+    void saveMindMap(Long spaceId, MindMap mindMap);
 
     void delete(Long spaceId);
 }

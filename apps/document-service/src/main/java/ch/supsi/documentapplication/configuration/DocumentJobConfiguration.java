@@ -4,11 +4,7 @@ import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.ChunkDeserializer;
 import ch.supsi.documentapplication.service.clients.LLMInputSanitizer;
 import ch.supsi.documentapplication.service.clients.StringSanitizer;
-import ch.supsi.documentapplication.service.processingpipeline.CleanupTasklet;
-import ch.supsi.documentapplication.service.processingpipeline.EnrichmentTasklet;
-import ch.supsi.documentapplication.service.processingpipeline.JSONOutputTasklet;
-import ch.supsi.documentapplication.service.processingpipeline.OCRTasklet;
-import ch.supsi.documentapplication.service.processingpipeline.SegmentationTasklet;
+import ch.supsi.documentapplication.service.documentpipeline.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.pemistahl.lingua.api.LanguageDetector;
@@ -25,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-public class PipelineJobConfiguration {
+public class DocumentJobConfiguration {
 
     @Bean
     public StringSanitizer stringSanitizer() {
@@ -96,10 +92,8 @@ public class PipelineJobConfiguration {
     private TaskletStep buildTaskletStep(
             String stepName, JobRepository jobRepository, PlatformTransactionManager txManager, Tasklet tasklet) {
 
-        var stepBuilder = new StepBuilder(stepName, jobRepository)
+        return new StepBuilder(stepName, jobRepository)
                 .tasklet(tasklet, txManager)
                 .build();
-
-        return stepBuilder;
     }
 }

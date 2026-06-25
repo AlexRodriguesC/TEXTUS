@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.unit.service.processingpipeline
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.model.Chunk
-import ch.supsi.documentapplication.service.processingpipeline.JSONOutputTasklet
+import ch.supsi.documentapplication.service.documentpipeline.JSONOutputTasklet
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.scope.context.StepContext
 import org.springframework.batch.core.step.StepContribution

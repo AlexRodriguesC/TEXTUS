@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION documents.create_mind_map(p_space_id BIGINT)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS
+$$
+    BEGIN
+        -- Validate space exists
+        IF NOT EXISTS (
+            SELECT 1 FROM documents.space WHERE id = p_space_id
+        ) THEN
+            RAISE EXCEPTION 'Space with id % not found', p_space_id;
+        END IF;
+
+        INSERT INTO documents.mind_map(space_id) VALUES (p_space_id);
+    END;
+$$

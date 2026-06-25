@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service.processingpipeline;
+package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import lombok.extern.log4j.Log4j2;

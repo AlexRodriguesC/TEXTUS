@@ -1,15 +1,16 @@
 package ch.supsi.documentapplication.model;
 
-import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 public class Space {
 
     private Long id;
-    private Long userId;
+    private String owner;
     private String name;
     private String description;
     private MindMap mindMap;
