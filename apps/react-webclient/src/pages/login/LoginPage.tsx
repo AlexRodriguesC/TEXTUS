@@ -10,6 +10,7 @@ import PathConstants from "@/routing/pathConstants.ts";
 import {useLogin} from "@/api/generated/authentication/authentication.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import {useAuth} from "@/hooks/useAuth.tsx";
+import {successToast} from "@/lib/toasts.ts";
 
 function LoginPage() {
     const {t} = useTranslation();
@@ -20,7 +21,6 @@ function LoginPage() {
     const [isPasswordShown, setIsPasswordShown] = React.useState(false);
     const [username, setUsername] = React.useState("");
     const [password, setPassword] = React.useState("");
-
 
     const handleLogin = () => {
         mutate({data: {username: username, password: password}});
@@ -33,12 +33,13 @@ function LoginPage() {
 
         const timer = setTimeout(() => {
             navigate({ to: PathConstants.HOME });
+            successToast(t("login.success"));
         }, 2000);
 
         return () => clearTimeout(timer);
     }, [isSuccess, data, username, login, navigate]);
 
-    if (isPending) {
+    if (isPending || isSuccess) {
         return (
             <Card>
                 <CardContent className={"flex flex-row items-center gap-8"}>
@@ -60,17 +61,6 @@ function LoginPage() {
             </Card>
         )
     }
-
-    if (isSuccess) {
-        return (
-            <Card>
-                <CardContent>
-                    {t("login.success")}
-                </CardContent>
-            </Card>
-        )
-    }
-
 
     return (
         <Card className="w-full max-w-sm">

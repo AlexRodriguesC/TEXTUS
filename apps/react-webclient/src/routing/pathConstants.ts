@@ -3,7 +3,7 @@ const PathConstants = {
     LOGIN: "/login",
     REGISTER: "/register",
     SPACES: "/spaces",
-    SPACE: "/spaces/:spaceId",
-}
+    SPACE: "/spaces/$spaceId",
+} as const;
 
 export default PathConstants;

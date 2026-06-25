@@ -1,4 +1,5 @@
 import {useTranslation} from "react-i18next";
+import type {SubmitEvent} from "react";
 import * as React from "react";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
@@ -10,6 +11,7 @@ import {Link, useNavigate} from "@tanstack/react-router";
 import {useRegister} from "@/api/generated/authentication/authentication.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import {useAuth} from "@/hooks/useAuth.tsx";
+import {successToast} from "@/lib/toasts.ts";
 
 function RegistrationPage() {
     const {t} = useTranslation();
@@ -25,7 +27,7 @@ function RegistrationPage() {
         mutate({data:{username, password}})
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: SubmitEvent) => {
         e.preventDefault();
         register();
     }
@@ -33,16 +35,17 @@ function RegistrationPage() {
     React.useEffect(() => {
         if (!isSuccess || !data) return;
 
-        login({ username, token: data.token });
+        login({ username, token: data.data.token });
 
         const timer = setTimeout(() => {
             navigate({ to: PathConstants.HOME });
+            successToast(t("registration.success"));
         }, 2000);
 
         return () => clearTimeout(timer);
-    }, [isSuccess, data, username, login, navigate]);
+    }, [isSuccess, data, username, login]);
 
-    if (isPending) {
+    if (isPending || isSuccess) {
         return (
             <Card>
                 <CardContent className={"flex flex-row items-center gap-8"}>
@@ -61,16 +64,6 @@ function RegistrationPage() {
                 <CardFooter>
                     <Button onClick={register}>Try again</Button>
                 </CardFooter>
-            </Card>
-        )
-    }
-
-    if (isSuccess) {
-        return (
-            <Card>
-                <CardContent>
-                    {t("registration.success")}
-                </CardContent>
             </Card>
         )
     }

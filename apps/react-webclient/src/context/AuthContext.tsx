@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import {createContext} from "react";
 
 export type User = {
     username: string,
@@ -7,12 +7,14 @@ export type User = {
 
 interface AuthContext {
     user: User | null,
+    isAuthenticated: boolean,
     login: (user: User) => void,
     logout: () => void
 }
 
 export const AuthContext = createContext<AuthContext>({
     user: null,
+    isAuthenticated: false,
     login: () => null,
     logout: () => null
 });
