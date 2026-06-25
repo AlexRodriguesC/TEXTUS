@@ -67,7 +67,8 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
     @Override
     public void update(Long spaceId, String name, String description) {
-        jdbcClient.sql("SELECT documents.update_space(:spaceId, :name, :description)")
+        jdbcClient
+                .sql("SELECT documents.update_space(:spaceId, :name, :description)")
                 .param("spaceId", spaceId)
                 .param("name", name)
                 .param("description", description)
@@ -77,7 +78,8 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
     @Override
     public void delete(Long spaceId) {
-        jdbcClient.sql("SELECT documents.delete_space(:spaceId)")
+        jdbcClient
+                .sql("SELECT documents.delete_space(:spaceId)")
                 .param("spaceId", spaceId)
                 .query()
                 .singleValue();

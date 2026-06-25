@@ -83,12 +83,11 @@ public class SpaceController {
     @DeleteMapping(value = "/{spaceId}")
     @Operation(summary = "Deletes a space", description = "Deletes a space by id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Space deleted"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(responseCode = "204", description = "Space deleted"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Void> deleteSpace(
-            @Parameter(hidden = true) Authentication authentication,
-            @PathVariable Long spaceId) {
+            @Parameter(hidden = true) Authentication authentication, @PathVariable Long spaceId) {
         String username = authentication.getName();
         spaceService.delete(username, spaceId);
         return ResponseEntity.noContent().build();
@@ -97,8 +96,8 @@ public class SpaceController {
     @PatchMapping(value = "/{spaceId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Updates a space", description = "Updates a space name and description by id.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Space updated"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(responseCode = "204", description = "Space updated"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Void> updateSpace(
             @Parameter(hidden = true) Authentication authentication,

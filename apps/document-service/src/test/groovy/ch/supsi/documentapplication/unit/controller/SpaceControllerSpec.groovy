@@ -2,14 +2,18 @@ package ch.supsi.documentapplication.unit.controller
 
 import ch.supsi.documentapplication.controller.SpaceController
 import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ISpaceService
+import ch.supsi.documentapplication.service.JwtFilter
 import ch.supsi.documentapplication.service.document.IDocumentService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.security.core.Authentication
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
@@ -20,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(SpaceController)
+@AutoConfigureMockMvc(addFilters = false)
 class SpaceControllerSpec extends Specification {
 
     @Autowired
@@ -30,6 +35,17 @@ class SpaceControllerSpec extends Specification {
 
     @SpringBean
     IDocumentService documentService = Mock()
+
+    @SpringBean
+    JwtFilter jwtFilter = Mock()
+
+    @SpringBean
+    AuthService authService = Mock()
+
+    @SpringBean
+    Authentication authentication = Mock() {
+        getName() >> "pippo"
+    }
 
     @SpringBean
     AppProperties appProperties = Mock() {
@@ -44,6 +60,7 @@ class SpaceControllerSpec extends Specification {
         when:
         def result = mockMvc.perform(
                 post("/api/v1/spaces")
+                        .principal(authentication)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
 

@@ -4,7 +4,6 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.model.Space;
 import java.util.List;
 import java.util.Objects;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

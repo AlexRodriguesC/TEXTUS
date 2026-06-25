@@ -22,6 +22,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Change wrapper perms
+        working-directory: apps/document-service
+        run: chmod +x ./gradlew
+
       - name: Run unit tests
         working-directory: apps/document-service
         run: ./gradlew clean test jacocoTestReport
@@ -53,6 +57,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Change wrapper perms
+        working-directory: apps/document-service
+        run: chmod +x ./gradlew
 
       - name: Run integration tests
         working-directory: apps/document-service
