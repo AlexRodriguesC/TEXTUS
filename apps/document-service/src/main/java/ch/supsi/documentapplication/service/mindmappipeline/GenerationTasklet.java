@@ -51,7 +51,7 @@ public class GenerationTasklet implements Tasklet {
 
         MindMap mindMap = mindMapClient.extractMindMap(chunks);
 
-        databaseSpaceStorage.saveMindMap(spaceIdLong, mindMap);
+        databaseSpaceStorage.createMindMap(spaceIdLong, mindMap);
         databaseSpaceStorage.updateMindMapStatus(spaceIdLong, MindMapStatus.DONE);
 
         return RepeatStatus.FINISHED;

@@ -8,4 +8,8 @@ public class NotFoundException extends RuntimeException {
     public static NotFoundException spaceNotFoundException(Long spaceId) {
         return new NotFoundException("Space with id " + spaceId + " not found");
     }
+
+    public static NotFoundException mindMapNotFoundException(Long spaceId) {
+        return new NotFoundException("Mind map for space with id " + spaceId + " not found");
+    }
 }

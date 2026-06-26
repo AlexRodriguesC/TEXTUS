@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.exception.NotFoundException;
+import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
@@ -37,7 +38,7 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
-    public void createDocument(MultipartFile documentMultipart, Long spaceId) {
+    public void createDocument(MultipartFile documentMultipart, String owner, Long spaceId) {
         byte[] documentBytes;
         try {
             documentBytes = documentMultipart.getBytes();
@@ -51,6 +52,10 @@ public class DocumentService implements IDocumentService {
 
         if (space == null) {
             throw NotFoundException.spaceNotFoundException(spaceId);
+        }
+
+        if (!space.getOwner().equals(owner)) {
+            throw UnauthorizedException.userNotOwnerOfSpace(owner, spaceId);
         }
 
         Document document = Document.create(documentBytes);

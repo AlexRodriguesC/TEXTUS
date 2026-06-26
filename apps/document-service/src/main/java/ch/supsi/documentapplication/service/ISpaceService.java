@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
 import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -21,4 +22,6 @@ public interface ISpaceService {
 
     @Nullable
     MindMap getMindMap(String username, @NotNull Long spaceId);
+
+    MindMapStatus getMindMapStatus(String username, @NotNull Long spaceId);
 }

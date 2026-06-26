@@ -97,7 +97,7 @@ public class OCRTasklet extends ProcessingTasklet {
         long ocrStart = System.currentTimeMillis();
         List<Future<File>> futures = new ArrayList<>();
 
-        try (ExecutorService executor = Executors.newFixedThreadPool(threads);) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads) ) {
             Semaphore semaphore = new Semaphore(threads);
 
             for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {

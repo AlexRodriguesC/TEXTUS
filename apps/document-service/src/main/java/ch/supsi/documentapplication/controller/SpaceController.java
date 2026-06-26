@@ -3,10 +3,11 @@ package ch.supsi.documentapplication.controller;
 import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.request.UpdateSpaceRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.MindMapResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.MindMapStatusDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ReadSpaceResponseDTO;
 import ch.supsi.documentapplication.model.DocumentStatus;
 import ch.supsi.documentapplication.model.MindMap;
-import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ISpaceService;
 import ch.supsi.documentapplication.service.document.IDocumentService;
@@ -88,6 +89,7 @@ public class SpaceController {
     @Operation(summary = "Deletes a space", description = "Deletes a space by id.")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Space deleted"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Void> deleteSpace(
@@ -101,6 +103,7 @@ public class SpaceController {
     @Operation(summary = "Updates a space", description = "Updates a space name and description by id.")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Space updated"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Void> updateSpace(
@@ -124,6 +127,7 @@ public class SpaceController {
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Mind-map generation accepted"),
         @ApiResponse(responseCode = "400", description = "Invalid request or the space cannot be processed"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "404", description = "Space not found"),
         @ApiResponse(responseCode = "409", description = "A mind-map generation is already in progress for this space"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -149,10 +153,11 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Mind-map retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "404", description = "Space or mind-map not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<MindMap> getMindMap(
+    public ResponseEntity<MindMapResponseDTO> getMindMap(
             @Parameter(description = "The ID of the space to retrieve the mind map for", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
@@ -160,7 +165,9 @@ public class SpaceController {
             @Parameter(hidden = true) Authentication authentication) {
 
         String username = authentication.getName();
-        return ResponseEntity.ok(spaceService.getMindMap(username, spaceId));
+        var mindMap = spaceService.getMindMap(username, spaceId);
+        var dto = MindMapResponseDTO.from(mindMap);
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/mind-map/status")
@@ -173,16 +180,19 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Mind-map status retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "404", description = "Space not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<MindMapStatus> getMindMapStatus(
+    public ResponseEntity<MindMapStatusDTO> getMindMapStatus(
             @Parameter(description = "The ID of the space to retrieve the mind-map status for", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
                     Long spaceId,
             @Parameter(hidden = true) Authentication authentication) {
-        return ResponseEntity.ok(MindMapStatus.DONE);
+        String username = authentication.getName();
+        var status = spaceService.getMindMapStatus(username, spaceId);
+        return ResponseEntity.ok(new MindMapStatusDTO(status));
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/documents/status")
@@ -195,6 +205,7 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Document statuses retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "404", description = "Space not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
@@ -219,11 +230,12 @@ public class SpaceController {
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Document accepted for processing"),
         @ApiResponse(responseCode = "400", description = "Invalid request or missing file"),
+        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "413", description = "Uploaded file is too large"),
         @ApiResponse(responseCode = "415", description = "Unsupported media type"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<@org.jetbrains.annotations.NotNull Void> uploadDocument(
+    public ResponseEntity<@org.jetbrains.annotations.NotNull Void> createDocument(
             @Parameter(
                             description = "The document file to upload",
                             required = true,
@@ -237,13 +249,14 @@ public class SpaceController {
             @Parameter(description = "The ID of the space to upload the document to", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
-                    Long spaceId) {
+                    Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
         if (document.isEmpty() || document.getSize() >= appProperties.getMaxDocumentSize()) {
             return ResponseEntity.badRequest().build();
         }
 
-        // todo: ensure owner of...lol
-        documentService.createDocument(document, spaceId);
+        String username = authentication.getName();
+        documentService.createDocument(document, username, spaceId);
         return ResponseEntity.accepted().build();
     }
 }

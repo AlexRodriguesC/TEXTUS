@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -27,8 +28,7 @@ public class SpaceService implements ISpaceService {
     private final Job mindMapJob;
 
     @Autowired
-    public SpaceService(IDatabaseSpaceStorage spaceStorage, JobOperator asyncJobOperator,
-                        Job mindMapJob) {
+    public SpaceService(IDatabaseSpaceStorage spaceStorage, JobOperator asyncJobOperator, Job mindMapJob) {
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.mindMapJob = mindMapJob;
@@ -56,26 +56,19 @@ public class SpaceService implements ISpaceService {
 
     @Override
     public void update(String username, Long spaceId, String name, String description) {
-        var spaces = spaceStorage.readAll(username);
-        boolean found = spaces.stream().anyMatch(space -> Objects.equals(space.getId(), spaceId));
-        if (!found) {
-            return;
-        }
-        spaceStorage.update(spaceId, name, description);
+        var space = getSpaceOrThrow(username, spaceId);
+        var updatedName = name == null || name.isEmpty() ? space.getName() : name;
+        var updatedDescription = description == null || description.isEmpty() ? space.getDescription() : description;
+
+        spaceStorage.update(space.getId(), updatedName, updatedDescription);
     }
 
     @Override
     public void createMindMap(String username, Long spaceId) {
-        var space = spaceStorage.read(spaceId);
-        if (space == null) {
-            throw NotFoundException.spaceNotFoundException(spaceId);
-        }
-        if (!space.getOwner().equals(username)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(username, spaceId);
-        }
+        var space = getSpaceOrThrow(username, spaceId);
 
         JobParameters jobParameters = new JobParametersBuilder()
-                .addString("SPACE_ID", spaceId.toString())
+                .addString("SPACE_ID", space.getId().toString())
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
@@ -90,6 +83,33 @@ public class SpaceService implements ISpaceService {
 
     @Override
     public @Nullable MindMap getMindMap(String username, Long spaceId) {
-        return null;
+        var space = getSpaceOrThrow(username, spaceId);
+
+        return spaceStorage.readMindMap(space.getId());
+    }
+
+    @Override
+    public MindMapStatus getMindMapStatus(String username, Long spaceId) {
+        var mindMap = getMindMap(username, spaceId);
+        if (mindMap == null) {
+            throw NotFoundException.mindMapNotFoundException(spaceId);
+        }
+
+        return mindMap.getMindMapStatus();
+    }
+
+    private Space getSpaceOrThrow(String username, Long spaceId) {
+        var space = spaceStorage.read(spaceId);
+        if (space == null) {
+            throw NotFoundException.spaceNotFoundException(spaceId);
+        }
+        return validateOwner(username, space);
+    }
+
+    private Space validateOwner(String requester, Space space) {
+        if (!space.getOwner().equals(requester)) {
+            throw UnauthorizedException.userNotOwnerOfSpace(requester, space.getId());
+        }
+        return space;
     }
 }

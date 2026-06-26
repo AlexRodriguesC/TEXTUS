@@ -1,10 +1,16 @@
 package ch.supsi.documentapplication.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
+@Getter
+@Setter
 public class MindMap {
 
+    private MindMapStatus mindMapStatus;
     private MindMapNode root;
 
     public Set<Long> getAllChunkIds() {

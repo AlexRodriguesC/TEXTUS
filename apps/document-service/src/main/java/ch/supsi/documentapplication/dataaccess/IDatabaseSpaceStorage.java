@@ -12,13 +12,15 @@ public interface IDatabaseSpaceStorage {
 
     Space read(Long id);
 
+    MindMap readMindMap(Long spaceId);
+
     List<Space> readAll(String owner);
 
     void update(Long spaceId, String name, String description);
 
     void updateMindMapStatus(Long spaceId, MindMapStatus status);
 
-    void saveMindMap(Long spaceId, MindMap mindMap);
+    void createMindMap(Long spaceId, MindMap mindMap);
 
     void delete(Long spaceId);
 }

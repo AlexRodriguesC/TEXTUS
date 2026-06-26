@@ -75,11 +75,11 @@ class SpaceControllerSpec extends Specification {
 
         when:
         def result = mockMvc.perform(
-                multipart("/api/v1/spaces/1/documents").file(file))
+                multipart("/api/v1/spaces/1/documents").file(file).principal(authentication))
 
         then:
         result.andExpect(status().isAccepted())
-        1 * documentService.createDocument(_, 1L)
+        1 * documentService.createDocument(_, "pippo", 1L)
     }
 
     def "should return 400 when file is empty"() {
@@ -106,7 +106,7 @@ class SpaceControllerSpec extends Specification {
         }
 
         when:
-        def response = controller.uploadDocument(file, 1L)
+        def response = controller.createDocument(file, 1L, authentication)
 
         then:
         response.statusCode.value() == 400

@@ -6,6 +6,7 @@ public class UnauthorizedException extends RuntimeException {
     }
 
     public static UnauthorizedException userNotOwnerOfSpace(String username, Long spaceId) {
-        return new UnauthorizedException(String.format("User %s is not the owner of space with id %d", username, spaceId));
+        return new UnauthorizedException(
+                String.format("User %s is not the owner of space with id %d", username, spaceId));
     }
 }

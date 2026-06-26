@@ -14,11 +14,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class MindMapJobConfiguration {
 
     @Bean
-    public Job mindMapJob(
-            JobRepository jobRepository, Step generate) {
-        return new JobBuilder("mindMapJob", jobRepository)
-                .start(generate)
-                .build();
+    public Job mindMapJob(JobRepository jobRepository, Step generate) {
+        return new JobBuilder("mindMapJob", jobRepository).start(generate).build();
     }
 
     @Bean
@@ -28,5 +25,4 @@ public class MindMapJobConfiguration {
                 .tasklet(generationTasklet, txManager)
                 .build();
     }
-
 }
