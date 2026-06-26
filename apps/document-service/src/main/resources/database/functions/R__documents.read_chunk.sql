@@ -2,6 +2,7 @@ CREATE OR REPLACE FUNCTION documents.read_chunk(p_chunk_id BIGINT)
     RETURNS TABLE
             (
                 id           BIGINT,
+                document_id     BIGINT,
                 tokens_in    INTEGER,
                 tokens_out   INTEGER,
                 title        TEXT,
@@ -16,6 +17,7 @@ $$
 BEGIN
     RETURN QUERY
         SELECT c.id,
+               c.document_id,
                c.tokens_in,
                c.tokens_out,
                c.title,

@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.service.documentpipeline;
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.DocumentStatus;
 import ch.supsi.documentapplication.properties.AppProperties;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
@@ -37,15 +39,18 @@ import java.util.concurrent.*;
 public class OCRTasklet extends ProcessingTasklet {
 
     private final IFileSystemDocumentStorage documentStorage;
+    private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final LanguageDetector languageDetector;
     private final String tessdataPath;
 
     @Autowired
     public OCRTasklet(
             IFileSystemDocumentStorage documentStorage,
+            IDatabaseDocumentStorage databaseDocumentStorage,
             LanguageDetector languageDetector,
             AppProperties appProperties) {
         this.documentStorage = documentStorage;
+        this.databaseDocumentStorage = databaseDocumentStorage;
         this.languageDetector = languageDetector;
         this.tessdataPath = appProperties.getTessdataPath();
     }
@@ -54,6 +59,7 @@ public class OCRTasklet extends ProcessingTasklet {
             throws Exception {
         log.debug("Executing OCR step for document with documentId {}", documentId);
 
+        databaseDocumentStorage.updateDocumentStatus(databaseDocumentId, DocumentStatus.PROCESSING);
         Document document = documentStorage.read(getDocumentIdAsUUID());
 
         try (PDDocument pdfDocument = Loader.loadPDF(document.getBytes())) {
@@ -97,7 +103,7 @@ public class OCRTasklet extends ProcessingTasklet {
         long ocrStart = System.currentTimeMillis();
         List<Future<File>> futures = new ArrayList<>();
 
-        try (ExecutorService executor = Executors.newFixedThreadPool(threads) ) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
             Semaphore semaphore = new Semaphore(threads);
 
             for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {

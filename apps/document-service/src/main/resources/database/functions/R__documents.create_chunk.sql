@@ -6,7 +6,8 @@ CREATE OR REPLACE FUNCTION documents.create_chunk(
     p_summary TEXT,
     p_key TEXT,
     p_keywords TEXT[],
-    p_related_keys TEXT[]
+    p_related_keys TEXT[],
+    p_document_id BIGINT
 )
     RETURNS BIGINT
     LANGUAGE plpgsql
@@ -25,8 +26,14 @@ BEGIN
         RAISE EXCEPTION 'Space with id % not found', p_space_id;
     END IF;
 
-    INSERT INTO documents.chunk (space_id, tokens_in, tokens_out, title, summary, key)
-    VALUES (p_space_id, p_tokens_in, p_tokens_out, p_title, p_summary, p_key)
+    IF NOT EXISTS (
+        SELECT 1 FROM documents.document WHERE id = p_document_id
+    ) THEN
+        RAISE EXCEPTION 'Document with id % not found', p_space_id;
+    END IF;
+
+    INSERT INTO documents.chunk (space_id, document_id, tokens_in, tokens_out, title, summary, key)
+    VALUES (p_space_id, p_document_id, p_tokens_in, p_tokens_out, p_title, p_summary, p_key)
     RETURNING id INTO v_chunk_id;
 
     FOREACH v_keyword IN ARRAY COALESCE(p_keywords, '{}') LOOP

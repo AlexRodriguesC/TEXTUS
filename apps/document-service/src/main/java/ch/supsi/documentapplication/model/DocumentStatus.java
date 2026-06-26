@@ -1,3 +1,7 @@
 package ch.supsi.documentapplication.model;
 
-public enum DocumentStatus {}
+public enum DocumentStatus {
+    RECEIVED,
+    PROCESSING,
+    DONE
+}

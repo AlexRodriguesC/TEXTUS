@@ -1,11 +1,13 @@
 package ch.supsi.documentapplication.unit.service
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.DocumentDomainException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Document
+import ch.supsi.documentapplication.model.DocumentStatus
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.service.document.DocumentService
 import org.springframework.batch.core.job.Job
@@ -17,92 +19,149 @@ import spock.lang.Specification
 
 class DocumentServiceSpec extends Specification {
 
-    def documentStorage = Mock(IFileSystemDocumentStorage)
-    def spaceStorage = Mock(IDatabaseSpaceStorage)
-    def jobOperator = Mock(JobOperator)
-    def pipelineJob = Mock(Job)
+    private final IFileSystemDocumentStorage documentFsStorage = Mock()
+    private final IDatabaseDocumentStorage databaseDocumentStorage = Mock()
+    private final IDatabaseSpaceStorage spaceStorage = Mock()
+    private final JobOperator jobOperator = Mock()
+    private final Job pipelineJob = Mock()
 
-    def service = new DocumentService(documentStorage, spaceStorage, jobOperator, pipelineJob)
+    private final DocumentService service =
+            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob)
 
-    def "should create document and start pipeline job"() {
+    def "should create document, persist it, and start pipeline job"() {
         given:
-        def file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        def space = Space.builder().id(10L).owner("alice").build()
+        String owner = "alice"
+        Long spaceId = 10L
+        byte[] bytes = "hello".bytes
+        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", bytes)
+        Space space = Space.builder().id(spaceId).owner(owner).build()
+        Long databaseDocId = 99L
 
         when:
-        service.createDocument(file, "alice", 10L)
+        service.createDocument(file, owner, spaceId)
 
         then:
-        1 * spaceStorage.read(10L) >> space
-        1 * documentStorage.create(_ as Document) >> { Document d ->
-            assert d != null
-            assert d.getDocumentId() != null
-        }
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.create(_ as Document, spaceId) >> databaseDocId
+        1 * documentFsStorage.create({ Document document ->
+            document != null
+        })
         1 * jobOperator.start(pipelineJob, _ as JobParameters)
-        noExceptionThrown()
+        0 * _
     }
 
-    def "should throw not found when space does not exist"() {
+    def "should throw not found when space is missing"() {
         given:
-        def file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
+        String owner = "alice"
+        Long spaceId = 10L
+        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
 
         when:
-        service.createDocument(file, "alice", 10L)
+        service.createDocument(file, owner, spaceId)
 
         then:
-        1 * spaceStorage.read(10L) >> null
-        def e = thrown(NotFoundException)
-        e.message
-        0 * documentStorage._
+        1 * spaceStorage.read(spaceId) >> null
+        NotFoundException e = thrown(NotFoundException)
+        0 * databaseDocumentStorage._
+        0 * documentFsStorage._
         0 * jobOperator._
     }
 
     def "should throw unauthorized when owner does not match"() {
         given:
-        def file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        def space = Space.builder().id(10L).owner("bob").build()
+        String owner = "alice"
+        Long spaceId = 10L
+        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
+        Space space = Space.builder().id(spaceId).owner("bob").build()
 
         when:
-        service.createDocument(file, "alice", 10L)
+        service.createDocument(file, owner, spaceId)
 
         then:
-        1 * spaceStorage.read(10L) >> space
-        def e = thrown(UnauthorizedException)
-        e.message
-        0 * documentStorage._
+        1 * spaceStorage.read(spaceId) >> space
+        UnauthorizedException e = thrown(UnauthorizedException)
+        0 * databaseDocumentStorage._
+        0 * documentFsStorage._
         0 * jobOperator._
     }
 
     def "should throw domain exception when file bytes cannot be read"() {
         given:
-        def file = Stub(MultipartFile)
-        file.getOriginalFilename() >> "broken.txt"
-        file.getBytes() >> { throw new IOException("boom") }
+        String owner = "alice"
+        Long spaceId = 10L
+        def file = Stub(MultipartFile) {
+            getOriginalFilename() >> "doc.txt"
+            getBytes() >> { throw new IOException("boom") }
+        }
 
         when:
-        service.createDocument(file, "alice", 10L)
+        service.createDocument(file, owner, spaceId)
 
         then:
-        def e = thrown(DocumentDomainException)
+        DocumentDomainException e = thrown(DocumentDomainException)
         e.message == "Failed to get file bytes"
         0 * spaceStorage._
-        0 * documentStorage._
+        0 * databaseDocumentStorage._
+        0 * documentFsStorage._
         0 * jobOperator._
     }
 
     def "should throw domain exception when job start fails"() {
         given:
-        def file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        def space = Space.builder().id(10L).owner("alice").build()
+        String owner = "alice"
+        Long spaceId = 10L
+        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
+        Space space = Space.builder().id(spaceId).owner(owner).build()
+        Long databaseDocId = 99L
 
         when:
-        service.createDocument(file, "alice", 10L)
+        service.createDocument(file, owner, spaceId)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.create(_ as Document, spaceId) >> databaseDocId
+        1 * documentFsStorage.create(_ as Document)
+        1 * jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
+        DocumentDomainException e = thrown(DocumentDomainException)
+        e.message == "Failed to start asynchronous job"
+    }
+
+    def "should return document statuses for owned space"() {
+        given:
+        String owner = "alice"
+        Long spaceId = 10L
+        Space space = Space.builder().id(spaceId).owner(owner).build()
+        List<DocumentStatus> statuses = [DocumentStatus.RECEIVED, DocumentStatus.DONE]
+
+        when:
+        List<DocumentStatus> result = service.getDocumentStatuses(owner, spaceId)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.getDocumentStatuses(spaceId) >> statuses
+        result == statuses
+    }
+
+    def "should throw not found when space is missing for statuses"() {
+        when:
+        service.getDocumentStatuses("alice", 10L)
+
+        then:
+        1 * spaceStorage.read(10L) >> null
+        thrown(NotFoundException)
+        0 * databaseDocumentStorage._
+    }
+
+    def "should throw unauthorized when requesting statuses for non owner"() {
+        given:
+        Space space = Space.builder().id(10L).owner("bob").build()
+
+        when:
+        service.getDocumentStatuses("alice", 10L)
 
         then:
         1 * spaceStorage.read(10L) >> space
-        1 * documentStorage.create(_ as Document)
-        1 * jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("job failed") }
-        def e = thrown(DocumentDomainException)
-        e.message == "Failed to start asynchronous job"
+        thrown(UnauthorizedException)
+        0 * databaseDocumentStorage._
     }
 }

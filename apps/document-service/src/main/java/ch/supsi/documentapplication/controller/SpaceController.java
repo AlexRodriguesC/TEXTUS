@@ -2,11 +2,7 @@ package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.request.UpdateSpaceRequestDTO;
-import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.MindMapResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.MindMapStatusDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ReadSpaceResponseDTO;
-import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.controller.DTO.response.*;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ISpaceService;
@@ -209,13 +205,15 @@ public class SpaceController {
         @ApiResponse(responseCode = "404", description = "Space not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<List<DocumentStatus>> getDocumentStatuses(
+    public ResponseEntity<DocumentStatusesResponseDTO> getDocumentStatuses(
             @Parameter(description = "The ID of the space to retrieve document statuses for", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
                     Long spaceId,
             @Parameter(hidden = true) Authentication authentication) {
-        return ResponseEntity.ok(List.of());
+        String owner = authentication.getName();
+        var statuses = documentService.getDocumentStatuses(owner, spaceId);
+        return ResponseEntity.ok(new DocumentStatusesResponseDTO(statuses));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{spaceId}/documents")

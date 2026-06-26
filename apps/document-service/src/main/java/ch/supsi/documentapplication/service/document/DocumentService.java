@@ -1,11 +1,13 @@
 package ch.supsi.documentapplication.service.document;
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.DocumentStatus;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -16,22 +18,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Log4j2
 @Service
 public class DocumentService implements IDocumentService {
 
-    private final IFileSystemDocumentStorage documentStorage;
+    private final IFileSystemDocumentStorage documentFsStorage;
+    private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job pipelineJob;
 
     @Autowired
     public DocumentService(
-            IFileSystemDocumentStorage documentStorage,
+            IFileSystemDocumentStorage documentFsStorage,
+            IDatabaseDocumentStorage databaseDocumentStorage,
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
             Job pipelineJob) {
-        this.documentStorage = documentStorage;
+        this.documentFsStorage = documentFsStorage;
+        this.databaseDocumentStorage = databaseDocumentStorage;
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.pipelineJob = pipelineJob;
@@ -60,11 +67,13 @@ public class DocumentService implements IDocumentService {
 
         Document document = Document.create(documentBytes);
 
-        documentStorage.create(document);
+        Long databaseDocId = databaseDocumentStorage.create(document, spaceId);
+        documentFsStorage.create(document);
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", document.getDocumentId().toString())
-                .addString("SPACE_ID", spaceId.toString())
+                .addLong("DATABASE_DOCUMENT_ID", databaseDocId)
+                .addLong("SPACE_ID", spaceId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
@@ -75,5 +84,26 @@ public class DocumentService implements IDocumentService {
             log.error(message, e);
             throw DocumentDomainException.jobFailedException(e);
         }
+    }
+
+    @Override
+    public List<DocumentStatus> getDocumentStatuses(String owner, Long spaceId) {
+        var space = getSpaceOrThrow(owner, spaceId);
+        return databaseDocumentStorage.getDocumentStatuses(space.getId());
+    }
+
+    private Space getSpaceOrThrow(String username, Long spaceId) {
+        var space = spaceStorage.read(spaceId);
+        if (space == null) {
+            throw NotFoundException.spaceNotFoundException(spaceId);
+        }
+        return validateOwner(username, space);
+    }
+
+    private Space validateOwner(String requester, Space space) {
+        if (!space.getOwner().equals(requester)) {
+            throw UnauthorizedException.userNotOwnerOfSpace(requester, space.getId());
+        }
+        return space;
     }
 }

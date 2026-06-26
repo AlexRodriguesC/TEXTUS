@@ -12,15 +12,14 @@ public abstract class ProcessingTasklet implements Tasklet {
     @Value("#{jobParameters['DOCUMENT_ID']}")
     protected String documentId;
 
+    @Value("#{jobParameters['DATABASE_DOCUMENT_ID']}")
+    protected Long databaseDocumentId;
+
     @Value("#{jobParameters['SPACE_ID']}")
-    protected String spaceId;
+    protected Long spaceId;
 
     protected UUID getDocumentIdAsUUID() {
         return UUID.fromString(documentId);
-    }
-
-    protected Long getSpaceIdAsLong() {
-        return Long.valueOf(spaceId);
     }
 
     @SuppressWarnings("unchecked")

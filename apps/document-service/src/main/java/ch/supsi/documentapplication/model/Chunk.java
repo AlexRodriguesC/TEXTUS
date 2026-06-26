@@ -2,11 +2,12 @@ package ch.supsi.documentapplication.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,6 +17,9 @@ public class Chunk {
 
     @JsonIgnore
     private Long id;
+
+    @JsonIgnore
+    private Long documentId;
 
     @JsonIgnore
     private Integer tokenCountInput;

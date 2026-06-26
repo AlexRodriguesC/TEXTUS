@@ -71,6 +71,8 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .single();
     }
 
+    // todo: add doc id to status
+
     @Override
     public MindMap readMindMap(Long spaceId) {
         MindMapStatus status = MindMapStatus.valueOf(jdbcClient
@@ -158,7 +160,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     @Override
     public void updateMindMapStatus(Long spaceId, MindMapStatus status) {
         jdbcClient
-                .sql("SELECT documents.update_mind_map_status(:space_id, :status)")
+                .sql("SELECT documents.update_mind_map_status(:space_id, :status:documents.mind_map_status)")
                 .param(SPACE_ID, spaceId)
                 .param(STATUS, status.name())
                 .query()
