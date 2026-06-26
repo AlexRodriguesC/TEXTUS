@@ -8,6 +8,7 @@ import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Document
 import ch.supsi.documentapplication.model.DocumentStatus
+import ch.supsi.documentapplication.model.FsDocument
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.service.document.DocumentService
 import org.springframework.batch.core.job.Job
@@ -34,7 +35,7 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         byte[] bytes = "hello".bytes
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", bytes)
-        Space space = Space.builder().id(spaceId).owner(owner).build()
+        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
         Long databaseDocId = 99L
 
         when:
@@ -42,8 +43,8 @@ class DocumentServiceSpec extends Specification {
 
         then:
         1 * spaceStorage.read(spaceId) >> space
-        1 * databaseDocumentStorage.create(_ as Document, spaceId) >> databaseDocId
-        1 * documentFsStorage.create({ Document document ->
+        1 * databaseDocumentStorage.create(spaceId) >> databaseDocId
+        1 * documentFsStorage.create({ FsDocument document ->
             document != null
         })
         1 * jobOperator.start(pipelineJob, _ as JobParameters)
@@ -60,8 +61,8 @@ class DocumentServiceSpec extends Specification {
         service.createDocument(file, owner, spaceId)
 
         then:
-        1 * spaceStorage.read(spaceId) >> null
-        NotFoundException e = thrown(NotFoundException)
+        1 * spaceStorage.read(spaceId) >> Optional.empty()
+        thrown(NotFoundException)
         0 * databaseDocumentStorage._
         0 * documentFsStorage._
         0 * jobOperator._
@@ -72,14 +73,14 @@ class DocumentServiceSpec extends Specification {
         String owner = "alice"
         Long spaceId = 10L
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        Space space = Space.builder().id(spaceId).owner("bob").build()
+        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner("bob").build())
 
         when:
         service.createDocument(file, owner, spaceId)
 
         then:
         1 * spaceStorage.read(spaceId) >> space
-        UnauthorizedException e = thrown(UnauthorizedException)
+        thrown(UnauthorizedException)
         0 * databaseDocumentStorage._
         0 * documentFsStorage._
         0 * jobOperator._
@@ -111,7 +112,7 @@ class DocumentServiceSpec extends Specification {
         String owner = "alice"
         Long spaceId = 10L
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        Space space = Space.builder().id(spaceId).owner(owner).build()
+        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
         Long databaseDocId = 99L
 
         when:
@@ -119,45 +120,48 @@ class DocumentServiceSpec extends Specification {
 
         then:
         1 * spaceStorage.read(spaceId) >> space
-        1 * databaseDocumentStorage.create(_ as Document, spaceId) >> databaseDocId
-        1 * documentFsStorage.create(_ as Document)
+        1 * databaseDocumentStorage.create(spaceId) >> databaseDocId
+        1 * documentFsStorage.create(_ as FsDocument)
         1 * jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
         DocumentDomainException e = thrown(DocumentDomainException)
         e.message == "Failed to start asynchronous job"
     }
 
-    def "should return document statuses for owned space"() {
+    def "should return documents for owned space"() {
         given:
         String owner = "alice"
         Long spaceId = 10L
-        Space space = Space.builder().id(spaceId).owner(owner).build()
-        List<DocumentStatus> statuses = [DocumentStatus.RECEIVED, DocumentStatus.DONE]
+        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
+        List<Document> documents = [
+                new Document(1, DocumentStatus.DONE),
+                new Document(2, DocumentStatus.PROCESSING)
+        ]
 
         when:
-        List<DocumentStatus> result = service.getDocumentStatuses(owner, spaceId)
+        List<Document> result = service.getDocuments(owner, spaceId)
 
         then:
         1 * spaceStorage.read(spaceId) >> space
-        1 * databaseDocumentStorage.getDocumentStatuses(spaceId) >> statuses
-        result == statuses
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> documents
+        result == documents
     }
 
-    def "should throw not found when space is missing for statuses"() {
+    def "should throw not found when space is missing"() {
         when:
-        service.getDocumentStatuses("alice", 10L)
+        service.getDocuments("alice", 10L)
 
         then:
-        1 * spaceStorage.read(10L) >> null
+        1 * spaceStorage.read(10L) >> Optional.empty()
         thrown(NotFoundException)
         0 * databaseDocumentStorage._
     }
 
-    def "should throw unauthorized when requesting statuses for non owner"() {
+    def "should throw unauthorized when requester is not owner"() {
         given:
-        Space space = Space.builder().id(10L).owner("bob").build()
+        Optional<Space> space = Optional.of(Space.builder().id(10L).owner("bob").build())
 
         when:
-        service.getDocumentStatuses("alice", 10L)
+        service.getDocuments("alice", 10L)
 
         then:
         1 * spaceStorage.read(10L) >> space

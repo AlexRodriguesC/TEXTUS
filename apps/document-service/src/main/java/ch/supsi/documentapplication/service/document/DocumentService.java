@@ -7,7 +7,7 @@ import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.Document;
-import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Log4j2
 @Service
@@ -55,23 +56,25 @@ public class DocumentService implements IDocumentService {
             throw new DocumentDomainException("Failed to get file bytes", e);
         }
 
-        Space space = spaceStorage.read(spaceId);
+        Optional<Space> optSpace = spaceStorage.read(spaceId);
 
-        if (space == null) {
+        if (optSpace.isEmpty()) {
             throw NotFoundException.spaceNotFoundException(spaceId);
         }
 
+        var space = optSpace.get();
+
         if (!space.getOwner().equals(owner)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(owner, spaceId);
+            throw UnauthorizedException.userNotOwnerOfSpace(owner, space.getId());
         }
 
-        Document document = Document.create(documentBytes);
+        FsDocument fsDocument = FsDocument.create(documentBytes);
 
-        Long databaseDocId = databaseDocumentStorage.create(document, spaceId);
-        documentFsStorage.create(document);
+        Long databaseDocId = databaseDocumentStorage.create(spaceId);
+        documentFsStorage.create(fsDocument);
 
         JobParameters jobParameters = new JobParametersBuilder()
-                .addString("DOCUMENT_ID", document.getDocumentId().toString())
+                .addString("DOCUMENT_ID", fsDocument.getDocumentId().toString())
                 .addLong("DATABASE_DOCUMENT_ID", databaseDocId)
                 .addLong("SPACE_ID", spaceId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
@@ -87,16 +90,17 @@ public class DocumentService implements IDocumentService {
     }
 
     @Override
-    public List<DocumentStatus> getDocumentStatuses(String owner, Long spaceId) {
+    public List<Document> getDocuments(String owner, Long spaceId) {
         var space = getSpaceOrThrow(owner, spaceId);
-        return databaseDocumentStorage.getDocumentStatuses(space.getId());
+        return databaseDocumentStorage.getDocuments(space.getId());
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {
-        var space = spaceStorage.read(spaceId);
-        if (space == null) {
+        var optSpace = spaceStorage.read(spaceId);
+        if (optSpace.isEmpty()) {
             throw NotFoundException.spaceNotFoundException(spaceId);
         }
+        var space = optSpace.get();
         return validateOwner(username, space);
     }
 

@@ -5,12 +5,13 @@ import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IDatabaseSpaceStorage {
 
     Long create(String owner, String name, String description);
 
-    Space read(Long id);
+    Optional<Space> read(Long id);
 
     MindMap readMindMap(Long spaceId);
 

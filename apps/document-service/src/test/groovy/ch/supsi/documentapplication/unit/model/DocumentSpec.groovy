@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.unit.model
 
 
-import ch.supsi.documentapplication.model.Document
+import ch.supsi.documentapplication.model.FsDocument
 import spock.lang.Specification
 
 class DocumentSpec extends Specification {
@@ -11,7 +11,7 @@ class DocumentSpec extends Specification {
         def bytes = "abc".getBytes()
 
         when:
-        Document document = Document.create(bytes)
+        FsDocument document = FsDocument.create(bytes)
 
         then:
         bytes == document.getBytes()
@@ -24,7 +24,7 @@ class DocumentSpec extends Specification {
         def bytes = "abc".getBytes()
 
         when:
-        Document document = Document.create(uuid, bytes)
+        FsDocument document = FsDocument.create(uuid, bytes)
 
         then:
         uuid == document.getDocumentId()

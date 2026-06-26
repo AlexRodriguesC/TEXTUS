@@ -10,11 +10,11 @@ public interface IDatabaseDocumentStorage {
 
     Long create(Chunk chunk, Long spaceId, Long documentId);
 
-    Long create(Document document, Long spaceId);
+    Long create(Long spaceId);
 
     void updateDocumentStatus(Long documentId, DocumentStatus status);
 
-    List<DocumentStatus> getDocumentStatuses(Long spaceId);
+    List<Document> getDocuments(Long spaceId);
 
     Chunk read(Long chunkId);
 }

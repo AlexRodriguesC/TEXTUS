@@ -2,7 +2,7 @@ package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
-import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.FsDocument;
 import lombok.extern.log4j.Log4j2;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -39,12 +39,12 @@ public class SegmentationTasklet extends ProcessingTasklet {
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
-        Document document = fileSystemDocumentStorage.read(getDocumentIdAsUUID());
-        if (document == null) {
+        FsDocument fsDocument = fileSystemDocumentStorage.read(getDocumentIdAsUUID());
+        if (fsDocument == null) {
             throw new DocumentDomainException("Document not found, documentId: " + documentId);
         }
 
-        List<String> contents = extractContents(document);
+        List<String> contents = extractContents(fsDocument);
 
         contents = contents.stream()
                 .filter(s -> !s.isBlank())
@@ -61,10 +61,10 @@ public class SegmentationTasklet extends ProcessingTasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private List<String> extractContents(Document document) throws IOException {
+    private List<String> extractContents(FsDocument fsDocument) throws IOException {
         ArrayList<String> contents = new ArrayList<>();
 
-        try (PDDocument pdfDocument = Loader.loadPDF(document.getBytes())) {
+        try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             int pageCount = pdfDocument.getNumberOfPages();
 

@@ -23,7 +23,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should return mind map for authorized user"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
         def mindMap = Mock(MindMap)
 
         when:
@@ -40,7 +40,7 @@ class SpaceServiceSpec extends Specification {
         service.getMindMap("alice", 10L)
 
         then:
-        1 * spaceStorage.read(10L) >> null
+        1 * spaceStorage.read(10L) >> Optional.empty()
         def e = thrown(NotFoundException)
         e.message
         0 * spaceStorage.readMindMap(_)
@@ -48,7 +48,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw unauthorized when requester is not owner of mind map space"() {
         given:
-        def space = Space.builder().id(10L).owner("bob").build()
+        def space = Optional.of(Space.builder().id(10L).owner("bob").build())
 
         when:
         service.getMindMap("alice", 10L)
@@ -64,7 +64,7 @@ class SpaceServiceSpec extends Specification {
         given:
         def mindMap = Mock(MindMap)
         mindMap.getMindMapStatus() >> MindMapStatus.DONE
-        def space = Space.builder().id(10L).owner("alice").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
 
         when:
         def result = service.getMindMapStatus("alice", 10L)
@@ -77,7 +77,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw not found when mind map is null for status"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
 
         when:
         service.getMindMapStatus("alice", 10L)
@@ -91,7 +91,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should update space using existing values when name and description are empty"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").name("old").description("desc").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").name("old").description("desc").build())
 
         when:
         service.update("alice", 10L, "", "")
@@ -103,7 +103,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should update space using provided values"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").name("old").description("desc").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").name("old").description("desc").build())
 
         when:
         service.update("alice", 10L, "new", "new desc")
@@ -115,7 +115,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should create mind map and start job"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
 
         when:
         service.createMindMap("alice", 10L)
@@ -128,7 +128,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw domain exception when mind map job fails"() {
         given:
-        def space = Space.builder().id(10L).owner("alice").build()
+        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
 
         when:
         service.createMindMap("alice", 10L)

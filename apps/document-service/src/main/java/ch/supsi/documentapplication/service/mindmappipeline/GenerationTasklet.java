@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class GenerationTasklet implements Tasklet {
 
     @Value("#{jobParameters['SPACE_ID']}")
-    protected String spaceId;
+    protected Long spaceId;
 
     private final IDatabaseSpaceStorage databaseSpaceStorage;
 
@@ -38,26 +38,28 @@ public class GenerationTasklet implements Tasklet {
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
-        var spaceIdLong = idAsLong();
-        var space = databaseSpaceStorage.read(spaceIdLong);
-        var chunks = space.getChunks();
-
-        if (chunks == null || chunks.isEmpty()) {
-            databaseSpaceStorage.updateMindMapStatus(spaceIdLong, MindMapStatus.DONE);
+        var optSpace = databaseSpaceStorage.read(spaceId);
+        if (optSpace.isEmpty()) {
+            log.error("No space found for id " + spaceId);
             return RepeatStatus.FINISHED;
         }
 
-        databaseSpaceStorage.updateMindMapStatus(spaceIdLong, MindMapStatus.GENERATING);
+        var space = optSpace.get();
+
+        var chunks = space.getChunks();
+
+        if (chunks == null || chunks.isEmpty()) {
+            databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
+            return RepeatStatus.FINISHED;
+        }
+
+        databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.GENERATING);
 
         MindMap mindMap = mindMapClient.extractMindMap(chunks);
 
-        databaseSpaceStorage.createMindMap(spaceIdLong, mindMap);
-        databaseSpaceStorage.updateMindMapStatus(spaceIdLong, MindMapStatus.DONE);
+        databaseSpaceStorage.createMindMap(spaceId, mindMap);
+        databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
 
         return RepeatStatus.FINISHED;
-    }
-
-    private Long idAsLong() {
-        return Long.valueOf(spaceId);
     }
 }

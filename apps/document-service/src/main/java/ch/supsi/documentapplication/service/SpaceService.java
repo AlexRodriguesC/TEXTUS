@@ -99,10 +99,11 @@ public class SpaceService implements ISpaceService {
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {
-        var space = spaceStorage.read(spaceId);
-        if (space == null) {
+        var optSpace = spaceStorage.read(spaceId);
+        if (optSpace.isEmpty()) {
             throw NotFoundException.spaceNotFoundException(spaceId);
         }
+        var space = optSpace.get();
         return validateOwner(username, space);
     }
 

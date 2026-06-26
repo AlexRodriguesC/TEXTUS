@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.DocumentStatus;
@@ -20,52 +20,72 @@ import java.util.List;
 @Log4j2
 public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabaseDocumentStorage {
 
+    private static final String ID = "id";
     private static final String SPACE_ID = "space_id";
     private static final String DOCUMENT_ID = "document_id";
     private static final String STATUS = "status";
-    private static final String DOCUMENT_STATUS = "status";
+    public static final String CHUNK_ID = "chunk_id";
+    public static final String TOKENS_IN = "tokens_in";
+    public static final String TOKENS_OUT = "tokens_out";
+    public static final String TITLE = "title";
+    public static final String SUMMARY = "summary";
+    public static final String KEY = "key";
+    public static final String KEYWORDS = "keywords";
+    public static final String RELATED_KEYS = "related_keys";
 
-    private final JdbcClient jdbcClient;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public DatabaseDocumentStorage(JdbcTemplate jdbc, JdbcClient jdbcClient) {
-        super(jdbc);
-        this.jdbcClient = jdbcClient;
+    public DatabaseDocumentStorage(JdbcTemplate jdbcTemplate, JdbcClient jdbcClient) {
+        super(jdbcClient);
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public Long create(Chunk chunk, Long spaceId, Long documentId) {
-        return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT documents.create_chunk(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try {
+            return jdbcTemplate.execute((ConnectionCallback<Long>) connection -> {
+                Array keywordsArray = buildArray(chunk.getKeywords(), connection);
+                Array relatedKeysArray = buildArray(chunk.getRelatedKeys(), connection);
 
-                stmt.setLong(1, spaceId);
-                stmt.setInt(2, chunk.getTokenCountInput());
-                stmt.setInt(3, chunk.getTokenCountOutput());
-
-                stmt.setString(4, chunk.getTitle());
-                stmt.setString(5, chunk.getSummary());
-                stmt.setString(6, chunk.getKey());
-                stmt.setArray(7, buildArray(chunk.getKeywords(), connection));
-                stmt.setArray(8, buildArray(chunk.getRelatedKeys(), connection));
-                stmt.setLong(9, documentId);
-
-                try (var rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getLong(1);
-                    }
-                    throw new DocumentDomainException("documents.create_chunk returned no id");
-                }
-            }
-        });
+                return jdbcClient
+                        .sql(
+                                """
+                        SELECT documents.create_chunk(
+                            :space_id, :tokens_in, :tokens_out, :title,
+                            :summary, :key, :keywords, :related_keys, :document_id
+                        )
+                    """)
+                        .param(SPACE_ID, spaceId)
+                        .param(TOKENS_IN, chunk.getTokenCountInput())
+                        .param(TOKENS_OUT, chunk.getTokenCountOutput())
+                        .param(TITLE, chunk.getTitle())
+                        .param(SUMMARY, chunk.getSummary())
+                        .param(KEY, chunk.getKey())
+                        .param(KEYWORDS, keywordsArray)
+                        .param(RELATED_KEYS, relatedKeysArray)
+                        .param(DOCUMENT_ID, documentId)
+                        .query(Long.class)
+                        .optional()
+                        .orElseThrow(() -> NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId));
+            });
+        } catch (org.springframework.dao.DataAccessException e) {
+            throw NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId);
+        }
     }
 
     @Override
-    public Long create(Document document, Long spaceId) {
-        return jdbcClient
-                .sql("SELECT documents.create_document(:space_id)")
-                .param(SPACE_ID, spaceId)
-                .query(Long.class)
-                .single();
+    public Long create(Long spaceId) {
+        try {
+            return jdbcClient
+                    .sql("SELECT documents.create_document(:space_id)")
+                    .param(SPACE_ID, spaceId)
+                    .query(Long.class)
+                    .optional()
+                    .orElseThrow(() -> NotFoundException.spaceNotFoundException(spaceId));
+        } catch (org.springframework.dao.DataAccessException e) {
+            throw NotFoundException.spaceNotFoundException(spaceId);
+        }
     }
 
     @Override
@@ -79,21 +99,20 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public List<DocumentStatus> getDocumentStatuses(Long spaceId) {
+    public List<Document> getDocuments(Long spaceId) {
         return jdbcClient
-                .sql("SELECT * FROM documents.read_document_statuses(:space_id)")
+                .sql("SELECT * FROM documents.read_documents(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> DocumentStatus.valueOf(rs.getString(DOCUMENT_STATUS)))
+                .query((rs, rowNum) -> new Document(rs.getLong(ID), DocumentStatus.valueOf(rs.getString(STATUS))))
                 .list();
     }
 
     @Override
     public Chunk read(Long chunkId) {
-        String sql = "select * from documents.read_chunk(?)";
-
-        return jdbc.queryForObject(
-                sql,
-                (rs, rowNum) -> new Chunk(
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_chunk(:chunk_id)")
+                .param(CHUNK_ID, chunkId)
+                .query((rs, rowNum) -> new Chunk(
                         rs.getLong("id"),
                         rs.getLong("document_id"),
                         rs.getInt("tokens_in"),
@@ -102,8 +121,8 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                         rs.getString("summary"),
                         toList(rs.getArray("keywords")),
                         rs.getString("key"),
-                        toList(rs.getArray("related_keys"))),
-                chunkId);
+                        toList(rs.getArray("related_keys"))))
+                .single();
     }
 
     private List<String> toList(java.sql.Array sqlArray) throws SQLException {

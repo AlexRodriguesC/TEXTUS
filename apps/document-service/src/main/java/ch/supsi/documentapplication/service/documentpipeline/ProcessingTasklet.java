@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.UUID;
 
+@SuppressWarnings("resolve")
 public abstract class ProcessingTasklet implements Tasklet {
 
     @Value("#{jobParameters['DOCUMENT_ID']}")

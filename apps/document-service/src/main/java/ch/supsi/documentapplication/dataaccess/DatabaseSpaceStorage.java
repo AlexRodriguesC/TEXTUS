@@ -1,20 +1,19 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapNode;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.jdbc.core.ConnectionCallback;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 @Log4j2
@@ -30,35 +29,30 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     public static final String CHUNK_ID = "chunk_id";
     public static final String PARENT_ID = "parent_id";
     public static final String PARENT_CHUNK_ID = "parent_chunk_id";
+    public static final String OWNER = "owner";
 
-    private final JdbcClient jdbcClient;
-
-    public DatabaseSpaceStorage(JdbcTemplate jdbc, JdbcClient jdbcClient) {
-        super(jdbc);
-        this.jdbcClient = jdbcClient;
+    public DatabaseSpaceStorage(JdbcClient jdbcClient) {
+        super(jdbcClient);
     }
 
     @Override
     public Long create(String owner, String name, String description) {
-        return jdbc.execute((ConnectionCallback<Long>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT documents.create_space(?, ?, ?)")) {
-
-                stmt.setString(1, owner);
-                stmt.setString(2, name);
-                stmt.setString(3, description);
-
-                try (var rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getLong(1);
-                    }
-                    throw new DocumentDomainException("documents.create_space returned no id");
-                }
-            }
-        });
+        try {
+            return jdbcClient
+                    .sql("SELECT documents.create_space(:owner, :name, :description)")
+                    .param(OWNER, owner)
+                    .param(NAME, name)
+                    .param(DESCRIPTION, description)
+                    .query(Long.class)
+                    .optional()
+                    .orElseThrow(() -> NotFoundException.userNotFound(owner));
+        } catch (org.springframework.dao.DataAccessException e) {
+            throw NotFoundException.userNotFound(owner);
+        }
     }
 
     @Override
-    public Space read(Long id) {
+    public Optional<Space> read(Long id) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_space(:id)")
                 .param(ID, id)
@@ -68,21 +62,24 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                         .name(rs.getString(NAME))
                         .description(rs.getString(DESCRIPTION))
                         .build())
-                .single();
+                .optional();
     }
-
-    // todo: add doc id to status
 
     @Override
     public MindMap readMindMap(Long spaceId) {
-        MindMapStatus status = MindMapStatus.valueOf(jdbcClient
-                .sql("SELECT documents.read_mind_map_status(:spaceId)")
-                .param(SPACE_ID, spaceId)
-                .query(String.class)
-                .single());
+        MindMapStatus status;
+        try {
+            status = MindMapStatus.valueOf(jdbcClient
+                    .sql("SELECT documents.read_mind_map_status(:space_id)")
+                    .param(SPACE_ID, spaceId)
+                    .query(String.class)
+                    .single());
+        } catch (DataAccessException e) {
+            throw NotFoundException.mindMapNotFoundException(spaceId);
+        }
 
         List<MindMapRow> rows = jdbcClient
-                .sql("SELECT * FROM documents.read_mind_map(:spaceId)")
+                .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new MindMapRow(rs.getLong(CHUNK_ID), rs.getObject(PARENT_CHUNK_ID, Long.class)))
                 .list();
@@ -121,29 +118,16 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
     @Override
     public List<Space> readAll(String owner) {
-        return jdbc.execute((ConnectionCallback<List<Space>>) connection -> {
-            try (var stmt = connection.prepareStatement("SELECT * FROM documents.read_spaces(?)")) {
-
-                stmt.setString(1, owner);
-
-                try (var rs = stmt.executeQuery()) {
-                    List<Space> spaces = new ArrayList<>();
-
-                    while (rs.next()) {
-                        var space = Space.builder()
-                                .id(rs.getLong(ID))
-                                .owner(rs.getString(OWNER_ID))
-                                .name(rs.getString(NAME))
-                                .description(rs.getString(DESCRIPTION))
-                                .build();
-
-                        spaces.add(space);
-                    }
-
-                    return spaces;
-                }
-            }
-        });
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_spaces(:owner)")
+                .param(OWNER, owner)
+                .query((rs, rowNum) -> Space.builder()
+                        .id(rs.getLong(ID))
+                        .owner(rs.getString(OWNER_ID))
+                        .name(rs.getString(NAME))
+                        .description(rs.getString(DESCRIPTION))
+                        .build())
+                .list();
     }
 
     @Override
@@ -160,7 +144,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     @Override
     public void updateMindMapStatus(Long spaceId, MindMapStatus status) {
         jdbcClient
-                .sql("SELECT documents.update_mind_map_status(:space_id, :status:documents.mind_map_status)")
+                .sql("SELECT documents.update_mind_map_status(:space_id, CAST(:status AS documents.mind_map_status))")
                 .param(SPACE_ID, spaceId)
                 .param(STATUS, status.name())
                 .query()

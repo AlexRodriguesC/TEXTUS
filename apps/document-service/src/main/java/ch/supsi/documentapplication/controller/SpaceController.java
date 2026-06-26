@@ -28,7 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1/spaces")
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Spaces", description = "Endpoints for handling spaces (document aggregate)")
+@Tag(name = "Spaces", description = "Endpoints for handling spaces (fsDocument aggregate)")
 public class SpaceController {
 
     private final AppProperties appProperties;
@@ -212,8 +212,11 @@ public class SpaceController {
                     Long spaceId,
             @Parameter(hidden = true) Authentication authentication) {
         String owner = authentication.getName();
-        var statuses = documentService.getDocumentStatuses(owner, spaceId);
-        return ResponseEntity.ok(new DocumentStatusesResponseDTO(statuses));
+        var statuses = documentService.getDocuments(owner, spaceId);
+        var statusesDto = statuses.stream()
+                .map(s -> new DocumentResponseDTO(s.getId(), s.getStatus()))
+                .toList();
+        return ResponseEntity.ok(new DocumentStatusesResponseDTO(statusesDto));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{spaceId}/documents")
@@ -243,18 +246,18 @@ public class SpaceController {
                                             schema = @Schema(type = "string", format = "binary")))
                     @RequestPart("document")
                     @jakarta.validation.constraints.NotNull
-                    MultipartFile document,
+                    MultipartFile fsDocument,
             @Parameter(description = "The ID of the space to upload the document to", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
                     Long spaceId,
             @Parameter(hidden = true) Authentication authentication) {
-        if (document.isEmpty() || document.getSize() >= appProperties.getMaxDocumentSize()) {
+        if (fsDocument.isEmpty() || fsDocument.getSize() >= appProperties.getMaxDocumentSize()) {
             return ResponseEntity.badRequest().build();
         }
 
         String username = authentication.getName();
-        documentService.createDocument(document, username, spaceId);
+        documentService.createDocument(fsDocument, username, spaceId);
         return ResponseEntity.accepted().build();
     }
 }

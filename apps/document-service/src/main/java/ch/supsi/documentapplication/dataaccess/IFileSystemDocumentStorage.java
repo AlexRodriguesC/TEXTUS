@@ -1,13 +1,14 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.FsDocument;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface IFileSystemDocumentStorage {
 
-    void create(Document document);
+    void create(FsDocument fsDocument);
 
     String createChunk(Integer page, String content, UUID documentId);
 
@@ -17,9 +18,9 @@ public interface IFileSystemDocumentStorage {
 
     void deleteChunk(UUID documentId, String chunkId);
 
-    Document read(UUID documentId);
+    FsDocument read(UUID documentId);
 
-    void update(Document document);
+    void update(FsDocument fsDocument);
 
     void delete(UUID documentId);
 

@@ -2,8 +2,8 @@ package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.properties.AppProperties;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
@@ -60,9 +60,9 @@ public class OCRTasklet extends ProcessingTasklet {
         log.debug("Executing OCR step for document with documentId {}", documentId);
 
         databaseDocumentStorage.updateDocumentStatus(databaseDocumentId, DocumentStatus.PROCESSING);
-        Document document = documentStorage.read(getDocumentIdAsUUID());
+        FsDocument fsDocument = documentStorage.read(getDocumentIdAsUUID());
 
-        try (PDDocument pdfDocument = Loader.loadPDF(document.getBytes())) {
+        try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
             if (!requiresOcr(pdfDocument)) {
                 log.debug("Document {} does not require OCR, skipping", documentId);
                 return RepeatStatus.FINISHED;
@@ -71,8 +71,8 @@ public class OCRTasklet extends ProcessingTasklet {
             String tesseractLanguageCode = detectLanguage(pdfDocument);
             byte[] ocrPdfBytes = performOcr(pdfDocument, tesseractLanguageCode);
 
-            Document newDocument = Document.create(document.getDocumentId(), ocrPdfBytes);
-            documentStorage.update(newDocument);
+            FsDocument newFsDocument = FsDocument.create(fsDocument.getDocumentId(), ocrPdfBytes);
+            documentStorage.update(newFsDocument);
         }
 
         return RepeatStatus.FINISHED;

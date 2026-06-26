@@ -2,7 +2,7 @@ package ch.supsi.documentapplication.unit.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.FileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.DocumentDomainException
-import ch.supsi.documentapplication.model.Document
+import ch.supsi.documentapplication.model.FsDocument
 import ch.supsi.documentapplication.properties.AppProperties
 import spock.lang.Specification
 import spock.lang.TempDir
@@ -28,15 +28,15 @@ class FileSystemDocumentStorageSpec extends Specification {
         storage = new FileSystemDocumentStorage(appProperties)
     }
 
-    private Document mockDocument(byte[] bytes = "content".bytes) {
-        Mock(Document) {
+    private FsDocument mockDocument(byte[] bytes = "content".bytes) {
+        Mock(FsDocument) {
             getDocumentId() >> UUID.randomUUID()
             getBytes() >> bytes
         }
     }
 
-    private Document mockDocument(UUID uuid, byte[] bytes) {
-        Mock(Document) {
+    private FsDocument mockDocument(UUID uuid, byte[] bytes) {
+        Mock(FsDocument) {
             getDocumentId() >> uuid
             getBytes() >> bytes
         }
@@ -98,7 +98,7 @@ class FileSystemDocumentStorageSpec extends Specification {
         given:
         Files.createDirectory(documentDir)
         byte[] content = "hello document".bytes
-        Document document = mockDocument(content)
+        FsDocument document = mockDocument(content)
         Files.write(documentDir.resolve(document.getDocumentId().toString()), content)
 
         when:

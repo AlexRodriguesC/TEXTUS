@@ -2,9 +2,13 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.properties.AppProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -13,9 +17,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
 
 /**
  * FileSystem-specific {@link IFileSystemDocumentStorage} implementation, handling direct interactions with a
@@ -33,7 +34,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
     }
 
     @Override
-    public void create(Document document) {
+    public void create(FsDocument fsDocument) {
         if (basePathDoesNotExist()) {
             try {
                 Files.createDirectory(basePath);
@@ -44,11 +45,11 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             }
         }
 
-        String documentId = document.getDocumentId().toString();
+        String documentId = fsDocument.getDocumentId().toString();
         Path documentPath = getDocumentPath(documentId);
 
         try {
-            Files.write(documentPath, document.getBytes());
+            Files.write(documentPath, fsDocument.getBytes());
         } catch (Exception e) {
             String errorMessage = String.format("Unable to write document %s", documentId);
             log.error(errorMessage, e);
@@ -132,9 +133,12 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             }
 
             Path chunkDirectory = getChunkDirectoryPath(documentId);
-            if (Files.exists(chunkDirectory)
-                    && Files.list(chunkDirectory).findAny().isEmpty()) {
-                Files.deleteIfExists(chunkDirectory);
+            try (var stream = Files.list(chunkDirectory)) {
+                boolean isEmpty = stream.findAny().isEmpty();
+
+                if (Files.exists(chunkDirectory) && isEmpty) {
+                    Files.deleteIfExists(chunkDirectory);
+                }
             }
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete chunk %s for document %s", chunkId, documentId);
@@ -144,7 +148,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
     }
 
     @Override
-    public Document read(UUID documentId) {
+    public FsDocument read(UUID documentId) {
         if (basePathDoesNotExist()) {
             return null;
         }
@@ -164,13 +168,13 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             throw new DocumentDomainException(errorMessage);
         }
 
-        return Document.create(documentId, documentBytes);
+        return FsDocument.create(documentId, documentBytes);
     }
 
     @Override
-    public void update(Document document) {
-        delete(document.getDocumentId());
-        create(document);
+    public void update(FsDocument fsDocument) {
+        delete(fsDocument.getDocumentId());
+        create(fsDocument);
     }
 
     @Override
