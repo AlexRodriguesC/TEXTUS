@@ -1,4 +1,9 @@
 {
+  "general": {
+    "user-already-exists": "Il nome utente specificato è già in uso",
+    "try-another-username": "Prova con un altro nome utente",
+    "go-home": "Home"
+  },
   "language": {
     "combobox": {
       "placeholder": "Cambia Lingua",
@@ -7,6 +12,8 @@
   },
   "login": {
     "login": "Accedi",
+    "loading": "Accesso in corso...",
+    "success": "Accesso effettuato con successo",
     "info": "Accedi al tuo account",
     "sub": "Inserisci qui sotto la tua email per accedere al tuo account",
     "sign-up": "Registrati"

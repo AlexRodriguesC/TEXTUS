@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {type AxiosRequestConfig, type Method} from 'axios';
 import {getStoredUser, logout2} from "@/App.tsx";
 
 const instance = axios.create({
@@ -39,22 +39,43 @@ instance.interceptors.response.use(
     }
 );
 
-export const customInstance = <T>(
+export class ApiError<T = unknown> extends Error {
+    status: number
+    data: T
+
+    constructor(status: number, data: T, message?: string) {
+        super(message ?? `HTTP ${status}`)
+        this.status = status
+        this.data = data
+    }
+}
+
+export async function customInstance<T>(
     url: string,
     options?: RequestInit
-): Promise<T> => {
-    const {method = 'GET', headers, body} = options ?? {};
+): Promise<T> {
+    try {
+        const response = await instance.request<T>({
+            url,
+            method: (options?.method as Method | undefined) ?? "GET",
+            data: options?.body,
+            headers: options?.headers as AxiosRequestConfig["headers"],
+        })
 
-    return instance.request<T>({
-        url,
-        method,
-        headers: headers as Record<string, string>,
-        data: body,
-    }).then((res) => {
         return {
-            data: res.data,
-            status: res.status,
-            headers: res.headers,
+            data: response.data,
+            status: response.status,
+            headers: response.headers,
         } as T;
-    });
-};
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            throw new ApiError(
+                error.response?.status ?? 500,
+                error.response?.data,
+                error.message
+            )
+        }
+
+        throw error
+    }
+}

@@ -2,9 +2,11 @@ import {Trans, useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button.tsx";
 import {Link} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
+import {useAuth} from "@/hooks/useAuth.tsx";
 
 function HomePage() {
     const {t} = useTranslation();
+    const {user} = useAuth()
 
     return (
         <div className="flex flex-col items-center gap-6 md:flex-row md:gap-8">
@@ -26,9 +28,10 @@ function HomePage() {
                     <Button asChild className="w-full" variant="default">
                         <Link to={PathConstants.SPACES}>{t("home.start")}</Link>
                     </Button>
-                    <Button asChild className="w-full" variant="secondary">
+                    {!user &&
+                        <Button asChild className="w-full" variant="secondary">
                         <Link to={PathConstants.LOGIN}>{t("home.account")}</Link>
-                    </Button>
+                        </Button>}
                 </div>
             </div>
         </div>

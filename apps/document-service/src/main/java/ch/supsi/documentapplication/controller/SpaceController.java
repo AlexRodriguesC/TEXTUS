@@ -191,22 +191,22 @@ public class SpaceController {
         return ResponseEntity.ok(new MindMapStatusDTO(status));
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/documents/status")
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/{spaceId}/documents")
     @Operation(
-            summary = "Get document processing statuses for the specified space",
+            summary = "Get documents for the specified space",
             description =
                     """
-                    Returns the processing status of all documents associated with the specified space.
-                    Each document status indicates whether processing is pending, in progress, completed, or failed.
+                    Returns all documents associated with the specified space.
+                    Each document representation contains the document id and its current processing status.
                     """)
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Document statuses retrieved successfully"),
+        @ApiResponse(responseCode = "200", description = "Documents retrieved successfully"),
         @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
         @ApiResponse(responseCode = "404", description = "Space not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<DocumentStatusesResponseDTO> getDocumentStatuses(
-            @Parameter(description = "The ID of the space to retrieve document statuses for", required = true)
+    public ResponseEntity<DocumentsResponseDTO> getDocumentStatuses(
+            @Parameter(description = "The ID of the space to retrieve documents for", required = true)
                     @jakarta.validation.constraints.NotNull
                     @PathVariable("spaceId")
                     Long spaceId,
@@ -216,7 +216,7 @@ public class SpaceController {
         var statusesDto = statuses.stream()
                 .map(s -> new DocumentResponseDTO(s.getId(), s.getStatus()))
                 .toList();
-        return ResponseEntity.ok(new DocumentStatusesResponseDTO(statusesDto));
+        return ResponseEntity.ok(new DocumentsResponseDTO(statusesDto));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/{spaceId}/documents")

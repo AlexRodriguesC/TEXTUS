@@ -3,9 +3,15 @@ package ch.supsi.documentapplication.controller;
 import ch.supsi.documentapplication.controller.DTO.response.TokenResponseDTO;
 import ch.supsi.documentapplication.model.User;
 import ch.supsi.documentapplication.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,14 +35,50 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<@NotNull TokenResponseDTO> login(@RequestBody User user) {
+    @Operation(
+            summary = "Authenticate user",
+            description = "Authenticates a user with username and password and returns a JWT token.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Authentication successful"),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<@NotNull TokenResponseDTO> login(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            description = "User credentials",
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                            schema = @Schema(implementation = User.class)))
+                    @RequestBody
+                    User user) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
         return ResponseEntity.ok(new TokenResponseDTO(authService.generateToken(user.getUsername())));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<@NotNull TokenResponseDTO> register(@RequestBody User user) {
+    @Operation(
+            summary = "Register user",
+            description = "Registers a new user and returns a JWT token for the created account.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Registration successful"),
+        @ApiResponse(responseCode = "400", description = "Invalid user payload"),
+        @ApiResponse(responseCode = "409", description = "User already exists"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<@NotNull TokenResponseDTO> register(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            description = "User registration payload",
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                            schema = @Schema(implementation = User.class)))
+                    @RequestBody
+                    User user) {
         return ResponseEntity.ok(new TokenResponseDTO(authService.register(user)));
     }
 }

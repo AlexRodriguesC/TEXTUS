@@ -1,4 +1,9 @@
 {
+  "general": {
+    "user-already-exists": "The specified username is already taken",
+    "try-another-username": "Try with another username",
+    "go-home": "Home"
+  },
   "language": {
     "combobox": {
       "placeholder": "Change language",
@@ -7,6 +12,8 @@
   },
   "login": {
     "login": "Login",
+    "loading": "Logging in...",
+    "success": "Login successful",
     "info": "Login to your account",
     "sub": "Enter your email below to login to your account",
     "sign-up": "Sign up"

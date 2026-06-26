@@ -11,11 +11,12 @@ import {useLogin} from "@/api/generated/authentication/authentication.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import {useAuth} from "@/hooks/useAuth.tsx";
 import {successToast} from "@/lib/toasts.ts";
+import type {ApiError} from "@/api/mutator.ts";
 
 function LoginPage() {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {mutate, isPending, isError, isSuccess, data} = useLogin()
+    const {mutate, isPending, isError, isSuccess, data, error} = useLogin<ApiError>()
     const {login} = useAuth()
 
     const [isPasswordShown, setIsPasswordShown] = React.useState(false);
@@ -50,6 +51,20 @@ function LoginPage() {
     }
 
     if (isError) {
+        if (error.status == 404) {
+            return (
+                <Card className={"flex flex-col items-center"}>
+                    <CardContent className={"flex flex-row items-center gap-8"}>
+                        <XIcon color={"red"}/><div>{t("login.wrong-credentials")}</div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild onClick={handleLogin}>
+                            <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            )
+        }
         return (
             <Card>
                 <CardContent className={"flex flex-row items-center gap-8"}>

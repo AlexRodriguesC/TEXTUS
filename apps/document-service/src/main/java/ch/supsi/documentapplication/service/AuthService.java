@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseUserStorage;
+import ch.supsi.documentapplication.exception.UsernameTakenException;
 import ch.supsi.documentapplication.model.User;
 import ch.supsi.documentapplication.properties.AppProperties;
 import io.jsonwebtoken.Claims;
@@ -37,7 +38,7 @@ public class AuthService implements UserDetailsService {
 
     public String register(User user) {
         if (databaseUserStorage.readUser(user.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("Username already taken");
+            throw new UsernameTakenException("Username is already taken");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         databaseUserStorage.createUser(user);
