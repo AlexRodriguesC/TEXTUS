@@ -14,7 +14,7 @@ const sizeMap = {
 function Logo({ size = 'md' }: LogoProps) {
     return (
         <Link className="flex flex-row items-center gap-2" to={PathConstants.HOME}>
-            <img src="/book.png" alt="logo" className={`${sizeMap[size]} object-contain`} />
+            <img src="/book.svg" alt="logo" className={`${sizeMap[size]} object-contain`} />
             <div className="font-playfair font-bold">TEXTUS</div>
         </Link>
     )

@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import Navbar from "@/components/Navbar.tsx";
 import {MeshGradientBackground} from "@/components/ui/mesh-gradient.tsx";
@@ -10,14 +9,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
         <MeshGradientBackground colors={
             theme === "dark"
-                ? ["#7c3aed", "#2563eb", "#4338ca", "#5b21b6"]
-                : ["#a78bfa", "#93c5fd", "#818cf8", "#c4b5fd"]
+                ? ["#0c4a6e", "#0369a1", "#075985", "#0284c7"]
+                : ["#bae6fd", "#7dd3fc", "#93c5fd", "#e0f2fe"]
         }
-                                backgroundColor={theme === "dark" ? "#1e1b26" : "#ffffff"}
+                                backgroundColor={theme === "dark" ? "#0f172a" : "#f0f9ff"}
                                 speed={1}>
             <div className="flex min-h-screen flex-col py-2 px-16">
                 <Navbar />
-                <main className="flex flex-1 items-center justify-center">{children}</main>
+                <main>{children}</main>
             </div>
         </MeshGradientBackground>
     );

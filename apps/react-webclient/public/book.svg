@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" id="Layer_1" x="0" y="0" style="enable-background:new 0 0 24 24" version="1.1" viewBox="0 0 24 24">
+  <g>
+    <linearGradient id="SVGID_1_" x1="12" x2="12" y1="20.819" y2="3.977" gradientUnits="userSpaceOnUse">
+      <stop offset="0" style="stop-color:#065cfb"/>
+      <stop offset="1" style="stop-color:#09a5f9"/>
+    </linearGradient>
+    <path d="M22.04,3.98L12,5.06L1.96,3.98H0.91c-0.36,0-0.66,0.29-0.66,0.66v15.53c0,0.36,0.29,0.66,0.66,0.66h22.18
+		c0.36,0,0.66-0.29,0.66-0.66V4.63c0-0.36-0.29-0.66-0.66-0.66H22.04z" style="fill:url(#SVGID_1_)"/>
+    <linearGradient id="SVGID_00000052803314129718454160000007869167293140989621_" x1="6.981" x2="6.981" y1="20.716" y2="3.181" gradientUnits="userSpaceOnUse">
+      <stop offset="0" style="stop-color:#a4c0ff"/>
+      <stop offset="1" style="stop-color:#e6efff"/>
+    </linearGradient>
+    <path d="M10.44,3.18H1.96v16.1h8.48
+		c0.78,0,1.43,0.62,1.54,1.43H12V4.86C12,3.93,11.3,3.18,10.44,3.18z" style="fill:url(#SVGID_00000052803314129718454160000007869167293140989621_)"/>
+    <linearGradient id="SVGID_00000062172749414540324570000004617809778870302389_" x1="17.019" x2="17.019" y1="20.716" y2="3.181" gradientUnits="userSpaceOnUse">
+      <stop offset="0" style="stop-color:#a4c0ff"/>
+      <stop offset="1" style="stop-color:#e6efff"/>
+    </linearGradient>
+    <path d="M13.56,3.18h8.48v16.1h-8.48
+		c-0.78,0-1.43,0.62-1.54,1.43H12V4.86C12,3.93,12.7,3.18,13.56,3.18z" style="fill:url(#SVGID_00000062172749414540324570000004617809778870302389_)"/>
+    <rect width="5.95" height=".75" x="4.05" y="5.46" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="4.05" y="8.16" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="4.05" y="10.86" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="4.05" y="13.55" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="4.05" y="16.25" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="14.05" y="5.46" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="14.05" y="8.16" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="14.05" y="10.86" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="14.05" y="13.55" style="fill:#fff"/>
+    <rect width="5.95" height=".75" x="14.05" y="16.25" style="fill:#fff"/>
+  </g>
+</svg>

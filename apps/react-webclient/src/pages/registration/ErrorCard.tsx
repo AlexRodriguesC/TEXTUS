@@ -4,6 +4,7 @@ import {Button} from "@/components/ui/button.tsx"
 import {Link} from "@tanstack/react-router"
 import PathConstants from "@/routing/pathConstants.ts"
 import {useTranslation} from "react-i18next";
+import CenteredPage from "@/components/CenteredPage.tsx";
 
 type ErrorCardProps = {
     title: string
@@ -17,29 +18,31 @@ function ErrorCard({ title, goTo, reset, goToLabel = "Go", onClick }: ErrorCardP
     const {t} = useTranslation();
 
     return (
-        <Card className="flex flex-col items-center">
-            <CardContent className="flex flex-row items-center gap-8">
-                <XIcon color="red" />
-                <div>{title}</div>
-            </CardContent>
+        <CenteredPage>
+            <Card className="flex flex-col items-center">
+                <CardContent className="flex flex-row items-center gap-8">
+                    <XIcon color="red" />
+                    <div>{title}</div>
+                </CardContent>
 
-            <CardFooter className="inline-flex flex-col items-stretch gap-2">
-                {goTo ? (
-                    reset ? <Button onClick={reset} asChild>
-                        <Link to={goTo}>{goToLabel}</Link>
-                    </Button> :
-                        <Button asChild>
-                            <Link to={goTo}>{goToLabel}</Link>
-                        </Button>
-                ) : onClick ? (
-                    <Button onClick={onClick}>{t("general.try-again")}</Button>
-                ) : null}
+                <CardFooter className="inline-flex flex-col items-stretch gap-2">
+                    {goTo ? (
+                        reset ? <Button onClick={reset} asChild>
+                                <Link to={goTo}>{goToLabel}</Link>
+                            </Button> :
+                            <Button asChild>
+                                <Link to={goTo}>{goToLabel}</Link>
+                            </Button>
+                    ) : onClick ? (
+                        <Button onClick={onClick}>{t("general.try-again")}</Button>
+                    ) : null}
 
-                <Button variant={"outline"} asChild>
-                    <Link to={PathConstants.HOME}>{t("general.go-home")}</Link>
-                </Button>
-            </CardFooter>
-        </Card>
+                    <Button variant={"outline"} asChild>
+                        <Link to={PathConstants.HOME}>{t("general.go-home")}</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </CenteredPage>
     )
 }
 

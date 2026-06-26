@@ -7,6 +7,7 @@ import {useQueryClient} from "@tanstack/react-query";
 import {failureToastAction, successToast} from "@/lib/toasts.ts";
 import SpacesListItem from "@/pages/spaces/SpacesListItem.tsx";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
+import EmptySpaces from "@/pages/spaces/EmptySpaces.tsx";
 
 export function SpacesPage() {
     const {t} = useTranslation();
@@ -51,8 +52,8 @@ export function SpacesPage() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-[75%] flex-col gap-8">
-            <div className="flex flex-row items-center gap-16">
+        <div className="mx-auto flex w-full max-w-[75%] flex-col justify-start gap-4 pt-4">
+            <div className="flex flex-row items-start gap-16">
                 <SpaceDialogForm
                     open={open}
                     onOpenChange={setOpen}
@@ -75,14 +76,20 @@ export function SpacesPage() {
                 />
             </div>
 
-            <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] pr-1">
+            <div className="max-h-[60vh] overflow-y-auto pr-1">
                 {filtered.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                        {t("spaces.empty")}
-                    </p>
+                    <EmptySpaces />
                 ) : (
-                    filtered.map((space) => (
-                        <SpacesListItem spaceId={space.spaceId!} name={space.name!} description={space.description!}/>))
+                    <div className="flex flex-col gap-2">
+                        {filtered.map((space) => (
+                            <SpacesListItem
+                                key={space.spaceId}
+                                spaceId={space.spaceId!}
+                                name={space.name!}
+                                description={space.description!}
+                            />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

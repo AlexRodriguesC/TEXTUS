@@ -15,6 +15,7 @@ import {successToast} from "@/lib/toasts.ts";
 import type {ApiError} from "@/api/mutator.ts";
 import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.tsx";
 import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
+import CenteredPage from "@/components/CenteredPage.tsx";
 
 function RegistrationPage() {
     const {t} = useTranslation();
@@ -50,11 +51,13 @@ function RegistrationPage() {
 
     if (isPending || isSuccess) {
         return (
-            <Card>
-                <CardContent className={"flex flex-row items-center gap-8"}>
-                    <Spinner></Spinner><div>{t("registration.loading")}</div>
-                </CardContent>
-            </Card>
+            <CenteredPage>
+                <Card>
+                    <CardContent className={"flex flex-row items-center gap-8"}>
+                        <Spinner></Spinner><div>{t("registration.loading")}</div>
+                    </CardContent>
+                </Card>
+            </CenteredPage>
         )
     }
 
@@ -64,7 +67,7 @@ function RegistrationPage() {
     }
 
     return (
-        <>
+        <CenteredPage>
         <Card className="w-full max-w-sm">
             <CardHeader>
                 <CardTitle>{t("registration.info")}</CardTitle>
@@ -122,7 +125,7 @@ function RegistrationPage() {
                 </form>
             </CardContent>
         </Card>
-        </>
+        </CenteredPage>
     )
 
 }

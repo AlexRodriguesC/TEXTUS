@@ -1,16 +1,38 @@
 services:
   db:
-    image: pgvector/pgvector:pg16
+    image: postgres:16
     container_name: postgresql
     environment:
       - POSTGRES_USER=appuser
       - POSTGRES_PASSWORD=appsecret
-      - POSTGRES_DB=textus
+      - POSTGRES_DB=documents
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d documents"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  spring-backend:
+    env_file:
+      - path: ../../.env
+        required: true
+    build: .
+    container_name: spring-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/documents
+      - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
     restart: unless-stopped
 
 volumes:
   pgdata:
+  springdata:

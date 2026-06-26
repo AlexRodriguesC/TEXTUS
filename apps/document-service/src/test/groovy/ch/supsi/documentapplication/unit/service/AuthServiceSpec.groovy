@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.unit.service
 
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseUserStorage
+import ch.supsi.documentapplication.exception.UsernameTakenException
 import ch.supsi.documentapplication.model.User
 import ch.supsi.documentapplication.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
@@ -52,8 +53,8 @@ class AuthServiceSpec extends Specification {
 
         then:
         1 * databaseUserStorage.readUser(username) >> Optional.of(user)
-        IllegalArgumentException e = thrown(IllegalArgumentException)
-        e.message == "Username already taken"
+        UsernameTakenException e = thrown(UsernameTakenException)
+        e.message == "Username is already taken"
         0 * passwordEncoder._
         0 * databaseUserStorage.createUser(_)
     }

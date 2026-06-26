@@ -30,6 +30,8 @@
     "account": "Ho già un account"
   },
   "spaces": {
+    "search": "Cerca spazi",
+    "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Add space\" in alto a sinistra per iniziare.",
     "add": {
       "success": "Spazio creato con successo.",
       "error": "Si è verificato un errore.",
