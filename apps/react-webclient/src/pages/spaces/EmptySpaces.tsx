@@ -6,7 +6,7 @@ function EmptySpaces() {
 
 
     return (
-        <div className="flex flex-col items-center gap-2 overflow-y-auto max-h-[60vh] pr-1">
+        <div className="flex flex-col items-center">
             <div className={"flex flex-col items-center gap-4 w-sm"}>
                 <div className={"md:w-xs xl:w-xl"}>
                     <DotLottieReact

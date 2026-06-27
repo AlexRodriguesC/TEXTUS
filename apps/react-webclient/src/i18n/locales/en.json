@@ -49,5 +49,13 @@
   "button": {
     "add": "Add",
     "cancel": "Cancel"
+  },
+  "action": {
+    "destructive": {
+      "title": "Delete item?",
+      "description": "This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
   }
 }

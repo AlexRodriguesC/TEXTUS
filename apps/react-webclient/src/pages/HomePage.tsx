@@ -12,7 +12,7 @@ function HomePage() {
     return (
         <div className="flex flex-col min-h-screen min-w-100 justify-center items-center gap-6 md:flex-row md:gap-8">
             <div>
-                <div className={"md:w-xs xl:w-xl"}>
+                <div className={"md:w-md xl:w-xl"}>
                     <DotLottieReact
                         src="/animations/home.lottie"
                         loop

@@ -27,6 +27,7 @@ export function SpacesPage() {
 
     const submitCreate = useCallback(() => {
         createSpace.mutate({data: {name, description}});
+        setOpen(false);
     }, [])
 
     const {data, isError} = useReadSpaces();
@@ -52,7 +53,7 @@ export function SpacesPage() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-[75%] flex-col justify-start gap-4 pt-4">
+        <div className="mx-auto flex w-full max-w-[75%] min-h-[80vh] max-h-[80vh] flex-col place-content-center gap-4">
             <div className="flex flex-row items-start gap-16">
                 <SpaceDialogForm
                     open={open}
@@ -76,22 +77,24 @@ export function SpacesPage() {
                 />
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto pr-1">
-                {filtered.length === 0 ? (
+            <div className={"mt-4 mb-4"}/>
+
+            {filtered.length === 0 ? (
+                <div className="max-h-[60vh] min-h-[60vh] overflow-y-auto items-center place-content-center">
                     <EmptySpaces />
-                ) : (
-                    <div className="flex flex-col gap-2">
-                        {filtered.map((space) => (
-                            <SpacesListItem
-                                key={space.spaceId}
-                                spaceId={space.spaceId!}
-                                name={space.name!}
-                                description={space.description!}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                </div>
+            ) : (
+                <div className="flex flex-col max-h-[60vh] min-h-[60vh] min-w-[100%] overflow-y-auto gap-2">
+                    {filtered.map((space) => (
+                        <SpacesListItem
+                            key={space.spaceId}
+                            spaceId={space.spaceId!}
+                            name={space.name!}
+                            description={space.description!}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

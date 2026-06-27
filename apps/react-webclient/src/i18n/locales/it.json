@@ -49,5 +49,13 @@
   "button": {
     "add": "Aggiungi",
     "cancel": "Annulla"
+  },
+  "action": {
+    "destructive": {
+      "title": "Eliminare elemento?",
+      "description": "Questa azione non può essere annullata.",
+      "confirm": "Elimina",
+      "cancel": "Annulla"
+    }
   }
 }

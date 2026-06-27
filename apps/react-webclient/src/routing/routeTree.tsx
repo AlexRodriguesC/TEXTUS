@@ -6,7 +6,7 @@ import PathConstants from './pathConstants'
 import MainLayout from '../MainLayout'
 import HomePage from "@/pages/HomePage.tsx";
 import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
-import SpacePage from "@/pages/SpacePage.tsx";
+import SpacePage from "@/pages/space/SpacePage.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({

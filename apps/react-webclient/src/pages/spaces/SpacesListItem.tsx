@@ -1,12 +1,13 @@
 import {Link} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
-import {Moon, Pencil, Trash2} from "lucide-react";
+import {Moon, Pencil} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {getReadSpacesQueryKey, useDeleteSpace} from "@/api/generated/spaces/spaces.ts";
 import {failureToastAction, successToast} from "@/lib/toasts.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {useCallback} from "react";
+import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
 
 type SpacesListItem = {
     spaceId: number,
@@ -38,7 +39,7 @@ function SpacesListItem({spaceId, name, description} : SpacesListItem) {
     return (
         <div
             key={spaceId}
-            className="flex flex-row items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
+            className="flex flex-row items-center justify-between border border-border p-4 hover:bg-muted/25 transition-colors"
         >
             <Link
                 to={PathConstants.SPACE}
@@ -56,9 +57,7 @@ function SpacesListItem({spaceId, name, description} : SpacesListItem) {
                 <Button variant="ghost" size="icon" aria-label="Edit space">
                     <Pencil className="size-4" />
                 </Button>
-                <Button onClick={submitDelete} variant="ghost" size="icon" aria-label="Delete space">
-                    <Trash2 className="size-4" />
-                </Button>
+                <DestructiveActionButton onConfirm={submitDelete}/>
             </div>
         </div>
     )

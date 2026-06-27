@@ -50,15 +50,16 @@ function SpaceDialogForm({
                          }: SpaceDialogFormProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
 
-            <DialogContent showCloseButton={false} className="sm:max-w-sm">
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        onSubmit();
-                    }}
-                >
+            <form
+                id="space-form"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    onSubmit();
+                }}
+            >
+                {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
+                <DialogContent showCloseButton={false}>
                     <DialogHeader>
                         <DialogTitle>{title}</DialogTitle>
                         <DialogDescription>{descriptionText}</DialogDescription>
@@ -93,12 +94,12 @@ function SpaceDialogForm({
                             </Button>
                         </DialogClose>
 
-                        <Button type="submit" disabled={pending}>
+                        <Button type="submit" form="space-form" disabled={pending}>
                             {submitLabel}
                         </Button>
                     </DialogFooter>
-                </form>
-            </DialogContent>
+                </DialogContent>
+            </form>
         </Dialog>
     );
 }
