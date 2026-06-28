@@ -14,27 +14,26 @@ import {Input} from "@/components/ui/input.tsx";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button.tsx";
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 
 type SpaceDialogFormProps = {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+    id: string,
     trigger?: React.ReactNode;
     title: string;
     descriptionText: string;
     submitLabel: string;
     cancelLabel: string;
     name: string;
-    description: string;
     onNameChange: (value: string) => void;
+    description: string;
     onDescriptionChange: (value: string) => void;
-    onCancel: () => void;
+    onCancel?: () => void;
     onSubmit: () => void;
     pending?: boolean;
 };
 
 function SpaceDialogForm({
-                             open,
-                             onOpenChange,
+    id,
                              trigger,
                              title,
                              descriptionText,
@@ -46,13 +45,14 @@ function SpaceDialogForm({
                              onDescriptionChange,
                              onCancel,
                              onSubmit,
-                             pending = false,
                          }: SpaceDialogFormProps) {
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
 
+    const {t} = useTranslation();
+
+    return (
+        <Dialog>
             <form
-                id="space-form"
+                id={id}
                 onSubmit={(e) => {
                     e.preventDefault();
                     onSubmit();
@@ -67,7 +67,7 @@ function SpaceDialogForm({
 
                     <FieldGroup>
                         <Field>
-                            <Label htmlFor="space-name">Name</Label>
+                            <Label htmlFor="space-name">{t("space.name")}</Label>
                             <Input
                                 id="space-name"
                                 name="name"
@@ -77,7 +77,7 @@ function SpaceDialogForm({
                         </Field>
 
                         <Field>
-                            <Label htmlFor="space-description">Description</Label>
+                            <Label htmlFor="space-description">{t("space.description")}</Label>
                             <Textarea
                                 id="space-description"
                                 name="description"
@@ -89,14 +89,17 @@ function SpaceDialogForm({
 
                     <DialogFooter>
                         <DialogClose asChild>
+                            <Button type="submit" form={id}>
+                                {submitLabel}
+                            </Button>
+                        </DialogClose>
+
+                        <DialogClose asChild>
                             <Button type="button" variant="outline" onClick={onCancel}>
                                 {cancelLabel}
                             </Button>
                         </DialogClose>
 
-                        <Button type="submit" form="space-form" disabled={pending}>
-                            {submitLabel}
-                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </form>

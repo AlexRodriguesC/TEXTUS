@@ -8,6 +8,7 @@ import {useQueryClient} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {useCallback} from "react";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
+import EditSpace from "@/pages/spaces/EditSpace.tsx";
 
 type SpacesListItem = {
     spaceId: number,
@@ -53,11 +54,9 @@ function SpacesListItem({spaceId, name, description} : SpacesListItem) {
                 </div>
             </Link>
 
-            <div className="flex flex-row gap-2">
-                <Button variant="ghost" size="icon" aria-label="Edit space">
-                    <Pencil className="size-4" />
-                </Button>
-                <DestructiveActionButton onConfirm={submitDelete}/>
+            <div className="flex flex-row gap-2 items-center">
+                <EditSpace spaceId={spaceId} initialName={name} initialDescription={description} trigger={<Pencil className="size-4 cursor-pointer" />}/>
+                <DestructiveActionButton title={t("spaces.delete.title")} onConfirm={submitDelete}/>
             </div>
         </div>
     )

@@ -29,6 +29,10 @@
     "start": "Inizia",
     "account": "Ho già un account"
   },
+  "space": {
+    "name": "Nome",
+    "description": "Descrizione"
+  },
   "spaces": {
     "search": "Cerca spazi",
     "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Add space\" in alto a sinistra per iniziare.",
@@ -44,10 +48,27 @@
       "description": "Assegna un nome al tuo spazio e, se vuoi, una descrizione.",
       "defaultName": "Il mio spazio",
       "defaultDescription": "Una bella descrizione"
+    },
+    "update": {
+      "title": "Modifica spazio",
+      "description": "Aggiorna il nome e la descrizione del tuo spazio.",
+      "success": "Spazio aggiornato con successo.",
+      "error": "Si è verificato un errore durante l'aggiornamento dello spazio."
+    },
+    "upload": {
+      "success": "Il documento {{fileName}} è stato caricato correttamente nel tuo spazio.",
+      "error": "Si è verificato un errore durante il caricamento del seguente documento: {{fileName}}.",
+      "none": "È stato tentato il caricamento dei documenti, ma non ne è stato trovato nessuno."
+    },
+    "delete": {
+      "title": "Eliminare spazio?",
+      "success": "Spazio eliminato con successo."
     }
   },
   "button": {
     "add": "Aggiungi",
+    "retry": "Riprova",
+    "update": "Aggiorna",
     "cancel": "Annulla"
   },
   "action": {
@@ -56,6 +77,20 @@
       "description": "Questa azione non può essere annullata.",
       "confirm": "Elimina",
       "cancel": "Annulla"
+    }
+  },
+  "documents": {
+    "upload": {
+      "title": "Inizia caricando i documenti.",
+      "description": "I documenti rappresentano la base di conoscenza su cui verrà costruito il percorso di apprendimento. Per risultati migliori, carica documenti coerenti sullo stesso argomento; altrimenti il percorso potrebbe non essere coerente.",
+      "helper": "Carica fino a 20 documenti",
+      "dropzoneTitle": "Carica documenti",
+      "dropzoneDescription": "Clicca qui oppure trascina i file per caricarli",
+      "cta": "Carica",
+      "success": "Documento {{fileName}} caricato con successo."
+    },
+    "delete": {
+      "success": "Documento {{fileName}} eliminato con successo."
     }
   }
 }

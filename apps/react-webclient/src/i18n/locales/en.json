@@ -29,6 +29,10 @@
     "start": "Start",
     "account": "I already have an account"
   },
+  "space": {
+    "name": "Name",
+    "description": "Description"
+  },
   "spaces": {
     "search": "Search spaces",
     "add-spaces": "Looks like there’s nothing here yet. Click \"Add space\" in the top left corner to get started.",
@@ -44,10 +48,27 @@
       "description": "Give your space a name and an optional description.",
       "defaultName": "My space",
       "defaultDescription": "A cool description"
+    },
+    "update": {
+      "title": "Edit space",
+      "description": "Update the name and description of your space.",
+      "success": "Space updated successfully.",
+      "error": "Something went wrong when updating a space."
+    },
+    "upload": {
+      "success": "Document {{fileName}} uploaded successfully to your space.",
+      "error": "An error occurred while uploading the following document: {{fileName}}.",
+      "none": "Tried to upload documents, but none were found."
+    },
+    "delete": {
+      "title": "Delete space?",
+      "success": "Space deleted successfully."
     }
   },
   "button": {
     "add": "Add",
+    "retry": "Retry",
+    "update": "Update",
     "cancel": "Cancel"
   },
   "action": {
@@ -56,6 +77,20 @@
       "description": "This action cannot be undone.",
       "confirm": "Delete",
       "cancel": "Cancel"
+    }
+  },
+  "documents": {
+    "upload": {
+      "title": "Start by uploading documents.",
+      "description": "Documents represent the knowledge on which the learning path will be based. For best results, upload coherent documents on the same subject; otherwise, the path may not be coherent.",
+      "helper": "Upload up to 20 documents",
+      "dropzoneTitle": "Upload documents",
+      "dropzoneDescription": "Click here or drag and drop to upload",
+      "cta": "Upload",
+      "success": "Document {{fileName}} uploaded successfully."
+    },
+    "delete": {
+      "success": "Documented {{fileName}} removed successfully."
     }
   }
 }

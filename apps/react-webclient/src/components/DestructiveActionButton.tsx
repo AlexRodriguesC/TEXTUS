@@ -13,22 +13,23 @@ import {useTranslation} from "react-i18next";
 import {Trash2} from "lucide-react";
 
 type DestructiveActionButtonProps = {
+    title: string,
     onConfirm: () => void
 }
 
-function DestructiveActionButton({onConfirm} : DestructiveActionButtonProps) {
+function DestructiveActionButton({title, onConfirm} : DestructiveActionButtonProps) {
     const {t} = useTranslation();
 
     return (
         <Dialog>
             <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Delete">
-                    <Trash2 className="size-4 " color={"red"} />
+                    <Trash2 className="size-4" color={"red"} />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{t("action.destructive.title")}</DialogTitle>
+                    <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>
                         {t("action.destructive.description")}
                     </DialogDescription>

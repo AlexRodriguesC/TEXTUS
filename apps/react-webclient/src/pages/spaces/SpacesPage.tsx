@@ -1,75 +1,32 @@
 import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button.tsx";
 import {Input} from "@/components/ui/input.tsx";
-import {useCallback, useState} from "react";
-import {getReadSpacesQueryKey, useCreateSpace, useReadSpaces} from "@/api/generated/spaces/spaces.ts";
-import {useQueryClient} from "@tanstack/react-query";
-import {failureToastAction, successToast} from "@/lib/toasts.ts";
+import {useMemo, useState} from "react";
+import {useReadSpaces} from "@/api/generated/spaces/spaces.ts";
 import SpacesListItem from "@/pages/spaces/SpacesListItem.tsx";
-import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
 import EmptySpaces from "@/pages/spaces/EmptySpaces.tsx";
+import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
 
 export function SpacesPage() {
     const {t} = useTranslation();
-    const queryClient = useQueryClient();
     const [search, setSearch] = useState("");
-    const defaultName = t("spaces.add.defaultName");
-    const [name, setName] = useState(defaultName);
-    const defaultDescription = t("spaces.add.defaultDescription");
-    const [description, setDescription] = useState(defaultDescription);
-
-    const [open, setOpen] = useState(false);
-
-    const restoreDefaults = useCallback(() => {
-        setName(defaultName);
-        setDescription(defaultDescription);
-    }, []);
-
-    const submitCreate = useCallback(() => {
-        createSpace.mutate({data: {name, description}});
-        setOpen(false);
-    }, [])
 
     const {data, isError} = useReadSpaces();
 
-    const createSpace = useCreateSpace({
-        mutation: {
-            onSuccess: async () => {
-                await queryClient.invalidateQueries({queryKey: getReadSpacesQueryKey()})
-                setOpen(false);
-                successToast(t("spaces.add.success"));
-                restoreDefaults();
-            },
-            onError: async () => {
-                failureToastAction(t("spaces.add.error"), <Button onClick={submitCreate}>t("button.retry")</Button>)
-            }
-        }
-    })
+    const spaces = useMemo(() => {
+        return isError ? [] : (data?.data ?? [])
+    }, [isError, data]);
 
-    const spaces = isError ? [] : (data?.data ?? []);
-
-    const filtered = spaces.filter((space) =>
-        space && space.spaceId && space.name && space.description && space.name.toLowerCase().includes(search.toLowerCase())
-    );
+    const filtered = useMemo(() => {
+        return spaces.filter((space) =>
+            space && space.spaceId && space.name && space.description && space.name.toLowerCase().includes(search.toLowerCase())
+        );
+    }, [search, spaces]);
 
     return (
         <div className="mx-auto flex w-full max-w-[75%] min-h-[80vh] max-h-[80vh] flex-col place-content-center gap-4">
             <div className="flex flex-row items-start gap-16">
-                <SpaceDialogForm
-                    open={open}
-                    onOpenChange={setOpen}
-                    trigger={<Button>{t("spaces.add.message")}</Button>}
-                    title={t("spaces.add.title")}
-                    descriptionText={t("spaces.add.description")}
-                    submitLabel={t("button.add")}
-                    cancelLabel={t("button.cancel")}
-                    name={name}
-                    description={description}
-                    onNameChange={setName}
-                    onDescriptionChange={setDescription}
-                    onCancel={restoreDefaults}
-                    onSubmit={submitCreate}
-                />
+                <CreateSpace trigger={<Button className={spaces.length === 0 ? "animate-pulse" : ""}>{t("spaces.add.message")}</Button>}/>
                 <Input
                     placeholder={t("spaces.search")}
                     value={search}
@@ -87,7 +44,7 @@ export function SpacesPage() {
                 <div className="flex flex-col max-h-[60vh] min-h-[60vh] min-w-[100%] overflow-y-auto gap-2">
                     {filtered.map((space) => (
                         <SpacesListItem
-                            key={space.spaceId}
+                            key={`${space.spaceId}-${space.name}-${space.description}`}
                             spaceId={space.spaceId!}
                             name={space.name!}
                             description={space.description!}
