@@ -20,6 +20,8 @@
   },
   "registration": {
     "register": "Registrati",
+    "loading": "Registrazione in corso...",
+    "success": "Registrazione effettuata con successo",
     "info": "Crea il tuo account",
     "sub": "Inserisci i tuoi dati qui sotto per creare il tuo account",
     "sign-in": "Accedi"
@@ -35,7 +37,7 @@
   },
   "spaces": {
     "search": "Cerca spazi",
-    "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Add space\" in alto a sinistra per iniziare.",
+    "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Aggiungi spazio\" in alto a sinistra per iniziare.",
     "add": {
       "success": "Spazio creato con successo.",
       "error": "Si è verificato un errore.",
@@ -69,6 +71,7 @@
     "add": "Aggiungi",
     "retry": "Riprova",
     "update": "Aggiorna",
+    "upload": "Carica",
     "cancel": "Annulla"
   },
   "action": {
@@ -79,15 +82,24 @@
       "cancel": "Annulla"
     }
   },
+  "document": {
+    "status": {
+      "tooltip": {
+        "received": "Questo documento è stato ricevuto correttamente ed è ora in attesa di essere elaborato.",
+        "done": "Questo documento è stato elaborato completamente.",
+        "loading": "Questo documento è attualmente in fase di elaborazione."
+      }
+    }
+  },
   "documents": {
     "upload": {
-      "title": "Inizia caricando i documenti.",
+      "title": "Inizia caricando i documenti",
       "description": "I documenti rappresentano la base di conoscenza su cui verrà costruito il percorso di apprendimento. Per risultati migliori, carica documenti coerenti sullo stesso argomento; altrimenti il percorso potrebbe non essere coerente.",
-      "helper": "Carica fino a 20 documenti",
-      "dropzoneTitle": "Carica documenti",
-      "dropzoneDescription": "Clicca qui oppure trascina i file per caricarli",
-      "cta": "Carica",
-      "success": "Documento {{fileName}} caricato con successo."
+      "helper": "Seleziona fino a 20 documenti",
+      "dropzoneTitle": "Seleziona documenti",
+      "dropzoneDescription": "Clicca qui oppure trascina i file per selezionarli",
+      "cta": "Seleziona",
+      "success": "Documento {{fileName}} selezionato con successo."
     },
     "delete": {
       "success": "Documento {{fileName}} eliminato con successo."

@@ -178,6 +178,7 @@ interface UseDropzoneReturn<TUploadRes, TUploadError> {
   onRetry: (id: string) => Promise<void>;
   canRetry: (id: string) => boolean;
   fileStatuses: FileStatus<TUploadRes, TUploadError>[];
+  clearFile: (id: string) => void;
   isInvalid: boolean;
   isDragActive: boolean;
   rootError: string | undefined;
@@ -305,6 +306,10 @@ const useDropzone = <TUploadRes, TUploadError = string>(
     [canRetry, fileStatuses, _uploadFile],
   );
 
+  const clearFile = useCallback((id: string) => {
+    dispatch({ type: "remove", id });
+  }, []);
+
   const getFileMessageId = (id: string) => `${inputId}-${id}-message`;
 
   const dropzone = rootUseDropzone({
@@ -366,6 +371,7 @@ const useDropzone = <TUploadRes, TUploadError = string>(
     onRetry,
     canRetry,
     fileStatuses: fileStatuses as FileStatus<TUploadRes, TUploadError>[],
+    clearFile,
     isInvalid,
     rootError,
     isDragActive: dropzone.isDragActive,
@@ -380,6 +386,7 @@ const DropZoneContext = createContext<UseDropzoneReturn<any, any>>({
   onRetry: async () => {},
   canRetry: () => false,
   fileStatuses: [],
+  clearFile: () => {},
   isInvalid: false,
   isDragActive: false,
   rootError: undefined,
@@ -430,6 +437,7 @@ const DropZoneArea = forwardRef<HTMLDivElement, DropZoneAreaProps>(
           // TODO: test if this actually works?
           ref.current = instance;
           if (typeof forwardedRef === "function") {
+
             forwardedRef(instance);
           } else if (forwardedRef) {
             forwardedRef.current = instance;

@@ -20,6 +20,8 @@
   },
   "registration": {
     "register": "Register",
+    "loading": "Registering...",
+    "success": "Registration successful",
     "info": "Create your account",
     "sub": "Enter your details below to create your account",
     "sign-in": "Sign in"
@@ -69,6 +71,7 @@
     "add": "Add",
     "retry": "Retry",
     "update": "Update",
+    "upload": "Upload",
     "cancel": "Cancel"
   },
   "action": {
@@ -79,15 +82,24 @@
       "cancel": "Cancel"
     }
   },
+  "document": {
+    "status": {
+      "tooltip": {
+        "received": "This document was received successfully and is now waiting to be processed.",
+        "done": "This document has been fully processed.",
+        "loading": "This document is currently being processed."
+      }
+    }
+  },
   "documents": {
     "upload": {
-      "title": "Start by uploading documents.",
+      "title": "Start by uploading documents",
       "description": "Documents represent the knowledge on which the learning path will be based. For best results, upload coherent documents on the same subject; otherwise, the path may not be coherent.",
-      "helper": "Upload up to 20 documents",
-      "dropzoneTitle": "Upload documents",
-      "dropzoneDescription": "Click here or drag and drop to upload",
+      "helper": "Select up to 20 documents",
+      "dropzoneTitle": "Select documents",
+      "dropzoneDescription": "Click here or drag and drop to select",
       "cta": "Upload",
-      "success": "Document {{fileName}} uploaded successfully."
+      "success": "Document {{fileName}} selected successfully."
     },
     "delete": {
       "success": "Documented {{fileName}} removed successfully."

@@ -119,7 +119,7 @@ function LoginPage() {
                                             required
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            className="pr-10"
+                                            className="pr-10 p-2"
                                         />
                                         <button
                                             type="button"
