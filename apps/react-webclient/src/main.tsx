@@ -6,14 +6,17 @@ import App from "./App.tsx";
 import {ThemeProvider} from "@/provider/ThemeProvider.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
 import {TooltipProvider} from "@/components/ui/tooltip.tsx";
+import AuthenticationProvider from "@/provider/AuthenticationProvider.tsx";
 
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <TooltipProvider>
             <ThemeProvider>
-                <Toaster/>
-                <App/>
+                <AuthenticationProvider>
+                    <Toaster/>
+                    <App/>
+                </AuthenticationProvider>
             </ThemeProvider>
         </TooltipProvider>
     </StrictMode>,

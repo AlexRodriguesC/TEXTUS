@@ -4,7 +4,6 @@ import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
-
 import java.util.List;
 import java.util.Optional;
 

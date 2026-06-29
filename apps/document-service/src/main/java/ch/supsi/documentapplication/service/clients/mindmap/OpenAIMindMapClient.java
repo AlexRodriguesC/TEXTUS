@@ -5,15 +5,14 @@ import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.service.MindMapValidator;
 import ch.supsi.documentapplication.service.clients.FailureTracker;
 import ch.supsi.documentapplication.service.clients.OpenAIClient;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import tools.jackson.core.exc.StreamReadException;
-
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class OpenAIMindMapClient extends OpenAIClient implements MindMapClient {

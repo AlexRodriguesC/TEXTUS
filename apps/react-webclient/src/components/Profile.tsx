@@ -3,14 +3,19 @@ import {UserRound} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
 import {Link} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import {useAuth} from "@/hooks/useAuth.tsx";
+import {useTranslation} from "react-i18next";
 
 function Profile() {
-    const {user, logout} = useAuth()
+    const { t } = useTranslation();
+    const {user, isAuthenticated, logout} = useAuth()
 
     return (
         <div>
@@ -18,25 +23,25 @@ function Profile() {
                 <DropdownMenuTrigger asChild>
                     <Avatar>
                         <AvatarFallback><UserRound/></AvatarFallback>
-                        <AvatarBadge className={user ? "bg-green-600 dark:bg-green-800" : "bg-red-600 dark:bg-red-800"} />
+                        <AvatarBadge className={isAuthenticated ? "bg-green-600 dark:bg-green-800" : "bg-red-600 dark:bg-red-800"} />
                     </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-40" align="start">
-                    {user ? (
+                    {isAuthenticated && user && user.username ? (
                         <DropdownMenuGroup>
-                            <DropdownMenuLabel>Logged as: {user.username}</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t("profile.logged-as", {username: user.username})}</DropdownMenuLabel>
                             <DropdownMenuItem onClick={logout}>
-                                Logout
+                                {t("logout")}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     ) : (
                         <DropdownMenuGroup>
-                            <DropdownMenuLabel>Not logged</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t("profile.not-logged-in")}</DropdownMenuLabel>
                             <DropdownMenuItem asChild>
-                                <Link to={PathConstants.LOGIN}>Login</Link>
+                                <Link to={PathConstants.LOGIN}>{t("login.login")}</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                                <Link to={PathConstants.REGISTER}>Register</Link>
+                                <Link to={PathConstants.REGISTER}>{t("registration.register")}</Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     )}

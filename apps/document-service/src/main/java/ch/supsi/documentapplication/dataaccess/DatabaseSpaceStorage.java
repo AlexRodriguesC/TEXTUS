@@ -2,13 +2,12 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.*;
+import java.sql.Array;
+import java.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
-
-import java.sql.Array;
-import java.util.*;
 
 @Repository
 @Log4j2

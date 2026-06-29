@@ -2,7 +2,6 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.FsDocument;
-
 import java.util.List;
 import java.util.UUID;
 

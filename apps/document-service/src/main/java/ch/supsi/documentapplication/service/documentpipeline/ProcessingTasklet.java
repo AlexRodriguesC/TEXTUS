@@ -1,11 +1,10 @@
 package ch.supsi.documentapplication.service.documentpipeline;
 
+import java.util.List;
+import java.util.UUID;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
-
-import java.util.List;
-import java.util.UUID;
 
 @SuppressWarnings("resolve")
 public abstract class ProcessingTasklet implements Tasklet {

@@ -4,17 +4,16 @@ import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.DocumentStatus;
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
-
-import java.sql.Array;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
 
 @Repository
 @Log4j2

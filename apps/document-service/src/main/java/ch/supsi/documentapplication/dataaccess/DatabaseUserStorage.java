@@ -1,10 +1,9 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.User;
+import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class DatabaseUserStorage extends DatabaseStorage implements IDatabaseUserStorage {

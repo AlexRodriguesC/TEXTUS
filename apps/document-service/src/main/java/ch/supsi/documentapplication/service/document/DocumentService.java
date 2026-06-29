@@ -9,6 +9,8 @@ import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.model.Space;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
@@ -17,9 +19,6 @@ import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Optional;
 
 @Log4j2
 @Service

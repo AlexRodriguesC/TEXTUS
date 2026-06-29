@@ -1,8 +1,7 @@
 package ch.supsi.documentapplication.model;
 
-import lombok.Getter;
-
 import java.util.UUID;
+import lombok.Getter;
 
 @Getter
 public class FsDocument {

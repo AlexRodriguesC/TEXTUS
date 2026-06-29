@@ -3,7 +3,6 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.DocumentStatus;
-
 import java.util.List;
 
 public interface IDatabaseDocumentStorage {

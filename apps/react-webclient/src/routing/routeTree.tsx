@@ -7,6 +7,7 @@ import MainLayout from '../MainLayout'
 import HomePage from "@/pages/HomePage.tsx";
 import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
 import SpacePage from "@/pages/space/SpacePage.tsx";
+import ProtectedRoute from "@/pages/ProtectedRoute.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({
@@ -29,7 +30,7 @@ const protectedRoute = createRoute({
     getParentRoute: () => rootRoute,
     id: 'main',
     beforeLoad: ({context, location}) => {
-        if (!context.auth.isAuthenticated) {
+        if (!context.auth) {
             throw redirect({
                 to: PathConstants.LOGIN,
                 search: {
@@ -39,9 +40,11 @@ const protectedRoute = createRoute({
         }
     },
     component: () => (
-        <MainLayout>
-            <Outlet />
-        </MainLayout>
+        <ProtectedRoute>
+            <MainLayout>
+                <Outlet />
+            </MainLayout>
+        </ProtectedRoute>
     ),
 })
 

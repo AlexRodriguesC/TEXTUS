@@ -1,5 +1,10 @@
 {
+  "profile": {
+    "logged-as": "Accesso effettuato come {{username}}",
+    "not-logged-in": "Non hai effettuato l'accesso"
+  },
   "general": {
+    "logout": "Sei stato disconnesso dal tuo account. Accedi di nuovo.",
     "user-already-exists": "Il nome utente specificato è già in uso",
     "try-another-username": "Prova con un altro nome utente",
     "go-home": "Home"
