@@ -2,8 +2,22 @@ spring.application.name=TEXTUS-backend
 
 logging.level.org.apache.tomcat.util.net.NioEndpoint=INFO
 
+spring.datasource.url=
+management.endpoints.web.cors.allowed-origins=http://localhost:5173
+
+# OpenAI-compatible API key. This is read from env variables and should be placed in a local .env file.
+spring.ai.openai.api-key=
+
+# Base URL for your OpenAI compatible inference provider
+spring.ai.openai.base-url=
+
+# The secret key for JWT
+app.secret-key=
+
+# Path to the Tesseract datapath on the host machine
+app.tessdatapath=
+
 # Main datasource
-spring.datasource.url=${SPRING_DATASOURCE_URL}
 spring.datasource.username=appuser
 spring.datasource.password=appsecret
 spring.datasource.driver-class-name=org.postgresql.Driver
@@ -12,8 +26,6 @@ spring.datasource.hikari.schema=documents
 spring.batch.job.enabled=false
 spring.batch.jdbc.continue-on-error=false
 spring.batch.jdbc.initialize-schema=never
-
-management.endpoints.web.cors.allowed-origins=http://localhost:5173
 
 spring.flyway.validate-migration-naming=true
 
@@ -68,12 +80,6 @@ spring.flyway.enabled=true
 # Location where Flyway looks for migration scripts
 spring.flyway.locations=classpath:database/migration,classpath:database/functions
 
-# OpenAI-compatible API key. This is read from env variables and should be placed in a local .env file.
-spring.ai.openai.api-key=${OPENAI_API_KEY}
-
-# Base URL for your OpenAI compatible inference provider
-spring.ai.openai.base-url=${OPENAI_BASE_URL}
-
 # LLM to use for inference
 spring.ai.openai.chat.model=zai/glm-4.6v-flashx
 
@@ -98,9 +104,6 @@ app.max-rolling-key-size=40
 # Maximum document size that the application will accept. Default: 500 * 1024 * 1024 (500MB)
 app.max-document-size=524288000
 
-# Path to the Tesseract datapath on the host machine
-app.tessdatapath=${TESSERACT_DATAPATH}
-
 # Threshold that defines whether a document needs OCR or not
 app.ocr-threshold=200
 
@@ -109,6 +112,3 @@ app.max-chunks-per-step=5
 
 # Maximum amount of times an LLM is allowed to fail before an exception is thrown
 app.max-llm-failures=5
-
-# The secret key for JWT
-app.secret-key=${JWT_SECRET_KEY}

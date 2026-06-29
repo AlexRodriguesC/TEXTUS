@@ -40,7 +40,8 @@ public class GenerationTasklet implements Tasklet {
 
         var optSpace = databaseSpaceStorage.read(spaceId);
         if (optSpace.isEmpty()) {
-            log.error("No space found for id " + spaceId);
+            var message = String.format("No space found with id %s", spaceId);
+            log.error(message);
             return RepeatStatus.FINISHED;
         }
 

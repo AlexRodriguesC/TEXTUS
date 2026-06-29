@@ -4,7 +4,6 @@ import ch.supsi.documentapplication.controller.SpaceController
 import ch.supsi.documentapplication.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ISpaceService
-import ch.supsi.documentapplication.service.JwtFilter
 import ch.supsi.documentapplication.service.document.IDocumentService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.spockframework.spring.SpringBean
@@ -35,9 +34,6 @@ class SpaceControllerSpec extends Specification {
 
     @SpringBean
     IDocumentService documentService = Mock()
-
-    @SpringBean
-    JwtFilter jwtFilter = Mock()
 
     @SpringBean
     AuthService authService = Mock()

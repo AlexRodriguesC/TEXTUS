@@ -38,3 +38,5 @@ out/
 .vscode/
 
 ./gradle/
+
+application.properties
