@@ -26,8 +26,10 @@ public class LLMFailureTracker implements FailureTracker {
         currentFailures++;
 
         if (currentFailures >= maxFailures) {
-            log.error("Failed to extract LLM response {} times", currentFailures);
-            throw new DocumentDomainException("Failed to extract LLM response " + currentFailures + " times");
+            String message = String.format("Failed to extract LLM response %d times", currentFailures);
+            resetFailures();
+            log.error(message);
+            throw new DocumentDomainException(message);
         }
     }
 

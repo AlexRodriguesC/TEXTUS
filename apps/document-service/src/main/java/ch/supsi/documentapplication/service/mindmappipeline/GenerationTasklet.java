@@ -45,20 +45,22 @@ public class GenerationTasklet implements Tasklet {
             return RepeatStatus.FINISHED;
         }
 
-        var space = optSpace.get();
+        var space = optSpace.get().getId();
 
-        var chunks = space.getChunks();
+        var chunks = databaseSpaceStorage.readChunks(space);
 
-        if (chunks == null || chunks.isEmpty()) {
+        Long mapId = databaseSpaceStorage.createMindMap(space);
+
+        if (chunks.isEmpty()) {
             databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
             return RepeatStatus.FINISHED;
         }
-
         databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.GENERATING);
 
-        MindMap mindMap = mindMapClient.extractMindMap(chunks);
+        MindMap mindMap = mindMapClient.extractMindMap(chunks.get());
 
-        databaseSpaceStorage.createMindMap(spaceId, mindMap);
+        databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMap);
+
         databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
 
         return RepeatStatus.FINISHED;

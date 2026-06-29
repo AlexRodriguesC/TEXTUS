@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
@@ -13,6 +14,8 @@ public interface IDatabaseSpaceStorage {
 
     Optional<Space> read(Long id);
 
+    Optional<List<Chunk>> readChunks(Long spaceId);
+
     MindMap readMindMap(Long spaceId);
 
     List<Space> readAll(String owner);
@@ -21,7 +24,9 @@ public interface IDatabaseSpaceStorage {
 
     void updateMindMapStatus(Long spaceId, MindMapStatus status);
 
-    void createMindMap(Long spaceId, MindMap mindMap);
+    Long createMindMap(Long spaceId);
+
+    void createMindMapNodes(Long spaceId, Long mindMapId, MindMap mindMap);
 
     void delete(Long spaceId);
 }

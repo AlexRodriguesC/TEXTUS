@@ -1,19 +1,14 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.model.MindMap;
-import ch.supsi.documentapplication.model.MindMapNode;
-import ch.supsi.documentapplication.model.MindMapStatus;
-import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.model.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.Array;
+import java.util.*;
 
 @Repository
 @Log4j2
@@ -66,6 +61,32 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     @Override
+    public Optional<List<Chunk>> readChunks(Long spaceId) {
+        List<Chunk> chunks = jdbcClient
+                .sql("SELECT * FROM documents.read_space_chunks(:space_id)")
+                .param(SPACE_ID, spaceId)
+                .query((rs, rowNum) -> {
+                    Array keywordsArray = rs.getArray("keywords");
+                    Array relatedKeysArray = rs.getArray("related_keys");
+                    return new Chunk(
+                            rs.getLong("id"),
+                            rs.getLong("document_id"),
+                            rs.getInt("tokens_in"),
+                            rs.getInt("tokens_out"),
+                            rs.getString("title"),
+                            rs.getString("summary"),
+                            keywordsArray != null ? Arrays.asList((String[]) keywordsArray.getArray()) : List.of(),
+                            rs.getString("key"),
+                            relatedKeysArray != null
+                                    ? Arrays.asList((String[]) relatedKeysArray.getArray())
+                                    : List.of());
+                })
+                .list();
+
+        return chunks.isEmpty() ? Optional.empty() : Optional.of(chunks);
+    }
+
+    @Override
     public MindMap readMindMap(Long spaceId) {
         MindMapStatus status;
         try {
@@ -75,7 +96,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                     .query(String.class)
                     .single());
         } catch (DataAccessException e) {
-            throw NotFoundException.mindMapNotFoundException(spaceId);
+            return null;
         }
 
         List<MindMapRow> rows = jdbcClient
@@ -152,13 +173,20 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     @Override
-    public void createMindMap(Long spaceId, MindMap mindMap) {
-        Long mindMapId = jdbcClient
-                .sql("SELECT documents.create_mind_map(:space_id)")
-                .param(SPACE_ID, spaceId)
-                .query(Long.class)
-                .single();
+    public Long createMindMap(Long spaceId) {
+        try {
+            return jdbcClient
+                    .sql("SELECT documents.create_mind_map(:space_id)")
+                    .param(SPACE_ID, spaceId)
+                    .query(Long.class)
+                    .single();
+        } catch (DataAccessException e) {
+            throw NotFoundException.spaceNotFoundException(spaceId);
+        }
+    }
 
+    @Override
+    public void createMindMapNodes(Long spaceId, Long mindMapId, MindMap mindMap) {
         MindMapNode root = mindMap.getRoot();
         if (root == null) {
             return;
@@ -168,13 +196,19 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     private void saveMindMapNodeRecursive(Long mindMapId, MindMapNode node, Long parentNodeId) {
-        Long nodeId = jdbcClient
-                .sql("SELECT documents.create_mind_map_node(:mind_map_id, :chunk_id, :parent_id)")
-                .param(MIND_MAP_ID, mindMapId)
-                .param(CHUNK_ID, node.getChunkId())
-                .param(PARENT_ID, parentNodeId)
-                .query(Long.class)
-                .single();
+        Long nodeId;
+
+        try {
+            nodeId = jdbcClient
+                    .sql("SELECT documents.create_mind_map_node(:mind_map_id, :chunk_id, :parent_id)")
+                    .param(MIND_MAP_ID, mindMapId)
+                    .param(CHUNK_ID, node.getChunkId())
+                    .param(PARENT_ID, parentNodeId)
+                    .query(Long.class)
+                    .single();
+        } catch (DataAccessException e) {
+            throw NotFoundException.mindMapNotFoundException(mindMapId);
+        }
 
         for (MindMapNode child : node.getChildren()) {
             saveMindMapNodeRecursive(mindMapId, child, nodeId);

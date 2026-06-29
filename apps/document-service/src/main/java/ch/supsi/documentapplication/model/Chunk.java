@@ -37,4 +37,15 @@ public class Chunk {
 
     @JsonAlias("related_keys")
     private List<String> relatedKeys;
+
+    @Override
+    public String toString() {
+        return "Chunk{" + "id="
+                + id + ", title='"
+                + title + '\'' + ", summary='"
+                + summary + '\'' + ", keywords="
+                + keywords + ", key='"
+                + key + '\'' + ", relatedKeys="
+                + relatedKeys + '}';
+    }
 }

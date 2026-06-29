@@ -3,7 +3,6 @@ package ch.supsi.documentapplication.integration.dataaccess
 import ch.supsi.documentapplication.dataaccess.DatabaseSpaceStorage
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.model.MindMap
-import ch.supsi.documentapplication.model.MindMapNode
 import ch.supsi.documentapplication.model.MindMapStatus
 import ch.supsi.documentapplication.model.Space
 import spock.lang.Subject
@@ -118,55 +117,16 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         jdbcTemplate.queryForList("select * from documents.space where id = ?", spaceId).isEmpty()
     }
 
-    def "should create and read mind map with root only"() {
-        given:
-        createUser()
-        Long spaceId = createSpace()
-        Long documentId = jdbcClient.sql("SELECT documents.create_document(:space_id)")
-                .param("space_id", spaceId)
-                .query(Long.class)
-                .single()
-        Long chunkId = jdbcClient.sql("""
-            SELECT documents.create_chunk(
-                :space_id, :tokens_in, :tokens_out, :title, :summary, :key, :keywords, :related_keys, :document_id
-            )
-        """)
-                .param("space_id", spaceId)
-                .param("tokens_in", 1)
-                .param("tokens_out", 1)
-                .param("title", "t")
-                .param("summary", "s")
-                .param("key", "k")
-                .param("keywords", null)
-                .param("related_keys", null)
-                .param("document_id", documentId)
-                .query(Long.class)
-                .single()
-
-        def mindMap = new MindMap(root: new MindMapNode(chunkId))
-
-        when:
-        storage.createMindMap(spaceId, mindMap)
-        MindMap result = storage.readMindMap(spaceId)
-
-        then:
-        result.mindMapStatus == MindMapStatus.NOT_CREATED || result.mindMapStatus != null
-        result.root != null
-        result.root.chunkId == chunkId
-        result.root.children.isEmpty()
-    }
-
-    def "should throw when reading mind map and none exists"() {
+    def "should return null when reading mind map and none exists"() {
         given:
         createUser()
         Long spaceId = createSpace()
 
         when:
-        storage.readMindMap(spaceId)
+        var map = storage.readMindMap(spaceId)
 
         then:
-        def ex = thrown(NotFoundException)
-        ex.message.toLowerCase().contains("mind map")
+        map == null
     }
 
     def "should update mind map status"() {
@@ -194,7 +154,7 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
                 .query(Long.class)
                 .single()
 
-        storage.createMindMap(spaceId, new MindMap(root: new MindMapNode(chunkId)))
+        storage.createMindMap(spaceId)
 
         when:
         storage.updateMindMapStatus(spaceId, MindMapStatus.GENERATING)

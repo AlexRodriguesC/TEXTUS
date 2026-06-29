@@ -10,9 +10,6 @@ import ch.supsi.documentapplication.service.clients.StringSanitizer;
 import ch.supsi.documentapplication.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.documentapplication.service.clients.mindmap.OpenAIMindMapClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
@@ -21,6 +18,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.FileCopyUtils;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class OpenAIClientsConfiguration {
@@ -35,7 +36,7 @@ public class OpenAIClientsConfiguration {
 
     @Bean
     public FailureTracker failureTracker(AppProperties appProperties) {
-        return LLMFailureTracker.create(appProperties.getMaxLLMFailures());
+        return LLMFailureTracker.create(appProperties.getMaxLLMMindMapFailures());
     }
 
     @Bean

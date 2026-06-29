@@ -22,5 +22,7 @@ public class AppProperties {
 
     private int maxLLMFailures;
 
+    private int maxLLMMindMapFailures;
+
     private String secretKey;
 }

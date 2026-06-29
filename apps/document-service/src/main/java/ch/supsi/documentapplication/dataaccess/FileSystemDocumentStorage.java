@@ -249,10 +249,6 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         return Path.of(basePath + File.separator + Path.of(documentId));
     }
 
-    private Path getChunkDirectoryPath(Long documentId) {
-        return basePath.resolve(documentId + "_chunks");
-    }
-
     private Path getChunkDirectoryPath(UUID documentId) {
         return basePath.resolve(documentId + "_chunks");
     }
