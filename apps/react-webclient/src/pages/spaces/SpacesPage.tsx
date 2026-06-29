@@ -2,25 +2,18 @@ import {useTranslation} from "react-i18next";
 import {Button} from "@/components/ui/button.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState} from "react";
-import {useReadSpaces} from "@/api/generated/spaces/spaces.ts";
 import SpacesListItem from "@/pages/spaces/SpacesListItem.tsx";
 import EmptySpaces from "@/pages/spaces/EmptySpaces.tsx";
 import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
+import useSpaces from "@/hooks/useSpaces.tsx";
 
 export function SpacesPage() {
-    const {t} = useTranslation();
+    const { t } = useTranslation();
     const [search, setSearch] = useState("");
-
-    const {data, isError} = useReadSpaces();
-
-    const spaces = useMemo(() => {
-        return isError ? [] : (data?.data ?? [])
-    }, [isError, data]);
+    const { spaces } = useSpaces();
 
     const filtered = useMemo(() => {
-        return spaces.filter((space) =>
-            space && space.spaceId && space.name && space.description && space.name.toLowerCase().includes(search.toLowerCase())
-        );
+        return spaces.filter((space) => space.name.toLowerCase().includes(search.toLowerCase()));
     }, [search, spaces]);
 
     return (

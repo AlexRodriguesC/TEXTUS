@@ -41,12 +41,9 @@ function RegistrationPage() {
 
         login({ username, token: data.data.token });
 
-        const timer = setTimeout(() => {
-            navigate({ to: PathConstants.HOME });
-            successToast(t("registration.success"));
-        }, 2000);
-
-        return () => clearTimeout(timer);
+        navigate({ to: PathConstants.HOME });
+        successToast(t("registration.success"));
+        
     }, [isSuccess, data, username, login]);
 
     if (isPending || isSuccess) {

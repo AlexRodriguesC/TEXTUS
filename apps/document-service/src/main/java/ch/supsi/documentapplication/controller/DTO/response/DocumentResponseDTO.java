@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.DocumentStatus;
+import jakarta.validation.constraints.NotNull;
 
-public record DocumentResponseDTO(Long id, DocumentStatus status) {}
+public record DocumentResponseDTO(@NotNull Long id, @NotNull DocumentStatus status) {}

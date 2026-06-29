@@ -90,9 +90,9 @@
   "document": {
     "status": {
       "tooltip": {
-        "received": "Questo documento è stato ricevuto correttamente ed è ora in attesa di essere elaborato.",
-        "done": "Questo documento è stato elaborato completamente.",
-        "loading": "Questo documento è attualmente in fase di elaborazione."
+        "received": "Questi documenti sono stati ricevuti correttamente e sono ora in attesa di essere elaborati",
+        "done": "Questi documenti sono stati elaborati completamente.",
+        "loading": "Questi documenti sono attualmente in fase di elaborazione."
       }
     }
   },
@@ -108,6 +108,12 @@
     },
     "delete": {
       "success": "Documento {{fileName}} eliminato con successo."
+    },
+    "status": {
+      "overview": "Panoramica degli stati dei documenti"
     }
+  },
+  "mindmap": {
+    "button": "Genera mindmap"
   }
 }

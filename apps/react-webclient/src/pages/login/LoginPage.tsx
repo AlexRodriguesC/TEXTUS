@@ -33,12 +33,9 @@ function LoginPage() {
 
         login({ username, token: data.data.token });
 
-        const timer = setTimeout(() => {
-            navigate({ to: PathConstants.HOME });
-            successToast(t("login.success"));
-        }, 2000);
+        navigate({ to: PathConstants.HOME });
+        successToast(t("login.success"));
 
-        return () => clearTimeout(timer);
     }, [isSuccess, data, username, login, navigate]);
 
     if (isPending || isSuccess) {

@@ -90,9 +90,9 @@
   "document": {
     "status": {
       "tooltip": {
-        "received": "This document was received successfully and is now waiting to be processed.",
-        "done": "This document has been fully processed.",
-        "loading": "This document is currently being processed."
+        "received": "These documents were received successfully and are now waiting to be processed",
+        "done": "These documents have been fully processed",
+        "loading": "These documents are currently being processed"
       }
     }
   },
@@ -108,6 +108,12 @@
     },
     "delete": {
       "success": "Documented {{fileName}} removed successfully."
+    },
+    "status": {
+      "overview": "Documents status overview"
     }
+  },
+  "mindmap": {
+    "button": "Generate mindmap"
   }
 }

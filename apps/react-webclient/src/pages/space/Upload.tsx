@@ -19,7 +19,11 @@ import {Button} from "@/components/ui/button.tsx";
 import {useQueryClient} from "@tanstack/react-query";
 import {useParams} from "@tanstack/react-router";
 
-function Upload() {
+interface UploadProps {
+    showHeaders: boolean;
+}
+
+function Upload({ showHeaders } : UploadProps) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const { spaceId } = useParams({
@@ -106,23 +110,27 @@ function Upload() {
         <Card className="p-4">
             <Dropzone {...dropzone}>
                 <div className="flex flex-col gap-4 sm:gap-5">
-                    <div>
-                        <CardTitle className="flex flex-row items-start gap-2 sm:items-center">
-                            <File className="size-5 shrink-0" />
-                            <div className="min-w-0 text-base sm:text-lg">{t("documents.upload.title")}</div>
-                        </CardTitle>
+                    {showHeaders &&
+                        <div>
+                            <CardTitle className="flex flex-row items-start gap-2 sm:items-center">
+                                <File className="size-5 shrink-0" />
+                                <div className="min-w-0 text-base sm:text-lg">{t("documents.upload.title")}</div>
+                            </CardTitle>
 
-                        <CardDescription className="mt-2 text-sm sm:text-base">
-                            {t("documents.upload.description")}
-                        </CardDescription>
-                    </div>
+                            <CardDescription className="mt-2 text-sm sm:text-base">
+                                {t("documents.upload.description")}
+                            </CardDescription>
+                        </div>
+                    }
 
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <DropzoneDescription>
-                            {t("documents.upload.helper")}
-                        </DropzoneDescription>
-                        <DropzoneMessage />
-                    </div>
+                    { showHeaders &&
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <DropzoneDescription>
+                                {t("documents.upload.helper")}
+                            </DropzoneDescription>
+                            <DropzoneMessage />
+                        </div>
+                    }
 
                     <CardContent className="p-0">
                         <DropZoneArea className="min-w-full max-w-full border-2 border-dashed bg-muted/50 transition-colors">
