@@ -28,6 +28,12 @@ function AuthenticationProvider({ children }: React.PropsWithChildren) {
     localStorage.removeItem(USERNAME);
   }, [clearLogoutTimer]);
 
+  useEffect(() => {
+    const handler = () => logout();
+    window.addEventListener("unauthorized", handler);
+    return () => window.removeEventListener("unauthorized", handler);
+  }, [logout]);
+
   const scheduleLogout = useCallback(
     (expiresAtMs: number) => {
       clearLogoutTimer();
@@ -74,8 +80,9 @@ function AuthenticationProvider({ children }: React.PropsWithChildren) {
   useEffect(() => {
     const token = localStorage.getItem(TOKEN);
     const expiresAtMs = Number(localStorage.getItem(EXPIRES_AT) ?? 0);
+    const username = localStorage.getItem(USERNAME);
 
-    if (!token || !expiresAtMs) {
+    if (!token || !expiresAtMs || !username) {
       logout();
       return;
     }
@@ -85,6 +92,7 @@ function AuthenticationProvider({ children }: React.PropsWithChildren) {
       return;
     }
 
+    setUser({ username, token });
     setIsAuthenticated(true);
     scheduleLogout(expiresAtMs);
   }, [logout, scheduleLogout]);

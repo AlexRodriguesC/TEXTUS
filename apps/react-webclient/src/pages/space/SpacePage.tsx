@@ -26,7 +26,11 @@ function SpacePage() {
   const { documents } = useDocuments(spaceId);
 
   if (documents.length == 0) {
-    return <Upload showHeaders={true} />;
+    return (
+      <div className={"max-w-[75%] md:max-w-[50%] lg:max-w-[40%]"}>
+        <Upload showHeaders={true} />
+      </div>
+    );
   }
 
   return (

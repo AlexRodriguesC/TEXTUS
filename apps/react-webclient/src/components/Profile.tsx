@@ -39,7 +39,7 @@ function Profile() {
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-40" align="start">
-          {isAuthenticated && user && user.username ? (
+          {isAuthenticated && user ? (
             <DropdownMenuGroup>
               <DropdownMenuLabel>
                 {t("profile.logged-as", { username: user.username })}

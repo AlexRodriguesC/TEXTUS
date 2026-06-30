@@ -20,6 +20,11 @@ function Node({ completed = false, children }: NodeProps) {
         "active:shadow-none active:translate-y-[4px]",
         "transition-[box-shadow,transform] duration-75",
         completed ? "border-green-500" : "border-primary",
+        "size-12",
+        "flex items-center justify-center",
+        "shrink-0",
+        "p-0",
+        "text-sm",
       )}
     >
       {children}

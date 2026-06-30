@@ -31,7 +31,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
-import * as React from "react";
 
 interface UploadProps {
   showHeaders: boolean;
@@ -199,7 +198,6 @@ function Upload({ showHeaders }: UploadProps) {
 
                       <DropzoneRemoveFile
                         variant="ghost"
-                        className="shrink-0 self-end sm:self-auto"
                         children={<Trash2 className="size-4" color={"red"} />}
                       />
                     </DropzoneFileListItem>

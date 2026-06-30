@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.NotFoundException;
+import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.*;
 import java.sql.Array;
 import java.sql.ResultSet;
@@ -149,11 +150,15 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
     @Override
     public List<Space> readAll(String owner) {
-        return jdbcClient
-                .sql("SELECT * FROM documents.read_spaces(:owner)")
-                .param(OWNER, owner)
-                .query((rs, rowNum) -> mapToSpace(rs))
-                .list();
+        try {
+            return jdbcClient
+                    .sql("SELECT * FROM documents.read_spaces(:owner)")
+                    .param(OWNER, owner)
+                    .query((rs, rowNum) -> mapToSpace(rs))
+                    .list();
+        } catch (DataAccessException e) {
+            throw UnauthorizedException.userNotAuthorizedToReadSpaces(owner);
+        }
     }
 
     @Override

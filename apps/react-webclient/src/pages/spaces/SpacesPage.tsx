@@ -45,7 +45,7 @@ export function SpacesPage() {
         <div className="flex flex-col max-h-[60vh] min-h-[60vh] min-w-[100%] overflow-y-auto gap-2">
           {filtered.map((space) => (
             <SpacesListItem
-              key={`${space.spaceId}-${space.name}-${space.description}`}
+              key={space.spaceId}
               icon={space.icon}
               spaceId={space.spaceId}
               name={space.name}

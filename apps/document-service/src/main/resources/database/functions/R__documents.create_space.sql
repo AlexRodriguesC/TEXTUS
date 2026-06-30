@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION documents.create_space(p_owner TEXT, p_icon VARCHAR(10), p_name TEXT, p_description TEXT)
+CREATE OR REPLACE FUNCTION documents.create_space(p_owner TEXT, p_icon TEXT, p_name TEXT, p_description TEXT)
     RETURNS BIGINT
     LANGUAGE plpgsql
 AS

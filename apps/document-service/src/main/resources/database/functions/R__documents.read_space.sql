@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION documents.read_space(p_space_id BIGINT)
     RETURNS TABLE (
         id BIGINT,
         owner_id TEXT,
-        icon VARCHAR(10),
+        icon TEXT,
         name TEXT,
         description TEXT
     )

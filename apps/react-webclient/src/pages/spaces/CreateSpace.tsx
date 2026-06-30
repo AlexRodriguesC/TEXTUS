@@ -21,7 +21,8 @@ function CreateSpace({ trigger }: CreateSpaceProps) {
   const [name, setName] = useState(defaultName);
   const defaultDescription = t("spaces.add.defaultDescription");
   const [description, setDescription] = useState(defaultDescription);
-  const [icon, setIcon] = useState<string>("1f929");
+  const defaultIcon = "1f929";
+  const [icon, setIcon] = useState<string>(defaultIcon);
 
   const createSpace = useCreateSpace({
     mutation: {
@@ -30,6 +31,9 @@ function CreateSpace({ trigger }: CreateSpaceProps) {
           queryKey: getReadSpacesQueryKey(),
         });
         successToast(t("spaces.add.success"));
+        setIcon(defaultIcon);
+        setName(defaultName);
+        setDescription(defaultDescription);
       },
       onError: async () => {
         failureToastAction(

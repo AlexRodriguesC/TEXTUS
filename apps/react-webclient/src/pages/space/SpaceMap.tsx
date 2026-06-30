@@ -11,111 +11,95 @@ import "@xyflow/react/dist/style.css";
 import { useTheme } from "@/hooks/useTheme.ts";
 import MapNode from "@/pages/space/MapNode.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-
-export interface MindMapTreeNode extends NodeDTO {
-  children: MindMapTreeNode[];
-}
-
-export function buildMindMapTree(nodes: NodeDTO[]): MindMapTreeNode[] {
-  const byId = new Map<number, MindMapTreeNode>();
-
-  // Pass 1: create a tree node for every entry that has an id
-  for (const n of nodes) {
-    if (n.chunkId == null) continue;
-    byId.set(n.chunkId, { ...n, children: [] });
-  }
-
-  const roots: MindMapTreeNode[] = [];
-
-  // Pass 2: attach each node to its parent; anything with no
-  // resolvable parent becomes a root (handles multiple roots too)
-  for (const node of byId.values()) {
-    const parent =
-      node.parentChunkId != null ? byId.get(node.parentChunkId) : undefined;
-
-    if (parent) {
-      parent.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-
-  return roots;
-}
-
-const X_GAP = 160;
-const Y_GAP = 180;
-
-interface LaidOutNode {
-  id: string;
-  x: number;
-  y: number;
-  parentId?: string;
-  dto: NodeDTO;
-}
-
-function layoutTree(roots: MindMapTreeNode[]): LaidOutNode[] {
-  const laidOut: LaidOutNode[] = [];
-  let nextLeafSlot = 0;
-
-  function visit(
-    node: MindMapTreeNode,
-    depth: number,
-    parentId?: string,
-  ): number {
-    const id = String(node.chunkId);
-
-    if (node.children.length === 0) {
-      const x = nextLeafSlot * X_GAP;
-      nextLeafSlot += 1;
-      laidOut.push({ id, x, y: depth * Y_GAP, parentId, dto: node });
-      return x;
-    }
-
-    const childXs = node.children.map((child) => visit(child, depth + 1, id));
-    const x = childXs.reduce((sum, v) => sum + v, 0) / childXs.length;
-    laidOut.push({ id, x, y: depth * Y_GAP, parentId, dto: node });
-    return x;
-  }
-
-  for (const root of roots) visit(root, 0);
-  return laidOut;
-}
+import dagre from "dagre";
 
 const nodeTypes = { mapNode: MapNode };
+
+// Configuration for the layout
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const NODE_WIDTH = 172;
+const NODE_HEIGHT = 36;
+
+function getLayoutedElements(
+  nodes: NodeDTO[],
+  direction: "TB" | "LR" = "TB",
+): { nodes: RFNode[]; edges: RFEdge[] } {
+  // 1. Build the graph
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: direction });
+  g.setDefaultEdgeLabel(() => ({}));
+
+  // 2. Add nodes to the graph
+  const nodeMap = new Map<number, NodeDTO>();
+  for (const n of nodes) {
+    if (n.chunkId == null) continue;
+    nodeMap.set(n.chunkId, n);
+    g.setNode(String(n.chunkId), { width: NODE_WIDTH, height: NODE_HEIGHT });
+  }
+
+  // 3. Add edges to the graph (parent -> child)
+  for (const n of nodes) {
+    if (n.parentChunkId != null && nodeMap.has(n.parentChunkId)) {
+      g.setEdge(String(n.parentChunkId), String(n.chunkId));
+    }
+  }
+
+  // 4. Run the layout algorithm
+  dagre.layout(g);
+
+  // 5. Convert back to React Flow nodes & edges
+  const rfNodes: RFNode[] = [];
+  const rfEdges: RFEdge[] = [];
+
+  for (const n of nodes) {
+    if (n.chunkId == null) continue;
+    const nodeId = String(n.chunkId);
+    const nodeWithPosition = g.node(nodeId);
+
+    rfNodes.push({
+      id: nodeId,
+      type: "mapNode",
+      position: {
+        x: nodeWithPosition.x,
+        y: nodeWithPosition.y,
+      },
+      data: { label: n.chunkId, completed: false },
+      draggable: false,
+    });
+
+    // Create edge if it has a parent
+    if (n.parentChunkId != null && nodeMap.has(n.parentChunkId)) {
+      rfEdges.push({
+        id: `${n.parentChunkId}-${n.chunkId}`,
+        source: String(n.parentChunkId),
+        target: nodeId,
+        type: "smooth",
+        selectable: false,
+      });
+    }
+  }
+
+  return { nodes: rfNodes, edges: rfEdges };
+}
 
 function SpaceMap() {
   const { spaceId } = useSpaceId();
   const { theme } = useTheme();
   const { mindMap } = useMindMap(spaceId);
 
-  const { rfNodes, rfEdges } = useMemo(() => {
-    const tree = buildMindMapTree(mindMap?.nodes ?? []);
-    const laidOut = layoutTree(tree);
-
-    const rfNodes: RFNode[] = laidOut.map((n) => ({
-      id: n.id,
-      type: "mapNode",
-      position: { x: n.x, y: n.y },
-      data: { label: n.dto.chunkId, completed: false },
-      draggable: false,
-    }));
-
-    const rfEdges: RFEdge[] = laidOut
-      .filter((n) => n.parentId != null)
-      .map((n) => ({
-        id: `${n.parentId}-${n.id}`,
-        source: n.parentId!,
-        target: n.id,
-        type: "step",
-      }));
-
-    return { rfNodes, rfEdges };
+  const { nodes: rfNodes, edges: rfEdges } = useMemo(() => {
+    const nodes = mindMap?.nodes ?? [];
+    return getLayoutedElements(nodes, "TB");
   }, [mindMap?.nodes]);
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <ReactFlow
+        proOptions={{
+          hideAttribution: true,
+        }}
         colorMode={theme}
         style={{ backgroundColor: "transparent", borderWidth: 2 }}
         nodes={rfNodes}
