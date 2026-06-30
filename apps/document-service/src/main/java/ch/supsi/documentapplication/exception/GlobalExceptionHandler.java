@@ -13,4 +13,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> usernameTakenException(UsernameTakenException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
     }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, String>> notFoundException(NotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+    }
 }

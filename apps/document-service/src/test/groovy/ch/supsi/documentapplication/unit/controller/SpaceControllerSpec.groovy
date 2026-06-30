@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.controller
 
 import ch.supsi.documentapplication.controller.SpaceController
+import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ISpaceService
@@ -50,8 +51,8 @@ class SpaceControllerSpec extends Specification {
 
     def "should return 200 and space id when space is created"() {
         given:
-        def body = new ObjectMapper().writeValueAsString([name: "My Space", description: "A test space"])
-        spaceService.create("pippo", "My Space", "A test space") >> 42L
+        def body = new ObjectMapper().writeValueAsString([icon: "abc", name: "My Space", description: "A test space"])
+        spaceService.create(_ as Space) >> 42L
 
         when:
         def result = mockMvc.perform(

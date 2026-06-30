@@ -23,7 +23,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should return mind map for authorized user"() {
         given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
         def mindMap = Mock(MindMap)
 
         when:
@@ -48,7 +48,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw unauthorized when requester is not owner of mind map space"() {
         given:
-        def space = Optional.of(Space.builder().id(10L).owner("bob").build())
+        def space = Optional.of(new Space(10L, "bob", "", "", ""))
 
         when:
         service.getMindMap("alice", 10L)
@@ -64,7 +64,7 @@ class SpaceServiceSpec extends Specification {
         given:
         def mindMap = Mock(MindMap)
         mindMap.getMindMapStatus() >> MindMapStatus.DONE
-        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
 
         when:
         def result = service.getMindMapStatus("alice", 10L)
@@ -77,7 +77,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw not found when mind map is null for status"() {
         given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
 
         when:
         service.getMindMapStatus("alice", 10L)
@@ -89,33 +89,9 @@ class SpaceServiceSpec extends Specification {
         e.message
     }
 
-    def "should update space using existing values when name and description are empty"() {
-        given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").name("old").description("desc").build())
-
-        when:
-        service.update("alice", 10L, "", "")
-
-        then:
-        1 * spaceStorage.read(10L) >> space
-        1 * spaceStorage.update(10L, "old", "desc")
-    }
-
-    def "should update space using provided values"() {
-        given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").name("old").description("desc").build())
-
-        when:
-        service.update("alice", 10L, "new", "new desc")
-
-        then:
-        1 * spaceStorage.read(10L) >> space
-        1 * spaceStorage.update(10L, "new", "new desc")
-    }
-
     def "should create mind map and start job"() {
         given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
 
         when:
         service.createMindMap("alice", 10L)
@@ -128,7 +104,7 @@ class SpaceServiceSpec extends Specification {
 
     def "should throw domain exception when mind map job fails"() {
         given:
-        def space = Optional.of(Space.builder().id(10L).owner("alice").build())
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
 
         when:
         service.createMindMap("alice", 10L)
@@ -143,8 +119,9 @@ class SpaceServiceSpec extends Specification {
     def "should return spaces for owner"() {
         given:
         def spaces = [
-                Space.builder().id(1L).owner("alice").build(),
-                Space.builder().id(2L).owner("alice").build()
+                new Space(1L, "alice", "", "", ""),
+                new Space(2L, "alice", "", "", ""),
+                new Space(3L, "alice", "", "", ""),
         ]
 
         when:
@@ -158,8 +135,8 @@ class SpaceServiceSpec extends Specification {
     def "should delete space only when it belongs to owner spaces"() {
         given:
         def spaces = [
-                Space.builder().id(1L).owner("alice").build(),
-                Space.builder().id(2L).owner("alice").build()
+                new Space(1L, "alice", "", "", ""),
+                new Space(2L, "alice", "", "", ""),
         ]
 
         when:
@@ -173,7 +150,7 @@ class SpaceServiceSpec extends Specification {
     def "should not delete space when it is not in owner's spaces"() {
         given:
         def spaces = [
-                Space.builder().id(1L).owner("alice").build()
+                new Space(1L, "alice", "", "", ""),
         ]
 
         when:

@@ -29,13 +29,22 @@ class DocumentServiceSpec extends Specification {
     private final DocumentService service =
             new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob)
 
+
+    Space buildSpace(Long id, String owner) {
+        return new Space(id, owner, "", "", "")
+    }
+
+    Optional<Space> buildOptSpace(Long id, String owner) {
+        return Optional.of(buildSpace(id, owner))
+    }
+
     def "should create document, persist it, and start pipeline job"() {
         given:
         String owner = "alice"
         Long spaceId = 10L
         byte[] bytes = "hello".bytes
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", bytes)
-        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
+        Optional<Space> space = buildOptSpace(spaceId, owner)
         Long databaseDocId = 99L
 
         when:
@@ -73,7 +82,7 @@ class DocumentServiceSpec extends Specification {
         String owner = "alice"
         Long spaceId = 10L
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner("bob").build())
+        Optional<Space> space = buildOptSpace(spaceId, "bob")
 
         when:
         service.createDocument(file, owner, spaceId)
@@ -112,7 +121,7 @@ class DocumentServiceSpec extends Specification {
         String owner = "alice"
         Long spaceId = 10L
         MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
+        Optional<Space> space = buildOptSpace(spaceId, owner)
         Long databaseDocId = 99L
 
         when:
@@ -131,7 +140,7 @@ class DocumentServiceSpec extends Specification {
         given:
         String owner = "alice"
         Long spaceId = 10L
-        Optional<Space> space = Optional.of(Space.builder().id(spaceId).owner(owner).build())
+        Optional<Space> space = buildOptSpace(spaceId, owner)
         List<Document> documents = [
                 new Document(1, DocumentStatus.DONE),
                 new Document(2, DocumentStatus.PROCESSING)
@@ -158,7 +167,7 @@ class DocumentServiceSpec extends Specification {
 
     def "should throw unauthorized when requester is not owner"() {
         given:
-        Optional<Space> space = Optional.of(Space.builder().id(10L).owner("bob").build())
+        Optional<Space> space = buildOptSpace(10L, "bob")
 
         when:
         service.getDocuments("alice", 10L)

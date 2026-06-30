@@ -1,15 +1,14 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.MindMap;
-import ch.supsi.documentapplication.model.MindMapStatus;
-import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.model.*;
 import java.util.List;
 import java.util.Optional;
 
 public interface IDatabaseSpaceStorage {
 
-    Long create(String owner, String name, String description);
+    Long create(Space space);
+
+    void update(Space space);
 
     Optional<Space> read(Long id);
 
@@ -18,8 +17,6 @@ public interface IDatabaseSpaceStorage {
     MindMap readMindMap(Long spaceId);
 
     List<Space> readAll(String owner);
-
-    void update(Long spaceId, String name, String description);
 
     void updateMindMapStatus(Long spaceId, MindMapStatus status);
 

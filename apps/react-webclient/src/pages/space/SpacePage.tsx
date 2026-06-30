@@ -1,59 +1,70 @@
 import SpaceMap from "@/pages/space/SpaceMap.tsx";
-import useDocuments from "@/hooks/useDocuments.tsx";
-import {useParams} from "@tanstack/react-router";
+import useDocuments from "@/hooks/useDocuments.ts";
 import Upload from "@/pages/space/Upload.tsx";
-import {Card} from "@/components/ui/card.tsx";
-import DocumentStatusList from "@/pages/space/DocumentStatusList.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import useMindMap from "@/hooks/useMindMap.tsx";
-import {useTranslation} from "react-i18next";
-import {Spinner} from "@/components/ui/spinner.tsx";
-
-const wrapStyles = "mx-auto flex min-h-[100%] max-h-[100%] flex-row items-center gap-4";
+import useSpaceId from "@/hooks/useSpaceId.ts";
+import CenteredPage from "@/components/CenteredPage.tsx";
+import SpaceSidebar from "@/pages/space/SpaceSidebar.tsx";
+import useSpaces from "@/hooks/useSpaces.ts";
+import { useMemo } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb.tsx";
+import PathConstants from "@/routing/pathConstants.ts";
 
 function SpacePage() {
-    const { spaceId } = useParams({
-        from: "/main/spaces/$spaceId",
-    });
+  const { spaceId } = useSpaceId();
+  const { spaces } = useSpaces();
+  const space = useMemo(
+    () => spaces.filter((s) => s.spaceId == spaceId)[0],
+    [spaces, spaceId],
+  );
+  const { documents } = useDocuments(spaceId);
 
-    const { t } = useTranslation();
+  if (documents.length == 0) {
+    return <Upload showHeaders={true} />;
+  }
 
-    const { documents } = useDocuments(Number(spaceId));
-
-    const { extractMindMap, status, mindMap } = useMindMap(Number(spaceId));
-
-    if (documents.length == 0) {
-        return (
-            <div className={wrapStyles}>
-                <Upload showHeaders={true}/>
-            </div>
-        )
-    }
-
-
-    return (
-        <div className={wrapStyles}>
-            <div className="flex w-full h-full flex-row gap-4 items-stretch">
-                <aside className="min-w-[25%] max-w-[25%]">
-                    <Card className="bg-muted/50 h-full p-4 justify-between">
-                        <div className={"flex flex-col gap-4"}>
-                            <DocumentStatusList></DocumentStatusList>
-                            <Upload showHeaders={false}/>
-                        </div>
-                        <div className={"w-full"}>
-                            <Button className={"w-full"} onClick={() => extractMindMap.mutate({spaceId})} disabled={status == "GENERATING"}>
-                                <div className={"flex flex-row gap-8"}>
-                                    {t("mindmap.button")}
-                                    {status == "GENERATING" && <Spinner/>}
-                                </div>
-                            </Button>
-                        </div>
-                    </Card>
-                </aside>
-                <SpaceMap />
-            </div>
+  return (
+    <CenteredPage>
+      <div className={"w-full h-full pt-8 pb-8"}>
+        <div className={"w-full h-fit"}>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={PathConstants.HOME}>Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href={PathConstants.SPACES}>
+                  Spaces
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{space.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
-    )
+        <div className="flex flex-col lg:flex-row gap-4 h-full w-full">
+          {/* Sidebar */}
+          <aside className="w-full lg:w-1/4">
+            <SpaceSidebar space={space} />
+          </aside>
+
+          {/* Main content */}
+          <div className="flex-1 w-full">
+            <SpaceMap />
+          </div>
+        </div>
+      </div>
+    </CenteredPage>
+  );
 }
 
 export default SpacePage;

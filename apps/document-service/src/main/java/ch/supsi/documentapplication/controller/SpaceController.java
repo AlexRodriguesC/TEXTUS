@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO
 import ch.supsi.documentapplication.controller.DTO.request.UpdateSpaceRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.*;
 import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.Space;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ISpaceService;
 import ch.supsi.documentapplication.service.document.IDocumentService;
@@ -58,8 +59,12 @@ public class SpaceController {
             @Parameter(hidden = true) Authentication authentication) {
 
         String username = authentication.getName();
-        Long id =
-                spaceService.create(username, createSpaceRequestDTO.getName(), createSpaceRequestDTO.getDescription());
+        var space = new Space(
+                username,
+                createSpaceRequestDTO.getIcon(),
+                createSpaceRequestDTO.getName(),
+                createSpaceRequestDTO.getDescription());
+        Long id = spaceService.create(space);
         return ResponseEntity.ok(new CreateSpaceResponseDTO(id));
     }
 
@@ -74,7 +79,8 @@ public class SpaceController {
         String username = authentication.getName();
         var spaces = spaceService.getSpaces(username);
         var spaceDTOs = spaces.stream()
-                .map(space -> new ReadSpaceResponseDTO(space.getId(), space.getName(), space.getDescription()))
+                .map(space -> new ReadSpaceResponseDTO(
+                        space.getId(), space.getIcon(), space.getName(), space.getDescription()))
                 .toList();
 
         return ResponseEntity.ok(spaceDTOs);
@@ -106,7 +112,8 @@ public class SpaceController {
             @PathVariable Long spaceId,
             @RequestBody @NotNull UpdateSpaceRequestDTO request) {
         String username = authentication.getName();
-        spaceService.update(username, spaceId, request.name(), request.description());
+        var space = new Space(spaceId, username, request.icon(), request.name(), request.description());
+        spaceService.update(space);
         return ResponseEntity.noContent().build();
     }
 

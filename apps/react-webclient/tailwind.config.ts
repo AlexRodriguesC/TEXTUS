@@ -1,9 +1,9 @@
 export default {
-    theme: {
-        extend: {
-            fontFamily: {
-                playfair: ['"Playfair Display"', 'serif'],
-            }
-        }
-    }
-}
+  theme: {
+    extend: {
+      fontFamily: {
+        playfair: ['"Playfair Display"', "serif"],
+      },
+    },
+  },
+};

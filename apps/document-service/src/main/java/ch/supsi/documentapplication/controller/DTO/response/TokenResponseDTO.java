@@ -1,3 +1,6 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
-public record TokenResponseDTO(String token) {}
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+public record TokenResponseDTO(@NotNull @NotEmpty String token) {}

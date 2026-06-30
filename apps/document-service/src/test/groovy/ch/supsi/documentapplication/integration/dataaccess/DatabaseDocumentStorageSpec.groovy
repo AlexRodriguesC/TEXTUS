@@ -1,39 +1,41 @@
 package ch.supsi.documentapplication.integration.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage
+import ch.supsi.documentapplication.dataaccess.DatabaseSpaceStorage
+import ch.supsi.documentapplication.dataaccess.DatabaseUserStorage
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.model.Chunk
 import ch.supsi.documentapplication.model.Document
 import ch.supsi.documentapplication.model.DocumentStatus
+import ch.supsi.documentapplication.model.Space
+import ch.supsi.documentapplication.model.User
 import spock.lang.Subject
 
 class DatabaseDocumentStorageSpec extends DatabaseSpec {
+
+    DatabaseSpaceStorage databaseSpaceStorage
+
+    DatabaseUserStorage databaseUserStorage
 
     @Subject
     DatabaseDocumentStorage storage
 
     def setup() {
         storage = new DatabaseDocumentStorage(jdbcTemplate, jdbcClient)
+        databaseSpaceStorage = new DatabaseSpaceStorage(jdbcClient)
+        databaseUserStorage = new DatabaseUserStorage(jdbcClient)
     }
 
     private void createUser(String username, String password = "abc") {
-        jdbcClient.sql("SELECT users.create_user(:username, :password)").param("username", username).param("password", password).query().singleValue()
+        databaseUserStorage.createUser(new User(username, password))
     }
 
-    private Long createSpace(String owner, String name = "space", String description = "desc") {
-        return jdbcClient.sql("SELECT documents.create_space(:owner, :name, :description)")
-                .param("owner", owner)
-                .param("name", name)
-                .param("description", description)
-                .query(Long.class)
-                .single()
+    private Long createSpace(String owner, String icon = "abc", String name = "space", String description = "desc") {
+        return databaseSpaceStorage.create(new Space(owner, icon, name, description))
     }
 
     private Long createDocument(Long spaceId) {
-        return jdbcClient.sql("SELECT documents.create_document(:space_id)")
-                .param("space_id", spaceId)
-                .query(Long.class)
-                .single()
+        return storage.create(spaceId)
     }
 
     private static Chunk buildChunk(List<String> keywords = ["k1", "k2"], List<String> relatedKeys = ["r1"]) {

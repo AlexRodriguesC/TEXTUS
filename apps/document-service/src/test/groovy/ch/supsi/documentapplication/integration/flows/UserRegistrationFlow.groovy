@@ -52,7 +52,7 @@ class UserRegistrationFlow extends BaseFlowSpec {
                 .uri('/api/v1/spaces')
                 .contentType(MediaType.APPLICATION_JSON)
                 .header('Authorization', "Bearer ${responseBody.token()}")
-                .body(new CreateSpaceRequestDTO('My Space', 'desc'))
+                .body(new CreateSpaceRequestDTO("icon", 'My Space', 'desc'))
                 .exchange()
 
         then:

@@ -40,9 +40,7 @@ public class Chunk {
     @Override
     public String toString() {
         return "Chunk{" + "id="
-                + id + ", title='"
-                + title + '\'' + ", summary='"
-                + summary + '\'' + ", keywords="
+                + id + ", keywords="
                 + keywords + ", key='"
                 + key + '\'' + ", relatedKeys="
                 + relatedKeys + '}';

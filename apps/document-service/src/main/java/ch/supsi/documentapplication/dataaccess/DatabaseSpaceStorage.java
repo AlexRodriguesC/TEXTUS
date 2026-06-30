@@ -3,6 +3,8 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.*;
 import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
@@ -16,6 +18,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     public static final String STATUS = "status";
     private static final String ID = "id";
     private static final String NAME = "name";
+    private static final String ICON = "icon";
     private static final String DESCRIPTION = "description";
     private static final String OWNER_ID = "owner_id";
     private static final String SPACE_ID = "space_id";
@@ -30,19 +33,32 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     @Override
-    public Long create(String owner, String name, String description) {
+    public Long create(Space space) {
         try {
             return jdbcClient
-                    .sql("SELECT documents.create_space(:owner, :name, :description)")
-                    .param(OWNER, owner)
-                    .param(NAME, name)
-                    .param(DESCRIPTION, description)
+                    .sql("SELECT documents.create_space(:owner, :icon, :name, :description)")
+                    .param(OWNER, space.getOwner())
+                    .param(ICON, space.getIcon())
+                    .param(NAME, space.getName())
+                    .param(DESCRIPTION, space.getDescription())
                     .query(Long.class)
                     .optional()
-                    .orElseThrow(() -> NotFoundException.userNotFound(owner));
+                    .orElseThrow(() -> NotFoundException.userNotFound(space.getOwner()));
         } catch (org.springframework.dao.DataAccessException e) {
-            throw NotFoundException.userNotFound(owner);
+            throw NotFoundException.userNotFound(space.getOwner());
         }
+    }
+
+    @Override
+    public void update(Space space) {
+        jdbcClient
+                .sql("SELECT documents.update_space(:space_id, :icon, :name, :description)")
+                .param(SPACE_ID, space.getId())
+                .param(ICON, space.getIcon())
+                .param(NAME, space.getName())
+                .param(DESCRIPTION, space.getDescription())
+                .query()
+                .singleValue();
     }
 
     @Override
@@ -50,12 +66,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         return jdbcClient
                 .sql("SELECT * FROM documents.read_space(:id)")
                 .param(ID, id)
-                .query((rs, rowNum) -> Space.builder()
-                        .id(rs.getLong(ID))
-                        .owner(rs.getString(OWNER_ID))
-                        .name(rs.getString(NAME))
-                        .description(rs.getString(DESCRIPTION))
-                        .build())
+                .query((rs, rowNum) -> mapToSpace(rs))
                 .optional();
     }
 
@@ -141,24 +152,8 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         return jdbcClient
                 .sql("SELECT * FROM documents.read_spaces(:owner)")
                 .param(OWNER, owner)
-                .query((rs, rowNum) -> Space.builder()
-                        .id(rs.getLong(ID))
-                        .owner(rs.getString(OWNER_ID))
-                        .name(rs.getString(NAME))
-                        .description(rs.getString(DESCRIPTION))
-                        .build())
+                .query((rs, rowNum) -> mapToSpace(rs))
                 .list();
-    }
-
-    @Override
-    public void update(Long spaceId, String name, String description) {
-        jdbcClient
-                .sql("SELECT documents.update_space(:space_id, :name, :description)")
-                .param(SPACE_ID, spaceId)
-                .param(NAME, name)
-                .param(DESCRIPTION, description)
-                .query()
-                .singleValue();
     }
 
     @Override
@@ -221,5 +216,14 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .param(SPACE_ID, spaceId)
                 .query()
                 .singleValue();
+    }
+
+    private Space mapToSpace(ResultSet rs) throws SQLException {
+        return new Space(
+                rs.getLong(ID),
+                rs.getString(OWNER_ID),
+                rs.getString(ICON),
+                rs.getString(NAME),
+                rs.getString(DESCRIPTION));
     }
 }

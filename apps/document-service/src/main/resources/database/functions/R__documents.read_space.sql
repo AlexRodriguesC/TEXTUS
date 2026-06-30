@@ -1,7 +1,8 @@
 CREATE OR REPLACE FUNCTION documents.read_space(p_space_id BIGINT)
     RETURNS TABLE (
-       id BIGINT,
+        id BIGINT,
         owner_id TEXT,
+        icon VARCHAR(10),
         name TEXT,
         description TEXT
     )
@@ -9,6 +10,6 @@ CREATE OR REPLACE FUNCTION documents.read_space(p_space_id BIGINT)
 AS
 $$
     BEGIN
-        RETURN QUERY SELECT s.id, s.owner_id, s.name, s.description FROM documents.space s WHERE s.id = p_space_id;
+        RETURN QUERY SELECT s.id, s.owner_id, s.icon, s.name, s.description FROM documents.space s WHERE s.id = p_space_id;
     END;
 $$

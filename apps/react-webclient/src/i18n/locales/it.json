@@ -37,6 +37,7 @@
     "account": "Ho già un account"
   },
   "space": {
+    "icon": "Icona",
     "name": "Nome",
     "description": "Descrizione"
   },
@@ -110,10 +111,13 @@
       "success": "Documento {{fileName}} eliminato con successo."
     },
     "status": {
-      "overview": "Panoramica degli stati dei documenti"
+      "overview": "Stati dei documenti"
     }
   },
   "mindmap": {
-    "button": "Genera mindmap"
+    "button": "Genera mindmap",
+    "creation": {
+      "success": "Creazione della mind map programmata con successo"
+    }
   }
 }

@@ -1,15 +1,15 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 import * as React from "react";
 
 export interface MeshGradientBackgroundProps {
-  className?: string
-  children?: React.ReactNode
+  className?: string;
+  children?: React.ReactNode;
   /** Gradient colors */
-  colors?: string[]
+  colors?: string[];
   /** Animation speed multiplier */
-  speed?: number
+  speed?: number;
   /** Background color */
-  backgroundColor?: string
+  backgroundColor?: string;
 }
 
 export function MeshGradientBackground({
@@ -19,13 +19,16 @@ export function MeshGradientBackground({
   speed = 1,
   backgroundColor = "#030014",
 }: MeshGradientBackgroundProps) {
-  const duration1 = 60 / speed
-  const duration2 = 80 / speed
-  const duration3 = 90 / speed
-  const duration4 = 70 / speed
+  const duration1 = 60 / speed;
+  const duration2 = 80 / speed;
+  const duration3 = 90 / speed;
+  const duration4 = 70 / speed;
 
   return (
-    <div className={cn("fixed inset-0 overflow-hidden", className)} style={{ backgroundColor }}>
+    <div
+      className={cn("fixed inset-0 overflow-hidden", className)}
+      style={{ backgroundColor }}
+    >
       {/* Gradient orbs */}
       <div className="absolute inset-0">
         {/* Orb 1 - Top left */}
@@ -86,7 +89,9 @@ export function MeshGradientBackground({
       />
 
       {/* Content layer */}
-      {children && <div className="relative z-10 h-full w-full">{children}</div>}
+      {children && (
+        <div className="relative z-10 h-full w-full">{children}</div>
+      )}
 
       <style>{`
         @keyframes meshMove1 {
@@ -138,9 +143,9 @@ export function MeshGradientBackground({
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 export default function MeshGradientBackgroundDemo() {
-  return <MeshGradientBackground />
+  return <MeshGradientBackground />;
 }

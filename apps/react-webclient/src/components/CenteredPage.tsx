@@ -1,10 +1,9 @@
+import * as React from "react";
 
 function CenteredPage({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="grid min-h-screen place-items-center px-4">
-            {children}
-        </div>
-    );
+  return (
+    <div className="grid h-full w-full place-items-center">{children}</div>
+  );
 }
 
 export default CenteredPage;

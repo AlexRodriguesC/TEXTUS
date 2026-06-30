@@ -39,6 +39,7 @@ Output schema:
   "chunkId": <number>,
   "children": [ ... same object shape ... ]
 }
+For every node, always include a children field. If the node has no children, set children to an empty array ([]).
 
 Hard constraints:
 - Exactly one root node.

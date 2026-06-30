@@ -11,6 +11,10 @@ public class CreateSpaceRequestDTO {
 
     @NotNull
     @NotEmpty
+    private String icon;
+
+    @NotNull
+    @NotEmpty
     private String name;
 
     @NotNull

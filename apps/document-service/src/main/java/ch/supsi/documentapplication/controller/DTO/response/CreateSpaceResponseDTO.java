@@ -1,3 +1,5 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
-public record CreateSpaceResponseDTO(Long id) {}
+import jakarta.validation.constraints.NotNull;
+
+public record CreateSpaceResponseDTO(@NotNull Long id) {}

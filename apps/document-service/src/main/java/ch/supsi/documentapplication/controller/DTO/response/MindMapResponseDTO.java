@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MindMapResponseDTO {
+
     private List<NodeDTO> nodes;
 
     @Data

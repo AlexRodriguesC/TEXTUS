@@ -1,65 +1,83 @@
-import {Link} from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
-import {Moon, Pencil} from "lucide-react";
-import {Button} from "@/components/ui/button.tsx";
-import {getReadSpacesQueryKey, useDeleteSpace} from "@/api/generated/spaces/spaces.ts";
-import {failureToastAction, successToast} from "@/lib/toasts.ts";
-import {useQueryClient} from "@tanstack/react-query";
-import {useTranslation} from "react-i18next";
-import {useCallback} from "react";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  getReadSpacesQueryKey,
+  useDeleteSpace,
+} from "@/api/generated/spaces/spaces.ts";
+import { failureToastAction, successToast } from "@/lib/toasts.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
 import EditSpace from "@/pages/spaces/EditSpace.tsx";
+import { Emoji } from "emoji-picker-react";
 
 type SpacesListItem = {
-    spaceId: number,
-    name: string,
-    description: string
-}
+  spaceId: number;
+  icon: string;
+  name: string;
+  description: string;
+};
 
-function SpacesListItem({spaceId, name, description} : SpacesListItem) {
-    const {t} = useTranslation();
-    const queryClient = useQueryClient();
+function SpacesListItem({ spaceId, icon, name, description }: SpacesListItem) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-    const submitDelete = useCallback(() => {
-        deleteSpace.mutate({spaceId});
-    }, [])
+  const submitDelete = useCallback(() => {
+    deleteSpace.mutate({ spaceId });
+  }, []);
 
-    const deleteSpace = useDeleteSpace({
-        mutation: {
-            onSuccess: async () => {
-                await queryClient.invalidateQueries({queryKey: getReadSpacesQueryKey()});
-                successToast(t("spaces.delete.success"));
-            },
-            onError: async () => {
-                failureToastAction(t("spaces.delete.error"), <Button onClick={submitDelete}>t("button.retry")</Button>)
-            }
-        }
-    })
+  const deleteSpace = useDeleteSpace({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: getReadSpacesQueryKey(),
+        });
+        successToast(t("spaces.delete.success"));
+      },
+      onError: async () => {
+        failureToastAction(
+          t("spaces.delete.error"),
+          <Button onClick={submitDelete}>{t("button.retry")}</Button>,
+        );
+      },
+    },
+  });
 
-
-    return (
-        <div
-            key={spaceId}
-            className="flex flex-row items-center justify-between border border-border p-4 hover:bg-muted/25 transition-colors"
-        >
-            <Link
-                to={PathConstants.SPACE}
-                params={{ spaceId: String(spaceId) }}
-                className="flex flex-1 flex-row items-center gap-4"
-            >
-                <Moon className="shrink-0" />
-                <div className="flex flex-col">
-                    <p className="font-medium">{name}</p>
-                    <p className="text-sm text-muted-foreground">{description}</p>
-                </div>
-            </Link>
-
-            <div className="flex flex-row gap-2 items-center">
-                <EditSpace spaceId={spaceId} initialName={name} initialDescription={description} trigger={<Pencil className="size-4 cursor-pointer" />}/>
-                <DestructiveActionButton title={t("spaces.delete.title")} onConfirm={submitDelete}/>
-            </div>
+  return (
+    <div
+      key={spaceId}
+      className="flex flex-row items-center justify-between border border-border p-4 hover:bg-muted/25 transition-colors"
+    >
+      <Link
+        to={PathConstants.SPACE}
+        params={{ spaceId: String(spaceId) }}
+        className="flex flex-1 flex-row items-center gap-4"
+      >
+        <Emoji unified={icon} />
+        <div className="flex flex-col">
+          <p className="font-medium">{name}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
-    )
+      </Link>
+
+      <div className="flex flex-row gap-2 items-center">
+        <EditSpace
+          spaceId={spaceId}
+          initialIcon={icon}
+          initialName={name}
+          initialDescription={description}
+          trigger={<Pencil className="size-4 cursor-pointer" />}
+        />
+        <DestructiveActionButton
+          title={t("spaces.delete.title")}
+          onConfirm={submitDelete}
+        />
+      </div>
+    </div>
+  );
 }
 
-export default SpacesListItem
+export default SpacesListItem;

@@ -34,11 +34,6 @@ public class SpaceService implements ISpaceService {
     }
 
     @Override
-    public Long create(String owner, String name, String description) {
-        return spaceStorage.create(owner, name, description);
-    }
-
-    @Override
     public List<Space> getSpaces(String owner) {
         return spaceStorage.readAll(owner);
     }
@@ -54,12 +49,22 @@ public class SpaceService implements ISpaceService {
     }
 
     @Override
-    public void update(String username, Long spaceId, String name, String description) {
-        var space = getSpaceOrThrow(username, spaceId);
-        var updatedName = name == null || name.isEmpty() ? space.getName() : name;
-        var updatedDescription = description == null || description.isEmpty() ? space.getDescription() : description;
+    public Long create(Space space) {
+        return spaceStorage.create(space);
+    }
 
-        spaceStorage.update(space.getId(), updatedName, updatedDescription);
+    @Override
+    public void update(Space space) {
+        var current = getSpaceOrThrow(space.getOwner(), space.getId());
+        var updatedIcon = space.getIcon() == null || space.getIcon().isEmpty() ? current.getIcon() : space.getIcon();
+        var updatedName = space.getName() == null || space.getName().isEmpty() ? current.getName() : space.getName();
+        var updatedDescription =
+                space.getDescription() == null || space.getDescription().isEmpty()
+                        ? current.getDescription()
+                        : space.getDescription();
+
+        spaceStorage.update(
+                new Space(current.getId(), current.getOwner(), updatedIcon, updatedName, updatedDescription));
     }
 
     @Override

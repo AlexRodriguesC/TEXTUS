@@ -1,26 +1,23 @@
 package ch.supsi.documentapplication.model;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@NoArgsConstructor
+@Setter
 @AllArgsConstructor
-@Builder
 public class Space {
 
     private Long id;
     private String owner;
+    private String icon;
     private String name;
     private String description;
-    private MindMap mindMap;
-    private List<Chunk> chunks;
 
-    public Space(Long id, String name, String description) {
-        this.id = id;
+    public Space(String owner, String icon, String name, String description) {
+        this.owner = owner;
+        this.icon = icon;
         this.name = name;
         this.description = description;
     }

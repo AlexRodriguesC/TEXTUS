@@ -1,8 +1,21 @@
-import {cn} from "@/lib/utils";
-import {createContext, forwardRef, useCallback, useContext, useId, useMemo, useReducer, useState,} from "react";
-import {type Accept, type FileRejection, useDropzone as rootUseDropzone,} from "react-dropzone";
-import type {ButtonProps} from "@base-ui/react/button/Button";
-import {Button} from "@/components/ui/button.tsx";
+import { cn } from "@/lib/utils";
+import {
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useId,
+  useMemo,
+  useReducer,
+  useState,
+} from "react";
+import {
+  type Accept,
+  type FileRejection,
+  useDropzone as rootUseDropzone,
+} from "react-dropzone";
+import type { ButtonProps } from "@base-ui/react/button/Button";
+import { Button } from "@/components/ui/button.tsx";
 
 type DropzoneResult<TUploadRes, TUploadError> =
   | {
@@ -403,8 +416,10 @@ const useDropzoneContext = <TUploadRes, TUploadError>() => {
   >;
 };
 
-interface DropzoneProps<TUploadRes, TUploadError>
-  extends UseDropzoneReturn<TUploadRes, TUploadError> {
+interface DropzoneProps<TUploadRes, TUploadError> extends UseDropzoneReturn<
+  TUploadRes,
+  TUploadError
+> {
   children: React.ReactNode;
 }
 const Dropzone = <TUploadRes, TUploadError>(
@@ -437,7 +452,6 @@ const DropZoneArea = forwardRef<HTMLDivElement, DropZoneAreaProps>(
           // TODO: test if this actually works?
           ref.current = instance;
           if (typeof forwardedRef === "function") {
-
             forwardedRef(instance);
           } else if (forwardedRef) {
             forwardedRef.current = instance;
@@ -464,8 +478,7 @@ const DropZoneArea = forwardRef<HTMLDivElement, DropZoneAreaProps>(
 );
 DropZoneArea.displayName = "DropZoneArea";
 
-export interface DropzoneDescriptionProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {}
+export interface DropzoneDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 const DropzoneDescription = forwardRef<
   HTMLParagraphElement,
@@ -512,8 +525,7 @@ const useDropzoneFileListContext = () => {
   return useContext(DropzoneFileListContext);
 };
 
-interface DropZoneFileListProps
-  extends React.OlHTMLAttributes<HTMLOListElement> {}
+interface DropZoneFileListProps extends React.OlHTMLAttributes<HTMLOListElement> {}
 
 const DropzoneFileList = forwardRef<HTMLOListElement, DropZoneFileListProps>(
   (props, ref) => {
@@ -535,8 +547,10 @@ const DropzoneFileList = forwardRef<HTMLOListElement, DropZoneFileListProps>(
 );
 DropzoneFileList.displayName = "DropzoneFileList";
 
-interface DropzoneFileListItemProps<TUploadRes, TUploadError>
-  extends React.LiHTMLAttributes<HTMLLIElement> {
+interface DropzoneFileListItemProps<
+  TUploadRes,
+  TUploadError,
+> extends React.LiHTMLAttributes<HTMLLIElement> {
   file: FileStatus<TUploadRes, TUploadError>;
 }
 
@@ -588,8 +602,7 @@ const DropzoneFileListItem = forwardRef<
 });
 DropzoneFileListItem.displayName = "DropzoneFileListItem";
 
-interface DropzoneFileMessageProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {}
+interface DropzoneFileMessageProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 const DropzoneFileMessage = forwardRef<
   HTMLParagraphElement,
@@ -622,8 +635,7 @@ const DropzoneFileMessage = forwardRef<
   );
 });
 DropzoneFileMessage.displayName = "DropzoneFileMessage";
-interface DropzoneMessageProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {}
+interface DropzoneMessageProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 const DropzoneMessage = forwardRef<HTMLParagraphElement, DropzoneMessageProps>(
   (props, ref) => {
@@ -718,8 +730,7 @@ const DropzoneRetryFile = forwardRef<HTMLButtonElement, DropzoneRetryFileProps>(
 );
 DropzoneRetryFile.displayName = "DropzoneRetryFile";
 
-interface DropzoneTriggerProps
-  extends React.LabelHTMLAttributes<HTMLLabelElement> {}
+interface DropzoneTriggerProps extends React.LabelHTMLAttributes<HTMLLabelElement> {}
 
 const DropzoneTrigger = forwardRef<HTMLLabelElement, DropzoneTriggerProps>(
   ({ className, children, ...props }, ref) => {

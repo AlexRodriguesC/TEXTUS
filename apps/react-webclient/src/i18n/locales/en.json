@@ -37,6 +37,7 @@
     "account": "I already have an account"
   },
   "space": {
+    "icon": "Icon",
     "name": "Name",
     "description": "Description"
   },
@@ -110,10 +111,13 @@
       "success": "Documented {{fileName}} removed successfully."
     },
     "status": {
-      "overview": "Documents status overview"
+      "overview": "Documents status"
     }
   },
   "mindmap": {
-    "button": "Generate mindmap"
+    "button": "Generate mindmap",
+    "creation": {
+      "success": "Mindmap creation scheduled successfully"
+    }
   }
 }
