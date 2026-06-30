@@ -15,10 +15,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
+import {useTranslation} from "react-i18next";
 
 function SpacePage() {
   const { spaceId } = useSpaceId();
   const { spaces } = useSpaces();
+  const { t } = useTranslation();
   const space = useMemo(
     () => spaces.filter((s) => s.spaceId == spaceId)[0],
     [spaces, spaceId],
@@ -65,6 +67,9 @@ function SpacePage() {
           <div className="flex-1 w-full">
             <SpaceMap />
           </div>
+        </div>
+        <div className={"w-full h-fit"}>
+          <p className={"text-muted-foreground text-xs place-self-center"}>{t("textus.disclaimer")}</p>
         </div>
       </div>
     </CenteredPage>

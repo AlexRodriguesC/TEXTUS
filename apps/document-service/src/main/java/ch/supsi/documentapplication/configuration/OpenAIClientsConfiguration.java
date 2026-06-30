@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.service.clients.LLMFailureTracker;
 import ch.supsi.documentapplication.service.clients.StringSanitizer;
 import ch.supsi.documentapplication.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.documentapplication.service.clients.mindmap.OpenAIMindMapClient;
+import ch.supsi.documentapplication.service.clients.summarisation.OpenAISummarizationClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -83,6 +84,27 @@ public class OpenAIClientsConfiguration {
 
         return new OpenAIEnrichmentClient(
                 chatClient, failureTracker, chunkDeserializer, stringSanitizer, promptTemplate);
+    }
+
+    @Bean
+    public OpenAISummarizationClient openAISummarizationClient(
+            ChatClient.Builder chatBuilder,
+            PromptProperties promptProperties,
+            StTemplateRenderer templateRenderer,
+            ResourceLoader resourceLoader,
+            FailureTracker failureTracker) {
+        var userPromptResource = resourceLoader.getResource(promptProperties.getSummarizationUser());
+        String userPromptText = copyToString(userPromptResource);
+
+        PromptTemplate promptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(userPromptText)
+                .build();
+
+        var systemPromptResource = resourceLoader.getResource(promptProperties.getSummarizationSystem());
+        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+
+        return new OpenAISummarizationClient(chatClient, promptTemplate, failureTracker);
     }
 
     private String copyToString(Resource resource) {

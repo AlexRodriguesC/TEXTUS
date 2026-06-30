@@ -1,4 +1,7 @@
 {
+  "textus": {
+    "disclaimer": "TEXTUS can be inaccurate; please double-check its responses"
+  },
   "profile": {
     "logged-as": "Logged in as {{username}}",
     "not-logged-in": "Not logged in"

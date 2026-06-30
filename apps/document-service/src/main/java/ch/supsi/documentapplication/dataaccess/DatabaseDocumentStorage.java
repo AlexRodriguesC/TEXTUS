@@ -4,12 +4,14 @@ import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.model.Page;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -69,6 +71,26 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                         .orElseThrow(() -> NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId));
             });
         } catch (org.springframework.dao.DataAccessException e) {
+            throw NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId);
+        }
+    }
+
+    @Override
+    public Long create(Page page, Long spaceId, Long documentId) {
+        try {
+            return jdbcClient
+                    .sql(
+                            "SELECT documents.create_page(:space_id, :document_id, :tokens_in, :tokens_out, :title, :summary)")
+                    .param(SPACE_ID, spaceId)
+                    .param(DOCUMENT_ID, documentId)
+                    .param(TOKENS_IN, -1)
+                    .param(TOKENS_OUT, -1)
+                    .param(TITLE, page.getTitle())
+                    .param(SUMMARY, page.getSummary())
+                    .query(Long.class)
+                    .optional()
+                    .orElseThrow(() -> NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId));
+        } catch (DataAccessException e) {
             throw NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId);
         }
     }

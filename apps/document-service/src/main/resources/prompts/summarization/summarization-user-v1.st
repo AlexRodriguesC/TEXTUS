@@ -1,0 +1,18 @@
+Analyze the following document and generate a title and a factual summary.
+
+Step 1 – Generate Questions: Identify 3–5 questions that capture the most critical factual information in the document.
+
+Step 2 – Answer Questions: Answer each question using ONLY information present in the document. Be specific and precise.
+
+Step 3 – Generate Title: Create a concise title (5–15 words) that accurately reflects the document's main subject.
+
+Step 4 – Generate Summary: Write a factual summary that presents the key information directly. Do NOT use introductory phrases like "the document covers," "this article discusses," or "the text describes." Instead, state the facts directly as declarative statements. For example, write "Water has a planar geometry with two bonding and two lone pairs" rather than "The document discusses water's geometry."
+
+Document:
+<document_text>
+
+Output only a JSON object in this format:
+{
+  "title": "concise title here",
+  "summary": "factual summary with direct statements only"
+}

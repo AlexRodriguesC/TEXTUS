@@ -43,13 +43,11 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Job pipelineJob(
-            JobRepository jobRepository, Step ocr, Step segment, Step enrich, Step writeJSON, Step cleanup) {
+    public Job pipelineJob(JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step cleanup) {
         return new JobBuilder("documentProcessingJob", jobRepository)
                 .start(ocr)
                 .next(segment)
-                .next(enrich)
-                .next(writeJSON)
+                .next(summarize)
                 .next(cleanup)
                 .build();
     }
@@ -76,11 +74,15 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Step writeJSON(
+    public Step summarize(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            JSONOutputTasklet jsonOutputTasklet) {
-        return buildTaskletStep("writeJSON", jobRepository, transactionManager, jsonOutputTasklet);
+            SummarizationTasklet summarizationTasklet) {
+        return buildTaskletStep(
+                summarizationTasklet.getClass().getSimpleName(),
+                jobRepository,
+                transactionManager,
+                summarizationTasklet);
     }
 
     @Bean
