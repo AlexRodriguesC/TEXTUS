@@ -6,6 +6,7 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -14,6 +15,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class MindMapJobConfiguration extends JobConfiguration {
 
     private static final String JOB_NAME = "mind_map_creation_job";
+
+    @Autowired
+    public MindMapJobConfiguration(JobExecutionLogger jobExecutionLogger) {
+        super(jobExecutionLogger);
+    }
 
     @Bean
     public Job mindMapJob(JobRepository jobRepository, Step extractTopics, Step generate) {

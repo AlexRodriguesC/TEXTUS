@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.unit.service
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
+import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
 import ch.supsi.documentapplication.exception.DocumentDomainException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
@@ -16,10 +18,11 @@ import spock.lang.Specification
 class SpaceServiceSpec extends Specification {
 
     def spaceStorage = Mock(IDatabaseSpaceStorage)
+    def documentStorage = Mock(IDatabaseDocumentStorage)
     def jobOperator = Mock(JobOperator)
     def mindMapJob = Mock(Job)
 
-    def service = new SpaceService(spaceStorage, jobOperator, mindMapJob)
+    def service = new SpaceService(spaceStorage, documentStorage, jobOperator, mindMapJob)
 
     def "should return mind map for authorized user"() {
         given:

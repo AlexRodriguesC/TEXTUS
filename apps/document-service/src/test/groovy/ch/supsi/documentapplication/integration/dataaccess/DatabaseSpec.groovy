@@ -40,8 +40,5 @@ abstract class DatabaseSpec extends Specification {
     }
 
     @Autowired
-    JdbcTemplate jdbcTemplate
-
-    @Autowired
     JdbcClient jdbcClient
 }

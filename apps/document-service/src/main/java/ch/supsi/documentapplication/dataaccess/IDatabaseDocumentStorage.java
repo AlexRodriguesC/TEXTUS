@@ -5,8 +5,6 @@ import java.util.List;
 
 public interface IDatabaseDocumentStorage {
 
-    Long create(Chunk chunk, Long spaceId, Long documentId);
-
     Long create(Page page, Long spaceId, Long documentId);
 
     Long create(Long spaceId);
@@ -15,13 +13,5 @@ public interface IDatabaseDocumentStorage {
 
     List<Document> getDocuments(Long spaceId);
 
-    Chunk read(Long chunkId);
-
     List<Page> getPages(Long documentId);
-
-    List<Topic> readTopics(Long pageId);
-
-    List<Topic> readDocumentTopics(Long documentId);
-
-    void create(Topic topic, Long pageId);
 }

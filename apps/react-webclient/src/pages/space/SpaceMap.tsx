@@ -1,5 +1,5 @@
 import useMindMap from "@/hooks/useMindMap.ts";
-import type { NodeDTO } from "@/api/model";
+import type { NodeDTO, TopicResponseDTO } from "@/api/model";
 import { useMemo } from "react";
 import {
   Controls,
@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme.ts";
 import MapNode from "@/pages/space/MapNode.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import dagre from "dagre";
+import { useGetTopics } from "@/api/generated/topics/topics.ts";
 
 const nodeTypes = { mapNode: MapNode };
 
@@ -25,6 +26,7 @@ const NODE_HEIGHT = 36;
 function getLayoutedElements(
   nodes: NodeDTO[],
   direction: "TB" | "LR" = "TB",
+  topics: TopicResponseDTO[],
 ): { nodes: RFNode[]; edges: RFEdge[] } {
   // 1. Build the graph
   const g = new dagre.graphlib.Graph();
@@ -57,6 +59,7 @@ function getLayoutedElements(
     if (n.chunkId == null) continue;
     const nodeId = String(n.chunkId);
     const nodeWithPosition = g.node(nodeId);
+    const lbl = topics.find((t) => t.id == n.chunkId);
 
     rfNodes.push({
       id: nodeId,
@@ -65,7 +68,13 @@ function getLayoutedElements(
         x: nodeWithPosition.x,
         y: nodeWithPosition.y,
       },
-      data: { label: n.chunkId, completed: false },
+      data: {
+        id: n.chunkId,
+        title: lbl?.title ?? "N/A",
+        summary: lbl?.summary ?? "N/A",
+        label: lbl?.title ?? n.chunkId,
+        completed: false,
+      },
       draggable: false,
     });
 
@@ -89,9 +98,12 @@ function SpaceMap() {
   const { theme } = useTheme();
   const { mindMap } = useMindMap(spaceId);
 
+  const { data } = useGetTopics(spaceId);
+  const topics = data?.data?.topics ?? [];
+
   const { nodes: rfNodes, edges: rfEdges } = useMemo(() => {
     const nodes = mindMap?.nodes ?? [];
-    return getLayoutedElements(nodes, "TB");
+    return getLayoutedElements(nodes, "TB", topics);
   }, [mindMap?.nodes]);
 
   return (

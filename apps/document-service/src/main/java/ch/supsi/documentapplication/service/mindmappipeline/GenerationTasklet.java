@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service.mindmappipeline;
 
 import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage;
+import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.model.*;
 import ch.supsi.documentapplication.service.clients.mindmap.MindMapClient;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class GenerationTasklet implements Tasklet {
 
+    private final DatabaseTopicStorage databaseTopicStorage;
+
     @Value("#{jobParameters['SPACE_ID']}")
     protected Long spaceId;
 
@@ -37,10 +40,12 @@ public class GenerationTasklet implements Tasklet {
     public GenerationTasklet(
             IDatabaseSpaceStorage databaseSpaceStorage,
             MindMapClient mindMapClient,
-            DatabaseDocumentStorage databaseDocumentStorage) {
+            DatabaseDocumentStorage databaseDocumentStorage,
+            DatabaseTopicStorage databaseTopicStorage) {
         this.databaseSpaceStorage = databaseSpaceStorage;
         this.mindMapClient = mindMapClient;
         this.databaseDocumentStorage = databaseDocumentStorage;
+        this.databaseTopicStorage = databaseTopicStorage;
     }
 
     @Override
@@ -61,7 +66,7 @@ public class GenerationTasklet implements Tasklet {
             var pages = databaseDocumentStorage.getPages(document.getId());
             var docTopics = new ArrayList<Topic>();
             for (Page page : pages) {
-                var pageTopics = databaseDocumentStorage.readTopics(page.getId());
+                var pageTopics = databaseTopicStorage.getByPageId(page.getId());
                 docTopics.addAll(pageTopics);
             }
             topics.addAll(docTopics);

@@ -19,7 +19,9 @@ function Logo({ size = "md" }: LogoProps) {
         alt="logo"
         className={`${sizeMap[size]} object-contain`}
       />
-      <div className="font-playfair font-bold">TEXTUS</div>
+      <div className="font-playfair font-bold text-muted-foreground">
+        TEXTUS
+      </div>
     </Link>
   );
 }

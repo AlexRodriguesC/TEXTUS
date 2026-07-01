@@ -3,7 +3,6 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.*;
-import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -69,32 +68,6 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .param(ID, id)
                 .query((rs, rowNum) -> mapToSpace(rs))
                 .optional();
-    }
-
-    @Override
-    public Optional<List<Chunk>> readChunks(Long spaceId) {
-        List<Chunk> chunks = jdbcClient
-                .sql("SELECT * FROM documents.read_space_chunks(:space_id)")
-                .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> {
-                    Array keywordsArray = rs.getArray("keywords");
-                    Array relatedKeysArray = rs.getArray("related_keys");
-                    return new Chunk(
-                            rs.getLong("id"),
-                            rs.getLong("document_id"),
-                            rs.getInt("tokens_in"),
-                            rs.getInt("tokens_out"),
-                            rs.getString("title"),
-                            rs.getString("summary"),
-                            keywordsArray != null ? Arrays.asList((String[]) keywordsArray.getArray()) : List.of(),
-                            rs.getString("key"),
-                            relatedKeysArray != null
-                                    ? Arrays.asList((String[]) relatedKeysArray.getArray())
-                                    : List.of());
-                })
-                .list();
-
-        return chunks.isEmpty() ? Optional.empty() : Optional.of(chunks);
     }
 
     @Override

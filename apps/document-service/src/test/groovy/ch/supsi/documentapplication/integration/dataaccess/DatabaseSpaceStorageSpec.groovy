@@ -39,7 +39,11 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         storage.delete(spaceId)
 
         then:
-        jdbcTemplate.queryForList("select * from documents.space where id = ?", spaceId).isEmpty()
+        jdbcClient.sql("select * from documents.space where id = :id")
+                .param("id", spaceId)
+                .query()
+                .listOfRows()
+                .isEmpty()
     }
 
     def "should return null when reading mind map and none exists"() {
@@ -58,26 +62,6 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         given:
         createUser()
         Long spaceId = createSpace()
-        Long documentId = jdbcClient.sql("SELECT documents.create_document(:space_id)")
-                .param("space_id", spaceId)
-                .query(Long.class)
-                .single()
-        jdbcClient.sql("""
-        SELECT documents.create_chunk(
-            :space_id, :tokens_in, :tokens_out, :title, :summary, :key, :keywords, :related_keys, :document_id
-        )
-    """)
-                .param("space_id", spaceId)
-                .param("tokens_in", 1)
-                .param("tokens_out", 1)
-                .param("title", "t")
-                .param("summary", "s")
-                .param("key", "k")
-                .param("keywords", null)
-                .param("related_keys", null)
-                .param("document_id", documentId)
-                .query(Long.class)
-                .single()
 
         storage.createMindMap(spaceId)
 

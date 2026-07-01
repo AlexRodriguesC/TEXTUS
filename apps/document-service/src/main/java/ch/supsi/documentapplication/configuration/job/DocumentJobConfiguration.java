@@ -1,18 +1,15 @@
 package ch.supsi.documentapplication.configuration.job;
 
-import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.ChunkDeserializer;
 import ch.supsi.documentapplication.service.clients.LLMInputSanitizer;
 import ch.supsi.documentapplication.service.clients.StringSanitizer;
 import ch.supsi.documentapplication.service.documentpipeline.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -20,18 +17,16 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Configuration
 public class DocumentJobConfiguration extends JobConfiguration {
 
-    @Bean
-    public StringSanitizer stringSanitizer() {
-        return new LLMInputSanitizer();
+    private static final String JOB_NAME = "document_processing_job";
+
+    @Autowired
+    public DocumentJobConfiguration(JobExecutionLogger jobExecutionLogger) {
+        super(jobExecutionLogger);
     }
 
     @Bean
-    public ObjectMapper chunkMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(Chunk.class, new ChunkDeserializer());
-        objectMapper.registerModule(module);
-        return objectMapper;
+    public StringSanitizer stringSanitizer() {
+        return new LLMInputSanitizer();
     }
 
     @Bean
@@ -41,7 +36,7 @@ public class DocumentJobConfiguration extends JobConfiguration {
 
     @Bean
     public Job pipelineJob(JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step cleanup) {
-        return new JobBuilder("documentProcessingJob", jobRepository)
+        return new JobBuilder(JOB_NAME, jobRepository)
                 .start(ocr)
                 .next(segment)
                 .next(summarize)

@@ -1,17 +1,13 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.DocumentDomainException;
-import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.properties.AppProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,24 +64,6 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             return chunkId;
         } catch (Exception e) {
             String errorMessage = String.format("Unable to write chunk %s for document %s", chunkId, documentId);
-            log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
-        }
-    }
-
-    @Override
-    public void createChunkJSON(List<Chunk> chunks, UUID documentId) {
-        try {
-            Path outputFile = basePath.resolve("document_" + documentId + ".json");
-
-            Files.createDirectories(outputFile.getParent());
-
-            Map<String, Object> payload = Map.of("chunks", chunks);
-
-            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(outputFile.toFile(), payload);
-
-        } catch (Exception e) {
-            String errorMessage = "Unable to create chunk JSON for document " + documentId;
             log.error(errorMessage, e);
             throw new DocumentDomainException(errorMessage);
         }

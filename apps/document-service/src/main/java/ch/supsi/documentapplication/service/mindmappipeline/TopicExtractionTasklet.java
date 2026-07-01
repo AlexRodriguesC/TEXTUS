@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service.mindmappipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.Topic;
 import ch.supsi.documentapplication.service.ProcessingTasklet;
@@ -24,12 +25,16 @@ import org.springframework.stereotype.Component;
 public class TopicExtractionTasklet extends ProcessingTasklet {
 
     private final IDatabaseDocumentStorage databaseDocumentStorage;
+    private final IDatabaseTopicStorage databaseTopicStorage;
     private final OpenAITopicExtractionClient topicExtractionClient;
 
     @Autowired
     public TopicExtractionTasklet(
-            IDatabaseDocumentStorage databaseDocumentStorage, OpenAITopicExtractionClient topicExtractionClient) {
+            IDatabaseDocumentStorage databaseDocumentStorage,
+            IDatabaseTopicStorage databaseTopicStorage,
+            OpenAITopicExtractionClient topicExtractionClient) {
         this.databaseDocumentStorage = databaseDocumentStorage;
+        this.databaseTopicStorage = databaseTopicStorage;
         this.topicExtractionClient = topicExtractionClient;
     }
 
@@ -43,7 +48,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
         for (var document : documents) {
             List<Page> documentPages = databaseDocumentStorage.getPages(document.getId());
-            var documentTopics = databaseDocumentStorage.readDocumentTopics(document.getId());
+            var documentTopics = databaseTopicStorage.getByDocumentId(document.getId());
 
             if (!documentTopics.isEmpty()) {
                 existingTopics.addAll(documentTopics);
@@ -56,7 +61,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
                 existingTopics.addAll(topics);
 
                 for (Topic topic : topics) {
-                    databaseDocumentStorage.create(topic, page.getId());
+                    databaseTopicStorage.create(topic, page.getId());
                 }
             }
         }

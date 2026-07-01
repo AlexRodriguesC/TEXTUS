@@ -8,11 +8,18 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 public abstract class JobConfiguration {
 
+    private final JobExecutionLogger jobExecutionLogger;
+
+    public JobConfiguration(JobExecutionLogger jobExecutionLogger) {
+        this.jobExecutionLogger = jobExecutionLogger;
+    }
+
     protected TaskletStep buildTaskletStep(
             String stepName, JobRepository jobRepository, PlatformTransactionManager txManager, Tasklet tasklet) {
 
         return new StepBuilder(stepName, jobRepository)
                 .tasklet(tasklet, txManager)
+                .listener(jobExecutionLogger)
                 .build();
     }
 }

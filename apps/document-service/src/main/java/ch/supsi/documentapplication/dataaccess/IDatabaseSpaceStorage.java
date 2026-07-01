@@ -12,8 +12,6 @@ public interface IDatabaseSpaceStorage {
 
     Optional<Space> read(Long id);
 
-    Optional<List<Chunk>> readChunks(Long spaceId);
-
     MindMap readMindMap(Long spaceId);
 
     List<Space> readAll(String owner);

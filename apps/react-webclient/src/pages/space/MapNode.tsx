@@ -1,5 +1,6 @@
 import { Handle, type NodeProps, Position } from "@xyflow/react";
 import Node from "@/pages/space/Node.tsx";
+import { useState } from "react";
 
 function MapNode({ data }: NodeProps) {
   const hideHandle = {
@@ -8,10 +9,17 @@ function MapNode({ data }: NodeProps) {
     border: "none",
     background: "transparent",
   };
+
   return (
     <>
       <Handle type="target" position={Position.Top} style={hideHandle} />
-      <Node completed={data.completed}>{data.label}</Node>
+      <Node
+        completed={data.completed}
+        title={data.title}
+        summary={data.summary}
+      >
+        {data.id}
+      </Node>
       <Handle type="source" position={Position.Bottom} style={hideHandle} />
     </>
   );
