@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.service.clients;
 
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.LLMExtractionFailedException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,14 +22,14 @@ public class LLMFailureTracker implements FailureTracker {
     }
 
     @Override
-    public void registerFailure() throws DocumentDomainException {
+    public void registerFailure() throws LLMExtractionFailedException {
         currentFailures++;
 
         if (currentFailures >= maxFailures) {
             String message = String.format("Failed to extract LLM response %d times", currentFailures);
             resetFailures();
             log.error(message);
-            throw new DocumentDomainException(message);
+            throw new LLMExtractionFailedException(message);
         }
     }
 

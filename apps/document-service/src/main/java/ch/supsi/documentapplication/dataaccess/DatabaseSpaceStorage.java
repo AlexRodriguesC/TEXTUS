@@ -24,10 +24,10 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     private static final String OWNER_ID = "owner_id";
     private static final String SPACE_ID = "space_id";
     public static final String MIND_MAP_ID = "mind_map_id";
-    public static final String CHUNK_ID = "chunk_id";
     public static final String PARENT_ID = "parent_id";
-    public static final String PARENT_CHUNK_ID = "parent_chunk_id";
+    public static final String PARENT_TOPIC_ID = "parent_topic_id";
     public static final String OWNER = "owner";
+    private static final String TOPIC_ID = "topic_id";
 
     public DatabaseSpaceStorage(JdbcClient jdbcClient) {
         super(jdbcClient);
@@ -113,7 +113,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         List<MindMapRow> rows = jdbcClient
                 .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new MindMapRow(rs.getLong(CHUNK_ID), rs.getObject(PARENT_CHUNK_ID, Long.class)))
+                .query((rs, rowNum) -> new MindMapRow(rs.getLong(TOPIC_ID), rs.getObject(PARENT_TOPIC_ID, Long.class)))
                 .list();
 
         MindMap mindMap = new MindMap();
@@ -128,16 +128,16 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         MindMapNode root = null;
 
         for (MindMapRow row : rows) {
-            nodesByChunkId.computeIfAbsent(row.chunkId(), MindMapNode::new);
+            nodesByChunkId.computeIfAbsent(row.topicId(), MindMapNode::new);
         }
 
         for (MindMapRow row : rows) {
-            MindMapNode current = nodesByChunkId.get(row.chunkId());
+            MindMapNode current = nodesByChunkId.get(row.topicId());
 
-            if (row.parentChunkId() == null) {
+            if (row.parentTopicId() == null) {
                 root = current;
             } else {
-                MindMapNode parent = nodesByChunkId.get(row.parentChunkId());
+                MindMapNode parent = nodesByChunkId.get(row.parentTopicId());
                 parent.getChildren().add(current);
             }
         }
@@ -146,7 +146,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         return mindMap;
     }
 
-    private record MindMapRow(Long chunkId, Long parentChunkId) {}
+    private record MindMapRow(Long topicId, Long parentTopicId) {}
 
     @Override
     public List<Space> readAll(String owner) {
@@ -199,9 +199,9 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
         try {
             nodeId = jdbcClient
-                    .sql("SELECT documents.create_mind_map_node(:mind_map_id, :chunk_id, :parent_id)")
+                    .sql("SELECT documents.create_mind_map_node(:mind_map_id, :topic_id, :parent_id)")
                     .param(MIND_MAP_ID, mindMapId)
-                    .param(CHUNK_ID, node.getTopicId())
+                    .param(TOPIC_ID, node.getTopicId())
                     .param(PARENT_ID, parentNodeId)
                     .query(Long.class)
                     .single();

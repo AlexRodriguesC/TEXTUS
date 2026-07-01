@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION documents.read_topics(
-    p_page_id BIGINT DEFAULT NULL
+    p_page_id BIGINT
 )
     RETURNS TABLE (
                       id          BIGINT,
@@ -23,7 +23,6 @@ SELECT
 FROM documents.topic t
          LEFT JOIN documents.topic_label tl ON tl.topic_id = t.id
          LEFT JOIN documents.label l ON l.id = tl.label_id
-WHERE p_page_id IS NULL OR t.page_id = p_page_id
+WHERE t.page_id = p_page_id
 GROUP BY t.id, t.page_id, t.tokens_in, t.tokens_out, t.title, t.summary
-ORDER BY t.id;
 $$;

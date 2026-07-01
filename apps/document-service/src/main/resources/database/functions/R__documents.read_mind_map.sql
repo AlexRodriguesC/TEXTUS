@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION documents.read_mind_map(p_space_id BIGINT)
     RETURNS TABLE (
-                      chunk_id BIGINT,
-                      parent_chunk_id BIGINT
+                      topic_id BIGINT,
+                      parent_topic_id BIGINT
                   )
     LANGUAGE plpgsql
 AS
@@ -9,8 +9,8 @@ $$
 BEGIN
     RETURN QUERY
         SELECT
-            child.chunk_id,
-            parent.chunk_id AS parent_chunk_id
+            child.topic_id,
+            parent.topic_id AS parent_topic_id
         FROM documents.space s
                  JOIN documents.mind_map_node child
                       ON child.mind_map_id = s.mind_map_id

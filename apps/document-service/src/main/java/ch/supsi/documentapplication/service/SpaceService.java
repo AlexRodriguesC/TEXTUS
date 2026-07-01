@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.service;
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.exception.NotFoundException;
@@ -23,12 +24,18 @@ import org.springframework.stereotype.Service;
 public class SpaceService implements ISpaceService {
 
     private final IDatabaseSpaceStorage spaceStorage;
+    private final IDatabaseDocumentStorage documentStorage;
     private final JobOperator jobOperator;
     private final Job mindMapJob;
 
     @Autowired
-    public SpaceService(IDatabaseSpaceStorage spaceStorage, JobOperator asyncJobOperator, Job mindMapJob) {
+    public SpaceService(
+            IDatabaseSpaceStorage spaceStorage,
+            IDatabaseDocumentStorage documentStorage,
+            JobOperator asyncJobOperator,
+            Job mindMapJob) {
         this.spaceStorage = spaceStorage;
+        this.documentStorage = documentStorage;
         this.jobOperator = asyncJobOperator;
         this.mindMapJob = mindMapJob;
     }

@@ -1,9 +1,9 @@
-package ch.supsi.documentapplication.service.documentpipeline;
+package ch.supsi.documentapplication.service.mindmappipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.Topic;
-import ch.supsi.documentapplication.properties.AppProperties;
+import ch.supsi.documentapplication.service.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,33 +25,39 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final OpenAITopicExtractionClient topicExtractionClient;
-    private final AppProperties appProperties;
 
     @Autowired
     public TopicExtractionTasklet(
-            IDatabaseDocumentStorage databaseDocumentStorage,
-            OpenAITopicExtractionClient topicExtractionClient,
-            AppProperties appProperties) {
+            IDatabaseDocumentStorage databaseDocumentStorage, OpenAITopicExtractionClient topicExtractionClient) {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.topicExtractionClient = topicExtractionClient;
-        this.appProperties = appProperties;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
-        log.debug("Executing topic extraction step for document with documentId {}", databaseDocumentId);
+        log.debug("Executing topic extraction step for space with spaceId {}", spaceId);
 
-        List<Page> documentPages = databaseDocumentStorage.getPages(databaseDocumentId);
+        var documents = databaseDocumentStorage.getDocuments(spaceId);
         List<Topic> existingTopics = new ArrayList<>();
 
-        for (Page page : documentPages) {
+        for (var document : documents) {
+            List<Page> documentPages = databaseDocumentStorage.getPages(document.getId());
+            var documentTopics = databaseDocumentStorage.readDocumentTopics(document.getId());
 
-            List<Topic> topics = topicExtractionClient.getResult(Pair.of(page, existingTopics));
-            existingTopics.addAll(topics);
+            if (!documentTopics.isEmpty()) {
+                existingTopics.addAll(documentTopics);
+                continue;
+            }
 
-            for (Topic topic : topics) {
-                databaseDocumentStorage.create(topic, page.getId());
+            for (Page page : documentPages) {
+
+                List<Topic> topics = topicExtractionClient.getResult(Pair.of(page, existingTopics));
+                existingTopics.addAll(topics);
+
+                for (Topic topic : topics) {
+                    databaseDocumentStorage.create(topic, page.getId());
+                }
             }
         }
 

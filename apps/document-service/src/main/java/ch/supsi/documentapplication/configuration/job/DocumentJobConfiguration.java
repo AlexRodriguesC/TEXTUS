@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.configuration;
+package ch.supsi.documentapplication.configuration.job;
 
 import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.ChunkDeserializer;
@@ -13,15 +13,12 @@ import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
-import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-public class DocumentJobConfiguration {
+public class DocumentJobConfiguration extends JobConfiguration {
 
     @Bean
     public StringSanitizer stringSanitizer() {
@@ -43,20 +40,18 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Job pipelineJob(
-            JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step extractTopics, Step cleanup) {
+    public Job pipelineJob(JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step cleanup) {
         return new JobBuilder("documentProcessingJob", jobRepository)
                 .start(ocr)
                 .next(segment)
                 .next(summarize)
-                .next(extractTopics)
                 .next(cleanup)
                 .build();
     }
 
     @Bean
     public Step ocr(JobRepository jobRepository, PlatformTransactionManager transactionManager, OCRTasklet ocrTasklet) {
-        return buildTaskletStep("ocrTasklet", jobRepository, transactionManager, ocrTasklet);
+        return buildTaskletStep(OCRTasklet.class.getSimpleName(), jobRepository, transactionManager, ocrTasklet);
     }
 
     @Bean
@@ -64,7 +59,8 @@ public class DocumentJobConfiguration {
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
             SegmentationTasklet segmentationTasklet) {
-        return buildTaskletStep("segmentationTasklet", jobRepository, transactionManager, segmentationTasklet);
+        return buildTaskletStep(
+                SegmentationTasklet.class.getSimpleName(), jobRepository, transactionManager, segmentationTasklet);
     }
 
     @Bean
@@ -80,28 +76,8 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Step extractTopics(
-            JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
-            TopicExtractionTasklet topicExtractionTasklet) {
-        return buildTaskletStep(
-                topicExtractionTasklet.getClass().getSimpleName(),
-                jobRepository,
-                transactionManager,
-                topicExtractionTasklet);
-    }
-
-    @Bean
     public Step cleanup(
             JobRepository jobRepository, PlatformTransactionManager txManager, CleanupTasklet cleanupTasklet) {
-        return buildTaskletStep("cleanup", jobRepository, txManager, cleanupTasklet);
-    }
-
-    private TaskletStep buildTaskletStep(
-            String stepName, JobRepository jobRepository, PlatformTransactionManager txManager, Tasklet tasklet) {
-
-        return new StepBuilder(stepName, jobRepository)
-                .tasklet(tasklet, txManager)
-                .build();
+        return buildTaskletStep(CleanupTasklet.class.getSimpleName(), jobRepository, txManager, cleanupTasklet);
     }
 }

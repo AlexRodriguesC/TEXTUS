@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.properties.AppProperties;
+import ch.supsi.documentapplication.service.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service.documentpipeline;
+package ch.supsi.documentapplication.service;
 
 import java.util.List;
 import java.util.UUID;

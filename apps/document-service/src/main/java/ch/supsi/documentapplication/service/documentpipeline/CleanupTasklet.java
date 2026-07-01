@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.service.documentpipeline;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.DocumentStatus;
+import ch.supsi.documentapplication.service.ProcessingTasklet;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;

@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.DocumentDomainException
+import ch.supsi.documentapplication.exception.LLMExtractionFailedException
 import ch.supsi.documentapplication.service.clients.FailureTracker
 import ch.supsi.documentapplication.service.clients.LLMFailureTracker
 import spock.lang.Specification
@@ -44,7 +45,7 @@ class LLMFailureTrackerSpec extends Specification {
         2.times { i -> failureTracker.registerFailure() }
 
         then:
-        thrown(DocumentDomainException)
+        thrown(LLMExtractionFailedException)
     }
 
     def "should throw if invalid max failures is provided. Case: max failure is #str"() {

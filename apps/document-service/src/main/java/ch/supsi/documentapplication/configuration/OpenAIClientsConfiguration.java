@@ -5,9 +5,7 @@ import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.properties.PromptProperties;
 import ch.supsi.documentapplication.service.MindMapValidator;
 import ch.supsi.documentapplication.service.clients.*;
-import ch.supsi.documentapplication.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.documentapplication.service.clients.mindmap.OpenAIMindMapClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -57,30 +55,6 @@ public class OpenAIClientsConfiguration {
         var mindMapValidator = new MindMapValidator();
 
         return new OpenAIMindMapClient(chatClient, failureTracker, mindMapValidator, promptTemplate);
-    }
-
-    @Bean
-    public OpenAIEnrichmentClient openAIEnrichmentClient(
-            ChatClient.Builder chatBuilder,
-            PromptProperties promptProperties,
-            ObjectMapper chunkDeserializer,
-            StTemplateRenderer templateRenderer,
-            StringSanitizer stringSanitizer,
-            ResourceLoader resourceLoader,
-            FailureTracker failureTracker) {
-        var userPromptResource = resourceLoader.getResource(promptProperties.getEnrichmentUser());
-        String userPromptText = copyToString(userPromptResource);
-
-        PromptTemplate promptTemplate = PromptTemplate.builder()
-                .renderer(templateRenderer)
-                .template(userPromptText)
-                .build();
-
-        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
-        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
-
-        return new OpenAIEnrichmentClient(
-                chatClient, failureTracker, chunkDeserializer, stringSanitizer, promptTemplate);
     }
 
     @Bean

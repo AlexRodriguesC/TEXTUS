@@ -12,7 +12,7 @@ public class MindMap {
     private MindMapStatus mindMapStatus;
     private MindMapNode root;
 
-    public Set<Long> getAllChunkIds() {
+    public Set<Long> getAllTopicIds() {
         Set<Long> ids = new HashSet<>();
         collect(root, ids);
         return ids;

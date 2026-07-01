@@ -19,5 +19,9 @@ public interface IDatabaseDocumentStorage {
 
     List<Page> getPages(Long documentId);
 
+    List<Topic> readTopics(Long pageId);
+
+    List<Topic> readDocumentTopics(Long documentId);
+
     void create(Topic topic, Long pageId);
 }

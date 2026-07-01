@@ -5,6 +5,8 @@ import ch.supsi.documentapplication.model.*;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,6 +154,31 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                 .param(DOCUMENT_ID, documentId)
                 .query((rs, rowNum) -> new Page(rs.getLong("id"), rs.getString("title"), rs.getString("summary")))
                 .list();
+    }
+
+    @Override
+    public List<Topic> readTopics(Long pageId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_topics(:page_id)")
+                .param(PAGE_ID, pageId)
+                .query((rs, rowNum) -> {
+                    Array sqlLabels = rs.getArray(LABELS);
+                    List<String> labels =
+                            sqlLabels != null ? Arrays.asList((String[]) sqlLabels.getArray()) : List.of();
+                    return new Topic(rs.getLong(ID), rs.getString(TITLE), rs.getString(SUMMARY), labels);
+                })
+                .list();
+    }
+
+    @Override
+    public List<Topic> readDocumentTopics(Long documentId) {
+        var pages = getPages(documentId);
+        List<Topic> topics = new ArrayList<>();
+        for (Page page : pages) {
+            topics.addAll(readTopics(page.getId()));
+        }
+
+        return topics;
     }
 
     @Override

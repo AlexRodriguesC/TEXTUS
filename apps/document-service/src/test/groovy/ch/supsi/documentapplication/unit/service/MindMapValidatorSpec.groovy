@@ -15,7 +15,7 @@ class MindMapValidatorSpec extends Specification {
     def "should return true if all chunkIds are present"() {
         given:
         List<Long> expectedChunks = [1L, 2L, 3L]
-        mindMap.getAllChunkIds() >> expectedChunks
+        mindMap.getAllTopicIds() >> expectedChunks
 
         when:
         boolean valid = mindMapValidator.validate(mindMap, expectedChunks)
@@ -28,7 +28,7 @@ class MindMapValidatorSpec extends Specification {
         given:
         List<Long> expectedChunks = [1L, 2L, 3L]
         List<Long> actualChunks = [1L, 2L]
-        mindMap.getAllChunkIds() >> actualChunks
+        mindMap.getAllTopicIds() >> actualChunks
 
         when:
         boolean valid = mindMapValidator.validate(mindMap, expectedChunks)

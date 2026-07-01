@@ -10,7 +10,7 @@ public class MindMapValidator {
             return false;
         }
 
-        var actualChunkIds = mindMap.getAllChunkIds();
+        var actualChunkIds = mindMap.getAllTopicIds();
 
         for (Long chunkId : expectedChunkIds) {
             if (!actualChunkIds.contains(chunkId)) {

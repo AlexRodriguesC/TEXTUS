@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.service.documentpipeline;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.DocumentDomainException;
 import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.service.ProcessingTasklet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

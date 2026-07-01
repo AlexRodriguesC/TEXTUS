@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.clients.mindmap;
 
-import ch.supsi.documentapplication.model.Chunk;
 import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.model.Topic;
 import ch.supsi.documentapplication.service.MindMapValidator;
 import ch.supsi.documentapplication.service.clients.FailureTracker;
 import ch.supsi.documentapplication.service.clients.OpenAIClient;
@@ -16,6 +16,8 @@ import tools.jackson.core.exc.StreamReadException;
 
 @Slf4j
 public class OpenAIMindMapClient extends OpenAIClient implements MindMapClient {
+
+    private static final String TOPICS = "topics";
 
     private final PromptTemplate promptTemplate;
     private final FailureTracker failureTracker;
@@ -33,15 +35,15 @@ public class OpenAIMindMapClient extends OpenAIClient implements MindMapClient {
     }
 
     @Override
-    public MindMap extractMindMap(List<Chunk> chunks) {
-        var filledUserPrompt = promptTemplate.render(Map.of("chunks", chunks));
+    public MindMap extractMindMap(List<Topic> topics) {
+        var filledUserPrompt = promptTemplate.render(Map.of(TOPICS, topics));
 
         var userPrompt = UserMessage.builder().text(filledUserPrompt).build();
         var prompt = new Prompt(userPrompt);
 
         boolean successful = false;
 
-        var expectedChunkIds = chunks.stream().map(Chunk::getId).toList();
+        var expectedChunkIds = topics.stream().map(Topic::getId).toList();
         MindMap mindMap = null;
 
         while (!successful) {
