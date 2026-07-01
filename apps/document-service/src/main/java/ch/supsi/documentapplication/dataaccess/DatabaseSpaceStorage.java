@@ -201,7 +201,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
             nodeId = jdbcClient
                     .sql("SELECT documents.create_mind_map_node(:mind_map_id, :chunk_id, :parent_id)")
                     .param(MIND_MAP_ID, mindMapId)
-                    .param(CHUNK_ID, node.getChunkId())
+                    .param(CHUNK_ID, node.getTopicId())
                     .param(PARENT_ID, parentNodeId)
                     .query(Long.class)
                     .single();

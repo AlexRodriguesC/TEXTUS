@@ -4,12 +4,9 @@ import ch.supsi.documentapplication.exception.PromptTemplateLoadException;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.properties.PromptProperties;
 import ch.supsi.documentapplication.service.MindMapValidator;
-import ch.supsi.documentapplication.service.clients.FailureTracker;
-import ch.supsi.documentapplication.service.clients.LLMFailureTracker;
-import ch.supsi.documentapplication.service.clients.StringSanitizer;
+import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.enrichment.OpenAIEnrichmentClient;
 import ch.supsi.documentapplication.service.clients.mindmap.OpenAIMindMapClient;
-import ch.supsi.documentapplication.service.clients.summarisation.OpenAISummarizationClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -46,7 +43,7 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             ResourceLoader resourceLoader,
             FailureTracker failureTracker) {
-        var userPromptResource = resourceLoader.getResource(promptProperties.getMindMapUser());
+        var userPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionUser());
         String userPromptText = copyToString(userPromptResource);
 
         PromptTemplate promptTemplate = PromptTemplate.builder()
@@ -54,7 +51,7 @@ public class OpenAIClientsConfiguration {
                 .template(userPromptText)
                 .build();
 
-        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapSystem());
+        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
         ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
 
         var mindMapValidator = new MindMapValidator();
@@ -79,7 +76,7 @@ public class OpenAIClientsConfiguration {
                 .template(userPromptText)
                 .build();
 
-        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapSystem());
+        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
         ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
 
         return new OpenAIEnrichmentClient(
@@ -105,6 +102,27 @@ public class OpenAIClientsConfiguration {
         ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
 
         return new OpenAISummarizationClient(chatClient, promptTemplate, failureTracker);
+    }
+
+    @Bean
+    public OpenAITopicExtractionClient openAITopicExtractionClient(
+            ChatClient.Builder chatBuilder,
+            PromptProperties promptProperties,
+            StTemplateRenderer templateRenderer,
+            ResourceLoader resourceLoader,
+            FailureTracker failureTracker) {
+        var userPromptResource = resourceLoader.getResource(promptProperties.getTopicExtractionUser());
+        String userPromptText = copyToString(userPromptResource);
+
+        PromptTemplate promptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(userPromptText)
+                .build();
+
+        var systemPromptResource = resourceLoader.getResource(promptProperties.getTopicExtractionSystem());
+        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+
+        return new OpenAITopicExtractionClient(chatClient, promptTemplate, failureTracker);
     }
 
     private String copyToString(Resource resource) {

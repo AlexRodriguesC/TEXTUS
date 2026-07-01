@@ -38,7 +38,7 @@ public class MindMapResponseDTO {
 
     private static void flatten(MindMapNode node, Long parentChunkId, List<NodeDTO> nodes) {
         nodes.add(NodeDTO.builder()
-                .chunkId(node.getChunkId())
+                .chunkId(node.getTopicId())
                 .parentChunkId(parentChunkId)
                 .build());
 
@@ -47,7 +47,7 @@ public class MindMapResponseDTO {
         }
 
         for (MindMapNode child : node.getChildren()) {
-            flatten(child, node.getChunkId(), nodes);
+            flatten(child, node.getTopicId(), nodes);
         }
     }
 }

@@ -12,9 +12,9 @@ public class PromptProperties {
     private String summarizationSystem;
     private String summarizationUser;
 
-    private String enrichmentSystem;
-    private String enrichmentUser;
+    private String topicExtractionSystem;
+    private String topicExtractionUser;
 
-    private String mindMapSystem;
-    private String mindMapUser;
+    private String mindMapExtractionSystem;
+    private String mindMapExtractionUser;
 }

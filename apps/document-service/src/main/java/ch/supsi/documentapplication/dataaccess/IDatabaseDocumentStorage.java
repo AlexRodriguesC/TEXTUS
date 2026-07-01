@@ -1,9 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.Document;
-import ch.supsi.documentapplication.model.DocumentStatus;
-import ch.supsi.documentapplication.model.Page;
+import ch.supsi.documentapplication.model.*;
 import java.util.List;
 
 public interface IDatabaseDocumentStorage {
@@ -19,4 +16,8 @@ public interface IDatabaseDocumentStorage {
     List<Document> getDocuments(Long spaceId);
 
     Chunk read(Long chunkId);
+
+    List<Page> getPages(Long documentId);
+
+    void create(Topic topic, Long pageId);
 }

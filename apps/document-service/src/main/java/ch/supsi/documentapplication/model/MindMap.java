@@ -20,7 +20,7 @@ public class MindMap {
 
     private void collect(MindMapNode node, Set<Long> ids) {
         if (node == null) return;
-        ids.add(node.getChunkId());
+        ids.add(node.getTopicId());
         for (MindMapNode child : node.getChildren()) {
             collect(child, ids);
         }

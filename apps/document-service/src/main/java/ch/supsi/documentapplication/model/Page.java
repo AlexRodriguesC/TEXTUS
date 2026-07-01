@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -7,6 +8,9 @@ import lombok.Getter;
 @Getter
 public class Page {
 
-    String title;
-    String summary;
+    @JsonIgnore
+    private Long id;
+
+    private String title;
+    private String summary;
 }

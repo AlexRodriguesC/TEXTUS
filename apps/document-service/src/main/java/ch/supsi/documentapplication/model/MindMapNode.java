@@ -13,11 +13,11 @@ import lombok.Setter;
 @JsonDeserialize(using = MindMapNodeDeserializer.class)
 public class MindMapNode {
 
-    private Long chunkId;
+    private Long topicId;
 
     private List<MindMapNode> children = new ArrayList<>();
 
-    public MindMapNode(Long chunkId) {
-        this.chunkId = chunkId;
+    public MindMapNode(Long topicId) {
+        this.topicId = topicId;
     }
 }

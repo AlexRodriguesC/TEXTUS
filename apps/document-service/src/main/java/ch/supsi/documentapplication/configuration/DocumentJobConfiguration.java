@@ -43,11 +43,13 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Job pipelineJob(JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step cleanup) {
+    public Job pipelineJob(
+            JobRepository jobRepository, Step ocr, Step segment, Step summarize, Step extractTopics, Step cleanup) {
         return new JobBuilder("documentProcessingJob", jobRepository)
                 .start(ocr)
                 .next(segment)
                 .next(summarize)
+                .next(extractTopics)
                 .next(cleanup)
                 .build();
     }
@@ -66,14 +68,6 @@ public class DocumentJobConfiguration {
     }
 
     @Bean
-    public Step enrich(
-            JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
-            EnrichmentTasklet enrichmentTasklet) {
-        return buildTaskletStep("enrichmentTasklet", jobRepository, transactionManager, enrichmentTasklet);
-    }
-
-    @Bean
     public Step summarize(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
@@ -83,6 +77,18 @@ public class DocumentJobConfiguration {
                 jobRepository,
                 transactionManager,
                 summarizationTasklet);
+    }
+
+    @Bean
+    public Step extractTopics(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            TopicExtractionTasklet topicExtractionTasklet) {
+        return buildTaskletStep(
+                topicExtractionTasklet.getClass().getSimpleName(),
+                jobRepository,
+                transactionManager,
+                topicExtractionTasklet);
     }
 
     @Bean

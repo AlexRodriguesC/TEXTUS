@@ -1,8 +1,6 @@
-package ch.supsi.documentapplication.service.clients.summarisation;
+package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.Page;
-import ch.supsi.documentapplication.service.clients.Client;
-import ch.supsi.documentapplication.service.clients.FailureTracker;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;

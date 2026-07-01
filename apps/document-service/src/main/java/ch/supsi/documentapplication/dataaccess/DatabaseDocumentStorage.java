@@ -1,10 +1,7 @@
 package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.Document;
-import ch.supsi.documentapplication.model.DocumentStatus;
-import ch.supsi.documentapplication.model.Page;
+import ch.supsi.documentapplication.model.*;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,6 +30,8 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public static final String KEY = "key";
     public static final String KEYWORDS = "keywords";
     public static final String RELATED_KEYS = "related_keys";
+    private static final String LABELS = "labels";
+    private static final String PAGE_ID = "page_id";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -143,6 +142,29 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                         toList(rs.getArray("keywords")),
                         rs.getString("key"),
                         toList(rs.getArray("related_keys"))))
+                .single();
+    }
+
+    @Override
+    public List<Page> getPages(Long documentId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_pages(:document_id)")
+                .param(DOCUMENT_ID, documentId)
+                .query((rs, rowNum) -> new Page(rs.getLong("id"), rs.getString("title"), rs.getString("summary")))
+                .list();
+    }
+
+    @Override
+    public void create(Topic topic, Long pageId) {
+        jdbcClient
+                .sql("SELECT documents.create_topic(:page_id, :tokens_in, :tokens_out, :title, :summary, :labels)")
+                .param(PAGE_ID, pageId)
+                .param(TOKENS_IN, -1)
+                .param(TOKENS_OUT, -1)
+                .param(TITLE, topic.getTitle())
+                .param(SUMMARY, topic.getSummary())
+                .param(LABELS, topic.getLabels().toArray(new String[0]))
+                .query(Long.class)
                 .single();
     }
 
