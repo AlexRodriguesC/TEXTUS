@@ -1,7 +1,10 @@
 package ch.supsi.documentapplication.exception;
 
-public class LLMExtractionFailedException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class LLMExtractionFailedException extends ApplicationException {
+
     public LLMExtractionFailedException(String message) {
-        super(message);
+        super(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 }

@@ -26,10 +26,10 @@ class DatabaseUserStorageSpec extends DatabaseSpec  {
         result.password == "secret"
 
         and:
-        def row = jdbcTemplate.queryForMap(
-                "select username, password from users.user where username = ?",
-                "alice"
-        )
+        def row = jdbcClient.sql("select username, password from users.\"user\" where username = :username")
+                .param("username", "alice")
+                .query()
+                .singleRow()
         row.username == "alice"
         row.password == "secret"
     }

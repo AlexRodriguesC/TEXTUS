@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.service.ProcessingTasklet;
 import java.io.IOException;
@@ -40,8 +40,10 @@ public class SegmentationTasklet extends ProcessingTasklet {
             throws Exception {
 
         FsDocument fsDocument = fileSystemDocumentStorage.read(getDocumentIdAsUUID());
+
         if (fsDocument == null) {
-            throw new DocumentDomainException("Document not found, documentId: " + documentId);
+            String message = String.format("Document with id %s not found", documentId);
+            throw new FileSystemException(message);
         }
 
         List<String> contents = extractContents(fsDocument);
@@ -54,8 +56,8 @@ public class SegmentationTasklet extends ProcessingTasklet {
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
             Integer pageNumber = page + 1;
-            String chunkId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
-            log.debug("Created chunk {} for document {}, page {}", chunkId, documentId, page);
+            String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
+            log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
         }
 
         return RepeatStatus.FINISHED;

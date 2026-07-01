@@ -1,8 +1,7 @@
 package ch.supsi.documentapplication.service;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.JobFailedToStartException;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.MindMap;
@@ -24,18 +23,15 @@ import org.springframework.stereotype.Service;
 public class SpaceService implements ISpaceService {
 
     private final IDatabaseSpaceStorage spaceStorage;
-    private final IDatabaseDocumentStorage documentStorage;
     private final JobOperator jobOperator;
     private final Job mindMapJob;
 
     @Autowired
     public SpaceService(
             IDatabaseSpaceStorage spaceStorage,
-            IDatabaseDocumentStorage documentStorage,
             JobOperator asyncJobOperator,
             Job mindMapJob) {
         this.spaceStorage = spaceStorage;
-        this.documentStorage = documentStorage;
         this.jobOperator = asyncJobOperator;
         this.mindMapJob = mindMapJob;
     }
@@ -88,7 +84,7 @@ public class SpaceService implements ISpaceService {
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", mindMapJob.getName());
             log.error(message, e);
-            throw DocumentDomainException.jobFailedException(e);
+            throw new JobFailedToStartException(message);
         }
     }
 

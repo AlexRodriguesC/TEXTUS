@@ -52,7 +52,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
         int processed = 0;
 
         while (processed < appProperties.getMaxChunksPerStep()) {
-            String pageText = fileSystemDocumentStorage.readNextChunk(getDocumentIdAsUUID());
+            String pageText = fileSystemDocumentStorage.readNextPage(getDocumentIdAsUUID());
 
             if (pageText == null || pageText.isBlank()) {
                 log.info("No more pages to summarize for document with documentId: {}", databaseDocumentId);

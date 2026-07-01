@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.unit.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.FileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.DocumentDomainException
+import ch.supsi.documentapplication.exception.FileSystemException
 import ch.supsi.documentapplication.model.FsDocument
 import ch.supsi.documentapplication.properties.AppProperties
 import spock.lang.Specification
@@ -78,7 +79,7 @@ class FileSystemDocumentStorageSpec extends Specification {
         failingStorage.create(mockDocument())
 
         then:
-        thrown(DocumentDomainException)
+        thrown(FileSystemException)
     }
 
     def "should throw if it fails to create document file"() {
@@ -91,7 +92,7 @@ class FileSystemDocumentStorageSpec extends Specification {
         storage.create(document)
 
         then:
-        thrown(DocumentDomainException)
+        thrown(FileSystemException)
     }
 
     def "should read document"() {
@@ -143,7 +144,7 @@ class FileSystemDocumentStorageSpec extends Specification {
         storage.read(documentId)
 
         then:
-        thrown(DocumentDomainException)
+        thrown(FileSystemException)
     }
 
     def "should update document"() {
@@ -208,6 +209,6 @@ class FileSystemDocumentStorageSpec extends Specification {
         storage.delete(documentId)
 
         then:
-        thrown(DocumentDomainException)
+        thrown(FileSystemException)
     }
 }

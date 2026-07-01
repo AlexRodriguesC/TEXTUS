@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.exception.DocumentDomainException;
+import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.properties.AppProperties;
 import java.io.File;
@@ -36,7 +36,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             } catch (Exception e) {
                 String errorMessage = String.format("Unable to create directory %s", basePath);
                 log.error(errorMessage, e);
-                throw new DocumentDomainException(errorMessage);
+                throw new FileSystemException(errorMessage);
             }
         }
 
@@ -48,37 +48,37 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         } catch (Exception e) {
             String errorMessage = String.format("Unable to write document %s", documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
     @Override
     public String createChunk(Integer page, String content, UUID documentId) {
-        String chunkId = String.valueOf(page);
-        Path chunkDirectory = getChunkDirectoryPath(documentId);
-        Path chunkPath = chunkDirectory.resolve(chunkId);
+        String pageId = String.valueOf(page);
+        Path pageDirectory = getPageDirectoryPath(documentId);
+        Path pagePath = pageDirectory.resolve(pageId);
 
         try {
-            Files.createDirectories(chunkDirectory);
-            Files.writeString(chunkPath, content);
-            return chunkId;
+            Files.createDirectories(pageDirectory);
+            Files.writeString(pagePath, content);
+            return pageId;
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to write chunk %s for document %s", chunkId, documentId);
+            String errorMessage = String.format("Unable to write page %s for document %s", pageId, documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
     @Override
-    public String readNextChunk(UUID documentId) {
-        Path chunkDirectory = getChunkDirectoryPath(documentId);
+    public String readNextPage(UUID documentId) {
+        Path pageDirectory = getPageDirectoryPath(documentId);
 
-        if (!Files.exists(chunkDirectory) || !Files.isDirectory(chunkDirectory)) {
+        if (!Files.exists(pageDirectory) || !Files.isDirectory(pageDirectory)) {
             return null;
         }
 
-        try (var stream = Files.list(chunkDirectory)) {
-            Path nextChunkPath = stream.filter(Files::isRegularFile)
+        try (var stream = Files.list(pageDirectory)) {
+            Path nextPagePath = stream.filter(Files::isRegularFile)
                     .min((p1, p2) -> {
                         Integer page1 = Integer.parseInt(p1.getFileName().toString());
                         Integer page2 = Integer.parseInt(p2.getFileName().toString());
@@ -86,41 +86,41 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
                     })
                     .orElse(null);
 
-            if (nextChunkPath == null) {
+            if (nextPagePath == null) {
                 return null;
             }
 
-            return Files.readString(nextChunkPath);
+            return Files.readString(nextPagePath);
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to read next chunk for document %s", documentId);
+            String errorMessage = String.format("Unable to read next page for document %s", documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
     @Override
-    public void deleteChunk(UUID documentId, String chunkId) {
-        Path chunkPath = getChunkDirectoryPath(documentId).resolve(chunkId);
+    public void deleteChunk(UUID documentId, String pageId) {
+        Path pagePath = getPageDirectoryPath(documentId).resolve(pageId);
 
         try {
-            boolean deleted = Files.deleteIfExists(chunkPath);
+            boolean deleted = Files.deleteIfExists(pagePath);
 
             if (!deleted) {
-                log.warn("Tried to delete chunk {} for document {} but it does not exist", chunkId, documentId);
+                log.warn("Tried to delete page {} for document {} but it does not exist", pageId, documentId);
             }
 
-            Path chunkDirectory = getChunkDirectoryPath(documentId);
-            try (var stream = Files.list(chunkDirectory)) {
+            Path pathDirectory = getPageDirectoryPath(documentId);
+            try (var stream = Files.list(pathDirectory)) {
                 boolean isEmpty = stream.findAny().isEmpty();
 
-                if (Files.exists(chunkDirectory) && isEmpty) {
-                    Files.deleteIfExists(chunkDirectory);
+                if (Files.exists(pathDirectory) && isEmpty) {
+                    Files.deleteIfExists(pathDirectory);
                 }
             }
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to delete chunk %s for document %s", chunkId, documentId);
+            String errorMessage = String.format("Unable to delete page %s for document %s", pageId, documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
@@ -142,7 +142,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         } catch (Exception e) {
             String errorMessage = String.format("Unable to read document %s", documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
 
         return FsDocument.create(documentId, documentBytes);
@@ -162,12 +162,12 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         }
 
         Path documentPath = getDocumentPath(String.valueOf(documentId));
-        Path chunkDirectory = getChunkDirectoryPath(documentId);
+        Path pageDirectory = getPageDirectoryPath(documentId);
 
         boolean documentExists = Files.exists(documentPath);
-        boolean chunkDirectoryExists = Files.exists(chunkDirectory);
+        boolean pageDirectoryExists = Files.exists(pageDirectory);
 
-        if (!documentExists && !chunkDirectoryExists) {
+        if (!documentExists && !pageDirectoryExists) {
             log.warn("Tried to delete document with id {} but it does not exist", documentId);
             return;
         }
@@ -177,14 +177,13 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
                 Files.delete(documentPath);
             }
 
-            if (chunkDirectoryExists) {
-                try (var paths = Files.walk(chunkDirectory)) {
+            if (pageDirectoryExists) {
+                try (var paths = Files.walk(pageDirectory)) {
                     paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
                         try {
                             Files.delete(path);
                         } catch (Exception e) {
-                            // todo: ?????? substitute with actual exception that makes sense..
-                            throw new RuntimeException(e);
+                            throw new FileSystemException(e.getMessage());
                         }
                     });
                 }
@@ -192,7 +191,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete document %s", documentId);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
@@ -214,7 +213,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete base path %s", basePath);
             log.error(errorMessage, e);
-            throw new DocumentDomainException(errorMessage);
+            throw new FileSystemException(errorMessage);
         }
     }
 
@@ -226,7 +225,7 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
         return Path.of(basePath + File.separator + Path.of(documentId));
     }
 
-    private Path getChunkDirectoryPath(UUID documentId) {
-        return basePath.resolve(documentId + "_chunks");
+    private Path getPageDirectoryPath(UUID documentId) {
+        return basePath.resolve(documentId + "_pages");
     }
 }

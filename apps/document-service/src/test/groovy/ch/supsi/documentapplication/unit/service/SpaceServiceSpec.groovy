@@ -1,9 +1,8 @@
 package ch.supsi.documentapplication.unit.service
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
+
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
-import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
-import ch.supsi.documentapplication.exception.DocumentDomainException
+import ch.supsi.documentapplication.exception.JobFailedToStartException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.MindMap
@@ -18,11 +17,10 @@ import spock.lang.Specification
 class SpaceServiceSpec extends Specification {
 
     def spaceStorage = Mock(IDatabaseSpaceStorage)
-    def documentStorage = Mock(IDatabaseDocumentStorage)
     def jobOperator = Mock(JobOperator)
     def mindMapJob = Mock(Job)
 
-    def service = new SpaceService(spaceStorage, documentStorage, jobOperator, mindMapJob)
+    def service = new SpaceService(spaceStorage, jobOperator, mindMapJob)
 
     def "should return mind map for authorized user"() {
         given:
@@ -115,8 +113,7 @@ class SpaceServiceSpec extends Specification {
         then:
         1 * spaceStorage.read(10L) >> space
         1 * jobOperator.start(mindMapJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
-        def e = thrown(DocumentDomainException)
-        e.message == "Failed to start asynchronous job"
+        thrown(JobFailedToStartException)
     }
 
     def "should return spaces for owner"() {

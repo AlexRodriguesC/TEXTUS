@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.unit.service
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
+import ch.supsi.documentapplication.exception.ApplicationException
 import ch.supsi.documentapplication.exception.DocumentDomainException
+import ch.supsi.documentapplication.exception.JobFailedToStartException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Document
@@ -108,8 +110,7 @@ class DocumentServiceSpec extends Specification {
         service.createDocument(file, owner, spaceId)
 
         then:
-        DocumentDomainException e = thrown(DocumentDomainException)
-        e.message == "Failed to get file bytes"
+        thrown(ApplicationException)
         0 * spaceStorage._
         0 * databaseDocumentStorage._
         0 * documentFsStorage._
@@ -132,8 +133,7 @@ class DocumentServiceSpec extends Specification {
         1 * databaseDocumentStorage.create(spaceId) >> databaseDocId
         1 * documentFsStorage.create(_ as FsDocument)
         1 * jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
-        DocumentDomainException e = thrown(DocumentDomainException)
-        e.message == "Failed to start asynchronous job"
+        thrown(JobFailedToStartException)
     }
 
     def "should return documents for owned space"() {

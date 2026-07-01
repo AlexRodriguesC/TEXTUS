@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.service.clients.mindmap.OpenAIMindMapClient;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
@@ -19,6 +20,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.FileCopyUtils;
 
 @Configuration
+@Slf4j
 public class OpenAIClientsConfiguration {
 
     @Bean
@@ -106,6 +108,10 @@ public class OpenAIClientsConfiguration {
             return FileCopyUtils.copyToString(reader);
 
         } catch (IOException e) {
+            log.error(
+                    "Failed to load prompt template. This is most likely a programmer error, or the resource {} is missing on the server.",
+                    resource.getFilename(),
+                    e);
             throw new PromptTemplateLoadException("Failed to load prompt template: " + resource.getDescription(), e);
         }
     }

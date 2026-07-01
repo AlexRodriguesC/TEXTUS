@@ -3,9 +3,7 @@ package ch.supsi.documentapplication.service.document;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.documentapplication.exception.DocumentDomainException;
-import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.exception.UnauthorizedException;
+import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.Document;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.model.Space;
@@ -52,7 +50,7 @@ public class DocumentService implements IDocumentService {
         } catch (Exception e) {
             String message = String.format("Failed to read bytes for file %s", documentMultipart.getOriginalFilename());
             log.error(message, e);
-            throw new DocumentDomainException("Failed to get file bytes", e);
+            throw ApplicationException.internalServerError(message);
         }
 
         Optional<Space> optSpace = spaceStorage.read(spaceId);
@@ -84,7 +82,7 @@ public class DocumentService implements IDocumentService {
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", pipelineJob.getName());
             log.error(message, e);
-            throw DocumentDomainException.jobFailedException(e);
+            throw new JobFailedToStartException(message);
         }
     }
 

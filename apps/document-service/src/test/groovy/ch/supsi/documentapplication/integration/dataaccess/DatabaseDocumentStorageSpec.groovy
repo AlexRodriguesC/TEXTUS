@@ -48,7 +48,10 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
 
         then:
         documentId != null
-        def row = jdbcTemplate.queryForMap("select * from documents.document where id = ?", documentId)
+        def row = jdbcClient.sql("select * from documents.document where id = :id")
+                .param("id", documentId)
+                .query()
+                .singleRow()
         row.space_id == spaceId
         row.status == "RECEIVED"
     }
@@ -64,7 +67,10 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         storage.updateDocumentStatus(documentId, DocumentStatus.PROCESSING)
 
         then:
-        def row = jdbcTemplate.queryForMap("select status from documents.document where id = ?", documentId)
+        def row = jdbcClient.sql("select * from documents.document where id = :id")
+                .param("id", documentId)
+                .query()
+                .singleRow()
         row.status == "PROCESSING"
     }
 
@@ -74,7 +80,9 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         createUser(owner)
         Long spaceId = createSpace(owner)
         Long documentId = createDocument(spaceId)
-        jdbcTemplate.execute("update documents.document set status = 'DONE' where id = ${documentId}")
+        jdbcClient.sql("update documents.document set status = 'DONE' where id = :id")
+                .param("id", documentId)
+                .update()
 
         when:
         List<Document> documents = storage.getDocuments(spaceId)

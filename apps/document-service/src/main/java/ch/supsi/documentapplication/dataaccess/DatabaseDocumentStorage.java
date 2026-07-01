@@ -2,7 +2,6 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.*;
-
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;

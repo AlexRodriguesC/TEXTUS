@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.controller;
 
+import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.TokenResponseDTO;
 import ch.supsi.documentapplication.model.User;
 import ch.supsi.documentapplication.service.AuthService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,9 +42,27 @@ public class AuthController {
             description = "Authenticates a user with username and password and returns a JWT token.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Authentication successful"),
-        @ApiResponse(responseCode = "401", description = "Invalid username or password"),
-        @ApiResponse(responseCode = "404", description = "User not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "401",
+                description = "Invalid username or password",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "User not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<@NotNull TokenResponseDTO> login(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -65,9 +85,27 @@ public class AuthController {
             description = "Registers a new user and returns a JWT token for the created account.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Registration successful"),
-        @ApiResponse(responseCode = "400", description = "Invalid user payload"),
-        @ApiResponse(responseCode = "409", description = "User already exists"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid user payload",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(
+                responseCode = "409",
+                description = "User already exists",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<@NotNull TokenResponseDTO> register(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(

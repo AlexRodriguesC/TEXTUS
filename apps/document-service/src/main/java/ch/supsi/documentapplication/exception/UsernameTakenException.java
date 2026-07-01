@@ -1,7 +1,10 @@
 package ch.supsi.documentapplication.exception;
 
-public class UsernameTakenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class UsernameTakenException extends ApplicationException {
+
     public UsernameTakenException(String message) {
-        super(message);
+        super(HttpStatus.CONFLICT, message);
     }
 }

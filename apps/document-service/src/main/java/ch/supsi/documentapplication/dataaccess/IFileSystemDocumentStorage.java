@@ -9,7 +9,7 @@ public interface IFileSystemDocumentStorage {
 
     String createChunk(Integer page, String content, UUID documentId);
 
-    String readNextChunk(UUID documentId);
+    String readNextPage(UUID documentId);
 
     void deleteChunk(UUID documentId, String chunkId);
 

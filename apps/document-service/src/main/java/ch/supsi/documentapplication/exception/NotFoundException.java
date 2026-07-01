@@ -1,25 +1,26 @@
 package ch.supsi.documentapplication.exception;
 
-import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 
-public class NotFoundException extends RuntimeException {
+public class NotFoundException extends ApplicationException {
+
     public NotFoundException(String message) {
-        super(message);
+        super(HttpStatus.NOT_FOUND, message);
     }
 
     public static NotFoundException spaceNotFoundException(Long spaceId) {
-        return new NotFoundException("Space with id " + spaceId + " not found");
+        return new NotFoundException(format("Space with id %d not found", spaceId));
     }
 
     public static NotFoundException spaceOrDocumentNotFoundException(Long spaceId, Long documentId) {
-        return new NotFoundException("Space with id " + spaceId + " or document " + documentId + " not found");
+        return new NotFoundException(format("Space with id %d or document %d not found", spaceId, documentId));
     }
 
     public static NotFoundException mindMapNotFoundException(Long spaceId) {
-        return new NotFoundException("Mind map for space with id " + spaceId + " not found");
+        return new NotFoundException(format("Mind map for space with id %d not found", spaceId));
     }
 
-    public static @NotNull RuntimeException userNotFound(String owner) {
-        return new NotFoundException("User " + owner + " not found");
+    public static NotFoundException userNotFound(String owner) {
+        return new NotFoundException(format("User %s not found", owner));
     }
 }

@@ -104,8 +104,20 @@ public class SpaceController {
     @Operation(summary = "Updates a space", description = "Updates a space name and description by id.")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Space updated"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<Void> updateSpace(
             @Parameter(hidden = true) Authentication authentication,
@@ -128,11 +140,41 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Mind-map generation accepted"),
-        @ApiResponse(responseCode = "400", description = "Invalid request or the space cannot be processed"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "404", description = "Space not found"),
-        @ApiResponse(responseCode = "409", description = "A mind-map generation is already in progress for this space"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request or the space cannot be processed",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Space not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "409",
+                description = "A mind-map generation is already in progress for this space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<MindMap> extractMindMap(
             @Parameter(description = "The ID of the space to create the mind map for", required = true)
@@ -155,9 +197,27 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Mind-map retrieved successfully"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "404", description = "Space or mind-map not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Space or mind-map not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<MindMapResponseDTO> getMindMap(
             @Parameter(description = "The ID of the space to retrieve the mind map for", required = true)
@@ -182,9 +242,27 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Mind-map status retrieved successfully"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "404", description = "Space not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Space not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<MindMapStatusDTO> getMindMapStatus(
             @Parameter(description = "The ID of the space to retrieve the mind-map status for", required = true)
@@ -207,9 +285,27 @@ public class SpaceController {
                     """)
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Documents retrieved successfully"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "404", description = "Space not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Space not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<DocumentsResponseDTO> getDocumentStatuses(
             @Parameter(description = "The ID of the space to retrieve documents for", required = true)
@@ -236,11 +332,41 @@ public class SpaceController {
                             """)
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Document accepted for processing"),
-        @ApiResponse(responseCode = "400", description = "Invalid request or missing file"),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "413", description = "Uploaded file is too large"),
-        @ApiResponse(responseCode = "415", description = "Unsupported media type"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request or missing file",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "413",
+                description = "Uploaded file is too large",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "415",
+                description = "Unsupported media type",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<@org.jetbrains.annotations.NotNull Void> createDocument(
             @Parameter(

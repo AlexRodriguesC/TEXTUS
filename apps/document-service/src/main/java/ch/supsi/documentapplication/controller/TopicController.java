@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.controller;
 
+import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.TopicResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.TopicsResponseDTO;
 import ch.supsi.documentapplication.service.ITopicService;
@@ -46,9 +47,27 @@ public class TopicController {
                         @Content(
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
                                 schema = @Schema(implementation = TopicsResponseDTO.class))),
-        @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space"),
-        @ApiResponse(responseCode = "404", description = "Space not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+        @ApiResponse(
+                responseCode = "403",
+                description = "User is not the owner of the specified space",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Space not found",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<TopicsResponseDTO> getTopics(
             @Parameter(description = "The ID of the space to retrieve topics from", required = true, example = "1")
