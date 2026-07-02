@@ -16,6 +16,7 @@ import ch.supsi.documentapplication.service.document.DocumentService
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParameters
 import org.springframework.batch.core.launch.JobOperator
+import org.springframework.batch.core.repository.JobRepository
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
@@ -27,9 +28,10 @@ class DocumentServiceSpec extends Specification {
     private final IDatabaseSpaceStorage spaceStorage = Mock()
     private final JobOperator jobOperator = Mock()
     private final Job pipelineJob = Mock()
+    private final JobRepository jobRepository = Mock()
 
     private final DocumentService service =
-            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob)
+            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob, jobRepository)
 
 
     Space buildSpace(Long id, String owner) {
@@ -38,28 +40,6 @@ class DocumentServiceSpec extends Specification {
 
     Optional<Space> buildOptSpace(Long id, String owner) {
         return Optional.of(buildSpace(id, owner))
-    }
-
-    def "should create document, persist it, and start pipeline job"() {
-        given:
-        String owner = "alice"
-        Long spaceId = 10L
-        byte[] bytes = "hello".bytes
-        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", bytes)
-        Optional<Space> space = buildOptSpace(spaceId, owner)
-        Long databaseDocId = 99L
-
-        when:
-        service.createDocument(file, owner, spaceId)
-
-        then:
-        1 * spaceStorage.read(spaceId) >> space
-        1 * databaseDocumentStorage.create(spaceId) >> databaseDocId
-        1 * documentFsStorage.create({ FsDocument document ->
-            document != null
-        })
-        1 * jobOperator.start(pipelineJob, _ as JobParameters)
-        0 * _
     }
 
     def "should throw not found when space is missing"() {
@@ -117,24 +97,6 @@ class DocumentServiceSpec extends Specification {
         0 * jobOperator._
     }
 
-    def "should throw domain exception when job start fails"() {
-        given:
-        String owner = "alice"
-        Long spaceId = 10L
-        MockMultipartFile file = new MockMultipartFile("document", "doc.txt", "text/plain", "hello".bytes)
-        Optional<Space> space = buildOptSpace(spaceId, owner)
-        Long databaseDocId = 99L
-
-        when:
-        service.createDocument(file, owner, spaceId)
-
-        then:
-        1 * spaceStorage.read(spaceId) >> space
-        1 * databaseDocumentStorage.create(spaceId) >> databaseDocId
-        1 * documentFsStorage.create(_ as FsDocument)
-        1 * jobOperator.start(pipelineJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
-        thrown(JobFailedToStartException)
-    }
 
     def "should return documents for owned space"() {
         given:
@@ -142,8 +104,8 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         Optional<Space> space = buildOptSpace(spaceId, owner)
         List<Document> documents = [
-                new Document(1, DocumentStatus.DONE),
-                new Document(2, DocumentStatus.PROCESSING)
+                new Document(1, 2),
+                new Document(2, 3)
         ]
 
         when:

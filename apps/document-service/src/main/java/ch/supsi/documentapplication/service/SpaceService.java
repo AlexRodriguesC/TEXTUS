@@ -7,17 +7,11 @@ import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
-
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
-import org.springframework.batch.core.job.JobExecution;
-import org.springframework.batch.core.job.JobInstance;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
@@ -29,15 +23,17 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class SpaceService implements ISpaceService {
 
-    private static final String JOB_NAME = "mind_map_creation_job";
-
     private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job mindMapJob;
     private final JobRepository jobRepository;
 
     @Autowired
-    public SpaceService(IDatabaseSpaceStorage spaceStorage, JobOperator asyncJobOperator, Job mindMapJob, JobRepository jobRepository) {
+    public SpaceService(
+            IDatabaseSpaceStorage spaceStorage,
+            JobOperator asyncJobOperator,
+            Job mindMapJob,
+            JobRepository jobRepository) {
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.mindMapJob = mindMapJob;
@@ -88,7 +84,7 @@ public class SpaceService implements ISpaceService {
                 .toJobParameters();
 
         try {
-           jobOperator.start(mindMapJob, jobParameters);
+            jobOperator.start(mindMapJob, jobParameters);
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", mindMapJob.getName());
             log.error(message, e);
@@ -110,21 +106,17 @@ public class SpaceService implements ISpaceService {
             return MindMapStatus.NOT_CREATED;
         }
 
-        JobInstance jobInstance = jobRepository.getLastJobInstance(JOB_NAME);
-        if (jobInstance == null) {
+        var jobId = mindMap.getJobId();
+        var jobExecution = jobRepository.getJobExecution(jobId);
+        if (jobExecution == null) {
             return MindMapStatus.NOT_CREATED;
         }
 
-        Optional<JobExecution> lastExecution = Optional.ofNullable(jobRepository.getLastJobExecution(jobInstance));
-
-        if (lastExecution.isEmpty()) {
-            return MindMapStatus.NOT_CREATED;
-        }
-
-        JobExecution jobExecution = lastExecution.get();
         var status = jobExecution.getStatus();
 
-        return status.isRunning() ? MindMapStatus.GENERATING : status.isUnsuccessful() ? MindMapStatus.FAILED : MindMapStatus.DONE;
+        return status.isRunning()
+                ? MindMapStatus.GENERATING
+                : status.isUnsuccessful() ? MindMapStatus.FAILED : MindMapStatus.DONE;
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {

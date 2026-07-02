@@ -1,8 +1,6 @@
 package ch.supsi.documentapplication.integration.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.DatabaseSpaceStorage
-import ch.supsi.documentapplication.model.MindMap
-import ch.supsi.documentapplication.model.MindMapStatus
 import ch.supsi.documentapplication.model.Space
 import spock.lang.Subject
 
@@ -55,6 +53,7 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         var map = storage.readMindMap(spaceId)
 
         then:
-        map == null
+        map.root == null
+        map.jobId == null
     }
 }

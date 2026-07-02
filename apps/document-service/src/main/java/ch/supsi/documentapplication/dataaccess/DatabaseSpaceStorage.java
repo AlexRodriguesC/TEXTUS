@@ -26,6 +26,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     public static final String PARENT_TOPIC_ID = "parent_topic_id";
     public static final String OWNER = "owner";
     private static final String TOPIC_ID = "topic_id";
+    public static final String JOB_ID = "job_id";
 
     public DatabaseSpaceStorage(JdbcClient jdbcClient) {
         super(jdbcClient);
@@ -74,7 +75,8 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         List<MindMapRow> rows = jdbcClient
                 .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new MindMapRow(rs.getLong(TOPIC_ID), rs.getObject(PARENT_TOPIC_ID, Long.class)))
+                .query((rs, rowNum) -> new MindMapRow(
+                        rs.getLong(JOB_ID), rs.getLong(TOPIC_ID), rs.getObject(PARENT_TOPIC_ID, Long.class)))
                 .list();
 
         MindMap mindMap = new MindMap();
@@ -88,6 +90,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         MindMapNode root = null;
 
         for (MindMapRow row : rows) {
+            mindMap.setJobId(row.jobId);
             nodesByChunkId.computeIfAbsent(row.topicId(), MindMapNode::new);
         }
 
@@ -106,7 +109,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         return mindMap;
     }
 
-    private record MindMapRow(Long topicId, Long parentTopicId) {}
+    private record MindMapRow(Long jobId, Long topicId, Long parentTopicId) {}
 
     @Override
     public List<Space> readAll(String owner) {
@@ -122,11 +125,12 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     @Override
-    public Long createMindMap(Long spaceId) {
+    public Long createMindMap(Long spaceId, Long jobId) {
         try {
             return jdbcClient
-                    .sql("SELECT documents.create_mind_map(:space_id)")
+                    .sql("SELECT documents.create_mind_map(:space_id, :job_id)")
                     .param(SPACE_ID, spaceId)
+                    .param(JOB_ID, jobId)
                     .query(Long.class)
                     .single();
         } catch (DataAccessException e) {

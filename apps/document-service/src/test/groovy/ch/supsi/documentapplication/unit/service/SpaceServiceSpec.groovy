@@ -12,6 +12,7 @@ import ch.supsi.documentapplication.service.SpaceService
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParameters
 import org.springframework.batch.core.launch.JobOperator
+import org.springframework.batch.core.repository.JobRepository
 import spock.lang.Specification
 
 class SpaceServiceSpec extends Specification {
@@ -19,8 +20,9 @@ class SpaceServiceSpec extends Specification {
     def spaceStorage = Mock(IDatabaseSpaceStorage)
     def jobOperator = Mock(JobOperator)
     def mindMapJob = Mock(Job)
+    def jobRepository = Mock(JobRepository)
 
-    def service = new SpaceService(spaceStorage, jobOperator, mindMapJob)
+    def service = new SpaceService(spaceStorage, jobOperator, mindMapJob, jobRepository)
 
     def "should return mind map for authorized user"() {
         given:
@@ -61,18 +63,17 @@ class SpaceServiceSpec extends Specification {
         0 * spaceStorage.readMindMap(_)
     }
 
-    def "should throw not found when mind map is null for status"() {
+    def "should throw not created when mind map is null for status"() {
         given:
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
 
         when:
-        service.getMindMapStatus("alice", 10L)
+        def status = service.getMindMapStatus("alice", 10L)
 
         then:
         1 * spaceStorage.read(10L) >> space
         1 * spaceStorage.readMindMap(10L) >> null
-        def e = thrown(NotFoundException)
-        e.message
+        status == MindMapStatus.NOT_CREATED
     }
 
     def "should create mind map and start job"() {

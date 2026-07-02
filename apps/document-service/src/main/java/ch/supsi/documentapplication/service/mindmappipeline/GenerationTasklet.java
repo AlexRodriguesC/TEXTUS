@@ -4,7 +4,8 @@ import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.model.*;
-import ch.supsi.documentapplication.service.clients.mindmap.MindMapClient;
+import ch.supsi.documentapplication.service.ProcessingTasklet;
+import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,33 +16,25 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
-import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
 @StepScope
-public class GenerationTasklet implements Tasklet {
+public class GenerationTasklet extends ProcessingTasklet {
 
     private final DatabaseTopicStorage databaseTopicStorage;
-
-    @Value("#{jobParameters['SPACE_ID']}")
-    protected Long spaceId;
-
     private final DatabaseDocumentStorage databaseDocumentStorage;
-
     private final IDatabaseSpaceStorage databaseSpaceStorage;
-
-    private final MindMapClient mindMapClient;
+    private final OpenAIMindMapClient mindMapClient;
 
     @Autowired
     public GenerationTasklet(
             IDatabaseSpaceStorage databaseSpaceStorage,
-            MindMapClient mindMapClient,
+            OpenAIMindMapClient mindMapClient,
             DatabaseDocumentStorage databaseDocumentStorage,
             DatabaseTopicStorage databaseTopicStorage) {
         this.databaseSpaceStorage = databaseSpaceStorage;
@@ -52,17 +45,12 @@ public class GenerationTasklet implements Tasklet {
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
-            throws Exception {
+            throws RetryException {
 
-        var optSpace = databaseSpaceStorage.read(spaceId);
-        if (optSpace.isEmpty()) {
-            var message = String.format("No space found with id %s", spaceId);
-            log.error(message);
-            return RepeatStatus.FINISHED;
-        }
+        Long mapId =
+                (Long) chunkContext.getStepContext().getJobExecutionContext().get("MAP_ID");
 
-        var space = optSpace.get().getId();
-        var documents = databaseDocumentStorage.getDocuments(space);
+        var documents = databaseDocumentStorage.getDocuments(spaceId);
         List<Topic> topics = new ArrayList<>();
         for (Document document : documents) {
             var pages = databaseDocumentStorage.getPages(document.getId());
@@ -76,20 +64,12 @@ public class GenerationTasklet implements Tasklet {
 
         topics = topics.stream().distinct().collect(Collectors.toList());
 
-        Long mapId = databaseSpaceStorage.createMindMap(space);
-
         if (topics.isEmpty()) {
             contribution.setExitStatus(ExitStatus.FAILED);
             return RepeatStatus.FINISHED;
         }
 
-        MindMap mindMap;
-
-        try {
-            mindMap = mindMapClient.extractMindMap(topics);
-        } catch (RetryException e) {
-            return RepeatStatus.FINISHED;
-        }
+        MindMap mindMap = mindMapClient.getResult(topics);
 
         databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMap);
 

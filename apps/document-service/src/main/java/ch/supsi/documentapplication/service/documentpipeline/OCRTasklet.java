@@ -1,8 +1,6 @@
 package ch.supsi.documentapplication.service.documentpipeline;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
-import ch.supsi.documentapplication.model.DocumentStatus;
 import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ProcessingTasklet;
@@ -31,8 +29,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.resilience.annotation.Retryable;
-import org.springframework.retry.annotation.Recover;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -41,29 +37,23 @@ import org.springframework.stereotype.Component;
 public class OCRTasklet extends ProcessingTasklet {
 
     private final IFileSystemDocumentStorage documentStorage;
-    private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final LanguageDetector languageDetector;
     private final String tessdataPath;
 
     @Autowired
     public OCRTasklet(
             IFileSystemDocumentStorage documentStorage,
-            IDatabaseDocumentStorage databaseDocumentStorage,
             LanguageDetector languageDetector,
             AppProperties appProperties) {
         this.documentStorage = documentStorage;
-        this.databaseDocumentStorage = databaseDocumentStorage;
         this.languageDetector = languageDetector;
         this.tessdataPath = appProperties.getTessdataPath();
     }
 
-    @Retryable()
-    @Recover
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
         log.debug("Executing OCR step for document with documentId {}", documentId);
 
-        databaseDocumentStorage.updateDocumentStatus(databaseDocumentId, DocumentStatus.PROCESSING);
         FsDocument fsDocument = documentStorage.read(getDocumentIdAsUUID());
 
         try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {

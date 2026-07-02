@@ -17,6 +17,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -40,7 +41,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
-            throws Exception {
+            throws RetryException {
         log.debug("Executing topic extraction step for space with spaceId {}", spaceId);
 
         var documents = databaseDocumentStorage.getDocuments(spaceId);

@@ -16,7 +16,7 @@ public interface IDatabaseSpaceStorage {
 
     List<Space> readAll(String owner);
 
-    Long createMindMap(Long spaceId);
+    Long createMindMap(Long spaceId, Long jobId);
 
     void createMindMapNodes(Long spaceId, Long mindMapId, MindMap mindMap);
 

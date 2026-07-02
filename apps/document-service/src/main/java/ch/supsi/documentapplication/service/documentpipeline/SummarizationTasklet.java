@@ -14,6 +14,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -41,13 +42,16 @@ public class SummarizationTasklet extends ProcessingTasklet {
     }
 
     @Override
-    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
-        log.debug("Executing summarization step for document with documentId {}", databaseDocumentId);
-
+    public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
+            throws RetryException {
         var stepExecutionContext =
                 chunkContext.getStepContext().getStepExecution().getExecutionContext();
 
         var totalProcessed = getValue(stepExecutionContext, TOTAL_PROCESSED, 0, Integer.class);
+        Long databaseDocumentId =
+                (Long) chunkContext.getStepContext().getJobExecutionContext().get("DATABASE_DOCUMENT_ID");
+
+        log.debug("Executing summarization step for document with documentId {}", databaseDocumentId);
 
         int processed = 0;
 

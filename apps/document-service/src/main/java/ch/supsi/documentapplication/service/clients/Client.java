@@ -1,22 +1,24 @@
 package ch.supsi.documentapplication.service.clients;
 
 import java.util.Map;
-import java.util.Optional;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import tools.jackson.core.exc.StreamReadException;
+import org.springframework.core.retry.RetryException;
+import org.springframework.core.retry.RetryTemplate;
 
-public abstract class Client<I, O> extends OpenAIClient {
+public abstract class Client<I, O> {
+
+    protected ChatClient chatClient;
 
     private final PromptTemplate promptTemplate;
-    private final FailureTracker failureTracker;
+    private final RetryTemplate retryTemplate;
 
-    public Client(ChatClient chatClient, PromptTemplate promptTemplate, FailureTracker failureTracker) {
-        super(chatClient);
+    public Client(ChatClient chatClient, RetryTemplate retryTemplate, PromptTemplate promptTemplate) {
+        this.chatClient = chatClient;
+        this.retryTemplate = retryTemplate;
         this.promptTemplate = promptTemplate;
-        this.failureTracker = failureTracker;
     }
 
     protected Prompt getPrompt(Map<String, Object> params) {
@@ -25,26 +27,9 @@ public abstract class Client<I, O> extends OpenAIClient {
         return new Prompt(userPrompt);
     }
 
-    public O getResult(I input) {
-        Optional<O> result = Optional.empty();
-
-        while (result.isEmpty()) {
-            try {
-                result = call(input);
-            } catch (StreamReadException e) {
-                failureTracker.registerFailure();
-                continue;
-            }
-
-            if (result.isEmpty()) {
-                failureTracker.registerFailure();
-            }
-        }
-
-        failureTracker.resetFailures();
-
-        return result.get();
+    public O getResult(I input) throws RetryException {
+        return retryTemplate.execute(() -> call(input));
     }
 
-    protected abstract Optional<O> call(I input);
+    protected abstract O call(I input);
 }

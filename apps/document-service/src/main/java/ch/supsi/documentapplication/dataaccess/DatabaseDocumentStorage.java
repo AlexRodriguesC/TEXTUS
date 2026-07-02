@@ -16,7 +16,6 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     private static final String ID = "id";
     private static final String SPACE_ID = "space_id";
     private static final String DOCUMENT_ID = "document_id";
-    private static final String STATUS = "status";
     public static final String TOKENS_IN = "tokens_in";
     public static final String TOKENS_OUT = "tokens_out";
     public static final String TITLE = "title";
@@ -50,11 +49,12 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public Long create(Long spaceId) {
+    public Long create(Long spaceId, Long jobId) {
         try {
             return jdbcClient
-                    .sql("SELECT documents.create_document(:space_id)")
+                    .sql("SELECT documents.create_document(:space_id, :job_id)")
                     .param(SPACE_ID, spaceId)
+                    .param(JOB_ID, jobId)
                     .query(Long.class)
                     .optional()
                     .orElseThrow(() -> NotFoundException.spaceNotFoundException(spaceId));
@@ -64,44 +64,11 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public void update(Document document) {
-        try {
-            jdbcClient
-                    .sql("SELECT documents.update_document(:document_id, :job_id)")
-                    .param(DOCUMENT_ID, document.getId())
-                    .param(JOB_ID, document.getJobId())
-                    .query()
-                    .singleValue();
-        } catch (DataAccessException e) {
-            throw NotFoundException.documentNotFoundException(document.getId());
-        }
-    }
-
-    @Override
-    public void updateDocumentStatus(Long documentId, DocumentStatus status) {
-        jdbcClient
-                .sql("SELECT documents.update_document_status(:document_id, :status::documents.document_status)")
-                .param(DOCUMENT_ID, documentId)
-                .param(STATUS, status.name())
-                .query()
-                .singleValue();
-    }
-
-    @Override
     public List<Document> getDocuments(Long spaceId) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_documents(:space_id)")
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new Document(rs.getLong(ID), rs.getLong(JOB_ID)))
-                .list();
-    }
-
-    @Override
-    public List<Long> getDocumentIds(Long spaceId) {
-        return jdbcClient
-                .sql("SELECT * FROM documents.read_documents(:space_id)")
-                .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> rs.getLong(ID))
                 .list();
     }
 

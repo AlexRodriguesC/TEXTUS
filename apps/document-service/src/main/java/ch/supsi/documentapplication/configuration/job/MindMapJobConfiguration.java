@@ -1,12 +1,13 @@
 package ch.supsi.documentapplication.configuration.job;
 
 import ch.supsi.documentapplication.service.mindmappipeline.GenerationTasklet;
+import ch.supsi.documentapplication.service.mindmappipeline.SetupTasklet;
 import ch.supsi.documentapplication.service.mindmappipeline.TopicExtractionTasklet;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -16,17 +17,21 @@ public class MindMapJobConfiguration extends JobConfiguration {
 
     private static final String JOB_NAME = "mind_map_creation_job";
 
-    @Autowired
-    public MindMapJobConfiguration(JobExecutionLogger jobExecutionLogger) {
-        super(jobExecutionLogger);
+    @Bean
+    public Job mindMapJob(JobRepository jobRepository, Step mapSetup, Step extractTopics, Step generate) {
+        return new JobBuilder(JOB_NAME, jobRepository)
+                .start(mapSetup)
+                .next(extractTopics)
+                .next(generate)
+                .build();
     }
 
     @Bean
-    public Job mindMapJob(JobRepository jobRepository, Step extractTopics, Step generate) {
-        return new JobBuilder(JOB_NAME, jobRepository)
-                .start(extractTopics)
-                .next(generate)
-                .build();
+    public Step mapSetup(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            @Qualifier("mindMapSetup") SetupTasklet setupTasklet) {
+        return buildTaskletStep(SetupTasklet.class.getName(), jobRepository, transactionManager, setupTasklet);
     }
 
     @Bean

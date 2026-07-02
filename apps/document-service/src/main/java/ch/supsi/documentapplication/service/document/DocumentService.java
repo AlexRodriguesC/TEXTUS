@@ -5,13 +5,10 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.*;
-
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
-import org.springframework.batch.core.job.JobExecution;
-import org.springframework.batch.core.job.JobInstance;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
@@ -24,15 +21,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class DocumentService implements IDocumentService {
 
-    private static final String JOB_NAME = "document_processing_job";
-    public static final String DATABASE_DOCUMENT_ID = "DATABASE_DOCUMENT_ID";
     public static final String SPACE_ID = "SPACE_ID";
 
     private final IFileSystemDocumentStorage documentFsStorage;
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
-    private final Job pipelineJob;
+    private final Job documentJob;
     private final JobRepository jobRepository;
 
     @Autowired
@@ -41,12 +36,13 @@ public class DocumentService implements IDocumentService {
             IDatabaseDocumentStorage databaseDocumentStorage,
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
-            Job pipelineJob, JobRepository jobRepository) {
+            Job documentJob,
+            JobRepository jobRepository) {
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
-        this.pipelineJob = pipelineJob;
+        this.documentJob = documentJob;
         this.jobRepository = jobRepository;
     }
 
@@ -75,21 +71,18 @@ public class DocumentService implements IDocumentService {
 
         FsDocument fsDocument = FsDocument.create(documentBytes);
 
-        Long databaseDocId = databaseDocumentStorage.create(spaceId);
         documentFsStorage.create(fsDocument);
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", fsDocument.getDocumentId().toString())
-                .addLong(DATABASE_DOCUMENT_ID, databaseDocId)
                 .addLong(SPACE_ID, spaceId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
         try {
-            var jobExecution = jobOperator.start(pipelineJob, jobParameters);
-            databaseDocumentStorage.update(new Document(databaseDocId, jobExecution.getId()));
+            jobOperator.start(documentJob, jobParameters);
         } catch (Exception e) {
-            String message = String.format("Failed to start job %s", pipelineJob.getName());
+            String message = String.format("Failed to start job %s", documentJob.getName());
             log.error(message, e);
             throw new JobFailedToStartException(message);
         }
@@ -109,7 +102,9 @@ public class DocumentService implements IDocumentService {
             }
 
             var status = jobExecution.getStatus();
-            var docStatus = status.isRunning() ? DocumentStatus.PROCESSING : status.isUnsuccessful() ? DocumentStatus.FAILED : DocumentStatus.DONE;
+            var docStatus = status.isRunning()
+                    ? DocumentStatus.PROCESSING
+                    : status.isUnsuccessful() ? DocumentStatus.FAILED : DocumentStatus.DONE;
             document.setStatus(docStatus);
         });
 

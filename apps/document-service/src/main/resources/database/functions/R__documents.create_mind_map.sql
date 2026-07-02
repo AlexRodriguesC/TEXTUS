@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION documents.create_mind_map(p_space_id BIGINT)
+CREATE OR REPLACE FUNCTION documents.create_mind_map(p_space_id BIGINT, p_job_id BIGINT)
     RETURNS BIGINT
     LANGUAGE plpgsql
 AS
@@ -13,7 +13,7 @@ $$
             RAISE EXCEPTION 'Space with id % not found', p_space_id;
         END IF;
 
-        INSERT INTO documents.mind_map DEFAULT VALUES RETURNING id INTO v_mind_map_id;;
+        INSERT INTO documents.mind_map(job_id) VALUES (p_job_id) RETURNING id INTO v_mind_map_id;
         UPDATE documents.space SET mind_map_id = v_mind_map_id WHERE id = p_space_id;
 
         RETURN v_mind_map_id;

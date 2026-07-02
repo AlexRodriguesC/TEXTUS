@@ -2,33 +2,26 @@ package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.Page;
 import java.util.Map;
-import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import tools.jackson.core.exc.StreamReadException;
+import org.springframework.core.retry.RetryTemplate;
 
-@Slf4j
+@Log4j2
 public class OpenAISummarizationClient extends Client<String, Page> {
 
     private static final String DOCUMENT_TEXT = "document_text";
 
     public OpenAISummarizationClient(
-            ChatClient chatClient, PromptTemplate promptTemplate, FailureTracker failureTracker) {
-        super(chatClient, promptTemplate, failureTracker);
+            ChatClient chatClient, RetryTemplate retryTemplate, PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, promptTemplate);
     }
 
     @Override
-    protected Optional<Page> call(String input) {
+    protected Page call(String input) {
         Map<String, Object> params = Map.of(DOCUMENT_TEXT, input);
         var prompt = getPrompt(params);
 
-        try {
-            var output = chatClient.prompt(prompt).call().entity(Page.class);
-            return Optional.ofNullable(output);
-        } catch (StreamReadException e) {
-            log.warn("Failed to parse output for summarisation prompt", e);
-            return Optional.empty();
-        }
+        return chatClient.prompt(prompt).call().entity(Page.class);
     }
 }
