@@ -14,6 +14,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.Authentication
+import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
@@ -32,6 +33,9 @@ class SpaceControllerSpec extends Specification {
 
     @SpringBean
     ISpaceService spaceService = Mock()
+
+    @SpringBean
+    AuthenticationEntryPoint authenticationEntryPoint = Mock()
 
     @SpringBean
     IDocumentService documentService = Mock()
