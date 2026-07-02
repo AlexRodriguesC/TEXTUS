@@ -8,6 +8,8 @@ import ch.supsi.documentapplication.service.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+@Log4j2
 @Component
 @StepScope
 public class TopicExtractionTasklet extends ProcessingTasklet {

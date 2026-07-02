@@ -80,4 +80,14 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                 .query((rs, rowNum) -> new Page(rs.getLong("id"), rs.getString("title"), rs.getString("summary")))
                 .list();
     }
+
+    @Override
+    public void deleteDocument(Long spaceId, Long documentId) {
+        jdbcClient
+                .sql("SELECT * FROM documents.delete_document(:space_id, :document_id)")
+                .param(SPACE_ID, spaceId)
+                .param(DOCUMENT_ID, documentId)
+                .query()
+                .singleValue();
+    }
 }

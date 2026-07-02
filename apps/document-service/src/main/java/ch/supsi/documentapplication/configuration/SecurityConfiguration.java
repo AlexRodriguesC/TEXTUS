@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.configuration;
 
+import ch.supsi.documentapplication.RestAuthenticationEntryPoint;
 import ch.supsi.documentapplication.service.JwtFilter;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +53,10 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http, JwtFilter jwtFilter, CorsConfigurationSource corsConfigurationSource) {
+            HttpSecurity http,
+            JwtFilter jwtFilter,
+            CorsConfigurationSource corsConfigurationSource,
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers(
                                 "/api/v1/auth/**",
@@ -67,7 +71,8 @@ public class SecurityConfiguration {
                         .authenticated())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint));
 
         return http.build();
     }

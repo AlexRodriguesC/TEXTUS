@@ -6,7 +6,6 @@ import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.*;
 import java.util.List;
-import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
@@ -57,17 +56,7 @@ public class DocumentService implements IDocumentService {
             throw ApplicationException.internalServerError(message);
         }
 
-        Optional<Space> optSpace = spaceStorage.read(spaceId);
-
-        if (optSpace.isEmpty()) {
-            throw NotFoundException.spaceNotFoundException(spaceId);
-        }
-
-        var space = optSpace.get();
-
-        if (!space.getOwner().equals(owner)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(owner, space.getId());
-        }
+        Space space = getSpaceOrThrow(owner, spaceId);
 
         FsDocument fsDocument = FsDocument.create(documentBytes);
 
@@ -75,7 +64,7 @@ public class DocumentService implements IDocumentService {
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", fsDocument.getDocumentId().toString())
-                .addLong(SPACE_ID, spaceId)
+                .addLong(SPACE_ID, space.getId())
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
@@ -109,6 +98,24 @@ public class DocumentService implements IDocumentService {
         });
 
         return documents;
+    }
+
+    @Override
+    public void deleteDocument(String owner, Long spaceId, Long documentId) {
+        var space = getSpaceOrThrow(owner, spaceId);
+        var documents = databaseDocumentStorage.getDocuments(space.getId());
+        var documentExists =
+                documents.stream().anyMatch(document -> document.getId().equals(documentId));
+        if (!documentExists) {
+            throw NotFoundException.documentNotFoundException(documentId);
+        }
+
+        var mindMap = spaceStorage.readMindMap(spaceId);
+        if (!mindMap.isEmpty()) {
+            throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
+        }
+
+        databaseDocumentStorage.deleteDocument(spaceId, documentId);
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {

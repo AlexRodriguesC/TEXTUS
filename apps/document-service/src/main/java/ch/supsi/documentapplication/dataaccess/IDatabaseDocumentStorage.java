@@ -12,4 +12,6 @@ public interface IDatabaseDocumentStorage {
     List<Document> getDocuments(Long spaceId);
 
     List<Page> getPages(Long documentId);
+
+    void deleteDocument(Long spaceId, Long documentId);
 }

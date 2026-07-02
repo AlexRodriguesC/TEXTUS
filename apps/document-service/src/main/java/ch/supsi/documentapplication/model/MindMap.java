@@ -21,6 +21,10 @@ public class MindMap {
         return ids;
     }
 
+    public boolean isEmpty() {
+        return root == null;
+    }
+
     private void collect(MindMapNode node, Set<Long> ids) {
         if (node == null) return;
         ids.add(node.getTopicId());

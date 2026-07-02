@@ -9,6 +9,8 @@ import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
 import java.util.List;
 import java.util.Objects;
+
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
@@ -20,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
+@Log4j2
 public class SpaceService implements ISpaceService {
 
     private final IDatabaseSpaceStorage spaceStorage;

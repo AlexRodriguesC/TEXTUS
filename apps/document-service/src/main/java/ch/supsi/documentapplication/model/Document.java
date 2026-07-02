@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 public class Document {
 
-    private Long id;
-    private Long jobId;
+    private final Long id;
+    private final Long jobId;
 
     @Setter
     private DocumentStatus status;

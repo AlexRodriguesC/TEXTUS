@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextClosedEvent;
@@ -8,7 +9,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
+@Log4j2
 public class ApplicationStoppedEventListener {
 
     private final IFileSystemDocumentStorage fileSystemDocumentStorage;

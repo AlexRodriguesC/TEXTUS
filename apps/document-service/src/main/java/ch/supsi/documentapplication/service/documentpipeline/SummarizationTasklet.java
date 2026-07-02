@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient;
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -17,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+@Log4j2
 @Component
 @StepScope
 public class SummarizationTasklet extends ProcessingTasklet {

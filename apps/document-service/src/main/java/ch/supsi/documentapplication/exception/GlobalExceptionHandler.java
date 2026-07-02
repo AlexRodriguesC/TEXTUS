@@ -18,7 +18,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handle(Exception e) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error"); // Exceptions could leak internal details...
     }
 
     @ExceptionHandler(UsernameTakenException.class)
