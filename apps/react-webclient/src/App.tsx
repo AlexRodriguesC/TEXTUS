@@ -7,6 +7,7 @@ import {
   QueryClientContext,
 } from "@tanstack/react-query";
 import { ApiError } from "@/api/mutator.ts";
+import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 
 const router = createRouter({ routeTree });
 
@@ -35,7 +36,9 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientContext value={queryClient}>
-      <RouterProvider router={router} />
+      <SidebarOpenProvider>
+        <RouterProvider router={router} />
+      </SidebarOpenProvider>
     </QueryClientContext>
   );
 }

@@ -122,5 +122,12 @@
     "creation": {
       "success": "Mindmap creation scheduled successfully"
     }
+  },
+  "sidebar": {
+    "add-space": "Add space",
+    "space": "Space {{spaceId}}",
+    "navigation": "Navigation",
+    "home": "Home",
+    "spaces": "Spaces"
   }
 }

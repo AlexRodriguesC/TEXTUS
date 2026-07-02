@@ -23,14 +23,14 @@ import {
   successToast,
 } from "@/lib/toasts.ts";
 import { useState } from "react";
-import {
-  getGetDocumentStatusesQueryKey,
-  useCreateDocument,
-} from "@/api/generated/spaces/spaces.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
+import {
+  getGetDocumentsQueryKey,
+  useCreateDocument,
+} from "@/api/generated/documents/documents.ts";
 
 interface UploadProps {
   showHeaders: boolean;
@@ -47,7 +47,7 @@ function Upload({ showHeaders }: UploadProps) {
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: getGetDocumentStatusesQueryKey(spaceId),
+          queryKey: getGetDocumentsQueryKey(spaceId),
         });
         successToast(t("spaces.upload.success"));
       },

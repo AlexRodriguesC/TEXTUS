@@ -122,5 +122,11 @@
     "creation": {
       "success": "Creazione della mind map programmata con successo"
     }
+  },
+  "sidebar": {
+    "add-space": "Aggiungi spazio",
+    "navigation": "Navigazione",
+    "home": "Home",
+    "spaces": "Spazi"
   }
 }

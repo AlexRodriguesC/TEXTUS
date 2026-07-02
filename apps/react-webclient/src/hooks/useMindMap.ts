@@ -1,10 +1,10 @@
+import { useTranslation } from "react-i18next";
+import { failureToast, successToast } from "@/lib/toasts";
 import {
   useExtractMindMap,
   useGetMindMap,
-  useGetMindMapStatus,
-} from "@/api/generated/spaces/spaces.ts";
-import { useTranslation } from "react-i18next";
-import { failureToast, successToast } from "@/lib/toasts";
+  useGetMindMapJob,
+} from "@/api/generated/mind-maps/mind-maps.ts";
 
 function useMindMap(spaceId: number) {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ function useMindMap(spaceId: number) {
     },
   });
 
-  const { data } = useGetMindMapStatus(spaceId, {
+  const { data } = useGetMindMapJob(spaceId, {
     query: {
       refetchInterval: (query) => {
         const status = query.state.data?.data.status ?? "NOT_CREATED";

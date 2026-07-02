@@ -1,14 +1,24 @@
-import * as React from "react";
-import Navbar from "@/components/Navbar.tsx";
 import { MeshGradientBackground } from "@/components/ui/mesh-gradient.tsx";
 import { useTheme } from "@/hooks/useTheme.ts";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar.tsx";
+import { AppSidebar } from "@/components/sidebar/Sidebar.tsx";
+import { type PropsWithChildren } from "react";
+import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
+
+interface MainLayoutProps extends PropsWithChildren {
+  sidebarEnabled: boolean;
+}
 
 export default function MainLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  sidebarEnabled = true,
+}: MainLayoutProps) {
   const { theme } = useTheme();
+  const { open, setOpen } = useSidebarOpen();
 
   return (
     <MeshGradientBackground
@@ -20,12 +30,23 @@ export default function MainLayout({
       backgroundColor={theme === "dark" ? "#0f172a" : "#f0f9ff"}
       speed={1}
     >
-      <div className="flex flex-col h-full w-full py-4 px-16">
-        <Navbar />
-        <main className={"flex justify-center items-center h-full w-full"}>
+      {sidebarEnabled ? (
+        <SidebarProvider open={open} onOpenChange={setOpen}>
+          <AppSidebar />
+          <SidebarInset className="bg-transparent">
+            <div className="flex items-center gap-2 p-1 border-b bg-transparent">
+              <SidebarTrigger />
+            </div>
+            <main className="flex justify-center items-center h-full w-full">
+              {children}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      ) : (
+        <main className="flex justify-center items-center h-full w-full">
           {children}
         </main>
-      </div>
+      )}
     </MeshGradientBackground>
   );
 }

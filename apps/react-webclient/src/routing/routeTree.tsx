@@ -17,9 +17,19 @@ const rootRoute = createRootRoute({
 // MainLayout route for auth pages (login, register)
 const publicRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: "public",
+  component: () => (
+    <MainLayout sidebarEnabled={true}>
+      <Outlet />
+    </MainLayout>
+  ),
+});
+
+const authRoute = createRoute({
+  getParentRoute: () => rootRoute,
   id: "auth",
   component: () => (
-    <MainLayout>
+    <MainLayout sidebarEnabled={false}>
       <Outlet />
     </MainLayout>
   ),
@@ -31,7 +41,7 @@ const protectedRoute = createRoute({
   id: "main",
   component: () => (
     <ProtectedRoute>
-      <MainLayout>
+      <MainLayout sidebarEnabled={true}>
         <Outlet />
       </MainLayout>
     </ProtectedRoute>
@@ -39,13 +49,13 @@ const protectedRoute = createRoute({
 });
 
 const loginRoute = createRoute({
-  getParentRoute: () => publicRoute,
+  getParentRoute: () => authRoute,
   path: PathConstants.LOGIN,
   component: LoginPage,
 });
 
 const registerRoute = createRoute({
-  getParentRoute: () => publicRoute,
+  getParentRoute: () => authRoute,
   path: PathConstants.REGISTER,
   component: RegistrationPage,
 });
@@ -69,6 +79,7 @@ const spaceRoute = createRoute({
 });
 
 export const routeTree = rootRoute.addChildren([
-  publicRoute.addChildren([loginRoute, registerRoute, homeRoute]),
+  publicRoute.addChildren([homeRoute]),
+  authRoute.addChildren([loginRoute, registerRoute]),
   protectedRoute.addChildren([spacesRoute, spaceRoute]),
 ]);

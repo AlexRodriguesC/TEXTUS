@@ -1,4 +1,4 @@
-import { useGetDocumentStatuses } from "@/api/generated/spaces/spaces.ts";
+import { useGetDocuments } from "@/api/generated/documents/documents.ts";
 
 export interface Document {
   id: number;
@@ -6,7 +6,7 @@ export interface Document {
 }
 
 function useDocuments(spaceId: number) {
-  const { data: documentStatuses } = useGetDocumentStatuses(spaceId);
+  const { data: documentStatuses } = useGetDocuments(spaceId);
 
   let documents: Document[] = [];
 

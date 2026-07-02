@@ -1,4 +1,3 @@
-import { useGetDocumentStatuses } from "@/api/generated/spaces/spaces.ts";
 import useDocuments, { type Document } from "@/hooks/useDocuments.ts";
 import { useMemo } from "react";
 import { Check, FileDown } from "lucide-react";
@@ -11,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
+import { useGetDocuments } from "@/api/generated/documents/documents.ts";
 
 function countForStatus(
   documents: Document[],
@@ -46,7 +46,7 @@ function DocumentStatusList() {
 
   const { documents } = useDocuments(spaceId);
 
-  useGetDocumentStatuses(spaceId, {
+  useGetDocuments(spaceId, {
     query: {
       refetchInterval: () => {
         const allDone =

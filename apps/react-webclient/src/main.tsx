@@ -8,7 +8,6 @@ import { Toaster } from "@/components/ui/sonner.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import AuthenticationProvider from "@/provider/AuthenticationProvider.tsx";
 import { ReactFlowProvider } from "@xyflow/react";
-import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,9 +16,7 @@ createRoot(document.getElementById("root")!).render(
         <AuthenticationProvider>
           <ReactFlowProvider>
             <Toaster />
-            <SidebarProvider>
-              <App />
-            </SidebarProvider>
+            <App />
           </ReactFlowProvider>
         </AuthenticationProvider>
       </ThemeProvider>

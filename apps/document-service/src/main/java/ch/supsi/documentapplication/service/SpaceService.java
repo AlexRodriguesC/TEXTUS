@@ -102,7 +102,7 @@ public class SpaceService implements ISpaceService {
     @Override
     public MindMapStatus getMindMapStatus(String username, Long spaceId) {
         var mindMap = getMindMap(username, spaceId);
-        if (mindMap == null) {
+        if (mindMap == null || mindMap.isEmpty()) {
             return MindMapStatus.NOT_CREATED;
         }
 
