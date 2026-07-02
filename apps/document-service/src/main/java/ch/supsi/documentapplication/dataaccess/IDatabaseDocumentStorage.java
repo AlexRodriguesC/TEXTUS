@@ -9,9 +9,13 @@ public interface IDatabaseDocumentStorage {
 
     Long create(Long spaceId);
 
+    void update(Document document);
+
     void updateDocumentStatus(Long documentId, DocumentStatus status);
 
     List<Document> getDocuments(Long spaceId);
+
+    List<Long> getDocumentIds(Long spaceId);
 
     List<Page> getPages(Long documentId);
 }

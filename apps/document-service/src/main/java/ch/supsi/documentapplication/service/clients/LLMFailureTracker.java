@@ -24,6 +24,7 @@ public class LLMFailureTracker implements FailureTracker {
     @Override
     public void registerFailure() throws LLMExtractionFailedException {
         currentFailures++;
+        log.warn("Registering failure");
 
         if (currentFailures >= maxFailures) {
             String message = String.format("Failed to extract LLM response %d times", currentFailures);

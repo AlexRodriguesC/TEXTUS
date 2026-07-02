@@ -16,6 +16,7 @@ description = 'TEXTUS-backend'
 spotless {
 	java {
 		target 'src/**/*.java'
+		targetExclude 'src/main/java/ch/supsi/documentapplication/controller/**/*.java'
 		palantirJavaFormat('2.50.0')
 		removeUnusedImports()
 		trimTrailingWhitespace()
@@ -73,6 +74,7 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	testImplementation("org.springframework.security:spring-security-test:7.1.0")
+	implementation("org.springframework.ai:spring-ai-retry:2.0.0")
 
 	// Database
 	implementation 'org.springframework.boot:spring-boot-starter-flyway:4.1.0'

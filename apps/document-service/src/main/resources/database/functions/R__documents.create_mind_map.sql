@@ -13,7 +13,7 @@ $$
             RAISE EXCEPTION 'Space with id % not found', p_space_id;
         END IF;
 
-        INSERT INTO documents.mind_map(status) VALUES ('NOT_CREATED'::documents.mind_map_status) RETURNING id INTO v_mind_map_id;
+        INSERT INTO documents.mind_map DEFAULT VALUES RETURNING id INTO v_mind_map_id;;
         UPDATE documents.space SET mind_map_id = v_mind_map_id WHERE id = p_space_id;
 
         RETURN v_mind_map_id;

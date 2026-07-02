@@ -57,22 +57,4 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         then:
         map == null
     }
-
-    def "should update mind map status"() {
-        given:
-        createUser()
-        Long spaceId = createSpace()
-
-        storage.createMindMap(spaceId)
-
-        when:
-        storage.updateMindMapStatus(spaceId, MindMapStatus.GENERATING)
-
-        then:
-        noExceptionThrown()
-
-        and:
-        MindMap result = storage.readMindMap(spaceId)
-        result.mindMapStatus == MindMapStatus.GENERATING
-    }
 }

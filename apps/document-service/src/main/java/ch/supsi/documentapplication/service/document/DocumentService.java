@@ -4,16 +4,18 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.*;
-import ch.supsi.documentapplication.model.Document;
-import ch.supsi.documentapplication.model.FsDocument;
-import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.model.*;
+
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.JobInstance;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,11 +24,16 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class DocumentService implements IDocumentService {
 
+    private static final String JOB_NAME = "document_processing_job";
+    public static final String DATABASE_DOCUMENT_ID = "DATABASE_DOCUMENT_ID";
+    public static final String SPACE_ID = "SPACE_ID";
+
     private final IFileSystemDocumentStorage documentFsStorage;
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job pipelineJob;
+    private final JobRepository jobRepository;
 
     @Autowired
     public DocumentService(
@@ -34,12 +41,13 @@ public class DocumentService implements IDocumentService {
             IDatabaseDocumentStorage databaseDocumentStorage,
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
-            Job pipelineJob) {
+            Job pipelineJob, JobRepository jobRepository) {
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.pipelineJob = pipelineJob;
+        this.jobRepository = jobRepository;
     }
 
     @Override
@@ -72,13 +80,14 @@ public class DocumentService implements IDocumentService {
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", fsDocument.getDocumentId().toString())
-                .addLong("DATABASE_DOCUMENT_ID", databaseDocId)
-                .addLong("SPACE_ID", spaceId)
+                .addLong(DATABASE_DOCUMENT_ID, databaseDocId)
+                .addLong(SPACE_ID, spaceId)
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
         try {
-            jobOperator.start(pipelineJob, jobParameters);
+            var jobExecution = jobOperator.start(pipelineJob, jobParameters);
+            databaseDocumentStorage.update(new Document(databaseDocId, jobExecution.getId()));
         } catch (Exception e) {
             String message = String.format("Failed to start job %s", pipelineJob.getName());
             log.error(message, e);
@@ -89,7 +98,22 @@ public class DocumentService implements IDocumentService {
     @Override
     public List<Document> getDocuments(String owner, Long spaceId) {
         var space = getSpaceOrThrow(owner, spaceId);
-        return databaseDocumentStorage.getDocuments(space.getId());
+        var documents = databaseDocumentStorage.getDocuments(space.getId());
+
+        documents.forEach(document -> {
+            var jobId = document.getJobId();
+            var jobExecution = jobRepository.getJobExecution(jobId);
+            if (jobExecution == null) {
+                document.setStatus(DocumentStatus.FAILED);
+                return;
+            }
+
+            var status = jobExecution.getStatus();
+            var docStatus = status.isRunning() ? DocumentStatus.PROCESSING : status.isUnsuccessful() ? DocumentStatus.FAILED : DocumentStatus.DONE;
+            document.setStatus(docStatus);
+        });
+
+        return documents;
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {

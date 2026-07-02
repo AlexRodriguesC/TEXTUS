@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.retry.*;
 import org.springframework.util.FileCopyUtils;
 
 @Configuration
@@ -39,6 +40,7 @@ public class OpenAIClientsConfiguration {
     @Bean
     public OpenAIMindMapClient mindMapClient(
             ChatClient.Builder chatBuilder,
+            RetryTemplate retryTemplate,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
             ResourceLoader resourceLoader,
@@ -56,7 +58,8 @@ public class OpenAIClientsConfiguration {
 
         var mindMapValidator = new MindMapValidator();
 
-        return new OpenAIMindMapClient(chatClient, failureTracker, mindMapValidator, promptTemplate);
+        return new OpenAIMindMapClient(
+                chatClient, retryTemplate, failureTracker, mindMapValidator, promptTemplate);
     }
 
     @Bean

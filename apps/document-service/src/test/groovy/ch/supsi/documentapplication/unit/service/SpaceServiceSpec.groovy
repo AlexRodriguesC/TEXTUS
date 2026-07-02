@@ -61,21 +61,6 @@ class SpaceServiceSpec extends Specification {
         0 * spaceStorage.readMindMap(_)
     }
 
-    def "should return mind map status"() {
-        given:
-        def mindMap = Mock(MindMap)
-        mindMap.getMindMapStatus() >> MindMapStatus.DONE
-        def space = Optional.of(new Space(10L, "alice", "", "", ""))
-
-        when:
-        def result = service.getMindMapStatus("alice", 10L)
-
-        then:
-        1 * spaceStorage.read(10L) >> space
-        1 * spaceStorage.readMindMap(10L) >> mindMap
-        result == MindMapStatus.DONE
-    }
-
     def "should throw not found when mind map is null for status"() {
         given:
         def space = Optional.of(new Space(10L, "alice", "", "", ""))

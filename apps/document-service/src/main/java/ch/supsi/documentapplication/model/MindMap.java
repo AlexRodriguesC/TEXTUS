@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 public class MindMap {
 
-    private MindMapStatus mindMapStatus;
     private MindMapNode root;
 
     public Set<Long> getAllTopicIds() {

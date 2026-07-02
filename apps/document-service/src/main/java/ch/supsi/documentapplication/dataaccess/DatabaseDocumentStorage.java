@@ -22,6 +22,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public static final String TITLE = "title";
     public static final String SUMMARY = "summary";
     public static final String KEY = "key";
+    public static final String JOB_ID = "job_id";
 
     @Autowired
     public DatabaseDocumentStorage(JdbcClient jdbcClient) {
@@ -57,8 +58,22 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                     .query(Long.class)
                     .optional()
                     .orElseThrow(() -> NotFoundException.spaceNotFoundException(spaceId));
-        } catch (org.springframework.dao.DataAccessException e) {
+        } catch (DataAccessException e) {
             throw NotFoundException.spaceNotFoundException(spaceId);
+        }
+    }
+
+    @Override
+    public void update(Document document) {
+        try {
+            jdbcClient
+                    .sql("SELECT documents.update_document(:document_id, :job_id)")
+                    .param(DOCUMENT_ID, document.getId())
+                    .param(JOB_ID, document.getJobId())
+                    .query()
+                    .singleValue();
+        } catch (DataAccessException e) {
+            throw NotFoundException.documentNotFoundException(document.getId());
         }
     }
 
@@ -77,7 +92,16 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbcClient
                 .sql("SELECT * FROM documents.read_documents(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new Document(rs.getLong(ID), DocumentStatus.valueOf(rs.getString(STATUS))))
+                .query((rs, rowNum) -> new Document(rs.getLong(ID), rs.getLong(JOB_ID)))
+                .list();
+    }
+
+    @Override
+    public List<Long> getDocumentIds(Long spaceId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_documents(:space_id)")
+                .param(SPACE_ID, spaceId)
+                .query((rs, rowNum) -> rs.getLong(ID))
                 .list();
     }
 

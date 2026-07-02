@@ -96,7 +96,7 @@ class SpaceControllerSpec extends Specification {
         given:
         def maxSize = 500L * 1024 * 1024
         def appProps = Mock(AppProperties) { it.maxDocumentSize >> maxSize }
-        def controller = new SpaceController(appProps, Mock(ISpaceService), Mock(IDocumentService))
+        def controller = new SpaceController(Mock(ISpaceService))
         def file = Mock(MultipartFile) {
             isEmpty() >> false
             getSize() >> maxSize

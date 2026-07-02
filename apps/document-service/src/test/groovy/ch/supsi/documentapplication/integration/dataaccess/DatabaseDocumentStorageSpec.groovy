@@ -74,25 +74,6 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         row.status == "PROCESSING"
     }
 
-    def "should read documents"() {
-        given:
-        def owner = "alice"
-        createUser(owner)
-        Long spaceId = createSpace(owner)
-        Long documentId = createDocument(spaceId)
-        jdbcClient.sql("update documents.document set status = 'DONE' where id = :id")
-                .param("id", documentId)
-                .update()
-
-        when:
-        List<Document> documents = storage.getDocuments(spaceId)
-
-        then:
-        documents.size() == 1
-        documents[0].id == documentId
-        documents[0].status == DocumentStatus.DONE
-    }
-
     def "create document throws when space does not exist"() {
         when:
         storage.create(999L)

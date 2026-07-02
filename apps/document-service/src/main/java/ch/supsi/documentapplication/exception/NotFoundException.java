@@ -12,6 +12,10 @@ public class NotFoundException extends ApplicationException {
         return new NotFoundException(format("Space with id %d not found", spaceId));
     }
 
+    public static NotFoundException documentNotFoundException(Long documentId) {
+        return new NotFoundException(format("Document with id %d not found", documentId));
+    }
+
     public static NotFoundException spaceOrDocumentNotFoundException(Long spaceId, Long documentId) {
         return new NotFoundException(format("Space with id %d or document %d not found", spaceId, documentId));
     }

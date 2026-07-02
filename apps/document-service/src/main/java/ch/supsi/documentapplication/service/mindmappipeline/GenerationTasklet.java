@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
@@ -18,6 +19,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -77,16 +79,19 @@ public class GenerationTasklet implements Tasklet {
         Long mapId = databaseSpaceStorage.createMindMap(space);
 
         if (topics.isEmpty()) {
-            databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
+            contribution.setExitStatus(ExitStatus.FAILED);
             return RepeatStatus.FINISHED;
         }
-        databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.GENERATING);
 
-        MindMap mindMap = mindMapClient.extractMindMap(topics);
+        MindMap mindMap;
+
+        try {
+            mindMap = mindMapClient.extractMindMap(topics);
+        } catch (RetryException e) {
+            return RepeatStatus.FINISHED;
+        }
 
         databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMap);
-
-        databaseSpaceStorage.updateMindMapStatus(spaceId, MindMapStatus.DONE);
 
         return RepeatStatus.FINISHED;
     }

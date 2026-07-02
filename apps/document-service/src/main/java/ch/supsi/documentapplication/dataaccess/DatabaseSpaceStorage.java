@@ -15,7 +15,6 @@ import org.springframework.stereotype.Repository;
 @Log4j2
 public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSpaceStorage {
 
-    public static final String STATUS = "status";
     private static final String ID = "id";
     private static final String NAME = "name";
     private static final String ICON = "icon";
@@ -72,17 +71,6 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
     @Override
     public MindMap readMindMap(Long spaceId) {
-        MindMapStatus status;
-        try {
-            status = MindMapStatus.valueOf(jdbcClient
-                    .sql("SELECT documents.read_mind_map_status(:space_id)")
-                    .param(SPACE_ID, spaceId)
-                    .query(String.class)
-                    .single());
-        } catch (DataAccessException e) {
-            return null;
-        }
-
         List<MindMapRow> rows = jdbcClient
                 .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
@@ -90,7 +78,6 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .list();
 
         MindMap mindMap = new MindMap();
-        mindMap.setMindMapStatus(status);
 
         if (rows.isEmpty()) {
             mindMap.setRoot(null);
@@ -132,16 +119,6 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         } catch (DataAccessException e) {
             throw UnauthorizedException.userNotAuthorizedToReadSpaces(owner);
         }
-    }
-
-    @Override
-    public void updateMindMapStatus(Long spaceId, MindMapStatus status) {
-        jdbcClient
-                .sql("SELECT documents.update_mind_map_status(:space_id, CAST(:status AS documents.mind_map_status))")
-                .param(SPACE_ID, spaceId)
-                .param(STATUS, status.name())
-                .query()
-                .singleValue();
     }
 
     @Override
