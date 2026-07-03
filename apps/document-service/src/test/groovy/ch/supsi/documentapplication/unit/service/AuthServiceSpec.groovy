@@ -4,7 +4,7 @@ package ch.supsi.documentapplication.unit.service
 import ch.supsi.documentapplication.dataaccess.IDatabaseUserStorage
 import ch.supsi.documentapplication.exception.UsernameTakenException
 import ch.supsi.documentapplication.model.User
-import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.configuration.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UsernameNotFoundException

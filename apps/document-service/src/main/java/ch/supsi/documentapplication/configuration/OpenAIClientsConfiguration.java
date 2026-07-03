@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.configuration;
 
+import ch.supsi.documentapplication.configuration.properties.PromptProperties;
 import ch.supsi.documentapplication.exception.PromptTemplateLoadException;
-import ch.supsi.documentapplication.properties.PromptProperties;
 import ch.supsi.documentapplication.service.MindMapValidator;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;

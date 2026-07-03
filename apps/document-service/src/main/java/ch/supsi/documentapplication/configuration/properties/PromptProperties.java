@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.properties;
+package ch.supsi.documentapplication.configuration.properties;
 
 import lombok.Getter;
 import lombok.Setter;

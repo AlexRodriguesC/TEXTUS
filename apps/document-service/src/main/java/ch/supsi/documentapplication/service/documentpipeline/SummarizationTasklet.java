@@ -1,9 +1,9 @@
 package ch.supsi.documentapplication.service.documentpipeline;
 
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
-import ch.supsi.documentapplication.properties.AppProperties;
 import ch.supsi.documentapplication.service.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient;
 import lombok.extern.log4j.Log4j2;

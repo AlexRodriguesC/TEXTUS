@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.properties;
+package ch.supsi.documentapplication.configuration.properties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class AppProperties {
 
+    private String providerModelsUrl;
+
     private int maxDocumentSize;
 
     private int maxChunksPerStep;
@@ -17,12 +19,6 @@ public class AppProperties {
     private int ocrThreshold;
 
     private String baseFilesystemPath;
-
-    private int maxRollingKeySize;
-
-    private int maxLLMFailures;
-
-    private int maxLLMMindMapFailures;
 
     private String secretKey;
 }

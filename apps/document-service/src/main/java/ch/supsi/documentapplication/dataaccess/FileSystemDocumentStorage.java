@@ -1,8 +1,8 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
-import ch.supsi.documentapplication.properties.AppProperties;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;

@@ -2,7 +2,7 @@ package ch.supsi.documentapplication.unit.controller
 
 import ch.supsi.documentapplication.controller.SpaceController
 import ch.supsi.documentapplication.model.Space
-import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.configuration.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ISpaceService
 import ch.supsi.documentapplication.service.document.IDocumentService
@@ -12,14 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
-import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.core.Authentication
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status

@@ -1,8 +1,7 @@
 package ch.supsi.documentapplication.unit.controller
 
 import ch.supsi.documentapplication.controller.DocumentController
-import ch.supsi.documentapplication.controller.SpaceController
-import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.configuration.properties.AppProperties
 import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ISpaceService
 import ch.supsi.documentapplication.service.document.IDocumentService

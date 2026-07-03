@@ -28,6 +28,12 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(@NotNull HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.contains("login") || path.contains("register");
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain)
             throws ServletException, IOException {

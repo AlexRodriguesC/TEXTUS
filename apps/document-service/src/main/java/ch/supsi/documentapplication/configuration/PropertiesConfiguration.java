@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.configuration;
 
-import ch.supsi.documentapplication.properties.AppProperties;
-import ch.supsi.documentapplication.properties.PromptProperties;
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
+import ch.supsi.documentapplication.configuration.properties.PromptProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

@@ -1,9 +1,9 @@
 package ch.supsi.documentapplication.service;
 
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IDatabaseUserStorage;
 import ch.supsi.documentapplication.exception.UsernameTakenException;
 import ch.supsi.documentapplication.model.User;
-import ch.supsi.documentapplication.properties.AppProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

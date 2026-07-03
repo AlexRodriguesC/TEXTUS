@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.controller;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentsResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
-import ch.supsi.documentapplication.properties.AppProperties;
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.service.document.IDocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -1,10 +1,9 @@
 package ch.supsi.documentapplication.unit.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.FileSystemDocumentStorage
-import ch.supsi.documentapplication.exception.DocumentDomainException
 import ch.supsi.documentapplication.exception.FileSystemException
 import ch.supsi.documentapplication.model.FsDocument
-import ch.supsi.documentapplication.properties.AppProperties
+import ch.supsi.documentapplication.configuration.properties.AppProperties
 import spock.lang.Specification
 import spock.lang.TempDir
 
