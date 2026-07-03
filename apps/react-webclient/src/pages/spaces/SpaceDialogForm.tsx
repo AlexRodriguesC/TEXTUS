@@ -91,7 +91,7 @@ function SpaceDialogForm({
         }}
       >
         {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
-        <DialogContent showCloseButton={false}>
+        <DialogContent onCloseAutoFocus={() => setOpen(false)} showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{descriptionText}</DialogDescription>

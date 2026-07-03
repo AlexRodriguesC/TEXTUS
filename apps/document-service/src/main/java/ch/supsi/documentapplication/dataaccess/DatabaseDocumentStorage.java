@@ -59,6 +59,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                     .optional()
                     .orElseThrow(() -> NotFoundException.spaceNotFoundException(spaceId));
         } catch (DataAccessException e) {
+            log.error("Database document creation failed", e);
             throw NotFoundException.spaceNotFoundException(spaceId);
         }
     }

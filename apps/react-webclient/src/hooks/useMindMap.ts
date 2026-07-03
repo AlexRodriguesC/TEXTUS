@@ -5,13 +5,20 @@ import {
   useGetMindMap,
   useGetMindMapJob,
 } from "@/api/generated/mind-maps/mind-maps.ts";
+import type {ErrorResponseDTO, MindMapJobDTO, MindMapResponseDTO, NodeDTO} from "@/api/model";
 
 function useMindMap(spaceId: number) {
   const { t } = useTranslation();
 
   const { data: mindMapData } = useGetMindMap(spaceId);
 
-  const mindMap = mindMapData?.data ?? undefined;
+  const maybeData = mindMapData?.data;
+  let mindMap: { nodes: NodeDTO[] } = { nodes: [] };
+
+  if (maybeData && isMindMapDTO(maybeData) && maybeData.nodes) {
+    mindMap = { nodes: maybeData.nodes };
+  }
+
 
   const extractMindMap = useExtractMindMap({
     mutation: {
@@ -27,7 +34,11 @@ function useMindMap(spaceId: number) {
   const { data } = useGetMindMapJob(spaceId, {
     query: {
       refetchInterval: (query) => {
-        const status = query.state.data?.data.status ?? "NOT_CREATED";
+        const data = query.state.data?.data;
+        if (!data || !isMindMapJobDTO(data)) {
+          return 2000;
+        }
+        const status = data.status;
         const done = status == "DONE";
         const canFetch =
           (mindMap != undefined && mindMap.nodes && mindMap.nodes.length > 0) ??
@@ -38,13 +49,25 @@ function useMindMap(spaceId: number) {
     },
   });
 
-  const status = data?.data.status ?? "NOT_CREATED";
+  let status = "NOT_CREATED";
+
+  if (data && isMindMapJobDTO(data.data)) {
+    status = data.data.status;
+  }
 
   return {
     extractMindMap,
     status,
     mindMap,
   };
+}
+
+function isMindMapJobDTO(data: ErrorResponseDTO | MindMapJobDTO): data is MindMapJobDTO {
+  return "status" in data;
+}
+
+function isMindMapDTO(data: ErrorResponseDTO | MindMapResponseDTO): data is MindMapResponseDTO {
+  return "nodes" in data;
 }
 
 export default useMindMap;

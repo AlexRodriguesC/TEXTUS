@@ -10,6 +10,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Log4j2
@@ -21,6 +22,9 @@ public class SetupTasklet extends ProcessingTasklet {
 
     private final IDatabaseDocumentStorage databaseDocumentStorage;
 
+    @Value("#{stepExecution.jobExecution.id}")
+    private Long executionId;
+
     @Autowired
     public SetupTasklet(IDatabaseDocumentStorage databaseDocumentStorage) {
         this.databaseDocumentStorage = databaseDocumentStorage;
@@ -29,8 +33,7 @@ public class SetupTasklet extends ProcessingTasklet {
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
 
-        var jobId = chunkContext.getStepContext().getJobInstanceId();
-        Long databaseDocId = databaseDocumentStorage.create(spaceId, jobId);
+        Long databaseDocId = databaseDocumentStorage.create(spaceId, executionId);
         chunkContext.getStepContext().getStepExecution().getExecutionContext().put(DATABASE_DOCUMENT_ID, databaseDocId);
 
         return RepeatStatus.FINISHED;

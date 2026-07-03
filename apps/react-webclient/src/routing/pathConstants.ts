@@ -1,4 +1,5 @@
 const PathConstants = {
+  NOT_FOUND: "/not-found",
   HOME: "/",
   LOGIN: "/login",
   REGISTER: "/register",

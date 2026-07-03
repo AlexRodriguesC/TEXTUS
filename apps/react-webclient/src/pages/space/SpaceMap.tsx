@@ -84,7 +84,6 @@ function getLayoutedElements(
         id: `${n.parentChunkId}-${n.chunkId}`,
         source: String(n.parentChunkId),
         target: nodeId,
-        type: "smooth",
         selectable: false,
       });
     }
@@ -99,12 +98,16 @@ function SpaceMap() {
   const { mindMap } = useMindMap(spaceId);
 
   const { data } = useGetTopics(spaceId);
-  const topics = data?.data?.topics ?? [];
+
+  let topics: TopicResponseDTO[] = []
+  if (data && data.data && "topics" in data.data) {
+    topics = data.data.topics;
+  }
 
   const { nodes: rfNodes, edges: rfEdges } = useMemo(() => {
     const nodes = mindMap?.nodes ?? [];
     return getLayoutedElements(nodes, "TB", topics);
-  }, [mindMap?.nodes]);
+  }, [mindMap?.nodes, topics]);
 
   return (
     <div style={{ width: "100%", height: "100%" }}>

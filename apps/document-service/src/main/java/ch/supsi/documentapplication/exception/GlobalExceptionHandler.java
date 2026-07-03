@@ -2,12 +2,14 @@ package ch.supsi.documentapplication.exception;
 
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Log4j2
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,6 +20,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handle(Exception e) {
+        log.error("Unhandled exception occurred", e);
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error"); // Exceptions could leak internal details...
     }

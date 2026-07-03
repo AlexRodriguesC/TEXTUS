@@ -1,4 +1,5 @@
 import { useGetDocuments } from "@/api/generated/documents/documents.ts";
+import type {DocumentsResponseDTO, ErrorResponseDTO} from "@/api/model";
 
 export interface Document {
   id: number;
@@ -8,19 +9,23 @@ export interface Document {
 function useDocuments(spaceId: number) {
   const { data: documentStatuses } = useGetDocuments(spaceId);
 
-  let documents: Document[] = [];
-
   if (
     documentStatuses &&
     documentStatuses.data &&
-    documentStatuses.data.documents
+    isDocumentResponseDTO(documentStatuses.data)
   ) {
-    documents = documentStatuses.data.documents;
+    return {documents: documentStatuses.data.documents};
   }
 
   return {
-    documents,
+    documents: [],
   };
+}
+
+function isDocumentResponseDTO(
+    data: DocumentsResponseDTO | ErrorResponseDTO
+): data is DocumentsResponseDTO {
+  return "documents" in data;
 }
 
 export default useDocuments;

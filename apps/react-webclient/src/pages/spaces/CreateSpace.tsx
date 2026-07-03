@@ -12,9 +12,10 @@ import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
 
 type CreateSpaceProps = {
   trigger: React.ReactNode;
+  onSuccess?: (spaceId: number) => void;
 };
 
-function CreateSpace({ trigger }: CreateSpaceProps) {
+function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const defaultName = t("spaces.add.defaultName");
@@ -26,7 +27,7 @@ function CreateSpace({ trigger }: CreateSpaceProps) {
 
   const createSpace = useCreateSpace({
     mutation: {
-      onSuccess: async () => {
+      onSuccess: async (resp) => {
         await queryClient.invalidateQueries({
           queryKey: getReadSpacesQueryKey(),
         });
@@ -34,6 +35,9 @@ function CreateSpace({ trigger }: CreateSpaceProps) {
         setIcon(defaultIcon);
         setName(defaultName);
         setDescription(defaultDescription);
+        if (onSuccess) {
+          onSuccess(resp.data.id)
+        }
       },
       onError: async () => {
         failureToastAction(

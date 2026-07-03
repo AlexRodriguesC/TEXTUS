@@ -2,6 +2,22 @@
   "textus": {
     "disclaimer": "TEXTUS può essere impreciso; si prega di ricontrollare le sue risposte."
   },
+  "notfound": "Sembra che non ci sia niente qui. Ti sei perso?",
+  "tutorial": {
+    "show": "Clicca per mostrare il tutorial. Verrà mostrato negli spazi che non contengono documenti."
+  },
+  "intro": {
+    "title": "Benvenuto in TEXTUS",
+    "description": "TEXTUS trasforma qualsiasi documento in un'<bold>esperienza di apprendimento personalizzata</bold>. <bold>Caricalo e imparalo, a modo tuo.</bold>"
+  },
+  "upload": {
+    "title": "Carica i file",
+    "description": "È il momento di caricare qualche documento. Puoi caricare qualsiasi documento in formato PDF. Hai caricato il documento sbagliato? Nessun problema: potrai eliminarlo alla fine di questo tutorial."
+  },
+  "start": {
+    "title": "Pronti, partenza, via!",
+    "description": "Sei pronto per iniziare il tuo percorso. Buono studio! Psst, se non hai ancora caricato nessun documento, torna indietro e caricalo prima di continuare."
+  },
   "profile": {
     "logged-as": "Accesso effettuato come {{username}}",
     "not-logged-in": "Non hai effettuato l'accesso"
@@ -40,6 +56,9 @@
     "account": "Ho già un account"
   },
   "space": {
+    "stepper": {
+      "prerequisite":  "Carica almeno un documento prima di continuare"
+    },
     "icon": "Icona",
     "name": "Nome",
     "description": "Descrizione"
@@ -77,6 +96,9 @@
     }
   },
   "button": {
+    "start": "Iniziamo!",
+    "next": "Avanti",
+    "back": "Indietro",
     "add": "Aggiungi",
     "retry": "Riprova",
     "update": "Aggiorna",

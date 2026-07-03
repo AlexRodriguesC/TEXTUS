@@ -2,6 +2,22 @@
   "textus": {
     "disclaimer": "TEXTUS can be inaccurate; please double-check its responses"
   },
+  "notfound": "Looks like there's nothing here. Lost your way?",
+  "tutorial": {
+    "show": "Click to show the tutorial. It will be shown on spaces that have no documents in them."
+  },
+  "intro": {
+    "title": "Welcome to TEXTUS",
+    "description": "TEXTUS turns any document into a <bold>personalised learning experience</bold>. <bold>Upload it and learn it, your way.</bold>"
+  },
+  "upload": {
+    "title": "Upload files",
+    "description": "Time to upload some documents. You can upload any document in PDF format. Uploaded the wrong document? No worries, you can delete it at the end of this tutorial."
+  },
+  "start": {
+    "title": "Ready, set, go!",
+    "description": "You're ready to start your journey. Happy learning! Psst, if you haven't uploaded any documents yet, go back and do that first."
+  },
   "profile": {
     "logged-as": "Logged in as {{username}}",
     "not-logged-in": "Not logged in"
@@ -40,6 +56,21 @@
     "account": "I already have an account"
   },
   "space": {
+    "stepper": {
+      "prerequisite": "Please upload at least one document before continuing",
+      "introduction": {
+        "title": "Introduction",
+        "description": "Spaces 101"
+      },
+      "upload": {
+        "title": "Upload",
+        "description": ""
+      },
+      "start": {
+        "title": "Start",
+        "description": ""
+      }
+    },
     "icon": "Icon",
     "name": "Name",
     "description": "Description"
@@ -77,6 +108,9 @@
     }
   },
   "button": {
+    "start": "Let's go!",
+    "next": "Next",
+    "back": "Back",
     "add": "Add",
     "retry": "Retry",
     "update": "Update",
