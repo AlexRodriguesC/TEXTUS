@@ -8,6 +8,7 @@ import ch.supsi.documentapplication.model.*;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
@@ -64,6 +65,7 @@ public class DocumentService implements IDocumentService {
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("DOCUMENT_ID", fsDocument.getDocumentId().toString())
+                .addString("DOCUMENT_NAME", documentMultipart.getOriginalFilename())
                 .addLong(SPACE_ID, space.getId())
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
@@ -104,15 +106,28 @@ public class DocumentService implements IDocumentService {
     public void deleteDocument(String owner, Long spaceId, Long documentId) {
         var space = getSpaceOrThrow(owner, spaceId);
         var documents = databaseDocumentStorage.getDocuments(space.getId());
-        var documentExists =
-                documents.stream().anyMatch(document -> document.getId().equals(documentId));
-        if (!documentExists) {
+        var document = documents.stream()
+                .filter(doc -> doc.getId().equals(documentId))
+                .findFirst()
+                .orElse(null);
+        if (document == null) {
             throw NotFoundException.documentNotFoundException(documentId);
         }
 
         var mindMap = spaceStorage.readMindMap(spaceId);
         if (!mindMap.isEmpty()) {
             throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
+        }
+
+        JobExecution jobExecution = jobRepository.getJobExecution(document.getJobId());
+        if (jobExecution != null && jobExecution.isRunning()) {
+            try {
+                jobOperator.stop(jobExecution);
+            } catch (Exception e) {
+                String message = String.format("Failed to stop job %s", document.getJobId());
+                log.error(message, e);
+            }
+            log.info("Stopped job {} for document {}", document.getJobId(), document.getId());
         }
 
         databaseDocumentStorage.deleteDocument(spaceId, documentId);

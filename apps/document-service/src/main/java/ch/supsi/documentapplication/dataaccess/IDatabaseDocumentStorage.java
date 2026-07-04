@@ -7,7 +7,7 @@ public interface IDatabaseDocumentStorage {
 
     Long create(Page page, Long spaceId, Long documentId);
 
-    Long create(Long spaceId, Long jobId);
+    Long create(Long spaceId, Long jobId, String documentName);
 
     List<Document> getDocuments(Long spaceId);
 

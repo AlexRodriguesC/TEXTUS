@@ -1,16 +1,14 @@
 import { useParams } from "@tanstack/react-router";
 
 function useSpaceId() {
-  const { spaceId } = useParams({
+  const params = useParams({
     from: "/main/spaces/$spaceId",
-    select: (val) => {
-      const num = Number(val.spaceId);
-      if (isNaN(num)) throw new Error("Invalid spaceId");
-      return { spaceId: num };
-    },
-  });
+    shouldThrow: false,
+  })
 
-  return { spaceId };
+  const numericSpaceId = params?.spaceId ? Number(params.spaceId) : undefined
+
+  return { spaceId: numericSpaceId };
 }
 
 export default useSpaceId;

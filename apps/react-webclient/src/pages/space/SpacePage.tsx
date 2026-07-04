@@ -1,8 +1,6 @@
-import useDocuments from "@/hooks/useDocuments.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
-import {useMemo} from "react";
 import { useTranslation } from "react-i18next";
 import EmptySpace from "@/pages/space/EmptySpace.tsx";
 import useTutorial from "@/hooks/useTutorial.tsx";
@@ -15,14 +13,13 @@ function SpacePage() {
   const { spaces } = useSpaces();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { documents } = useDocuments(spaceId);
   const { tutorialEnabled, disableTutorial } = useTutorial()
 
   if (!spaces.find(s => s.spaceId === spaceId)) {
     navigate({to: PathConstants.NOT_FOUND})
   }
 
-  if (documents.length == 0 || tutorialEnabled) {
+  if (tutorialEnabled) {
     return (
       <div className={"min-w-[75%] md:min-w-[50%] lg:min-w-[50%]"}>
         <EmptySpace onCompleted={() => {
@@ -33,21 +30,21 @@ function SpacePage() {
   }
 
   return (
-    <CenteredPage>
-      <div className={"w-full h-full pt-8 pb-8"}>
-        <div className="flex flex-col lg:flex-row gap-4 h-full w-full">
-          {/* Main content */}
-          <div className="flex-1 w-full">
-            <SpaceMap />
+      <CenteredPage>
+        <div className={"w-full h-full pt-8 pb-8"}>
+          <div className="flex flex-col lg:flex-row gap-4 h-full w-full">
+            {/* Main content */}
+            <div className="flex-1 w-full">
+              <SpaceMap />
+            </div>
+          </div>
+          <div className={"w-full h-fit"}>
+            <p className={"text-muted-foreground text-xs place-self-center text-center"}>
+              {t("textus.disclaimer")}
+            </p>
           </div>
         </div>
-        <div className={"w-full h-fit"}>
-          <p className={"text-muted-foreground text-xs place-self-center"}>
-            {t("textus.disclaimer")}
-          </p>
-        </div>
-      </div>
-    </CenteredPage>
+      </CenteredPage>
   );
 }
 

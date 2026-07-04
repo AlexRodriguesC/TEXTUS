@@ -114,6 +114,7 @@
     }
   },
   "document": {
+    "delete": "Eliminare il documento {{documentName}}?",
     "status": {
       "tooltip": {
         "received": "Questi documenti sono stati ricevuti correttamente e sono ora in attesa di essere elaborati",
@@ -149,6 +150,11 @@
     "add-space": "Aggiungi spazio",
     "navigation": "Navigazione",
     "home": "Home",
-    "spaces": "Spazi"
+    "spaces": "Spazi",
+    "mind-map": {
+      "generate": "Genera mappa mentale",
+      "generating": "Generazione mappa mentale in corso",
+      "re-generate": "Rigenera mappa mentale"
+    }
   }
 }

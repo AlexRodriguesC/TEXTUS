@@ -75,6 +75,7 @@ public class SegmentationTasklet extends ProcessingTasklet {
                 stripper.setEndPage(page);
 
                 String rawPageText = stripper.getText(pdfDocument);
+
                 String pageText = normalizePageText(rawPageText);
 
                 contents.add(pageText);

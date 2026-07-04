@@ -11,8 +11,10 @@ function ProtectedRoute({ children }: PropsWithChildren) {
   const navigate = useNavigate();
 
   if (!isAuthenticated) {
-    navigate({ to: PathConstants.LOGIN });
-    successToast(t("general.logout"));
+    navigate({ to: PathConstants.LOGIN }).then(
+        () => successToast(t("general.logout"))
+    );
+
   }
 
   return <>{children}</>;

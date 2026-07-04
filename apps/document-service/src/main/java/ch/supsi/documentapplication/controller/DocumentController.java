@@ -53,7 +53,7 @@ public class DocumentController {
             @Parameter(hidden = true) Authentication authentication) {
         String owner = authentication.getName();
         var statuses = documentService.getDocuments(owner, spaceId);
-        var statusesDto = statuses.stream().map(s -> new DocumentResponseDTO(s.getId(), s.getStatus())).toList();
+        var statusesDto = statuses.stream().map(s -> new DocumentResponseDTO(s.getName(), s.getId(), s.getStatus())).toList();
         return ResponseEntity.ok(new DocumentsResponseDTO(statusesDto));
     }
 

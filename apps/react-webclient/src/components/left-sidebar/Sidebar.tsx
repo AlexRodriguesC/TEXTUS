@@ -6,15 +6,13 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
+  SidebarMenu, SidebarTrigger,
 } from "@/components/ui/sidebar.tsx";
-import SidebarLogo from "@/components/sidebar/SidebarLogo.tsx";
-import SidebarSpaces from "@/components/sidebar/SidebarSpaces.tsx";
-import SidebarHome from "@/components/sidebar/SidebarHome.tsx";
+import SidebarSpaces from "@/components/left-sidebar/SidebarSpaces.tsx";
+import SidebarHome from "@/components/left-sidebar/SidebarHome.tsx";
 import { useTranslation } from "react-i18next";
-import SidebarSettings from "@/components/sidebar/SidebarSettings.tsx";
-import SidebarSpaceInfo from "@/components/sidebar/SidebarSpaceInfo.tsx";
-import SidebarAddSpace from "@/components/sidebar/SidebarAddSpace.tsx";
+import SidebarSettings from "@/components/left-sidebar/SidebarSettings.tsx";
+import SidebarAddSpace from "@/components/left-sidebar/SidebarAddSpace.tsx";
 
 export function AppSidebar() {
   const { t } = useTranslation();
@@ -22,7 +20,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarLogo />
+        <SidebarTrigger/>
       </SidebarHeader>
       <SidebarContent>
         <SidebarAddSpace />
@@ -35,7 +33,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarSpaceInfo />
       </SidebarContent>
       <SidebarFooter>
         <SidebarSettings />

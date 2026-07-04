@@ -66,6 +66,9 @@ Do not describe your reasoning.
 Do not output the checklist.
 Do not output intermediate work.
 Return only the final JSON object.
+When writing string values, never use double quotes (") inside the text.
+Use single quotes or rewrite the sentence to avoid quoting words entirely.
+Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
 
 INPUT_TOPICS:
 <topics>

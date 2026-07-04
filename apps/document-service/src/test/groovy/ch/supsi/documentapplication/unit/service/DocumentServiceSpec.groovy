@@ -104,8 +104,8 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         Optional<Space> space = buildOptSpace(spaceId, owner)
         List<Document> documents = [
-                new Document(1, 2),
-                new Document(2, 3)
+                new Document("abc", 1, 2),
+                new Document("abc", 2, 3)
         ]
 
         when:

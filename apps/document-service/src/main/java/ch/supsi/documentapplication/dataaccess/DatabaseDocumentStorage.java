@@ -22,6 +22,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public static final String SUMMARY = "summary";
     public static final String KEY = "key";
     public static final String JOB_ID = "job_id";
+    public static final String DOCUMENT_NAME = "document_name";
 
     @Autowired
     public DatabaseDocumentStorage(JdbcClient jdbcClient) {
@@ -49,12 +50,13 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public Long create(Long spaceId, Long jobId) {
+    public Long create(Long spaceId, Long jobId, String documentName) {
         try {
             return jdbcClient
-                    .sql("SELECT documents.create_document(:space_id, :job_id)")
+                    .sql("SELECT documents.create_document(:space_id, :job_id, :document_name)")
                     .param(SPACE_ID, spaceId)
                     .param(JOB_ID, jobId)
+                    .param(DOCUMENT_NAME, documentName)
                     .query(Long.class)
                     .optional()
                     .orElseThrow(() -> NotFoundException.spaceNotFoundException(spaceId));
@@ -69,7 +71,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbcClient
                 .sql("SELECT * FROM documents.read_documents(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new Document(rs.getLong(ID), rs.getLong(JOB_ID)))
+                .query((rs, rowNum) -> new Document(rs.getString("name"), rs.getLong(ID), rs.getLong(JOB_ID)))
                 .list();
     }
 
@@ -78,7 +80,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbcClient
                 .sql("SELECT * FROM documents.read_pages(:document_id)")
                 .param(DOCUMENT_ID, documentId)
-                .query((rs, rowNum) -> new Page(rs.getLong("id"), rs.getString("title"), rs.getString("summary")))
+                .query((rs, rowNum) -> new Page(rs.getLong(ID), rs.getString("title"), rs.getString("summary")))
                 .list();
     }
 

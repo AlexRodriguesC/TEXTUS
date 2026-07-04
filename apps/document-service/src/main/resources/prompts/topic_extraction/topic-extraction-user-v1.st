@@ -22,3 +22,7 @@ Output only a JSON array in this format:
     "summary": "factual summary with direct statements only"
   }
 ]
+
+When writing string values, never use double quotes (") inside the text.
+Use single quotes or rewrite the sentence to avoid quoting words entirely.
+Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`

@@ -1,4 +1,5 @@
 import { useReadSpaces } from "@/api/generated/spaces/spaces.ts";
+import {useAuth} from "@/hooks/useAuth.ts";
 
 export interface ISpace {
   spaceId: number;
@@ -8,7 +9,12 @@ export interface ISpace {
 }
 
 function useSpaces() {
-  const { data } = useReadSpaces();
+  const { isAuthenticated } = useAuth();
+  const { data } = useReadSpaces({
+    query: {
+      enabled: isAuthenticated
+    }
+  });
   let spaces: ISpace[] = [];
 
   if (data && data.data) {

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION documents.create_document(p_space_id BIGINT, p_job_id BIGINT)
+CREATE OR REPLACE FUNCTION documents.create_document(p_space_id BIGINT, p_job_id BIGINT, p_name TEXT)
     RETURNS BIGINT
     LANGUAGE plpgsql
 AS
@@ -13,7 +13,7 @@ $$
             RAISE EXCEPTION 'Space with id % not found', p_space_id;
         END IF;
 
-        INSERT INTO documents.document(space_id, job_id) VALUES (p_space_id, p_job_id) RETURNING id INTO v_document_id;
+        INSERT INTO documents.document(space_id, job_id, name) VALUES (p_space_id, p_job_id, p_name) RETURNING id INTO v_document_id;
 
         RETURN v_document_id;
     END;

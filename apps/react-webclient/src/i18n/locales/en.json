@@ -126,6 +126,7 @@
     }
   },
   "document": {
+    "delete": "Delete document {{documentName}}?",
     "status": {
       "tooltip": {
         "received": "These documents were received successfully and are now waiting to be processed",
@@ -162,6 +163,11 @@
     "space": "Space {{spaceId}}",
     "navigation": "Navigation",
     "home": "Home",
-    "spaces": "Spaces"
+    "spaces": "Spaces",
+    "mind-map": {
+      "generate": "Generate Mind Map",
+      "generating": "Generating Mind Map",
+      "re-generate": "Regenerate Mind Map"
+    }
   }
 }

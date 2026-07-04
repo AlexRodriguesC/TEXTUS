@@ -25,6 +25,9 @@ public class SetupTasklet extends ProcessingTasklet {
     @Value("#{stepExecution.jobExecution.id}")
     private Long executionId;
 
+    @Value("#{jobParameters['DOCUMENT_NAME']}")
+    private String documentName;
+
     @Autowired
     public SetupTasklet(IDatabaseDocumentStorage databaseDocumentStorage) {
         this.databaseDocumentStorage = databaseDocumentStorage;
@@ -33,7 +36,7 @@ public class SetupTasklet extends ProcessingTasklet {
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
 
-        Long databaseDocId = databaseDocumentStorage.create(spaceId, executionId);
+        Long databaseDocId = databaseDocumentStorage.create(spaceId, executionId, documentName);
         chunkContext.getStepContext().getStepExecution().getExecutionContext().put(DATABASE_DOCUMENT_ID, databaseDocId);
 
         return RepeatStatus.FINISHED;

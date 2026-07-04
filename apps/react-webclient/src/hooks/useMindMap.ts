@@ -5,12 +5,19 @@ import {
   useGetMindMap,
   useGetMindMapJob,
 } from "@/api/generated/mind-maps/mind-maps.ts";
-import type {ErrorResponseDTO, MindMapJobDTO, MindMapResponseDTO, NodeDTO} from "@/api/model";
+import type {ErrorResponseDTO, MindMapJobDTO, MindMapJobDTOStatus, MindMapResponseDTO, NodeDTO} from "@/api/model";
 
-function useMindMap(spaceId: number) {
+type MindMapStatus = MindMapJobDTOStatus
+
+function useMindMap(spaceId: number | undefined) {
   const { t } = useTranslation();
 
-  const { data: mindMapData } = useGetMindMap(spaceId);
+  const { data: mindMapData } = useGetMindMap(spaceId ?? -1, {
+    query:
+        {
+          enabled: spaceId != undefined
+        }
+  });
 
   const maybeData = mindMapData?.data;
   let mindMap: { nodes: NodeDTO[] } = { nodes: [] };
@@ -31,25 +38,21 @@ function useMindMap(spaceId: number) {
     },
   });
 
-  const { data } = useGetMindMapJob(spaceId, {
+  const { data } = useGetMindMapJob(spaceId ?? -1, {
     query: {
       refetchInterval: (query) => {
-        const data = query.state.data?.data;
-        if (!data || !isMindMapJobDTO(data)) {
-          return 2000;
-        }
-        const status = data.status;
-        const done = status == "DONE";
-        const canFetch =
-          (mindMap != undefined && mindMap.nodes && mindMap.nodes.length > 0) ??
-          false;
-        return done || !canFetch ? false : 2000;
+        const jobData = query.state.data?.data
+        if (!jobData || !isMindMapJobDTO(jobData)) return 2000
+        const done = jobData.status === "DONE"
+        const hasNodes = mindMap.nodes.length > 0
+        return done || hasNodes ? false : 2000
       },
       refetchIntervalInBackground: true,
+      enabled: spaceId != undefined
     },
   });
 
-  let status = "NOT_CREATED";
+  let status: MindMapStatus = "NOT_CREATED";
 
   if (data && isMindMapJobDTO(data.data)) {
     status = data.data.status;
