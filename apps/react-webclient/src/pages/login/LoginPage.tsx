@@ -10,133 +10,166 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import * as React from "react";
-import { Eye, EyeClosed, XIcon } from "lucide-react";
+import {Eye, EyeClosed, HomeIcon, XIcon} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
-import { useLogin } from "@/api/generated/authentication/authentication.ts";
-import { Spinner } from "@/components/ui/spinner.tsx";
+import {
+  type loginResponse,
+  type loginResponseSuccess,
+  useLogin
+} from "@/api/generated/authentication/authentication.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
 import type { ApiError } from "@/api/mutator.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 
+function isSuccessResponse(resp: loginResponse): resp is loginResponseSuccess {
+  return "data" in resp && "token" in resp.data;
+}
+
 function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mutate, isPending, isError, isSuccess, data, error } =
+  const { mutate, } =
     useLogin<ApiError>();
   const { login } = useAuth();
 
   const [isPasswordShown, setIsPasswordShown] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState<number | undefined>(undefined);
 
   const handleLogin = () => {
-    mutate({ data: { username: username, password: password } });
+    mutate({ data: { username: username, password: password }, }, {
+      onSuccess: (resp) => {
+        if (!isSuccessResponse(resp)) {
+          return;
+        }
+        login({ username, token: resp.data.token });
+        navigate({ to: PathConstants.HOME }).then(() => {
+          successToast(t("login.success"));
+        })
+      },
+      onError: (resp) => {
+        setError(resp.status);
+      }
+    });
   };
 
-  React.useEffect(() => {
-    if (!isSuccess || !data) return;
-
-    login({ username, token: data.data.token });
-
-    navigate({ to: PathConstants.HOME });
-    successToast(t("login.success"));
-  }, [isSuccess, data, username, login, navigate]);
-
-  if (isPending || isSuccess) {
-    return (
-      <CenteredPage>
-        <Card>
-          <CardContent className={"flex flex-row items-center gap-8"}>
-            <Spinner></Spinner>
-            <div>{t("login.loading")}</div>
-          </CardContent>
-        </Card>
-      </CenteredPage>
-    );
+  const reset = () => {
+    setError(undefined);
+    setUsername("");
+    setPassword("");
   }
 
-  if (isError) {
-    if (error.status == 404) {
-      return (
+  if (error == 404) {
+    return (
         <CenteredPage>
           <Card className={"flex flex-col items-center"}>
             <CardContent className={"flex flex-row items-center gap-8"}>
               <XIcon color={"red"} />
               <div>{t("login.wrong-credentials")}</div>
             </CardContent>
-            <CardFooter>
-              <Button asChild onClick={handleLogin}>
+            <CardFooter className={"flex flex-col gap-2"}>
+              <Button variant={"default"} asChild>
+                <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
+              </Button>
+              <Button className={"w-full"} variant={"secondary"} onClick={() => navigate({to: PathConstants.HOME})}>
+                {t("general.go-home")}
+              </Button>
+            </CardFooter>
+          </Card>
+        </CenteredPage>
+    );
+  } else if (error === 401) {
+    return (
+        <CenteredPage>
+          <Card>
+            <CardContent className={"flex flex-row items-center gap-8"}>
+              <XIcon color={"red"} />
+              <div>{t("login.wrong-credentials")}</div>
+            </CardContent>
+            <CardFooter className={"flex flex-col gap-2"}>
+              <Button variant={"default"} onClick={() => reset()}>{t("login.try-with-other")}</Button>
+              <Button variant={"secondary"} className={"w-full"} asChild>
                 <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
               </Button>
             </CardFooter>
           </Card>
         </CenteredPage>
-      );
-    }
+    );
+  } else if (error) {
     return (
-      <CenteredPage>
-        <Card>
-          <CardContent className={"flex flex-row items-center gap-8"}>
-            <XIcon color={"red"} />
-            <div>{t("login.wrong")}</div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={handleLogin}>Try again</Button>
-          </CardFooter>
-        </Card>
-      </CenteredPage>
+        <CenteredPage>
+          <Card>
+            <CardContent className={"flex flex-row items-center gap-8"}>
+              <XIcon color={"red"} />
+              <div>{t("login.wrong")}</div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleLogin}>{t("button.retry")}</Button>
+              <Button variant={"secondary"} onClick={() => reset()}>{t("login.try-with-other")}</Button>
+            </CardFooter>
+          </Card>
+        </CenteredPage>
     );
   }
+
 
   return (
     <CenteredPage>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{t("login.info")}</CardTitle>
-          <CardDescription>{t("login.sub")}</CardDescription>
+          <div className={"flex justify-end pt-0"}>
+            <Link to={PathConstants.HOME}>
+              <HomeIcon size={20} style={{color: "var(--muted-foreground)"}}/>
+            </Link>
+          </div>
+          <div>
+            <CardTitle>{t("login.info")}</CardTitle>
+            <CardDescription>{t("login.sub")}</CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin();
+              }}
           >
             <div className="flex flex-col gap-8">
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="john.doe@textus.com"
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
+                      id="email"
+                      type="email"
+                      placeholder="john.doe@textus.com"
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="flex flex-row items-center relative">
                     <Input
-                      id="password"
-                      type={isPasswordShown ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10 p-2"
+                        id="password"
+                        type={isPasswordShown ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pr-10 p-2"
                     />
                     <button
-                      type="button"
-                      onClick={() => setIsPasswordShown((prev) => !prev)}
-                      className="absolute right-3 text-muted-foreground"
+                        type="button"
+                        onClick={() => setIsPasswordShown((prev) => !prev)}
+                        className="absolute right-3 text-muted-foreground"
                     >
                       {isPasswordShown ? (
-                        <Eye size={16} />
+                          <Eye size={16} />
                       ) : (
-                        <EyeClosed size={16} />
+                          <EyeClosed size={16} />
                       )}
                     </button>
                   </div>

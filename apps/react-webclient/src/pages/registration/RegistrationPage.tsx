@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { SubmitEvent } from "react";
+import {type SubmitEvent, useState} from "react";
 import * as React from "react";
 import {
   Card,
@@ -10,12 +10,15 @@ import {
 } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Eye, EyeClosed } from "lucide-react";
+import {Eye, EyeClosed, HomeIcon} from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useRegister } from "@/api/generated/authentication/authentication.ts";
-import { Spinner } from "@/components/ui/spinner.tsx";
+import {
+  type registerResponseError,
+  type registerResponseSuccess,
+  useRegister
+} from "@/api/generated/authentication/authentication.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
 import type { ApiError } from "@/api/mutator.ts";
@@ -23,19 +26,40 @@ import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.ts
 import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
 
+
+function hasToken(data: registerResponseSuccess | registerResponseError): data is registerResponseSuccess {
+  return "data" in data && "token" in data;
+}
+
 function RegistrationPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mutate, isPending, isError, isSuccess, data, error, reset } =
+  const { mutate } =
     useRegister<ApiError>();
   const { login } = useAuth();
 
   const [isPasswordShown, setIsPasswordShown] = React.useState(false);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [error, setError] = useState<number | undefined>(undefined);
 
   const register = () => {
-    mutate({ data: { username, password } });
+    mutate({ data: { username, password } }, {
+      onSuccess: (resp) => {
+        if (!hasToken(resp)) {
+          return;
+        }
+
+        login({ username, token: resp.data.token });
+
+        navigate({ to: PathConstants.HOME }).then(() => {
+          successToast(t("registration.success"));
+        });
+      },
+      onError: (err) => {
+        setError(err.status);
+      }
+    });
   };
 
   const handleSubmit = (e: SubmitEvent) => {
@@ -43,31 +67,11 @@ function RegistrationPage() {
     register();
   };
 
-  React.useEffect(() => {
-    if (!isSuccess || !data) return;
-
-    login({ username, token: data.data.token });
-
-    navigate({ to: PathConstants.HOME });
-    successToast(t("registration.success"));
-  }, [isSuccess, data, username, login]);
-
-  if (isPending || isSuccess) {
-    return (
-      <CenteredPage>
-        <Card>
-          <CardContent className={"flex flex-row items-center gap-8"}>
-            <Spinner></Spinner>
-            <div>{t("registration.loading")}</div>
-          </CardContent>
-        </Card>
-      </CenteredPage>
-    );
-  }
-
-  if (isError) {
-    if (error.status == 409)
-      return <UserAlreadyExistsCard reset={() => reset()} />;
+  if (error == 409) {
+    return <UserAlreadyExistsCard reset={() => {
+      setError(undefined);
+    }} />;
+  } else if (error) {
     return <InternalServerErrorCard />;
   }
 
@@ -75,8 +79,15 @@ function RegistrationPage() {
     <CenteredPage>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{t("registration.info")}</CardTitle>
-          <CardDescription>{t("registration.sub")}</CardDescription>
+          <div className={"flex justify-end pt-0"}>
+            <Link to={PathConstants.HOME}>
+              <HomeIcon size={20} style={{color: "var(--muted-foreground)"}}/>
+            </Link>
+          </div>
+          <div>
+            <CardTitle>{t("registration.info")}</CardTitle>
+            <CardDescription>{t("registration.sub")}</CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>

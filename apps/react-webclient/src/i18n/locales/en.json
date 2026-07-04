@@ -35,6 +35,9 @@
     }
   },
   "login": {
+    "register": "Register",
+    "try-with-other": "Try with different credentials",
+    "wrong-credentials": "Invalid username or password",
     "login": "Login",
     "loading": "Logging in...",
     "success": "Login successful",

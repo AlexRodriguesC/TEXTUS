@@ -10,12 +10,12 @@ import PathConstants from "@/routing/pathConstants.ts";
 
 function SpacePage() {
   const { spaceId } = useSpaceId();
-  const { spaces } = useSpaces();
+  const { spaces, isLoading } = useSpaces();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { tutorialEnabled, disableTutorial } = useTutorial()
 
-  if (!spaces.find(s => s.spaceId === spaceId)) {
+  if (!isLoading && !spaces.find(s => s.spaceId === spaceId)) {
     navigate({to: PathConstants.NOT_FOUND})
   }
 

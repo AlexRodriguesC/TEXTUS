@@ -10,7 +10,7 @@ export interface ISpace {
 
 function useSpaces() {
   const { isAuthenticated } = useAuth();
-  const { data } = useReadSpaces({
+  const { data, isLoading } = useReadSpaces({
     query: {
       enabled: isAuthenticated
     }
@@ -21,7 +21,7 @@ function useSpaces() {
     spaces = data.data;
   }
 
-  return { spaces };
+  return { spaces, isLoading };
 }
 
 export default useSpaces;

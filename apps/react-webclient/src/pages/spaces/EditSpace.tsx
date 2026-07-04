@@ -54,7 +54,7 @@ function EditSpace({
 
   return (
     <SpaceDialogForm
-      id={"edit"}
+      id={`edit${spaceId}`}
       trigger={trigger}
       title={t("spaces.update.title")}
       descriptionText={t("spaces.update.description")}
