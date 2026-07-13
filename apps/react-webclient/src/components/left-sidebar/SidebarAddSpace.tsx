@@ -35,7 +35,7 @@ function SidebarAddSpace() {
               <SidebarMenu>
                 <SidebarMenuItem key="space_info">
                   <div
-                      className={`flex ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
+                      className={`flex ${open ? "flex-row justify-between items-center" : "flex-col items-center"}`}
                   >
                     <SidebarMenuButton asChild tooltip={t("sidebar.add-space")}>
                       {!open &&

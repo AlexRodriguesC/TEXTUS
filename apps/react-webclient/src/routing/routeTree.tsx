@@ -8,6 +8,9 @@ import HomePage from "@/pages/HomePage.tsx";
 import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
 import SpacePage from "@/pages/space/SpacePage.tsx";
 import ProtectedRoute from "@/pages/ProtectedRoute.tsx";
+import SpaceMenu from "@/pages/space/SpaceMenu.tsx";
+import SpaceChat from "@/pages/space/SpaceChat.tsx";
+import SpaceMap from "@/pages/space/SpaceMap.tsx";
 
 // Single root route - no layout here
 const rootRoute = createRootRoute({
@@ -78,6 +81,36 @@ const spaceRoute = createRoute({
   component: SpacePage,
 });
 
+const spaceMenuRoute = createRoute({
+  getParentRoute: () => spaceRoute,
+  path: PathConstants.SPACE_MENU,
+  component: () => (
+      <SpacePage>
+        <SpaceMenu/>
+      </SpacePage>
+  )
+})
+
+const spaceChatRoute = createRoute({
+  getParentRoute: () => spaceRoute,
+  path: PathConstants.SPACE_CHAT,
+  component: () => (
+      <SpacePage>
+        <SpaceChat/>
+      </SpacePage>
+  )
+})
+
+const spaceMapRoute = createRoute({
+  getParentRoute: () => spaceRoute,
+  path: PathConstants.SPACE_MIND_MAP,
+  component: () => (
+      <SpacePage>
+        <SpaceMap/>
+      </SpacePage>
+  )
+})
+
 const notFoundRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.NOT_FOUND,
@@ -88,4 +121,5 @@ export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([homeRoute, notFoundRoute]),
   authRoute.addChildren([loginRoute, registerRoute]),
   protectedRoute.addChildren([spacesRoute, spaceRoute]),
+  spaceRoute.addChildren([spaceMenuRoute, spaceChatRoute, spaceMapRoute])
 ]);

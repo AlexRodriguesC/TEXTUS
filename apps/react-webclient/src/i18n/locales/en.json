@@ -23,6 +23,9 @@
     "not-logged-in": "Not logged in"
   },
   "general": {
+    "title": "Title",
+    "summary": "Summary",
+    "wrong": "Something went wrong",
     "logout": "You were logged out of your account. Please log in again",
     "user-already-exists": "The specified username is already taken",
     "try-another-username": "Try with another username",
@@ -144,10 +147,10 @@
       "title": "Start by uploading documents",
       "description": "Documents represent the knowledge on which the learning path will be based. For best results, upload coherent documents on the same subject; otherwise, the path may not be coherent.",
       "helper": "Select up to 20 documents",
-      "dropzoneTitle": "Select documents",
-      "dropzoneDescription": "Click here or drag and drop to select",
+      "dropzoneTitle": "Upload documents",
+      "dropzoneDescription": "Click here or drag and drop to upload",
       "cta": "Upload",
-      "success": "Document {{fileName}} selected successfully."
+      "success": "Document {{fileName}} uploaded successfully."
     },
     "delete": {
       "success": "Documented {{fileName}} removed successfully."
@@ -163,6 +166,20 @@
     }
   },
   "sidebar": {
+    "actions": {
+      "map": {
+        "label": "Mind Map",
+        "tooltip": "Generate a mind map based on the provided sources"
+      },
+      "learn": {
+        "label": "Learn",
+        "tooltip": "Generate a learning path based on the provided sources"
+      },
+      "chat": {
+        "label": "Chat",
+        "tooltip": "Open a chat to interact with an AI based on your documents"
+      }
+    },
     "add-space": "Add space",
     "space": "Space {{spaceId}}",
     "navigation": "Navigation",

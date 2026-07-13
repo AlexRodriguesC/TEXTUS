@@ -2,7 +2,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import * as React from "react";
-import {Eye, EyeClosed, HomeIcon, XIcon} from "lucide-react";
+import {Eye, EyeClosed, HomeIcon} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
@@ -23,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
 import type { ApiError } from "@/client/mutator.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
+import {ErrorCard} from "@/components/ErrorCard.tsx";
 
 function isSuccessResponse(resp: loginResponse): resp is loginResponseSuccess {
   return "data" in resp && "token" in resp.data;
@@ -63,56 +63,38 @@ function LoginPage() {
     setPassword("");
   }
 
-  if (error == 404) {
+  if (error === 404) {
     return (
-        <CenteredPage>
-          <Card className={"flex flex-col items-center"}>
-            <CardContent className={"flex flex-row items-center gap-8"}>
-              <XIcon color={"red"} />
-              <div>{t("login.wrong-credentials")}</div>
-            </CardContent>
-            <CardFooter className={"flex flex-col gap-2"}>
-              <Button variant={"default"} asChild>
-                <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
-              </Button>
-              <Button className={"w-full"} variant={"secondary"} onClick={() => navigate({to: PathConstants.HOME})}>
-                {t("general.go-home")}
-              </Button>
-            </CardFooter>
-          </Card>
-        </CenteredPage>
+        <ErrorCard messageKey="login.wrong-credentials">
+          <Button variant="default" asChild>
+            <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
+          </Button>
+          <Button className="w-full" variant="secondary" onClick={() => navigate({ to: PathConstants.HOME })}>
+            {t("general.go-home")}
+          </Button>
+        </ErrorCard>
     );
   } else if (error === 401) {
     return (
-        <CenteredPage>
-          <Card>
-            <CardContent className={"flex flex-row items-center gap-8"}>
-              <XIcon color={"red"} />
-              <div>{t("login.wrong-credentials")}</div>
-            </CardContent>
-            <CardFooter className={"flex flex-col gap-2"}>
-              <Button variant={"default"} onClick={() => reset()}>{t("login.try-with-other")}</Button>
-              <Button variant={"secondary"} className={"w-full"} asChild>
-                <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        </CenteredPage>
+        <ErrorCard messageKey="login.wrong-credentials">
+          <Button variant="default" onClick={() => reset()}>
+            {t("login.try-with-other")}
+          </Button>
+          <Button variant="secondary" className="w-full" asChild>
+            <Link to={PathConstants.REGISTER}>{t("login.register")}</Link>
+          </Button>
+        </ErrorCard>
     );
   } else if (error) {
     return (
-        <CenteredPage>
-          <Card>
-            <CardContent className={"flex flex-row items-center gap-8"}>
-              <XIcon color={"red"} />
-              <div>{t("login.wrong")}</div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleLogin}>{t("button.retry")}</Button>
-              <Button variant={"secondary"} onClick={() => reset()}>{t("login.try-with-other")}</Button>
-            </CardFooter>
-          </Card>
-        </CenteredPage>
+        <ErrorCard messageKey="login.wrong">
+          <Button className="w-full" onClick={handleLogin}>
+            {t("button.retry")}
+          </Button>
+          <Button variant="secondary" onClick={() => reset()}>
+            {t("login.try-with-other")}
+          </Button>
+        </ErrorCard>
     );
   }
 

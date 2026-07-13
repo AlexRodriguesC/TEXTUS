@@ -9,6 +9,8 @@ import {
 import { ApiError } from "@/client/mutator.ts";
 import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 import TutorialContextProvider from "@/provider/TutorialContextProvider.tsx";
+import RightSidebarOpenProvider from "@/provider/RightSidebarOpenProvider.tsx";
+import ViewModeProvider from "@/provider/ViewModeProvider.tsx";
 
 const router = createRouter({ routeTree });
 
@@ -38,9 +40,13 @@ function App() {
   return (
     <QueryClientContext value={queryClient}>
       <SidebarOpenProvider>
-        <TutorialContextProvider>
-          <RouterProvider router={router} />
-        </TutorialContextProvider>
+        <RightSidebarOpenProvider>
+          <TutorialContextProvider>
+            <ViewModeProvider>
+              <RouterProvider router={router} />
+            </ViewModeProvider>
+          </TutorialContextProvider>
+        </RightSidebarOpenProvider>
       </SidebarOpenProvider>
     </QueryClientContext>
   );

@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import {useTranslation} from "react-i18next";
 
 interface NodeProps {
   completed: boolean;
@@ -17,6 +18,8 @@ interface NodeProps {
 }
 
 function Node({ completed = false, title, summary, children }: NodeProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -45,12 +48,12 @@ function Node({ completed = false, title, summary, children }: NodeProps) {
         <DialogHeader>
           <div className={"flex flex-col gap-4"}>
             <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-              title
+              {t("general.title")}
             </p>
             <>{title}</>
             <Separator orientation={"horizontal"} />
             <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-              summary
+              {t("general.summary")}
             </p>
             <>{summary}</>
           </div>

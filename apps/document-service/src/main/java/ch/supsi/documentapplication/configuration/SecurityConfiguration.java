@@ -42,7 +42,7 @@ public class SecurityConfiguration {
                 HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name(),
                 HttpMethod.PATCH.name()));
-        configuration.setAllowedOriginPatterns(List.of("https://textus-*.vercel.app"));
+        configuration.setAllowedOriginPatterns(List.of("https://textus-*.vercel.app", "http://localhost:*"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 

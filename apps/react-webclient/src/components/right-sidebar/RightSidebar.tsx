@@ -3,16 +3,18 @@ import {
     SidebarContent,
     SidebarFooter, SidebarGroup,
     SidebarHeader,
-    SidebarTrigger,
+    SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import {PanelRightIcon} from "lucide-react";
-import SidebarSpaceInfo from "@/components/left-sidebar/SidebarSpaceInfo.tsx";
+import SidebarSpaceInfo from "@/components/right-sidebar/SidebarSpaceInfo.tsx";
 import MindMapSidebarButton from "@/components/right-sidebar/MindMapSidebarButton.tsx";
 
 export function RightSidebar() {
+    const { state, openMobile } = useSidebar();
+    const open = state === "expanded" || openMobile;
 
   return (
-    <Sidebar collapsible="icon" side={"right"}>
+    <Sidebar collapsible="icon" side={"right"} >
       <SidebarHeader>
         <SidebarTrigger icon={<PanelRightIcon/>}/>
       </SidebarHeader>
@@ -21,7 +23,7 @@ export function RightSidebar() {
       </SidebarContent>
       <SidebarFooter>
           <SidebarGroup>
-              <MindMapSidebarButton/>
+              {open && <MindMapSidebarButton/>}
           </SidebarGroup>
       </SidebarFooter>
     </Sidebar>

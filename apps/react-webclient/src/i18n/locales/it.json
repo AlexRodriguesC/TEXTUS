@@ -23,6 +23,9 @@
     "not-logged-in": "Non hai effettuato l'accesso"
   },
   "general": {
+    "title": "Titolo",
+    "summary": "Riassunto",
+    "wrong": "Qualcosa è andato storto",
     "logout": "Sei stato disconnesso dal tuo account. Accedi di nuovo.",
     "user-already-exists": "Il nome utente specificato è già in uso",
     "try-another-username": "Prova con un altro nome utente",
@@ -132,10 +135,10 @@
       "title": "Inizia caricando i documenti",
       "description": "I documenti rappresentano la base di conoscenza su cui verrà costruito il percorso di apprendimento. Per risultati migliori, carica documenti coerenti sullo stesso argomento; altrimenti il percorso potrebbe non essere coerente.",
       "helper": "Seleziona fino a 20 documenti",
-      "dropzoneTitle": "Seleziona documenti",
-      "dropzoneDescription": "Clicca qui oppure trascina i file per selezionarli",
+      "dropzoneTitle": "Carica documenti",
+      "dropzoneDescription": "Clicca qui oppure trascina i file per caricarli",
       "cta": "Seleziona",
-      "success": "Documento {{fileName}} selezionato con successo."
+      "success": "Documento {{fileName}} caricato con successo."
     },
     "delete": {
       "success": "Documento {{fileName}} eliminato con successo."
@@ -151,6 +154,20 @@
     }
   },
   "sidebar": {
+    "actions": {
+      "map": {
+        "label": "Mappa Mentale",
+        "tooltip": "Genera una mappa mentale basata sulle fonti fornite"
+      },
+      "learn": {
+        "label": "Apprendi",
+        "tooltip": "Genera un percorso di apprendimento basato sulle fonti fornite"
+      },
+      "chat": {
+        "label": "Chat",
+        "tooltip": "Apri una chat per interagire con un'IA basata sui tuoi documenti"
+      }
+    },
     "add-space": "Aggiungi spazio",
     "navigation": "Navigazione",
     "home": "Home",

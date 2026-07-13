@@ -3,18 +3,17 @@ import { useTheme } from "@/hooks/useTheme.ts";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/left-sidebar/Sidebar.tsx";
-import {type PropsWithChildren} from "react";
+import {type PropsWithChildren, useRef} from "react";
 import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
 import { useMatches } from "@tanstack/react-router"
 import {RightSidebar} from "@/components/right-sidebar/RightSidebar.tsx";
-import {PanelLeftIcon, PanelRightIcon} from "lucide-react";
-import {Button} from "@/components/ui/button.tsx";
-import Logo from "@/components/left-sidebar/Logo.tsx";
 import * as React from "react";
 import useTutorial from "@/hooks/useTutorial.tsx";
+import LayoutHeader from "@/LayoutHeader.tsx";
+import useRightSidebarOpen from "@/hooks/useRightSidebarOpen.tsx";
+import RightSidebarToggle from "@/RightSidebarToggle.tsx";
 
 interface MainLayoutProps extends PropsWithChildren {
   sidebarEnabled: boolean;
@@ -26,6 +25,8 @@ export default function MainLayout({
 }: MainLayoutProps) {
   const { theme } = useTheme();
   const { open, setOpen } = useSidebarOpen();
+  const { open: leftOpen, setOpen: setLeftOpen } = useSidebarOpen();
+  const { open: rightOpen, setOpen: setRightOpen } = useRightSidebarOpen();
 
   return (
     <MeshGradientBackground
@@ -39,7 +40,10 @@ export default function MainLayout({
     >
       {sidebarEnabled ? (
       <SidebarProvider open={open} onOpenChange={setOpen}>
-        <LayoutInner open={open} setOpen={setOpen}>
+        <LayoutInner
+            leftOpen={leftOpen} setLeftOpen={setLeftOpen}
+            rightOpen={rightOpen} setRightOpen={setRightOpen}
+        >
           {children}
         </LayoutInner>
       </SidebarProvider>
@@ -50,79 +54,40 @@ export default function MainLayout({
   );
 }
 
-function LayoutInner({ open, setOpen, children }: {
-  open: boolean
-  setOpen: (v: boolean) => void
+function LayoutInner({
+                       leftOpen, setLeftOpen,
+                       rightOpen, setRightOpen,
+                       children,
+                     }: {
+  leftOpen: boolean
+  setLeftOpen: (v: boolean) => void
+  rightOpen: boolean
+  setRightOpen: (v: boolean) => void
   children: React.ReactNode
 }) {
   const matches = useMatches();
-  const isOnSpaceRoute = matches.some(
-      (m) => m.routeId === "/main/spaces/$spaceId"
-  )
-  const { isMobile, setOpenMobile, openMobile } = useSidebar();
+  const isOnSpaceRoute = matches.some((m) => m.routeId === "/main/spaces/$spaceId");
   const { tutorialEnabled } = useTutorial();
+  const showRightSidebar = isOnSpaceRoute && !tutorialEnabled;
 
-  const toggleLeftSidebar = () => {
-    if (isMobile) {
-      setOpenMobile(!openMobile);
-    } else {
-      setOpen(!open);
-    }
-  };
+  const rightTogglePortalRef = useRef<HTMLDivElement>(null);
 
   return (
-      <>
+      <SidebarProvider open={leftOpen} onOpenChange={setLeftOpen}>
         <AppSidebar />
-        {isOnSpaceRoute && !tutorialEnabled ? (
-            <SidebarProvider>
-              <SidebarInset className="bg-transparent">
-                <div className="grid grid-cols-3 items-center gap-2 p-1 border-b bg-transparent">
-                  <div className="flex justify-start">
-                    {isMobile && (
-                        <Button className="shrink-0" variant="ghost" size="icon" onClick={toggleLeftSidebar}>
-                          <PanelLeftIcon />
-                        </Button>
-                    )}
-                  </div>
+        <SidebarInset className="bg-transparent flex flex-col flex-1 min-w-0 h-full">
+          <LayoutHeader showRightToggle={showRightSidebar} rightTogglePortalRef={rightTogglePortalRef} />
+          <main className="flex justify-center items-center h-full w-full min-w-0">
+            {children}
+          </main>
+        </SidebarInset>
 
-                  <div className="flex justify-center">
-                    <Logo />
-                  </div>
-
-                  <div className="flex justify-end">
-                    {isMobile && (
-                        <SidebarTrigger className="shrink-0">
-                          <PanelRightIcon />
-                        </SidebarTrigger>
-                    )}
-                  </div>
-                </div>
-                <main className="flex justify-center items-center h-full w-full">
-                  {children}
-                </main>
-              </SidebarInset>
+        {showRightSidebar && (
+            <SidebarProvider open={rightOpen} onOpenChange={setRightOpen} className="w-auto shrink-0">
+              <RightSidebarToggle containerRef={rightTogglePortalRef} />
               <RightSidebar />
             </SidebarProvider>
-        ) : (
-            <SidebarInset className="bg-transparent">
-              <div className="grid grid-cols-3 items-center gap-2 p-1 border-b bg-transparent">
-                <div className="flex justify-start">
-                  {isMobile && (
-                      <Button className="shrink-0" variant="ghost" size="icon" onClick={toggleLeftSidebar}>
-                        <PanelLeftIcon />
-                      </Button>
-                  )}
-                </div>
-
-                <div className="flex justify-center">
-                  <Logo />
-                </div>
-              </div>
-              <main className="flex justify-center items-center h-full w-full">
-                {children}
-              </main>
-            </SidebarInset>
         )}
-      </>
-  )
+      </SidebarProvider>
+  );
 }

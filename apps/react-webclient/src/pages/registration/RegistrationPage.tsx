@@ -47,6 +47,7 @@ function RegistrationPage() {
     mutate({ data: { username, password } }, {
       onSuccess: (resp) => {
         if (!hasToken(resp)) {
+          console.error("no token in registration response")
           return;
         }
 

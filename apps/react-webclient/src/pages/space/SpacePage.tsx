@@ -4,11 +4,12 @@ import useSpaces from "@/hooks/useSpaces.ts";
 import { useTranslation } from "react-i18next";
 import EmptySpace from "@/pages/space/EmptySpace.tsx";
 import useTutorial from "@/hooks/useTutorial.tsx";
-import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import {useNavigate} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 
-function SpacePage() {
+import type {PropsWithChildren} from "react";
+
+function SpacePage({children} : PropsWithChildren) {
   const { spaceId } = useSpaceId();
   const { spaces, isLoading } = useSpaces();
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ function SpacePage() {
           <div className="flex flex-col lg:flex-row gap-4 h-full w-full">
             {/* Main content */}
             <div className="flex-1 w-full">
-              <SpaceMap />
+              {children}
             </div>
           </div>
           <div className={"w-full h-fit"}>

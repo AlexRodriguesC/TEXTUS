@@ -1,16 +1,21 @@
 import { useTranslation } from "react-i18next";
 import PathConstants from "@/routing/pathConstants.ts";
-import ErrorCard from "@/pages/registration/ErrorCard.tsx";
+import {ErrorCard} from "@/components/ErrorCard.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {Link} from "@tanstack/react-router";
 
 function InternalServerErrorCard() {
   const { t } = useTranslation();
 
   return (
     <ErrorCard
-      title={t("general.internal-server-error")}
-      goTo={PathConstants.HOME}
-      goToLabel={t("general.wrong")}
-    ></ErrorCard>
+        messageKey={"general.wrong"}>
+      <Button variant={"default"} className={"w-full"} asChild>
+        <Link to={PathConstants.HOME}>
+          {t("general.go-home")}
+        </Link>
+      </Button>
+    </ErrorCard>
   );
 }
 

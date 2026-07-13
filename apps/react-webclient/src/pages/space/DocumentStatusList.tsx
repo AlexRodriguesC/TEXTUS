@@ -8,7 +8,7 @@ function DocumentStatusList() {
 
   return (
     <div className={"flex flex-row w-full justify-between items-center h-fit"}>
-      <div className={"flex flex-row w-full items-center gap-8"}>
+      <div className={"flex flex-col w-full items-center"}>
         {documents.map(doc => {
           return <SidebarDocumentInfo key={doc.id} document={doc}/>
         })}
