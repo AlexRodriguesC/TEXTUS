@@ -1,11 +1,9 @@
 services:
   db:
-    image: postgres:16
+    build:
+      context: .
+      dockerfile: database/database.Dockerfile
     container_name: postgresql
-    environment:
-      - POSTGRES_USER=appuser
-      - POSTGRES_PASSWORD=appsecret
-      - POSTGRES_DB=documents
     ports:
       - "5432:5432"
     volumes:
@@ -21,7 +19,9 @@ services:
     env_file:
       - path: ../../.env
         required: true
-    build: .
+    build:
+      context: .
+      dockerfile: spring.Dockerfile
     container_name: spring-backend
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/documents
