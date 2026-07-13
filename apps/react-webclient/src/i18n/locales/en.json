@@ -35,6 +35,7 @@
     }
   },
   "login": {
+    "wrong": "Something went wrong",
     "register": "Register",
     "try-with-other": "Try with different credentials",
     "wrong-credentials": "Invalid username or password",

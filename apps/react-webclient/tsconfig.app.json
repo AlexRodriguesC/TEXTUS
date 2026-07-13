@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "skipDefaultLibCheck": true,
     "paths": {
       "@/*": ["./src/*"]
     },

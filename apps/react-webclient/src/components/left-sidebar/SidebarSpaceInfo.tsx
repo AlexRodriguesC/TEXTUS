@@ -87,7 +87,7 @@ function SidebarSpaceInfo() {
                               {(file.file.size / (1024 * 1024)).toFixed(2)} MB
                             </p>
                           </div>
-                          <DropzoneRemoveFile variant="ghost" children={<Trash2 className="size-4" color={"red"} />} />
+                          <DropzoneRemoveFile children={<Trash2 className="size-4" color={"red"} />} />
                         </DropzoneFileListItem>
                     ))}
                   </DropzoneFileList>

@@ -35,7 +35,6 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
@@ -43,6 +42,7 @@ public class SecurityConfiguration {
                 HttpMethod.DELETE.name(),
                 HttpMethod.OPTIONS.name(),
                 HttpMethod.PATCH.name()));
+        configuration.setAllowedOriginPatterns(List.of("https://textus-*.vercel.app"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
@@ -59,6 +59,7 @@ public class SecurityConfiguration {
             RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers(
+                                "/actuator/**",
                                 "/api/v1/auth/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

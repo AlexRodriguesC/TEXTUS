@@ -1,5 +1,5 @@
 app = 'database-billowing-dew-1309'
-primary_region = 'lhr'
+primary_region = 'fra'
 
 [build]
   dockerfile = "database.Dockerfile"

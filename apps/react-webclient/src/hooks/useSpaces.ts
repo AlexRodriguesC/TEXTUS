@@ -1,4 +1,4 @@
-import { useReadSpaces } from "@/api/generated/spaces/spaces.ts";
+import { useReadSpaces } from "@/client/generated/spaces/spaces.ts";
 import {useAuth} from "@/hooks/useAuth.ts";
 
 export interface ISpace {

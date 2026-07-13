@@ -18,10 +18,10 @@ import {
   type registerResponseError,
   type registerResponseSuccess,
   useRegister
-} from "@/api/generated/authentication/authentication.ts";
+} from "@/client/generated/authentication/authentication.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
-import type { ApiError } from "@/api/mutator.ts";
+import type { ApiError } from "@/client/mutator.ts";
 import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.tsx";
 import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";

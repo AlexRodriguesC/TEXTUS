@@ -1,6 +1,5 @@
 import { Handle, type NodeProps, Position } from "@xyflow/react";
 import Node from "@/pages/space/Node.tsx";
-import { useState } from "react";
 
 function MapNode({ data }: NodeProps) {
   const hideHandle = {

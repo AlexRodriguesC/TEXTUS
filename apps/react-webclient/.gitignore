@@ -23,5 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-src/api/generated/
-src/api/model/
+src/client/generated/
+src/client/model/
+
+.env.development
+.env.production
+.vercel
+.env*

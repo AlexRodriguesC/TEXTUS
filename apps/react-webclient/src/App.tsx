@@ -6,7 +6,7 @@ import {
   QueryClient,
   QueryClientContext,
 } from "@tanstack/react-query";
-import { ApiError } from "@/api/mutator.ts";
+import { ApiError } from "@/client/mutator.ts";
 import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 import TutorialContextProvider from "@/provider/TutorialContextProvider.tsx";
 

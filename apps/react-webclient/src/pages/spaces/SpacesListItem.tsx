@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   getReadSpacesQueryKey,
   useDeleteSpace,
-} from "@/api/generated/spaces/spaces.ts";
+} from "@/client/generated/spaces/spaces.ts";
 import { failureToastAction, successToast } from "@/lib/toasts.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";

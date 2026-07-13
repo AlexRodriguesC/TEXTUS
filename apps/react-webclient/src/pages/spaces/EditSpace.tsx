@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   getReadSpacesQueryKey,
   useUpdateSpace,
-} from "@/api/generated/spaces/spaces.ts";
+} from "@/client/generated/spaces/spaces.ts";
 import { failureToastAction, successToast } from "@/lib/toasts.ts";
 import { Button } from "@base-ui/react";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";

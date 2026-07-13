@@ -1,23 +1,27 @@
-import { defineConfig } from "orval";
+import { defineConfig } from 'orval';
+import { loadEnv } from 'vite';
+
+const mode = process.env.NODE_ENV || 'development';
+const env = loadEnv(mode, process.cwd(), 'VITE_');
 
 export default defineConfig({
   textus: {
     input: {
-      target: "http://localhost:8080/v3/api-docs",
+      target: `${env.VITE_API_BASE_URL}/v3/api-docs`,
     },
     output: {
-      mode: "tags-split", // one file per API tag
-      target: "src/api/generated",
-      schemas: "src/api/model",
-      client: "react-query",
+      mode: 'tags-split',
+      target: 'src/client/generated',
+      schemas: 'src/client/model',
+      client: 'react-query',
       clean: true,
       override: {
         mutator: {
-          path: "src/api/mutator.ts",
-          name: "customInstance",
+          path: 'src/client/mutator.ts',
+          name: 'customInstance',
         },
         query: {
-          version: 5, // TanStack Query v5
+          version: 5,
         },
       },
     },

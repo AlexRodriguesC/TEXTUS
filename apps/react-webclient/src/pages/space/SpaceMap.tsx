@@ -1,5 +1,5 @@
 import useMindMap from "@/hooks/useMindMap.ts";
-import type { NodeDTO, TopicResponseDTO } from "@/api/model";
+import type { NodeDTO, TopicResponseDTO } from "@/client/model";
 import { useMemo } from "react";
 import {
   Controls,
@@ -12,7 +12,7 @@ import { useTheme } from "@/hooks/useTheme.ts";
 import MapNode from "@/pages/space/MapNode.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import dagre from "dagre";
-import { useGetTopics } from "@/api/generated/topics/topics.ts";
+import { useGetTopics } from "@/client/generated/topics/topics.ts";
 
 const nodeTypes = { mapNode: MapNode };
 
@@ -97,7 +97,11 @@ function SpaceMap() {
   const { theme } = useTheme();
   const { mindMap } = useMindMap(spaceId);
 
-  const { data } = useGetTopics(spaceId);
+  const { data } = useGetTopics(spaceId ?? 0, {
+    query: {
+      enabled: spaceId !== undefined,
+    },
+  });
 
   let topics: TopicResponseDTO[] = []
   if (data && data.data && "topics" in data.data) {

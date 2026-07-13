@@ -1,5 +1,4 @@
 import {StepperContent} from "@/components/reui/stepper.tsx";
-import * as React from "react";
 import {DotLottieReact} from "@lottiefiles/dotlottie-react";
 import {Trans, useTranslation} from "react-i18next";
 

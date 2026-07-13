@@ -35,6 +35,7 @@
     }
   },
   "login": {
+    "wrong": "Qualcosa è andato storto",
     "register": "Registrati",
     "try-with-other": "Prova con altre credenziali",
     "wrong-credentials": "Username o password non validi",

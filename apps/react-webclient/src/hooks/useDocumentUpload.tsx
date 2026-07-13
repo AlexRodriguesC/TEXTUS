@@ -6,11 +6,11 @@ import { failureToast, failureToastAction, successToast } from "@/lib/toasts.ts"
 import {
     getGetDocumentsQueryKey,
     useCreateDocument,
-} from "@/api/generated/documents/documents.ts";
+} from "@/client/generated/documents/documents.ts";
 import { Button } from "@/components/ui/button.tsx";
 
 interface UseDocumentUploadOptions {
-    spaceId: number;
+    spaceId: number | undefined;
 }
 
 export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
@@ -21,6 +21,7 @@ export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
     const uploadDocument = useCreateDocument({
         mutation: {
             onSuccess: async () => {
+                if (spaceId === undefined) return;
                 await queryClient.invalidateQueries({
                     queryKey: getGetDocumentsQueryKey(spaceId),
                 });
@@ -30,12 +31,17 @@ export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
                 failureToastAction(
                     t("spaces.upload.error"),
                     <Button onClick={submitUpload}>{t("button.retry")}</Button>,
-            );
+                );
             },
         },
     });
 
     const submitUpload = () => {
+        if (spaceId === undefined) {
+            failureToast(t("spaces.upload.noSpace"));
+            return;
+        }
+
         if (!files || files.length === 0) {
             failureToast(t("spaces.upload.none"));
             return;

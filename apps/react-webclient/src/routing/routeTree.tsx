@@ -78,8 +78,14 @@ const spaceRoute = createRoute({
   component: SpacePage,
 });
 
+const notFoundRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: PathConstants.NOT_FOUND,
+  component: NotFoundPage,
+});
+
 export const routeTree = rootRoute.addChildren([
-  publicRoute.addChildren([homeRoute]),
+  publicRoute.addChildren([homeRoute, notFoundRoute]),
   authRoute.addChildren([loginRoute, registerRoute]),
   protectedRoute.addChildren([spacesRoute, spaceRoute]),
 ]);

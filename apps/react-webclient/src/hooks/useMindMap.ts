@@ -4,8 +4,8 @@ import {
   useExtractMindMap,
   useGetMindMap,
   useGetMindMapJob,
-} from "@/api/generated/mind-maps/mind-maps.ts";
-import type {ErrorResponseDTO, MindMapJobDTO, MindMapJobDTOStatus, MindMapResponseDTO, NodeDTO} from "@/api/model";
+} from "@/client/generated/mind-maps/mind-maps.ts";
+import type {ErrorResponseDTO, MindMapJobDTO, MindMapJobDTOStatus, MindMapResponseDTO, NodeDTO} from "@/client/model";
 
 type MindMapStatus = MindMapJobDTOStatus
 

@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import {
   getReadSpacesQueryKey,
   useCreateSpace,
-} from "@/api/generated/spaces/spaces.ts";
+} from "@/client/generated/spaces/spaces.ts";
 import { failureToastAction, successToast } from "@/lib/toasts.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";

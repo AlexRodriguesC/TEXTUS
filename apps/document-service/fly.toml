@@ -1,5 +1,5 @@
 app = 'document-service-shimmering-cherry-7591'
-primary_region = 'lhr'
+primary_region = 'fra'
 
 [build]
   dockerfile = "spring.Dockerfile"
@@ -13,15 +13,25 @@ primary_region = 'lhr'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
+
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "15s"
+  method = "GET"
+  timeout = "10s"
+  path = "/actuator/health"
+
+[[services.ports]]
+  port = 8080
 
 [[mounts]]
   source = "documentdata"
-  destination = "documents"
+  destination = "/app/documents"
 
 [[vm]]
-  memory = '1gb'
+  memory = '4gb'
   cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 1024
+  cpus = 4
+  memory_mb = 4096

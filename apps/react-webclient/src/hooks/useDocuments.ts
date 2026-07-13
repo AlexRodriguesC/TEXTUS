@@ -1,5 +1,5 @@
-import {getGetDocumentsQueryKey, useDeleteDocument, useGetDocuments} from "@/api/generated/documents/documents.ts";
-import type {DocumentResponseDTOStatus, DocumentsResponseDTO, ErrorResponseDTO} from "@/api/model";
+import {getGetDocumentsQueryKey, useDeleteDocument, useGetDocuments} from "@/client/generated/documents/documents.ts";
+import type {DocumentResponseDTOStatus, DocumentsResponseDTO, ErrorResponseDTO} from "@/client/model";
 import {successToast} from "@/lib/toasts.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
