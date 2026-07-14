@@ -23,7 +23,7 @@ function SidebarAddSpace() {
   const open = state === "expanded" || openMobile;
 
   const navigateToSpace = useCallback((spaceId: number) => {
-    navigate({to: PathConstants.SPACE, params: {spaceId: String(spaceId)}})
+    navigate({to: PathConstants.SPACE_MENU, params: {spaceId: String(spaceId)}})
   }, [navigate])
 
   return (

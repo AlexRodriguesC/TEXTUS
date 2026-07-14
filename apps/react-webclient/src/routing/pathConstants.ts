@@ -4,10 +4,10 @@ const PathConstants = {
   LOGIN: "/login",
   REGISTER: "/register",
   SPACES: "/spaces",
-  SPACE: "/spaces/$spaceId",
   SPACE_MENU: "/spaces/$spaceId/menu",
   SPACE_CHAT: "/spaces/$spaceId/chat",
-  SPACE_MIND_MAP: "/spaces/$spaceId/mind_map"
+  SPACE_MIND_MAP: "/spaces/$spaceId/mind_map",
+  SPACE_LEARN: "/spaces/$spaceId/learn"
 } as const;
 
 export default PathConstants;

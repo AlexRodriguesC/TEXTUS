@@ -4,28 +4,22 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem, SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
-import { useTranslation } from "react-i18next";
 import useSpaces from "@/hooks/useSpaces.ts";
 import { Emoji } from "emoji-picker-react";
-import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
-import useTutorial from "@/hooks/useTutorial.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-import {GraduationCap, MessagesSquare, Workflow} from "lucide-react";
+import {GraduationCap, Menu, MessagesSquare, Workflow} from "lucide-react";
 import SidebarAction from "@/components/right-sidebar/SidebarAction.tsx";
-import useViewMode from "@/hooks/useViewMode.ts";
 import RightSidebarBreadcrumbs from "@/components/right-sidebar/RightSidebarBreadcrumbs.tsx";
+import PathConstants from "@/routing/pathConstants.ts";
 
 function SidebarSpaceInfo() {
   const { spaceId } = useSpaceId();
   const { state, openMobile } = useSidebar();
   const open = state === "expanded" || openMobile;
-  const { t } = useTranslation();
   const spaces = useSpaces();
-  const { tutorialEnabled, enableTutorial } = useTutorial();
-  const { setViewMode } = useViewMode();
 
 
   if (!spaceId) {
@@ -43,21 +37,15 @@ function SidebarSpaceInfo() {
       <SidebarGroupLabel>
         <div className="flex flex-row items-center justify-between gap-2 w-sm">
           <RightSidebarBreadcrumbs space={space} />
-          <span className="flex items-center h-[2em] leading-none overflow-hidden">
-      {!tutorialEnabled && (
-          <InformationQuestionMark
-              size={16}
-              onClick={enableTutorial}
-              tooltip={t("tutorial.show")}
-          />
-      )}
-    </span>
+
         </div>
       </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarAction onClick={() => setViewMode("chat")} icon={<MessagesSquare/>} labelKey={"sidebar.actions.chat.label"} tooltipKey={"sidebar.actions.chat.tooltip"}/>
-        <SidebarAction onClick={() => setViewMode("mind-map")} icon={<Workflow/>} labelKey={"sidebar.actions.map.label"} tooltipKey={"sidebar.actions.map.tooltip"} backgroundColor="#2f2733"/>
-        <SidebarAction onClick={() => setViewMode("learning")} icon={<GraduationCap/>} labelKey={"sidebar.actions.learn.label"} tooltipKey={"sidebar.actions.learn.tooltip"} backgroundColor="#E9ECFC"/>
+      <SidebarGroupContent className={"flex flex-col items-center"}>
+        <SidebarAction icon={<Menu/>} labelKey={"sidebar.actions.menu.label"} tooltipKey={"sidebar.actions.menu.tooltip"} to={PathConstants.SPACE_MENU}/>
+        <SidebarSeparator className={"mt-2 mb-2"}/>
+        <SidebarAction to={PathConstants.SPACE_CHAT} icon={<MessagesSquare/>} labelKey={"sidebar.actions.chat.label"} tooltipKey={"sidebar.actions.chat.tooltip"}/>
+        <SidebarAction to={PathConstants.SPACE_MIND_MAP} icon={<Workflow/>} labelKey={"sidebar.actions.map.label"} tooltipKey={"sidebar.actions.map.tooltip"} backgroundColor="#2f2733"/>
+        <SidebarAction to={PathConstants.SPACE_LEARN} icon={<GraduationCap/>} labelKey={"sidebar.actions.learn.label"} tooltipKey={"sidebar.actions.learn.tooltip"} backgroundColor="#E9ECFC"/>
       </SidebarGroupContent>
 
       <SidebarGroupContent>

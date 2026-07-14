@@ -2,11 +2,10 @@ import { useParams } from "@tanstack/react-router";
 
 function useSpaceId() {
   const params = useParams({
-    from: "/main/spaces/$spaceId",
-    shouldThrow: false,
-  })
+    strict: false,
+  });
 
-  const numericSpaceId = params?.spaceId ? Number(params.spaceId) : undefined
+  const numericSpaceId = params?.spaceId ? Number(params.spaceId) : undefined;
 
   return { spaceId: numericSpaceId };
 }

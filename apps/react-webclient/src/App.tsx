@@ -10,7 +10,6 @@ import { ApiError } from "@/client/mutator.ts";
 import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 import TutorialContextProvider from "@/provider/TutorialContextProvider.tsx";
 import RightSidebarOpenProvider from "@/provider/RightSidebarOpenProvider.tsx";
-import ViewModeProvider from "@/provider/ViewModeProvider.tsx";
 
 const router = createRouter({ routeTree });
 
@@ -42,9 +41,7 @@ function App() {
       <SidebarOpenProvider>
         <RightSidebarOpenProvider>
           <TutorialContextProvider>
-            <ViewModeProvider>
-              <RouterProvider router={router} />
-            </ViewModeProvider>
+            <RouterProvider router={router} />
           </TutorialContextProvider>
         </RightSidebarOpenProvider>
       </SidebarOpenProvider>

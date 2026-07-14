@@ -166,6 +166,10 @@
       "chat": {
         "label": "Chat",
         "tooltip": "Apri una chat per interagire con un'IA basata sui tuoi documenti"
+      },
+      "menu": {
+        "label": "Menu",
+        "tooltip": "Vai al menu per gestire i tuoi documenti"
       }
     },
     "add-space": "Aggiungi spazio",

@@ -52,7 +52,7 @@ function SpacesListItem({ spaceId, icon, name, description }: SpacesListItem) {
       className="flex flex-row items-center justify-between border border-border p-4 hover:bg-muted/25 transition-colors"
     >
       <Link
-        to={PathConstants.SPACE}
+        to={PathConstants.SPACE_MENU}
         params={{ spaceId: String(spaceId) }}
         className="flex flex-1 flex-row items-center gap-4"
       >

@@ -7,13 +7,13 @@ import {
 import { AppSidebar } from "@/components/left-sidebar/Sidebar.tsx";
 import {type PropsWithChildren, useRef} from "react";
 import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
-import { useMatches } from "@tanstack/react-router"
 import {RightSidebar} from "@/components/right-sidebar/RightSidebar.tsx";
 import * as React from "react";
 import useTutorial from "@/hooks/useTutorial.tsx";
 import LayoutHeader from "@/LayoutHeader.tsx";
 import useRightSidebarOpen from "@/hooks/useRightSidebarOpen.tsx";
 import RightSidebarToggle from "@/RightSidebarToggle.tsx";
+import useSpaceId from "@/hooks/useSpaceId.ts";
 
 interface MainLayoutProps extends PropsWithChildren {
   sidebarEnabled: boolean;
@@ -65,10 +65,9 @@ function LayoutInner({
   setRightOpen: (v: boolean) => void
   children: React.ReactNode
 }) {
-  const matches = useMatches();
-  const isOnSpaceRoute = matches.some((m) => m.routeId === "/main/spaces/$spaceId");
-  const { tutorialEnabled } = useTutorial();
-  const showRightSidebar = isOnSpaceRoute && !tutorialEnabled;
+    const { spaceId } = useSpaceId();
+    const { tutorialEnabled } = useTutorial();
+    const showRightSidebar = spaceId !== undefined && !tutorialEnabled;
 
   const rightTogglePortalRef = useRef<HTMLDivElement>(null);
 

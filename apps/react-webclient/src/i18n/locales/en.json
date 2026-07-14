@@ -178,6 +178,10 @@
       "chat": {
         "label": "Chat",
         "tooltip": "Open a chat to interact with an AI based on your documents"
+      },
+      "menu": {
+        "label": "Menu",
+        "tooltip": "Go to the menu to manage your documents"
       }
     },
     "add-space": "Add space",

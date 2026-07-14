@@ -6,13 +6,12 @@ import PathConstants from "./pathConstants";
 import MainLayout from "../MainLayout";
 import HomePage from "@/pages/HomePage.tsx";
 import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
-import SpacePage from "@/pages/space/SpacePage.tsx";
 import ProtectedRoute from "@/pages/ProtectedRoute.tsx";
 import SpaceMenu from "@/pages/space/SpaceMenu.tsx";
 import SpaceChat from "@/pages/space/SpaceChat.tsx";
 import SpaceMap from "@/pages/space/SpaceMap.tsx";
+import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 
-// Single root route - no layout here
 const rootRoute = createRootRoute({
   notFoundComponent: NotFoundPage,
 });
@@ -75,40 +74,28 @@ const spacesRoute = createRoute({
   component: SpacesPage,
 });
 
-const spaceRoute = createRoute({
-  getParentRoute: () => protectedRoute,
-  path: PathConstants.SPACE,
-  component: SpacePage,
-});
-
 const spaceMenuRoute = createRoute({
-  getParentRoute: () => spaceRoute,
+  getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MENU,
-  component: () => (
-      <SpacePage>
-        <SpaceMenu/>
-      </SpacePage>
-  )
+  component: SpaceMenu
 })
 
 const spaceChatRoute = createRoute({
-  getParentRoute: () => spaceRoute,
+  getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_CHAT,
-  component: () => (
-      <SpacePage>
-        <SpaceChat/>
-      </SpacePage>
-  )
+  component: SpaceChat
 })
 
 const spaceMapRoute = createRoute({
-  getParentRoute: () => spaceRoute,
+  getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MIND_MAP,
-  component: () => (
-      <SpacePage>
-        <SpaceMap/>
-      </SpacePage>
-  )
+  component: SpaceMap
+})
+
+const spaceLearnRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: PathConstants.SPACE_LEARN,
+  component: SpaceLearn
 })
 
 const notFoundRoute = createRoute({
@@ -120,6 +107,5 @@ const notFoundRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([homeRoute, notFoundRoute]),
   authRoute.addChildren([loginRoute, registerRoute]),
-  protectedRoute.addChildren([spacesRoute, spaceRoute]),
-  spaceRoute.addChildren([spaceMenuRoute, spaceChatRoute, spaceMapRoute])
+  protectedRoute.addChildren([spacesRoute, spaceMenuRoute, spaceChatRoute, spaceMapRoute, spaceLearnRoute]),
 ]);

@@ -7,24 +7,29 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useTranslation } from "react-i18next";
-import useViewMode from "@/hooks/useViewMode.ts";
-import {Emoji} from "emoji-picker-react";
-import type {ISpace} from "@/hooks/useSpaces.ts";
+import { Emoji } from "emoji-picker-react";
+import type { ISpace } from "@/hooks/useSpaces.ts";
+import { Link, useMatches } from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
 
 interface RightSidebarBreadcrumbsProps {
     space: ISpace;
 }
 
-const viewModeLabelKeys: Record<string, string> = {
-    "chat": "sidebar.actions.chat.label",
-    "mind-map": "sidebar.actions.map.label",
-    "learning-path": "sidebar.actions.learn.label",
+const viewLabelKeys: Record<string, string> = {
+    [PathConstants.SPACE_CHAT]: "sidebar.actions.chat.label",
+    [PathConstants.SPACE_MIND_MAP]: "sidebar.actions.map.label",
 };
 
 function RightSidebarBreadcrumbs({ space }: RightSidebarBreadcrumbsProps) {
     const { t } = useTranslation();
-    const { viewMode, setViewMode } = useViewMode();
-    const isMenu = viewMode === "menu";
+    const matches = useMatches();
+
+    const currentView = Object.keys(viewLabelKeys).find((path) =>
+        matches.some((m) => m.routeId.endsWith(path))
+    );
+
+    const isMenu = !currentView;
 
     return (
         <Breadcrumb>
@@ -34,30 +39,30 @@ function RightSidebarBreadcrumbs({ space }: RightSidebarBreadcrumbsProps) {
                         <BreadcrumbPage className="flex items-center gap-2">
                             <span>{t("sidebar.space", { spaceId: String(space.spaceId) })}</span>
                             <span className="flex items-center h-[2em] leading-none overflow-hidden">
-                <Emoji unified={space.icon} size={16} />
-              </span>
+                                <Emoji unified={space.icon} size={16} />
+                            </span>
                         </BreadcrumbPage>
                     ) : (
                         <BreadcrumbLink asChild>
-                            <button
-                                type="button"
-                                onClick={() => setViewMode("menu")}
+                            <Link
+                                to={PathConstants.SPACE_MENU}
+                                params={{ spaceId: String(space.spaceId) }}
                                 className="flex items-center gap-2"
                             >
                                 <span>{t("sidebar.space", { spaceId: String(space.spaceId) })}</span>
                                 <span className="flex items-center h-[2em] leading-none overflow-hidden">
-                  <Emoji unified={space.icon} size={16} />
-                </span>
-                            </button>
+                                    <Emoji unified={space.icon} size={16} />
+                                </span>
+                            </Link>
                         </BreadcrumbLink>
                     )}
                 </BreadcrumbItem>
 
-                {!isMenu && (
+                {!isMenu && currentView && (
                     <>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{t(viewModeLabelKeys[viewMode])}</BreadcrumbPage>
+                            <BreadcrumbPage>{t(viewLabelKeys[currentView])}</BreadcrumbPage>
                         </BreadcrumbItem>
                     </>
                 )}
