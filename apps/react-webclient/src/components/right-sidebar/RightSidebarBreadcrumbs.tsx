@@ -19,6 +19,7 @@ interface RightSidebarBreadcrumbsProps {
 const viewLabelKeys: Record<string, string> = {
     [PathConstants.SPACE_CHAT]: "sidebar.actions.chat.label",
     [PathConstants.SPACE_MIND_MAP]: "sidebar.actions.map.label",
+    [PathConstants.SPACE_LEARN]: "sidebar.actions.learn.label",
 };
 
 function RightSidebarBreadcrumbs({ space }: RightSidebarBreadcrumbsProps) {

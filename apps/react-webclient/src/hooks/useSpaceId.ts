@@ -6,8 +6,9 @@ function useSpaceId() {
   });
 
   const numericSpaceId = params?.spaceId ? Number(params.spaceId) : undefined;
+  const strSpaceId = params?.spaceId ? params.spaceId : undefined;
 
-  return { spaceId: numericSpaceId };
+  return { spaceId: numericSpaceId, strSpaceId };
 }
 
 export default useSpaceId;

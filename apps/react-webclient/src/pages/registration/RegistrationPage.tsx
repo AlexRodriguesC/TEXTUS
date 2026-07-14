@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  type registerResponseError,
+  type registerResponse,
   type registerResponseSuccess,
   useRegister
 } from "@/client/generated/authentication/authentication.ts";
@@ -27,8 +27,8 @@ import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCar
 import CenteredPage from "@/components/CenteredPage.tsx";
 
 
-function hasToken(data: registerResponseSuccess | registerResponseError): data is registerResponseSuccess {
-  return "data" in data && "token" in data;
+function hasToken(resp: registerResponse): resp is registerResponseSuccess {
+  return "data" in resp && "token" in resp.data;
 }
 
 function RegistrationPage() {
@@ -78,72 +78,74 @@ function RegistrationPage() {
 
   return (
     <CenteredPage>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className={"flex justify-end pt-0"}>
-            <Link to={PathConstants.HOME}>
-              <HomeIcon size={20} style={{color: "var(--muted-foreground)"}}/>
-            </Link>
-          </div>
-          <div>
-            <CardTitle>{t("registration.info")}</CardTitle>
-            <CardDescription>{t("registration.sub")}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-8">
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john.doe@textus.com"
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="flex flex-row items-center relative">
+      <div className="flex w-full h-full justify-center items-center">
+        <Card className="w-full max-w-sm h-fit">
+          <CardHeader>
+            <div className={"flex justify-end pt-0"}>
+              <Link to={PathConstants.HOME}>
+                <HomeIcon size={20} style={{color: "var(--muted-foreground)"}}/>
+              </Link>
+            </div>
+            <div>
+              <CardTitle>{t("registration.info")}</CardTitle>
+              <CardDescription>{t("registration.sub")}</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-6">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="password"
-                      type={isPasswordShown ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
+                        id="email"
+                        type="email"
+                        placeholder="john.doe@textus.com"
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
                     />
-                    <button
-                      type="button"
-                      onClick={() => setIsPasswordShown((prev) => !prev)}
-                      className="absolute right-3 text-muted-foreground"
-                    >
-                      {isPasswordShown ? (
-                        <Eye size={16} />
-                      ) : (
-                        <EyeClosed size={16} />
-                      )}
-                    </button>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="flex flex-row items-center relative">
+                      <Input
+                          id="password"
+                          type={isPasswordShown ? "text" : "password"}
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pr-10"
+                      />
+                      <button
+                          type="button"
+                          onClick={() => setIsPasswordShown((prev) => !prev)}
+                          className="absolute right-3 text-muted-foreground"
+                      >
+                        {isPasswordShown ? (
+                            <Eye size={16} />
+                        ) : (
+                            <EyeClosed size={16} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <Button type="submit" className="w-full">
-                  {t("registration.register")}
-                </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to={PathConstants.LOGIN}>
-                    {t("registration.sign-in")}
-                  </Link>
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button type="submit" className="w-full">
+                    {t("registration.register")}
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to={PathConstants.LOGIN}>
+                      {t("registration.sign-in")}
+                    </Link>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </CenteredPage>
   );
 }

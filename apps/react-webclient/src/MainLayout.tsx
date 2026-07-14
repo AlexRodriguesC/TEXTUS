@@ -72,17 +72,17 @@ function LayoutInner({
   const rightTogglePortalRef = useRef<HTMLDivElement>(null);
 
   return (
-      <SidebarProvider open={leftOpen} onOpenChange={setLeftOpen}>
+      <SidebarProvider open={leftOpen} onOpenChange={setLeftOpen} className="h-svh min-h-0 overflow-hidden">
         <AppSidebar />
         <SidebarInset className="bg-transparent flex flex-col flex-1 min-w-0 h-full">
           <LayoutHeader showRightToggle={showRightSidebar} rightTogglePortalRef={rightTogglePortalRef} />
-          <main className="flex justify-center items-center h-full w-full min-w-0">
+          <main className="flex justify-center h-full w-full min-w-0 min-h-0 overflow-hidden">
             {children}
           </main>
         </SidebarInset>
 
         {showRightSidebar && (
-            <SidebarProvider open={rightOpen} onOpenChange={setRightOpen} className="w-auto shrink-0">
+            <SidebarProvider open={rightOpen} onOpenChange={setRightOpen} className="w-auto shrink-0 h-svh min-h-0 overflow-hidden">
               <RightSidebarToggle containerRef={rightTogglePortalRef} />
               <RightSidebar />
             </SidebarProvider>

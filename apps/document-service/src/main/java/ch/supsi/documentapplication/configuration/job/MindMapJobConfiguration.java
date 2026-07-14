@@ -2,7 +2,6 @@ package ch.supsi.documentapplication.configuration.job;
 
 import ch.supsi.documentapplication.service.async.mindmappipeline.GenerationTasklet;
 import ch.supsi.documentapplication.service.async.mindmappipeline.SetupTasklet;
-import ch.supsi.documentapplication.service.async.mindmappipeline.TopicExtractionTasklet;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -18,10 +17,9 @@ public class MindMapJobConfiguration extends JobConfiguration {
     private static final String JOB_NAME = "mind_map_creation_job";
 
     @Bean
-    public Job mindMapJob(JobRepository jobRepository, Step mapSetup, Step extractTopics, Step generate) {
+    public Job mindMapJob(JobRepository jobRepository, Step mapSetup, Step generate) {
         return new JobBuilder(JOB_NAME, jobRepository)
                 .start(mapSetup)
-                .next(extractTopics)
                 .next(generate)
                 .build();
     }
@@ -32,18 +30,6 @@ public class MindMapJobConfiguration extends JobConfiguration {
             PlatformTransactionManager transactionManager,
             @Qualifier("mindMapSetup") SetupTasklet setupTasklet) {
         return buildTaskletStep(SetupTasklet.class.getName(), jobRepository, transactionManager, setupTasklet);
-    }
-
-    @Bean
-    public Step extractTopics(
-            JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
-            TopicExtractionTasklet topicExtractionTasklet) {
-        return buildTaskletStep(
-                topicExtractionTasklet.getClass().getSimpleName(),
-                jobRepository,
-                transactionManager,
-                topicExtractionTasklet);
     }
 
     @Bean

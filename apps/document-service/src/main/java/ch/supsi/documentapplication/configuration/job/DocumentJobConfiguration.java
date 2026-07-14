@@ -24,12 +24,19 @@ public class DocumentJobConfiguration extends JobConfiguration {
 
     @Bean
     public Job documentJob(
-            JobRepository jobRepository, Step docSetup, Step ocr, Step segment, Step summarize, Step cleanup) {
+            JobRepository jobRepository,
+            Step docSetup,
+            Step ocr,
+            Step segment,
+            Step summarize,
+            Step extractTopics,
+            Step cleanup) {
         return new JobBuilder(JOB_NAME, jobRepository)
                 .start(docSetup)
                 .next(ocr)
                 .next(segment)
                 .next(summarize)
+                .next(extractTopics)
                 .next(cleanup)
                 .build();
     }
@@ -66,6 +73,18 @@ public class DocumentJobConfiguration extends JobConfiguration {
                 jobRepository,
                 transactionManager,
                 summarizationTasklet);
+    }
+
+    @Bean
+    public Step extractTopics(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            TopicExtractionTasklet topicExtractionTasklet) {
+        return buildTaskletStep(
+                topicExtractionTasklet.getClass().getSimpleName(),
+                jobRepository,
+                transactionManager,
+                topicExtractionTasklet);
     }
 
     @Bean

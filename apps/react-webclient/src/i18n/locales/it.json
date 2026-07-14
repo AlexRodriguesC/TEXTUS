@@ -29,7 +29,8 @@
     "logout": "Sei stato disconnesso dal tuo account. Accedi di nuovo.",
     "user-already-exists": "Il nome utente specificato è già in uso",
     "try-another-username": "Prova con un altro nome utente",
-    "go-home": "Home"
+    "go-home": "Home",
+    "learn": "Impara"
   },
   "language": {
     "combobox": {
@@ -180,6 +181,24 @@
       "generate": "Genera mappa mentale",
       "generating": "Generazione mappa mentale in corso",
       "re-generate": "Rigenera mappa mentale"
+    }
+  },
+  "learning-path": {
+    "creation": {
+      "success": "Creazione percorso di apprendimento programmata con successo",
+      "error": "Si è verificato un errore durante la creazione del percorso di apprendimento"
+    },
+    "empty": {
+      "title": "Percorsi di apprendimento personalizzati",
+      "description": "Trasforma i tuoi documenti in un percorso di apprendimento su misura.",
+      "cta": "Genera percorso di apprendimento",
+      "cta-add": "Aggiungi documenti",
+      "cta-regenerate": "Rigenera percorso di apprendimento"
+    }
+  },
+  "chapter": {
+    "header": {
+      "guide": "Guida"
     }
   }
 }

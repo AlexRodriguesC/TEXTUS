@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service;
+package ch.supsi.documentapplication.service.async;
 
 import java.util.UUID;
 import org.springframework.batch.core.step.tasklet.Tasklet;

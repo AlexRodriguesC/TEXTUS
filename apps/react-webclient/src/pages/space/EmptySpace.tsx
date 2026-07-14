@@ -66,7 +66,7 @@ function EmptySpace({ onCompleted }: EmptySpace) {
                 completed: <CheckIcon className="size-3.5" />,
                 loading: <LoaderCircleIcon className="size-3.5 animate-spin" />
             }}
-            className="w-full h-[500px] space-y-8 flex flex-col overflow-hidden"
+            className="w-full h-125 space-y-8 flex flex-col overflow-hidden"
         >
             <StepperNav className="shrink-0">
                 {steps.map((step, index) => (

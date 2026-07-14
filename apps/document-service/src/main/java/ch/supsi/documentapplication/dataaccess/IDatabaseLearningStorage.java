@@ -5,7 +5,9 @@ import ch.supsi.documentapplication.model.LearningPath;
 
 public interface IDatabaseLearningStorage {
 
-    void create(Chapter chapter, Long spaceId);
+    void create(Long pathId, Chapter chapter, Long spaceId);
+
+    Long createLearningPath(Long spaceId, Long executionId);
 
     LearningPath read(Long spaceId);
 

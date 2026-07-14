@@ -1,9 +1,10 @@
 package ch.supsi.documentapplication.controller;
 
+import ch.supsi.documentapplication.controller.DTO.response.ChapterResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.LearningPathJobDTO;
+import ch.supsi.documentapplication.controller.DTO.response.LearningPathResponseDTO;
 import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.model.LearningPath;
 import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/spaces/{spaceId}/paths")
@@ -86,8 +89,8 @@ public class LearningController {
                     @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
-    public ResponseEntity<LearningPath> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                        @Parameter(hidden = true) Authentication authentication) {
+    public ResponseEntity<LearningPathResponseDTO> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+                                                                   @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
         var learningPath = learningService.getLearningPath(username, spaceId);
 
@@ -95,7 +98,9 @@ public class LearningController {
             throw NotFoundException.learningPathNotFound(spaceId);
         }
 
-        return ResponseEntity.ok(learningPath);
+        List<ChapterResponseDTO> dtos = learningPath.getChapters().stream().map(c -> new ChapterResponseDTO(c.getIndex(), c.getTitle(), c.getDescription(), c.getTopics())).toList();
+
+        return ResponseEntity.ok(new LearningPathResponseDTO(dtos));
     }
 
     @DeleteMapping

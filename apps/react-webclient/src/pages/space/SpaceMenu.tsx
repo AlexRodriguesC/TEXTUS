@@ -24,18 +24,20 @@ function SpaceMenu() {
 
     if (tutorialEnabled) {
         return (
-            <div className={"min-w-[75%] md:min-w-[50%] lg:min-w-[50%]"}>
-                <EmptySpace onCompleted={() => {
-                    disableTutorial();
-                }}/>
-            </div>
+            <CenteredPage>
+                <div className={"min-w-[75%] md:min-w-[50%] lg:min-w-[50%]"}>
+                    <EmptySpace onCompleted={() => {
+                        disableTutorial();
+                    }}/>
+                </div>
+            </CenteredPage>
         );
     }
 
 
     return (
         <CenteredPage>
-            <div className={"max-w-[80%]"}>
+            <div className={"max-w-[80%] place-content-center"}>
                 <div className={"flex w-full justify-end"}>
                     <span className="flex items-center h-[2em] leading-none overflow-hidden">
               {!tutorialEnabled && (

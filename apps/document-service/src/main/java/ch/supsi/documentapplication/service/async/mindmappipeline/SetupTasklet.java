@@ -50,6 +50,6 @@ public class SetupTasklet implements Tasklet {
                 .getExecutionContext()
                 .put("MAP_ID", mapId);
 
-        return null;
+        return RepeatStatus.FINISHED;
     }
 }

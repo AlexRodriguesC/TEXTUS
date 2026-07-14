@@ -16,7 +16,7 @@ public abstract class JobConfiguration {
         // step
         // will not be persisted between steps
         ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
-        listener.setKeys(new String[] {"MAP_ID", "DATABASE_DOCUMENT_ID"});
+        listener.setKeys(new String[] {"MAP_ID", "DATABASE_DOCUMENT_ID", "PATH_ID"});
 
         return new StepBuilder(stepName, jobRepository)
                 .tasklet(tasklet, txManager)

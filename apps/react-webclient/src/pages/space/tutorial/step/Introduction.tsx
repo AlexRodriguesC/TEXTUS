@@ -16,7 +16,7 @@ function Introduction({ index }: IntroductionProps) {
             value={index + 1}
             className="flex w-full items-center justify-center"
         >
-            <div className={"flex flex-col md:flex-row w-full items-center gap-8"}>
+            <div className={"flex flex-col md:flex-row w-full items-center gap-8 overflow-hidden"}>
                 <div className={"w-xs md:w-md xl:w-xl shrink-0"}>
                     <DotLottieReact src="/animations/ideas.lottie" loop autoplay />
                 </div>
@@ -24,7 +24,7 @@ function Introduction({ index }: IntroductionProps) {
                     <h2 className="text-2xl font-semibold mb-2">
                         {t("intro.title")}
                     </h2>
-                    <p className="break-words">
+                    <p className="wrap-break-word">
                         <Trans
                             i18nKey="intro.description"
                             components={{ bold: <strong /> }}

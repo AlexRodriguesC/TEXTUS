@@ -37,7 +37,7 @@ function SidebarAction({ icon, labelKey, tooltipKey, to, backgroundColor }: Side
                         </Link>
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t(tooltipKey)}</TooltipContent>
+                <TooltipContent side={"left"}>{t(tooltipKey)}</TooltipContent>
             </Tooltip>
         );
     }
@@ -62,7 +62,7 @@ function SidebarAction({ icon, labelKey, tooltipKey, to, backgroundColor }: Side
                     </Link>
                 </Button>
             </TooltipTrigger>
-            <TooltipContent>{t(tooltipKey)}</TooltipContent>
+            <TooltipContent side={"left"}>{t(tooltipKey)}</TooltipContent>
         </Tooltip>
     );
 }

@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION documents.create_chapter(
     p_space_id BIGINT,
+    p_path_id BIGINT,
     p_index INTEGER,
     p_title TEXT,
     p_description TEXT,
@@ -19,8 +20,8 @@ BEGIN
         RAISE EXCEPTION 'Space with id % not found', p_space_id;
     END IF;
 
-    INSERT INTO documents.chapter (index, title, description)
-    VALUES (p_index, p_title, p_description)
+    INSERT INTO documents.chapter (path_id, index, title, description)
+    VALUES (p_path_id, p_index, p_title, p_description)
     RETURNING id INTO v_chapter_id;
 
     UPDATE documents.topic

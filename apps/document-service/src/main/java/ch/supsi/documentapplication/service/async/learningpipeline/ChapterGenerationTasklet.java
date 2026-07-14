@@ -4,10 +4,12 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseLearningStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.Chapter;
 import ch.supsi.documentapplication.model.Topic;
-import ch.supsi.documentapplication.service.ProcessingTasklet;
+import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,11 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
+        log.debug("Executing chapter generation step for space with spaceId {}", spaceId);
+
+        Long pathId =
+                (Long) chunkContext.getStepContext().getJobExecutionContext().get("PATH_ID");
+
         List<Topic> topics = databaseTopicStorage.getBySpaceId(spaceId);
         List<String> distinctLabels = topics.stream()
                 .flatMap(topic -> topic.getLabels().stream())
@@ -54,27 +61,33 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
         List<Chapter> finalChapters = new ArrayList<>();
 
         List<Topic> remainingTopics = new ArrayList<>(topics);
+        Map<Long, String> labelById = labels.stream().collect(Collectors.toMap(Label::id, Label::name));
+
         for (Chapter chapter : chapters) {
-            var chapterLabels = chapter.getLabels();
-            for (Label label : labels) {
-                List<Topic> matchingTopics = remainingTopics.stream()
-                        .filter(topic -> topic.getLabels().contains(label.name()))
-                        .toList();
-                remainingTopics.removeAll(matchingTopics);
-                var matchingAsLong = matchingTopics.stream().map(Topic::getId).toList();
-                finalChapters.add(new Chapter(
-                        chapter.getIndex(),
-                        chapter.getTitle(),
-                        chapter.getDescription(),
-                        chapterLabels,
-                        matchingAsLong));
-            }
+            List<String> chapterLabelNames =
+                    chapter.getLabels().stream().map(labelById::get).toList();
+
+            List<Topic> matchingTopics = remainingTopics.stream()
+                    .filter(topic -> topic.getLabels().stream().anyMatch(chapterLabelNames::contains))
+                    .toList();
+
+            remainingTopics.removeAll(matchingTopics);
+
+            var matchingAsLong = matchingTopics.stream().map(Topic::getId).toList();
+
+            finalChapters.add(new Chapter(
+                    chapter.getIndex(),
+                    chapter.getTitle(),
+                    chapter.getDescription(),
+                    chapter.getLabels(),
+                    matchingAsLong));
         }
 
         for (Chapter chapter : finalChapters) {
-            databaseLearningStorage.create(chapter, spaceId);
+            databaseLearningStorage.create(pathId, chapter, spaceId);
         }
 
+        log.debug("Finished chapter generation step for space with spaceId {}", spaceId);
         return RepeatStatus.FINISHED;
     }
 }

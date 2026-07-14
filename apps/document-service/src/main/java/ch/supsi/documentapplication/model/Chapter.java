@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Getter;
 
@@ -17,6 +19,19 @@ public class Chapter {
 
     @JsonIgnore
     private final List<Long> topics;
+
+    @JsonCreator
+    public Chapter(
+            @JsonProperty("index") Integer index,
+            @JsonProperty("title") String title,
+            @JsonProperty("description") String description,
+            @JsonProperty("labels") List<Long> labels) {
+        this.index = index;
+        this.title = title;
+        this.description = description;
+        this.labels = labels;
+        this.topics = null;
+    }
 
     public Chapter(Integer index, String title, String description, List<Long> labels, List<Long> topics) {
         this.index = index;

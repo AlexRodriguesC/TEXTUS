@@ -16,7 +16,7 @@ function UserAlreadyExistsCard({ reset }: UserAlreadyExistsCardProps) {
     <ErrorCard
       messageKey={t("general.user-already-exists")}
     >
-      <Button variant="default" className={"w-full"} onClick={reset} asChild>
+      <Button variant="default" className={"w-full"} onClick={reset}>
         {t("general.try-another-username")}
       </Button>
       <Button className="w-full" variant="secondary" onClick={() => navigate({ to: PathConstants.HOME })}>

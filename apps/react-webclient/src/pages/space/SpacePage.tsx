@@ -22,11 +22,11 @@ function SpacePage({children} : PropsWithChildren) {
 
   if (tutorialEnabled) {
     return (
-      <div className={"min-w-[75%] md:min-w-[50%] lg:min-w-[50%]"}>
+      <CenteredPage>
         <EmptySpace onCompleted={() => {
           disableTutorial();
         }}/>
-      </div>
+      </CenteredPage>
     );
   }
 

@@ -23,18 +23,32 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
-    public void create(Chapter chapter, Long spaceId) {
+    public void create(Long pathId, Chapter chapter, Long spaceId) {
         jdbcClient
                 .sql(
                         """
-            SELECT documents.create_chapter(:spaceId, :index, :title, :description, :topics)
+            SELECT documents.create_chapter(:spaceId, :pathId, :index, :title, :description, :topics)
             """)
                 .param(SPACE_ID, spaceId)
+                .param("pathId", pathId)
                 .param(INDEX, chapter.getIndex())
                 .param(TITLE, chapter.getTitle())
                 .param(DESCRIPTION, chapter.getDescription())
                 .param("topics", chapter.getTopics().toArray(new Long[0]))
-                .update();
+                .query()
+                .singleValue();
+    }
+
+    @Override
+    public Long createLearningPath(Long spaceId, Long executionId) {
+        return jdbcClient
+                .sql("""
+            SELECT documents.create_learning_path(:spaceId, :jobId)
+            """)
+                .param(SPACE_ID, spaceId)
+                .param("jobId", executionId)
+                .query(Long.class)
+                .single();
     }
 
     @Override
@@ -74,6 +88,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
             SELECT documents.delete_learning_path(:spaceId)
             """)
                 .param(SPACE_ID, spaceId)
-                .update();
+                .query()
+                .singleValue();
     }
 }

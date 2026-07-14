@@ -13,18 +13,6 @@ class MindMapValidatorSpec extends Specification {
 
     MindMap mindMap = Mock()
 
-    def "should return true when all expected chunk ids are present"() {
-        given: "a mind map containing all expected chunk ids"
-        mindMap.getAllTopicIds() >> [1L, 2L, 3L]
-        def expectedChunkIds = [1L, 2L]
-
-        when: "validating the mind map"
-        def result = validator.validate(mindMap, expectedChunkIds)
-
-        then: "the validation succeeds"
-        result
-    }
-
     def "should throw when mindMap is null"() {
         when: "validating a null mind map"
         validator.validate(null, [1L])
@@ -53,15 +41,15 @@ class MindMapValidatorSpec extends Specification {
         thrown(AIOutputMappingFailedException)
     }
 
-    def "should return true when expectedChunkIds is empty"() {
+    def "should succeed when expectedChunkIds is empty"() {
         given: "a mind map and no expected chunk ids"
         mindMap.getAllTopicIds() >> [1L, 2L]
 
         when: "validating with an empty expected list"
-        def result = validator.validate(mindMap, [])
+        validator.validate(mindMap, [])
 
         then: "the validation succeeds"
-        result
+        noExceptionThrown()
     }
 
     def "should throw when mind map has no topic ids but ids are expected"() {

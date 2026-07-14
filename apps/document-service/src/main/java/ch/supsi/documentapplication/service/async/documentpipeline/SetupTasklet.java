@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
-import ch.supsi.documentapplication.service.ProcessingTasklet;
+import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
