@@ -2,6 +2,8 @@ package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.LearningPathJobDTO;
+import ch.supsi.documentapplication.exception.NotFoundException;
+import ch.supsi.documentapplication.model.LearningPath;
 import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -70,6 +72,49 @@ public class LearningController {
         String username = authentication.getName();
         var status = learningService.getLearningPathStatus(username, spaceId);
         return ResponseEntity.ok(new LearningPathJobDTO(status));
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the learning path for the specified space", description = """
+        Returns the learning path currently generated for the specified space,
+        including its chapters and associated topics.
+        """)
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Learning path retrieved"),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
+    public ResponseEntity<LearningPath> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+                                                        @Parameter(hidden = true) Authentication authentication) {
+        String username = authentication.getName();
+        var learningPath = learningService.getLearningPath(username, spaceId);
+
+        if (learningPath == null) {
+            throw NotFoundException.learningPathNotFound(spaceId);
+        }
+
+        return ResponseEntity.ok(learningPath);
+    }
+
+    @DeleteMapping
+    @Operation(summary = "Delete the learning path for the specified space", description = """
+        Deletes the learning path associated with the specified space.
+        If a generation job is currently running for this path, it will be stopped first.
+        """)
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "204", description = "Learning path deleted"),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
+    public ResponseEntity<Void> deleteLearningPath(@Parameter(description = "The ID of the space to delete the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+                                                   @Parameter(hidden = true) Authentication authentication) {
+        String username = authentication.getName();
+        learningService.deleteLearningPath(username, spaceId);
+        return ResponseEntity.noContent().build();
     }
 
 }

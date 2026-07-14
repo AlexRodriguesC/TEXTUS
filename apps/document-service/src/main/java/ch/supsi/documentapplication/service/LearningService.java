@@ -29,7 +29,12 @@ public class LearningService implements ILearningService {
     private final Job chapterJob;
 
     @Autowired
-    public LearningService(IDatabaseLearningStorage databaseLearningStorage, IDatabaseSpaceStorage databaseSpaceStorage, JobOperator jobOperator, JobRepository jobRepository, Job chapterJob) {
+    public LearningService(
+            IDatabaseLearningStorage databaseLearningStorage,
+            IDatabaseSpaceStorage databaseSpaceStorage,
+            JobOperator jobOperator,
+            JobRepository jobRepository,
+            Job chapterJob) {
         this.databaseLearningStorage = databaseLearningStorage;
         this.databaseSpaceStorage = databaseSpaceStorage;
         this.jobOperator = jobOperator;
@@ -53,7 +58,6 @@ public class LearningService implements ILearningService {
             log.error(message, e);
             throw new JobFailedToStartException(message);
         }
-
     }
 
     @Override
@@ -78,7 +82,9 @@ public class LearningService implements ILearningService {
 
         var status = jobExecution.getStatus();
 
-        return status.isRunning() ? LearningPathStatus.GENERATING : status.isUnsuccessful() ? LearningPathStatus.FAILED : LearningPathStatus.DONE;
+        return status.isRunning()
+                ? LearningPathStatus.GENERATING
+                : status.isUnsuccessful() ? LearningPathStatus.FAILED : LearningPathStatus.DONE;
     }
 
     @Override

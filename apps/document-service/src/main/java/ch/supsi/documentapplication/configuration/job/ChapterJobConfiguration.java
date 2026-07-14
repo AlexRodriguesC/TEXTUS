@@ -15,17 +15,16 @@ public class ChapterJobConfiguration extends JobConfiguration {
     private static final String JOB_NAME = "chapter_creation_job";
 
     @Bean
-    public Job chapterJob(JobRepository jobRepository, Step generate) {
-        return new JobBuilder(JOB_NAME, jobRepository)
-                .start(generate)
-                .build();
+    public Job chapterJob(JobRepository jobRepository, Step generateChapters) {
+        return new JobBuilder(JOB_NAME, jobRepository).start(generateChapters).build();
     }
 
     @Bean
-    public Step generate(
+    public Step generateChapters(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
             ChapterGenerationTasklet chapterGenerationTasklet) {
-        return buildTaskletStep(ChapterGenerationTasklet.class.getName(), jobRepository, transactionManager, chapterGenerationTasklet);
+        return buildTaskletStep(
+                ChapterGenerationTasklet.class.getName(), jobRepository, transactionManager, chapterGenerationTasklet);
     }
 }

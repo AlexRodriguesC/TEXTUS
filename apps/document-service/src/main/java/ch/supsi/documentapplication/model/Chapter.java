@@ -2,7 +2,6 @@ package ch.supsi.documentapplication.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
@@ -10,6 +9,7 @@ public class Chapter {
 
     @JsonIgnore
     private Long id;
+
     private final Integer index;
     private final String title;
     private final String description;
