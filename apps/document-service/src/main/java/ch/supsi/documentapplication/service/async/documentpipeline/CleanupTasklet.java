@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service.documentpipeline;
+package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.service.ProcessingTasklet;

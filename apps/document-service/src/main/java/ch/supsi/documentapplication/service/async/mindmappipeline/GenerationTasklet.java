@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service.mindmappipeline;
+package ch.supsi.documentapplication.service.async.mindmappipeline;
 
 import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage;

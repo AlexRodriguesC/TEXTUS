@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.service.documentpipeline;
+package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;

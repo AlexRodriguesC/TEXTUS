@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.unit.service.clients
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException
 import ch.supsi.documentapplication.model.MindMap
 import ch.supsi.documentapplication.model.Topic
-import ch.supsi.documentapplication.service.MindMapValidator
+import ch.supsi.documentapplication.service.validator.MindMapValidator
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt

@@ -27,4 +27,8 @@ public class NotFoundException extends ApplicationException {
     public static NotFoundException userNotFound(String owner) {
         return new NotFoundException(format("User %s not found", owner));
     }
+
+    public static NotFoundException learningPathNotFound(Long spaceId) {
+        return new NotFoundException(format("Learning path for space with id %d not found", spaceId));
+    }
 }

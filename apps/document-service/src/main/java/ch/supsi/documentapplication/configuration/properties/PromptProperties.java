@@ -17,4 +17,7 @@ public class PromptProperties {
 
     private String mindMapExtractionSystem;
     private String mindMapExtractionUser;
+
+    private String chapterExtractionSystem;
+    private String chapterExtractionUser;
 }

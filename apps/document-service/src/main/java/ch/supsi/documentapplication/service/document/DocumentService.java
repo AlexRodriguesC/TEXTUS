@@ -110,6 +110,7 @@ public class DocumentService implements IDocumentService {
                 .filter(doc -> doc.getId().equals(documentId))
                 .findFirst()
                 .orElse(null);
+
         if (document == null) {
             throw NotFoundException.documentNotFoundException(documentId);
         }

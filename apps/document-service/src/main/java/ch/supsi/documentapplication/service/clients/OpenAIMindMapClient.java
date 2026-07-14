@@ -2,15 +2,13 @@ package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.Topic;
-import ch.supsi.documentapplication.service.MindMapValidator;
+import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.retry.RetryTemplate;
 
-@Log4j2
 public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
 
     private static final String TOPICS = "topics";

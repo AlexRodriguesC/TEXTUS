@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.configuration.job;
 
-import ch.supsi.documentapplication.service.documentpipeline.*;
+import ch.supsi.documentapplication.service.async.documentpipeline.*;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import org.springframework.batch.core.job.Job;

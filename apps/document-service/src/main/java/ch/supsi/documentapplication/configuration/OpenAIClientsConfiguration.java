@@ -2,9 +2,10 @@ package ch.supsi.documentapplication.configuration;
 
 import ch.supsi.documentapplication.configuration.properties.PromptProperties;
 import ch.supsi.documentapplication.exception.PromptTemplateLoadException;
-import ch.supsi.documentapplication.service.MindMapValidator;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
+import ch.supsi.documentapplication.service.validator.ChapterValidator;
+import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +30,29 @@ public class OpenAIClientsConfiguration {
                 .startDelimiterToken('<')
                 .endDelimiterToken('>')
                 .build();
+    }
+
+    @Bean
+    public OpenAIChapterClient openAIChapterClient(
+            ChatClient.Builder chatBuilder,
+            RetryTemplate retryTemplate,
+            StTemplateRenderer templateRenderer,
+            PromptProperties promptProperties,
+            ResourceLoader resourceLoader) {
+        var userPromptResource = resourceLoader.getResource(promptProperties.getChapterExtractionUser());
+        String userPromptText = copyToString(userPromptResource);
+
+        PromptTemplate promptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(userPromptText)
+                .build();
+
+        var systemPromptResource = resourceLoader.getResource(promptProperties.getChapterExtractionSystem());
+        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+
+        var chapterValidator = new ChapterValidator();
+
+        return new OpenAIChapterClient(chatClient, retryTemplate, chapterValidator, promptTemplate);
     }
 
     @Bean

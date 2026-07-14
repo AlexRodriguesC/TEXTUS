@@ -1,8 +1,8 @@
 package ch.supsi.documentapplication.configuration.job;
 
-import ch.supsi.documentapplication.service.mindmappipeline.GenerationTasklet;
-import ch.supsi.documentapplication.service.mindmappipeline.SetupTasklet;
-import ch.supsi.documentapplication.service.mindmappipeline.TopicExtractionTasklet;
+import ch.supsi.documentapplication.service.async.mindmappipeline.GenerationTasklet;
+import ch.supsi.documentapplication.service.async.mindmappipeline.SetupTasklet;
+import ch.supsi.documentapplication.service.async.mindmappipeline.TopicExtractionTasklet;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;

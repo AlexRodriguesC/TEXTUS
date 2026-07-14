@@ -2,7 +2,7 @@ package ch.supsi.documentapplication.unit.service
 
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException
 import ch.supsi.documentapplication.model.MindMap
-import ch.supsi.documentapplication.service.MindMapValidator
+import ch.supsi.documentapplication.service.validator.MindMapValidator
 import spock.lang.Specification
 import spock.lang.Subject
 
