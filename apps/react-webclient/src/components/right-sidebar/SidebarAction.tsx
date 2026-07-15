@@ -11,12 +11,11 @@ interface SidebarActionProps {
     labelKey: string;
     tooltipKey: string;
     to: string;
-    backgroundColor?: string;
 }
 
-function SidebarAction({ icon, labelKey, tooltipKey, to, backgroundColor }: SidebarActionProps) {
+function SidebarAction({ icon, labelKey, tooltipKey, to}: SidebarActionProps) {
     const { t } = useTranslation();
-    const { state, openMobile } = useSidebar();
+    const { state, openMobile, setOpen } = useSidebar();
     const open = state === "expanded" || openMobile;
 
     if (!open) {
@@ -25,7 +24,6 @@ function SidebarAction({ icon, labelKey, tooltipKey, to, backgroundColor }: Side
                 <TooltipTrigger asChild>
                     <Button
                         variant="secondary"
-                        style={{ backgroundColor }}
                         className="relative h-10 w-10 flex items-center justify-center rounded-xl bg-muted/40 p-0"
                         asChild
                     >
@@ -46,8 +44,8 @@ function SidebarAction({ icon, labelKey, tooltipKey, to, backgroundColor }: Side
         <Tooltip>
             <TooltipTrigger asChild>
                 <Button
+                    onClick={() => setOpen(false)}
                     variant="secondary"
-                    style={{ backgroundColor }}
                     className="h-auto w-full flex flex-row items-center justify-between gap-3 rounded-xl px-4 py-3 bg-muted/40"
                     asChild
                 >

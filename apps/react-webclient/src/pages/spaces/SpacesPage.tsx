@@ -20,7 +20,7 @@ export function SpacesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[75%] min-h-[80vh] max-h-[80vh] flex-col place-content-center gap-4">
-      <div className="flex flex-row items-start gap-16">
+      <div className="flex flex-col items-center md:flex-row md:items-start md:gap-16">
         <CreateSpace
           trigger={
             <Button className={spaces.length === 0 ? "animate-pulse" : ""}>

@@ -15,11 +15,8 @@ function ChapterHeader({ chapter }: ChapterHeaderProps) {
     const { strSpaceId } = useSpaceId();
 
     return (
-        <div className={"sticky top-1 z-10 flex flex-col md:flex-row gap-2 items-center justify-between px-4 py-3 bg-primary/40"}>
-            <div>
-                <p className={"font-extrabold text-primary-foreground"}>{chapter.title}</p>
-                <p className={"text-secondary-foreground"}>{chapter.description}</p>
-            </div>
+        <div className={"sticky top-1 z-10 flex flex-col w-full md:flex-row gap-2 items-center justify-between px-4 py-3 bg-primary/40"}>
+            <p className={"font-extrabold text-primary-foreground truncate"}>{chapter.title}</p>
             <Button variant={"secondary"} className={"bg-foreground/20 w-full md:w-fit"}>
                 <Link
                     to={PathConstants.SPACE_LEARN_GUIDE}
