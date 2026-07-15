@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils.ts";
 import * as React from "react";
 import {
   Dialog,
@@ -9,6 +7,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import {useTranslation} from "react-i18next";
+import MotionButton from "@/components/MotionButton.tsx";
 
 interface NodeProps {
   completed: boolean;
@@ -23,26 +22,9 @@ function Node({ completed = false, title, summary, children }: NodeProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <motion.button
-          data-slot="button"
-          whileHover={{ scale: completed ? 1.0 : 1.1 }}
-          transition={{ type: "spring", stiffness: 0, damping: 10 }}
-          className={cn(
-            "relative cursor-pointer rounded-full border-3 p-4",
-            "bg-card text-primary-foreground font-extrabold",
-            "shadow-[0_3px_0_var(--color-ring)]",
-            "active:shadow-none active:translate-y-[4px]",
-            "transition-[box-shadow,transform] duration-75",
-            completed ? "border-green-500" : "border-primary",
-            "size-12",
-            "flex items-center justify-center",
-            "shrink-0",
-            "p-0",
-            "text-sm",
-          )}
-        >
+        <MotionButton completed={completed}>
           {children}
-        </motion.button>
+        </MotionButton>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

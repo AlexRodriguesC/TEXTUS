@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Chapter;
 import ch.supsi.documentapplication.model.LearningPath;
+import ch.supsi.documentapplication.model.PathSettings;
 
 public interface IDatabaseLearningStorage {
 
@@ -12,4 +13,6 @@ public interface IDatabaseLearningStorage {
     LearningPath read(Long spaceId);
 
     void delete(Long spaceId);
+
+    void updateSettings(Long id, PathSettings settings);
 }

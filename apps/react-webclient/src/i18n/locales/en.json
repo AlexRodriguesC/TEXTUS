@@ -116,6 +116,7 @@
     }
   },
   "button": {
+    "apply": "Apply",
     "start": "Let's go!",
     "next": "Next",
     "back": "Back",
@@ -167,6 +168,17 @@
     }
   },
   "sidebar": {
+    "settings": {
+      "path": {
+        "changes": "Changes to learning path settings will only take effect on exercises generated after the change",
+        "title": "Path Settings",
+        "exerciseTypes": "Exercise Type Occurrence",
+        "question": "Question",
+        "list": "List",
+        "group": "Group",
+        "pair": "Pair"
+      }
+    },
     "actions": {
       "map": {
         "label": "Mind Map",
@@ -197,6 +209,10 @@
     }
   },
   "learning-path": {
+    "settings": {
+      "success": "Learning path settings updated successfully",
+      "error": "Something went wrong while updating the learning path settings"
+    },
     "creation": {
       "success": "Learning path creation scheduled successfully",
       "error": "Something went wrong while scheduling the generation of the learning path"

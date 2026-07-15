@@ -5,19 +5,20 @@ import {
     useDeleteLearningPath,
     useExtractLearningPath,
     useGetLearningPath,
-    useGetLearningPathJob
+    useGetLearningPathJob, useUpdatePathSettings
 } from "@/client/generated/paths/paths.ts";
 import type {
     ErrorResponseDTO,
     LearningPathJobDTO,
     LearningPathJobDTOStatus,
-    LearningPathResponseDTO,
+    LearningPathResponseDTO, PathSettingsResponseDTO,
 } from "@/client/model";
 import {useTranslation} from "react-i18next";
 import {failureToast, successToast} from "@/lib/toasts.ts";
 import {useQueryClient} from "@tanstack/react-query";
 
 export interface LearningPath {
+    settings: LearningPathSettings;
     chapters: Chapter[];
 }
 
@@ -28,6 +29,8 @@ export interface Chapter {
     topics: number[];
 }
 
+export interface LearningPathSettings extends PathSettingsResponseDTO {}
+
 type LearningPathStatus = LearningPathJobDTOStatus
 
 function useLearningPath() {
@@ -35,16 +38,39 @@ function useLearningPath() {
     const queryClient = useQueryClient();
     const { t } = useTranslation();
 
-    const { data: learningPathData } = useGetLearningPath(spaceId ?? -1, {
+    const { data: jobData } = useGetLearningPathJob(spaceId ?? -1, {
         query: {
-            enabled: spaceId !== undefined
-        }
+            enabled: spaceId !== undefined,
+            refetchIntervalInBackground: true,
+            refetchInterval: (query) => {
+                const raw = query.state.data?.data;
+                if (!raw || !isLearningPathJobDTO(raw)) return 2000;
+                const done = raw.status === "DONE";
+                const failed = raw.status === "FAILED";
+                return done || failed ? false : 2000;
+            },
+        },
+    });
+
+    const { data: learningPathData, isLoading } = useGetLearningPath(spaceId ?? -1, {
+        query: {
+            enabled:
+                spaceId !== undefined &&
+                !!jobData &&
+                isLearningPathJobDTO(jobData.data) &&
+                jobData.data.status === "DONE",
+        },
     });
 
     const maybePath = learningPathData?.data;
-    let learningPath: LearningPath = { chapters: [] };
+    let learningPath: LearningPath | undefined = undefined;
     if (maybePath && isLearningPathDTO(maybePath)) {
         learningPath = maybePath;
+    }
+
+    let learningPathStatus: LearningPathStatus = "NOT_CREATED";
+    if (jobData && isLearningPathJobDTO(jobData.data)) {
+        learningPathStatus = jobData.data.status;
     }
 
     const deleteLearningPath = useDeleteLearningPath({
@@ -53,33 +79,12 @@ function useLearningPath() {
                 await queryClient.invalidateQueries({
                     queryKey: getGetLearningPathQueryKey(spaceId!),
                 });
-
                 await queryClient.invalidateQueries({
                     queryKey: getGetLearningPathJobQueryKey(spaceId!),
                 });
-            }
-        }
-    })
-
-    const { data } = useGetLearningPathJob(spaceId ?? -1, {
-        query: {
-            enabled: spaceId !== undefined,
-            refetchIntervalInBackground: true,
-            refetchInterval: (query) => {
-                const jobData = query.state.data?.data;
-                if (!jobData || !isLearningPathJobDTO(jobData)) return 2000;
-                const done = jobData.status === "DONE";
-                const hasChapters = learningPath.chapters.length > 0;
-                return done || hasChapters ? false : 2000;
-            }
-        }
-    })
-
-    let learningPathStatus: LearningPathStatus = "NOT_CREATED";
-
-    if (data && isLearningPathJobDTO(data.data)) {
-        learningPathStatus = data.data.status;
-    }
+            },
+        },
+    });
 
     const generateLearningPath = useExtractLearningPath({
         mutation: {
@@ -88,15 +93,35 @@ function useLearningPath() {
             },
             onError: () => {
                 failureToast(t("learning-path.creation.error"));
+            },
+        },
+    });
+
+    const updateSettingsInternal = useUpdatePathSettings({
+        mutation: {
+            onSuccess: () => {
+                successToast(t("learning-path.settings.success"));
+                queryClient.invalidateQueries({
+                    queryKey: getGetLearningPathQueryKey(spaceId!),
+                })
+            },
+            onError: () => {
+                failureToast(t("learning-path.settings.error"));
             }
         }
     })
 
+    const updateSettings = (settings: LearningPathSettings) => {
+        updateSettingsInternal.mutate({spaceId: spaceId!, data: settings})
+    }
+
     return {
         path: learningPath,
+        isPathLoading: isLoading,
         status: learningPathStatus,
         generateLearningPath,
-        deleteLearningPath
+        deleteLearningPath,
+        updateSettings,
     };
 }
 

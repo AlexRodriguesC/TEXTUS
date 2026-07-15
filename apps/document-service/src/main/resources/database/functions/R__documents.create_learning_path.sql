@@ -17,6 +17,7 @@ BEGIN
     END IF;
 
     INSERT INTO documents.learning_path (space_id, job_id) VALUES (p_space_id, p_job_id) RETURNING id INTO v_path_id;
+    INSERT INTO documents.learning_path_settings (path_id) VALUES (v_path_id);
 
     RETURN v_path_id;
 END;

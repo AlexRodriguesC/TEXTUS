@@ -1,10 +1,9 @@
 package ch.supsi.documentapplication.controller;
 
-import ch.supsi.documentapplication.controller.DTO.response.ChapterResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.LearningPathJobDTO;
-import ch.supsi.documentapplication.controller.DTO.response.LearningPathResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.request.PatchSettingsDTO;
+import ch.supsi.documentapplication.controller.DTO.response.*;
 import ch.supsi.documentapplication.exception.NotFoundException;
+import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -34,6 +34,29 @@ public class LearningController {
     @Autowired
     public LearningController(ILearningService learningService) {
         this.learningService = learningService;
+    }
+
+
+    @PutMapping(value = "/settings", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update learning path settings", description = """
+            Updates the distribution percentages for question, list, group, and pair content types.
+            All values must be between 0 and 100, and their sum must equal 100.
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input, values out of range or sum not 100", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<?> updatePathSettings(
+            @PathVariable("spaceId") @NotNull Long spaceId,
+            @Valid @RequestBody PatchSettingsDTO settings,
+            @Parameter(hidden = true) Authentication authentication) {
+
+        String username = authentication.getName();
+        learningService.updateSettings(username, spaceId, PathSettings.from(settings));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -100,7 +123,7 @@ public class LearningController {
 
         List<ChapterResponseDTO> dtos = learningPath.getChapters().stream().map(c -> new ChapterResponseDTO(c.getIndex(), c.getTitle(), c.getDescription(), c.getTopics())).toList();
 
-        return ResponseEntity.ok(new LearningPathResponseDTO(dtos));
+        return ResponseEntity.ok(new LearningPathResponseDTO(PathSettingsResponseDTO.from(learningPath.getSettings()), dtos));
     }
 
     @DeleteMapping

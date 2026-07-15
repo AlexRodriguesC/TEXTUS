@@ -7,6 +7,7 @@ import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.LearningPath;
 import ch.supsi.documentapplication.model.LearningPathStatus;
+import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.Space;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -43,8 +44,8 @@ public class LearningService implements ILearningService {
     }
 
     @Override
-    public void createLearningPath(String username, Long spaceId) {
-        var space = getSpaceOrThrow(username, spaceId);
+    public void createLearningPath(String owner, Long spaceId) {
+        var space = getSpaceOrThrow(owner, spaceId);
 
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("SPACE_ID", space.getId().toString())
@@ -61,14 +62,14 @@ public class LearningService implements ILearningService {
     }
 
     @Override
-    public LearningPath getLearningPath(String username, Long spaceId) {
-        var space = getSpaceOrThrow(username, spaceId);
+    public LearningPath getLearningPath(String owner, Long spaceId) {
+        var space = getSpaceOrThrow(owner, spaceId);
         return databaseLearningStorage.read(space.getId());
     }
 
     @Override
-    public LearningPathStatus getLearningPathStatus(String username, Long spaceId) {
-        var learningPath = getLearningPath(username, spaceId);
+    public LearningPathStatus getLearningPathStatus(String owner, Long spaceId) {
+        var learningPath = getLearningPath(owner, spaceId);
 
         if (learningPath == null) {
             return LearningPathStatus.NOT_CREATED;
@@ -88,12 +89,8 @@ public class LearningService implements ILearningService {
     }
 
     @Override
-    public void deleteLearningPath(String username, Long spaceId) {
-        var learningPath = getLearningPath(username, spaceId);
-
-        if (learningPath == null) {
-            throw NotFoundException.learningPathNotFound(spaceId);
-        }
+    public void deleteLearningPath(String owner, Long spaceId) {
+        var learningPath = getLearningPathOrThrow(owner, spaceId);
 
         JobExecution jobExecution = jobRepository.getJobExecution(learningPath.getJobId());
         if (jobExecution != null && jobExecution.isRunning()) {
@@ -107,6 +104,29 @@ public class LearningService implements ILearningService {
         }
 
         databaseLearningStorage.delete(spaceId);
+    }
+
+    @Override
+    public void updateSettings(String owner, Long spaceId, PathSettings settings) {
+        settings.validate();
+        var space = getSpaceOrThrow(owner, spaceId);
+        var learningPath = getLearningPathOrThrow(space.getOwner(), space.getId());
+
+        if (learningPath.getSettings() == settings) {
+            return;
+        }
+
+        databaseLearningStorage.updateSettings(space.getId(), settings);
+    }
+
+    private LearningPath getLearningPathOrThrow(String owner, Long spaceId) {
+        var learningPath = getLearningPath(owner, spaceId);
+
+        if (learningPath == null) {
+            throw NotFoundException.learningPathNotFound(spaceId);
+        }
+
+        return learningPath;
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {

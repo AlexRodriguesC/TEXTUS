@@ -3,19 +3,14 @@ import useLearningPath, {type Chapter} from "@/hooks/useLearningPath.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
-import {Star, Trophy} from "lucide-react";
 import {useEffect, useRef, useState} from "react";
 import {Separator} from "@/components/ui/separator.tsx";
+import PathNode, {type PathNodeType} from "@/pages/space/learn/PathNodeType.tsx";
 
 function getStepCount(topicCount: number): number {
     if (topicCount <= 3) return 3;
     if (topicCount <= 6) return 5;
     return 8;
-}
-
-interface PathNode {
-    topics: number[];
-    type: "star" | "chest" | "trophy";
 }
 
 function distributeTopics(topics: number[], stepCount: number): number[][] {
@@ -26,26 +21,15 @@ function distributeTopics(topics: number[], stepCount: number): number[][] {
     return groups;
 }
 
-function buildNodes(topics: number[], stepCount: number): PathNode[] {
+function buildNodes(topics: number[], stepCount: number): PathNodeType[] {
     const groups = distributeTopics(topics, stepCount);
     return groups.map((g, i) => ({
         topics: g,
-        type: i === groups.length - 1 ? "trophy" : (i + 1) % 3 === 0 ? "chest" : "star",
+        type: i === groups.length - 1 ? "trophy" : "star",
     }));
 }
 
 const OFFSETS = [0, 60, 0, -60];
-
-function PathStep({ node, offset }: { node: PathNode; offset: number }) {
-    const icon = node.type === "trophy" ? <img className={"w-fit h-fit"} src={"/checkpoint.png"}/> : node.type === "chest" ? "🎁" : <img src={"/lesson.png"}/>;
-    return (
-        <div className={"flex justify-center"} style={{ transform: `translateX(${offset}px)` }}>
-            <div className={"flex h-16 w-16 items-center justify-center rounded-full bg-gray-700 text-2xl text-gray-400"}>
-                {icon}
-            </div>
-        </div>
-    );
-}
 
 function ChapterPath({ chapter}: { chapter: Chapter; sectionIndex: number }) {
     const stepCount = getStepCount(chapter.topics.length);
@@ -55,7 +39,7 @@ function ChapterPath({ chapter}: { chapter: Chapter; sectionIndex: number }) {
         <div className={"flex flex-col items-center gap-2 pb-8"} data-chapter-index={chapter.index}>
             <div className={"flex flex-col items-center gap-6 pt-4"}>
                 {nodes.map((node, i) => (
-                    <PathStep key={i} node={node} offset={OFFSETS[i % OFFSETS.length]} />
+                    <PathNode key={i} node={node} offset={OFFSETS[i % OFFSETS.length]} />
                 ))}
             </div>
         </div>
@@ -66,35 +50,38 @@ function SpaceLearn() {
     const { path, status } = useLearningPath();
     const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
     const chaptersRef = useRef<HTMLDivElement[]>([]);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const viewportRef = useRef<HTMLDivElement>(null);
+    const ratiosRef = useRef<Map<number, number>>(new Map());
 
     useEffect(() => {
-        if (!path?.chapters.length) return;
+        if (!path?.chapters.length || !viewportRef.current) return;
 
-        // Collect chapter container elements
         const elements = document.querySelectorAll<HTMLDivElement>("[data-chapter-index]");
         chaptersRef.current = Array.from(elements);
+        ratiosRef.current = new Map();
 
         const observer = new IntersectionObserver(
             (entries) => {
-                // Find the chapter with the largest intersection ratio
-                let maxRatio = 0;
-                let bestEntry: IntersectionObserverEntry | null = null;
-
                 entries.forEach((entry) => {
-                    if (entry.intersectionRatio > maxRatio) {
-                        maxRatio = entry.intersectionRatio;
-                        bestEntry = entry;
+                    const index = Number(entry.target.getAttribute("data-chapter-index"));
+                    ratiosRef.current.set(index, entry.intersectionRatio);
+                });
+
+                let bestIndex: number | null = null;
+                let maxRatio = 0;
+                ratiosRef.current.forEach((ratio, index) => {
+                    if (ratio > maxRatio) {
+                        maxRatio = ratio;
+                        bestIndex = index;
                     }
                 });
 
-                if (bestEntry && maxRatio > 0.3) {
-                    const index = Number(bestEntry.target.getAttribute("data-chapter-index"));
-                    const chapter = path.chapters.find((c) => c.index === index);
+                if (bestIndex !== null && maxRatio > 0.3) {
+                    const chapter = path.chapters.find((c) => c.index === bestIndex);
                     if (chapter) setActiveChapter(chapter);
                 }
             },
-            { root: scrollContainerRef.current, threshold: [0.3, 0.6] }
+            { root: viewportRef.current, threshold: [0, 0.3, 0.6, 1] }
         );
 
         chaptersRef.current.forEach((el) => observer.observe(el));
@@ -102,14 +89,14 @@ function SpaceLearn() {
         return () => observer.disconnect();
     }, [path]);
 
-    if (path === undefined || status === "NOT_CREATED") {
+    if (path === undefined || status === "NOT_CREATED" || path.chapters.length === 0) {
         return <SpaceLearnEmpty />;
     }
 
     return (
         <CenteredPage>
-            <div className="h-full w-full max-w-[90%] lg:max-w-[40%] flex flex-col items-center justify-center gap-16">
-                <div className={"sticky top-0 z-20 w-full"}>
+            <div className="h-full w-full max-w-[90%] lg:max-w-[40%] flex flex-col items-center gap-16 min-h-0">
+                <div className="sticky top-0 z-20 w-full">
                     {activeChapter ? (
                         <ChapterHeader chapter={activeChapter} />
                     ) : (
@@ -117,10 +104,7 @@ function SpaceLearn() {
                     )}
                 </div>
 
-                <ScrollArea
-                    ref={scrollContainerRef}
-                    className="h-full w-full"
-                >
+                <ScrollArea className="h-full w-full min-h-0" viewportRef={viewportRef}>
                     <div className={"flex h-full flex-col items-center"}>
                         {path.chapters.map((chapter, i) => (
                             <div key={chapter.index} className="flex flex-col">

@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record LearningPathResponseDTO(@NotNull List<ChapterResponseDTO> chapters) {
+public record LearningPathResponseDTO(@NotNull PathSettingsResponseDTO settings, @NotNull List<ChapterResponseDTO> chapters) {
 }

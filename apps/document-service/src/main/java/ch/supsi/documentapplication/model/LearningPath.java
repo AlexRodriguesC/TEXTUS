@@ -9,5 +9,6 @@ import lombok.Getter;
 public class LearningPath {
 
     private Long jobId;
+    private PathSettings settings;
     private List<Chapter> chapters;
 }

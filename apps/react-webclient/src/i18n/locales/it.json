@@ -104,6 +104,7 @@
     }
   },
   "button": {
+    "apply": "Modifica",
     "start": "Iniziamo!",
     "next": "Avanti",
     "back": "Indietro",
@@ -155,6 +156,17 @@
     }
   },
   "sidebar": {
+    "settings": {
+      "path": {
+        "changes": "Le modifiche alle impostazioni del percorso di apprendimento influenzeranno solo gli esercizi generati dopo le modifiche",
+        "title": "Impostazioni percorso",
+        "exerciseTypes": "Occorrenza tipi di esercizio",
+        "question": "Domanda",
+        "list": "Elenco",
+        "group": "Gruppo",
+        "pair": "Coppia"
+      }
+    },
     "actions": {
       "map": {
         "label": "Mappa Mentale",
@@ -184,6 +196,10 @@
     }
   },
   "learning-path": {
+    "settings": {
+      "success": "Impostazioni del percorso di apprendimento aggiornate con successo",
+      "error": "Si è verificato un errore durante l'aggiornamento delle impostazioni del percorso di apprendimento"
+    },
     "creation": {
       "success": "Creazione percorso di apprendimento programmata con successo",
       "error": "Si è verificato un errore durante la creazione del percorso di apprendimento"

@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Chapter;
 import ch.supsi.documentapplication.model.LearningPath;
+import ch.supsi.documentapplication.model.PathSettings;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
@@ -55,20 +56,31 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     public LearningPath read(Long spaceId) {
         var pathRow = jdbcClient
                 .sql("""
-            SELECT * FROM documents.read_learning_path(:spaceId)
-            """)
+                SELECT * FROM documents.read_learning_path(:spaceId)
+                """)
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new AbstractMap.SimpleEntry<>(rs.getLong("id"), rs.getLong("job_id")))
+                .query((rs, rowNum) -> {
+                    Long jobId = rs.getLong("job_id");
+                    PathSettings settings = new PathSettings(
+                            rs.getInt("question_percentage"),
+                            rs.getInt("list_percentage"),
+                            rs.getInt("group_percentage"),
+                            rs.getInt("pair_percentage"));
+                    return new AbstractMap.SimpleEntry<>(jobId, settings);
+                })
                 .optional();
 
         if (pathRow.isEmpty()) {
             return null;
         }
 
+        Long jobId = pathRow.get().getKey();
+        PathSettings settings = pathRow.get().getValue();
+
         List<Chapter> chapters = jdbcClient
                 .sql("""
-            SELECT * FROM documents.read_chapters(:spaceId)
-            """)
+                SELECT * FROM documents.read_chapters(:spaceId)
+                """)
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new Chapter(
                         rs.getLong("id"),
@@ -78,7 +90,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                         Arrays.asList((Long[]) rs.getArray("topic_ids").getArray())))
                 .list();
 
-        return new LearningPath(pathRow.get().getValue(), chapters);
+        return new LearningPath(jobId, settings, chapters);
     }
 
     @Override
@@ -88,6 +100,20 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
             SELECT documents.delete_learning_path(:spaceId)
             """)
                 .param(SPACE_ID, spaceId)
+                .query()
+                .singleValue();
+    }
+
+    @Override
+    public void updateSettings(Long id, PathSettings settings) {
+        jdbcClient
+                .sql(
+                        "SELECT documents.update_path_settings(:spaceId, :questionPercentage, :listPercentage, :groupPercentage, :pairPercentage)")
+                .param(SPACE_ID, id)
+                .param("questionPercentage", settings.getQuestionPercentage())
+                .param("listPercentage", settings.getListPercentage())
+                .param("groupPercentage", settings.getGroupPercentage())
+                .param("pairPercentage", settings.getPairPercentage())
                 .query()
                 .singleValue();
     }
