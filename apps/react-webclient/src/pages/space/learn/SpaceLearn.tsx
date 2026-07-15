@@ -1,45 +1,30 @@
-import SpaceLearnEmpty from "@/pages/space/learn/SpaceLearnEmpty.tsx";
-import useLearningPath, {type Chapter} from "@/hooks/useLearningPath.ts";
-import CenteredPage from "@/components/CenteredPage.tsx";
+import SpaceLearnEmpty from "@/pages/space/learn/SpaceLearnEmpty.tsx";import CenteredPage from "@/components/CenteredPage.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import {useEffect, useRef, useState} from "react";
 import {Separator} from "@/components/ui/separator.tsx";
 import PathNode, {type PathNodeType} from "@/pages/space/learn/PathNodeType.tsx";
-
-function getStepCount(topicCount: number): number {
-    if (topicCount <= 3) return 3;
-    if (topicCount <= 6) return 5;
-    return 8;
-}
-
-function distributeTopics(topics: number[], stepCount: number): number[][] {
-    const groups: number[][] = Array.from({ length: stepCount }, () => []);
-    topics.forEach((topicId, i) => {
-        groups[i % stepCount].push(topicId);
-    });
-    return groups;
-}
-
-function buildNodes(topics: number[], stepCount: number): PathNodeType[] {
-    const groups = distributeTopics(topics, stepCount);
-    return groups.map((g, i) => ({
-        topics: g,
-        type: i === groups.length - 1 ? "trophy" : "star",
-    }));
-}
+import {NodeResponseDTOType} from "@/client/model/nodeResponseDTOType.ts";
+import type {ChapterResponseDTO, NodeResponseDTO} from "@/client/model";
+import useLearningPath from "@/hooks/useLearningPath.ts";
 
 const OFFSETS = [0, 60, 0, -60];
 
-function ChapterPath({ chapter}: { chapter: Chapter; sectionIndex: number }) {
-    const stepCount = getStepCount(chapter.topics.length);
-    const nodes = buildNodes(chapter.topics, stepCount);
+function toPathNode(node: NodeResponseDTO): PathNodeType {
+    return {
+        topics: node.topics,
+        type: node.type === NodeResponseDTOType.CHECKPOINT ? "trophy" : "star",
+    };
+}
+
+function ChapterPath({ chapter }: { chapter: ChapterResponseDTO; sectionIndex: number }) {
+    const nodes = chapter.nodes.map(toPathNode);
 
     return (
         <div className={"flex flex-col items-center gap-2 pb-8"} data-chapter-index={chapter.index}>
             <div className={"flex flex-col items-center gap-6 pt-4"}>
-                {nodes.map((node, i) => (
-                    <PathNode key={i} node={node} offset={OFFSETS[i % OFFSETS.length]} />
+                {chapter.nodes.map((node, i) => (
+                    <PathNode key={node.id} node={nodes[i]} offset={OFFSETS[i % OFFSETS.length]} />
                 ))}
             </div>
         </div>
@@ -48,7 +33,7 @@ function ChapterPath({ chapter}: { chapter: Chapter; sectionIndex: number }) {
 
 function SpaceLearn() {
     const { path, status } = useLearningPath();
-    const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
+    const [activeChapter, setActiveChapter] = useState<ChapterResponseDTO | null>(null);
     const chaptersRef = useRef<HTMLDivElement[]>([]);
     const viewportRef = useRef<HTMLDivElement>(null);
     const ratiosRef = useRef<Map<number, number>>(new Map());

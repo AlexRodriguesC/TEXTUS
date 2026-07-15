@@ -4,8 +4,7 @@ CREATE OR REPLACE FUNCTION documents.read_chapters(p_space_id BIGINT)
                 id          BIGINT,
                 index       INTEGER,
                 title       TEXT,
-                description TEXT,
-                topic_ids   BIGINT[]
+                description TEXT
             )
     LANGUAGE plpgsql
 AS
@@ -15,12 +14,8 @@ BEGIN
         SELECT c.id,
                c.index,
                c.title,
-               c.description,
-               ARRAY_AGG(t.id ORDER BY t.id) AS topic_ids
+               c.description
         FROM documents.chapter c
-                 JOIN documents.topic t ON t.chapter_id = c.id
-                 JOIN documents.page p ON p.id = t.page_id
-        WHERE p.space_id = p_space_id
-        GROUP BY c.id, c.index, c.title, c.description;
+                 JOIN documents.learning_path p ON p.space_id = p_space_id;
 END;
 $$;

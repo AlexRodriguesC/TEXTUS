@@ -3,6 +3,8 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.LearningPath;
+import ch.supsi.documentapplication.model.learn.Node;
+import ch.supsi.documentapplication.model.learn.NodeType;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
@@ -25,19 +27,31 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
 
     @Override
     public void create(Long pathId, Chapter chapter, Long spaceId) {
-        jdbcClient
+        Long chapterId = jdbcClient
                 .sql(
                         """
-            SELECT documents.create_chapter(:spaceId, :pathId, :index, :title, :description, :topics)
+            SELECT documents.create_chapter(:spaceId, :pathId, :index, :title, :description)
             """)
                 .param(SPACE_ID, spaceId)
                 .param("pathId", pathId)
                 .param(INDEX, chapter.getIndex())
                 .param(TITLE, chapter.getTitle())
                 .param(DESCRIPTION, chapter.getDescription())
-                .param("topics", chapter.getTopics().toArray(new Long[0]))
-                .query()
-                .singleValue();
+                .query(Long.class)
+                .single();
+
+        var nodes = chapter.getNodes();
+
+        for (Node node : nodes) {
+            jdbcClient
+                    .sql("SELECT documents.create_node(:chapter_id, :index, :type, :topics)")
+                    .param("chapter_id", chapterId)
+                    .param("index", node.getIndex())
+                    .param("type", node.getType().name().toLowerCase())
+                    .param("topics", node.getTopics().toArray(new Long[0]))
+                    .query(Long.class)
+                    .single();
+        }
     }
 
     @Override
@@ -83,14 +97,39 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                 """)
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new Chapter(
-                        rs.getLong("id"),
-                        rs.getInt(INDEX),
-                        rs.getString(TITLE),
-                        rs.getString(DESCRIPTION),
-                        Arrays.asList((Long[]) rs.getArray("topic_ids").getArray())))
+                        rs.getLong("id"), rs.getInt(INDEX), rs.getString(TITLE), rs.getString(DESCRIPTION), null))
                 .list();
 
+        for (Chapter chapter : chapters) {
+            List<Node> nodes = getNodesByChapterId(chapter.getId());
+            chapter.setNodes(nodes);
+        }
+
         return new LearningPath(jobId, settings, chapters);
+    }
+
+    private List<Node> getNodesByChapterId(Long chapterId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_nodes(:chapter_id)")
+                .param("chapter_id", chapterId)
+                .query((rs, rowNum) -> {
+                    Long id = rs.getLong("id");
+                    Integer index = rs.getInt("index");
+                    String typeStr = rs.getString("type");
+                    NodeType type = NodeType.valueOf(typeStr.toUpperCase());
+
+                    java.sql.Array topicsArray = rs.getArray("topics");
+                    List<Long> topics;
+                    if (topicsArray != null) {
+                        Long[] arr = (Long[]) topicsArray.getArray();
+                        topics = Arrays.asList(arr);
+                    } else {
+                        topics = List.of();
+                    }
+
+                    return new Node(id, type, index, topics);
+                })
+                .list();
     }
 
     @Override

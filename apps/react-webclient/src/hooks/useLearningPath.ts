@@ -8,28 +8,20 @@ import {
     useGetLearningPathJob, useUpdatePathSettings
 } from "@/client/generated/paths/paths.ts";
 import type {
+    ChapterResponseDTO,
     ErrorResponseDTO,
     LearningPathJobDTO,
     LearningPathJobDTOStatus,
-    LearningPathResponseDTO, PathSettingsResponseDTO,
+    LearningPathResponseDTO, NodeResponseDTO, PathSettingsResponseDTO,
 } from "@/client/model";
 import {useTranslation} from "react-i18next";
 import {failureToast, successToast} from "@/lib/toasts.ts";
 import {useQueryClient} from "@tanstack/react-query";
 
-export interface LearningPath {
-    settings: LearningPathSettings;
-    chapters: Chapter[];
-}
-
-export interface Chapter {
-    index: number;
-    title: string;
-    description: string;
-    topics: number[];
-}
-
+export interface LearningPath extends LearningPathResponseDTO {}
 export interface LearningPathSettings extends PathSettingsResponseDTO {}
+export interface Chapter extends ChapterResponseDTO {}
+export interface Node extends NodeResponseDTO {}
 
 type LearningPathStatus = LearningPathJobDTOStatus
 
@@ -128,7 +120,7 @@ function useLearningPath() {
 export default useLearningPath;
 
 function isLearningPathDTO(data: ErrorResponseDTO | LearningPathResponseDTO): data is LearningPathResponseDTO {
-    return "chapters" in data;
+    return "chapters" in data && "settings" in data;
 }
 
 function isLearningPathJobDTO(data: ErrorResponseDTO | LearningPathJobDTO): data is LearningPathJobDTO {

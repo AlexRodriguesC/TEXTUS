@@ -21,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("api/v1/spaces/{spaceId}/paths")
 @SecurityRequirement(name = "bearerAuth")
@@ -121,9 +119,7 @@ public class LearningController {
             throw NotFoundException.learningPathNotFound(spaceId);
         }
 
-        List<ChapterResponseDTO> dtos = learningPath.getChapters().stream().map(c -> new ChapterResponseDTO(c.getIndex(), c.getTitle(), c.getDescription(), c.getTopics())).toList();
-
-        return ResponseEntity.ok(new LearningPathResponseDTO(PathSettingsResponseDTO.from(learningPath.getSettings()), dtos));
+        return ResponseEntity.ok(LearningPathResponseDTO.from(learningPath));
     }
 
     @DeleteMapping

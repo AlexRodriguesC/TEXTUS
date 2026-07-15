@@ -74,7 +74,6 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
             remainingTopics.removeAll(matchingTopics);
 
             var matchingAsLong = matchingTopics.stream().map(Topic::getId).toList();
-
             finalChapters.add(new Chapter(
                     chapter.getIndex(),
                     chapter.getTitle(),
@@ -82,6 +81,8 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                     chapter.getLabels(),
                     matchingAsLong));
         }
+
+        finalChapters.forEach(Chapter::buildNodes);
 
         for (Chapter chapter : finalChapters) {
             databaseLearningStorage.create(pathId, chapter, spaceId);

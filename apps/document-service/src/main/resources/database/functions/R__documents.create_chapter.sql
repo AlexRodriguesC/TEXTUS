@@ -3,8 +3,7 @@ CREATE OR REPLACE FUNCTION documents.create_chapter(
     p_path_id BIGINT,
     p_index INTEGER,
     p_title TEXT,
-    p_description TEXT,
-    p_topics BIGINT[]
+    p_description TEXT
 )
     RETURNS BIGINT
     LANGUAGE plpgsql
@@ -23,10 +22,6 @@ BEGIN
     INSERT INTO documents.chapter (path_id, index, title, description)
     VALUES (p_path_id, p_index, p_title, p_description)
     RETURNING id INTO v_chapter_id;
-
-    UPDATE documents.topic
-    SET chapter_id = v_chapter_id
-    WHERE id = ANY (p_topics);
 
     RETURN v_chapter_id;
 END;
