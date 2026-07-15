@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.service.async.documentpipeline;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.Page;
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient;
 import java.util.ArrayList;

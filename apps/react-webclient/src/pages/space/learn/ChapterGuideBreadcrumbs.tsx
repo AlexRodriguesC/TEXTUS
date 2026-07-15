@@ -31,11 +31,11 @@ function ChapterGuideBreadcrumbs({ chapter }: ChapterGuideBreadcrumbsProps) {
         <Breadcrumb>
             <BreadcrumbList>
                 <BreadcrumbItem>
-                    <BreadcrumbLink onClick={handleLearnClick}>{t("general.learn")}</BreadcrumbLink>
+                    <BreadcrumbLink className={"cursor-pointer"} onClick={handleLearnClick}>{t("general.learn")}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                    <BreadcrumbPage>{chapter.title}</BreadcrumbPage>
+                    <BreadcrumbPage className={"cursor-pointer"}>{chapter.title}</BreadcrumbPage>
                 </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>

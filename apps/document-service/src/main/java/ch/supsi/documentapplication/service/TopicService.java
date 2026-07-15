@@ -5,7 +5,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.Space;
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Topic;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

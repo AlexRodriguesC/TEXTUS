@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.validator;
 
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException;
-import ch.supsi.documentapplication.model.Chapter;
+import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import java.util.List;
 

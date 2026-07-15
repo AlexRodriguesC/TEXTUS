@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.model.*;
+import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import java.util.ArrayList;

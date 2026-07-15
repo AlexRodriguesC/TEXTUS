@@ -1,8 +1,8 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chapter;
-import ch.supsi.documentapplication.model.LearningPath;
 import ch.supsi.documentapplication.model.PathSettings;
+import ch.supsi.documentapplication.model.learn.Chapter;
+import ch.supsi.documentapplication.model.learn.LearningPath;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;

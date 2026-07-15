@@ -1,5 +1,6 @@
-package ch.supsi.documentapplication.model;
+package ch.supsi.documentapplication.model.learn;
 
+import ch.supsi.documentapplication.model.PathSettings;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

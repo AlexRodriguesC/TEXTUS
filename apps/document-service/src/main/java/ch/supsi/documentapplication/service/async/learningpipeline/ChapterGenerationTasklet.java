@@ -2,8 +2,8 @@ package ch.supsi.documentapplication.service.async.learningpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseLearningStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
-import ch.supsi.documentapplication.model.Chapter;
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Chapter;
+import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient;
 import java.util.ArrayList;

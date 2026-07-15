@@ -1,8 +1,8 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chapter;
-import ch.supsi.documentapplication.model.LearningPath;
 import ch.supsi.documentapplication.model.PathSettings;
+import ch.supsi.documentapplication.model.learn.Chapter;
+import ch.supsi.documentapplication.model.learn.LearningPath;
 
 public interface IDatabaseLearningStorage {
 

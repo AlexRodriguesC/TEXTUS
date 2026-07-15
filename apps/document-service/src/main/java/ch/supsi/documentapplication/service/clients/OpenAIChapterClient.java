@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.service.clients;
 
-import ch.supsi.documentapplication.model.Chapter;
+import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import ch.supsi.documentapplication.service.validator.Validator;
 import java.util.List;

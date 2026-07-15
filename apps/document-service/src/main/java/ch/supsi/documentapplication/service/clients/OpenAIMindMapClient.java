@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.MindMap;
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.util.List;
 import java.util.Map;

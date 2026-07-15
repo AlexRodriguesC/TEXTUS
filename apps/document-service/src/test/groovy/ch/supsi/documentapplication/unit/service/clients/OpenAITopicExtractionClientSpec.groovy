@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.model.Page
-import ch.supsi.documentapplication.model.Topic
+import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient
 import org.apache.commons.lang3.tuple.Pair
 import org.springframework.ai.chat.client.ChatClient
@@ -39,7 +39,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         client = new OpenAITopicExtractionClient(chatClient, retryTemplate, promptTemplate)
     }
 
-    Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
+    static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
         return new Topic(id, title, summary, labels)
     }
 
@@ -47,7 +47,8 @@ class OpenAITopicExtractionClientSpec extends Specification {
         given: "a page and existing topics with overlapping labels"
         def page = new Page(1L, "title1", "page summary text")
         def existingTopics = [
-                topic(1L, "topicA", "summ", ["label1", "label2"]),
+                topic(1L, "topicA",
+                        "summ", ["label1", "label2"]),
                 topic(2L, "topicB", "summ", ["label2", "label3"])
         ]
         def input = Pair.of(page, existingTopics)

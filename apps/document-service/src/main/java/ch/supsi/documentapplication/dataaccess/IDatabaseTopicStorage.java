@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Topic;
 import java.util.List;
 
 public interface IDatabaseTopicStorage {

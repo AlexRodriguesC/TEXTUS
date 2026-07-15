@@ -1,4 +1,4 @@
-package ch.supsi.documentapplication.model;
+package ch.supsi.documentapplication.model.learn;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;

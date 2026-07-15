@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.Page;
-import ch.supsi.documentapplication.model.Topic;
+import ch.supsi.documentapplication.model.learn.Topic;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
