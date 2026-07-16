@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.controller;
 
-import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -134,51 +133,4 @@ public class LearningController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(null); // service call goes here
     }
-
-    // =====================================================================
-    // DTOs
-    // =====================================================================
-
-    @Schema(description = "Represents the state of a node's lesson, including BKT mastery and completion status")
-    public record LessonResponseDTO(
-            @Schema(description = "Identifier of the node this lesson belongs to") Long nodeId,
-            @Schema(description = "Current lesson status", example = "IN_PROGRESS") LessonStatus status,
-            @Schema(description = "Current BKT mastery probability, between 0 and 1", example = "0.42") double mastery,
-            @Schema(description = "Number of attempts used so far in this lesson", example = "3") int attemptsUsed,
-            @Schema(description = "Maximum number of attempts allowed before the lesson is exhausted", example = "10") int maxAttempts
-    ) {}
-
-    @Schema(description = "Status of a lesson")
-    public enum LessonStatus {
-        IN_PROGRESS,
-        MASTERED,
-        EXHAUSTED
-    }
-
-    @Schema(description = "Represents a single exercise served to the user for a lesson")
-    public record ExerciseResponseDTO(
-            @Schema(description = "Unique identifier of the exercise") Long exerciseId,
-            @Schema(description = "Identifier of the node this exercise belongs to") Long nodeId,
-            @Schema(description = "Exercise family type", example = "pair") String family,
-            @Schema(description = "Family-specific exercise content payload") Object content,
-            @Schema(description = "Whether this exercise has already been attempted", example = "false") boolean completed
-    ) {}
-
-    @Schema(description = "Request body for submitting an attempt at the lesson's current exercise")
-    public record AttemptRequestDTO(
-            @Schema(description = "Client-generated unique identifier for this attempt, used for idempotent retries", example = "att_5541") String attemptId,
-            @Schema(description = "Identifier of the exercise being attempted; must match the lesson's current exercise") Long exerciseId,
-            @Schema(description = "User's submitted responses, shape depends on exercise family") List<Object> responses,
-            @Schema(description = "Time taken to respond, in milliseconds", example = "4200") long responseTimeMs
-    ) {}
-
-    @Schema(description = "Feedback returned after submitting an attempt")
-    public record AttemptResponseDTO(
-            @Schema(description = "Identifier of the submitted attempt") String attemptId,
-            @Schema(description = "Identifier of the attempted exercise") Long exerciseId,
-            @Schema(description = "Whether the overall attempt was correct") boolean correct,
-            @Schema(description = "Per-item grading results, shape depends on exercise family") List<Object> results,
-            @Schema(description = "Updated lesson state after this attempt, including new mastery and status") LessonResponseDTO lesson,
-            @Schema(description = "Timestamp when the attempt was recorded") Instant submittedAt
-    ) {}
 }

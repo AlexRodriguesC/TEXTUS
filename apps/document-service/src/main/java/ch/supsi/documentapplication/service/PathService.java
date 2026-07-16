@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.service;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseLearningStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.JobFailedToStartException;
 import ch.supsi.documentapplication.exception.NotFoundException;
@@ -23,21 +23,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class PathService implements IPathService {
 
-    private final IDatabaseLearningStorage databaseLearningStorage;
-    private final IDatabaseSpaceStorage databaseSpaceStorage;
+    private final IDatabasePathStorage pathStorage;
+    private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final JobRepository jobRepository;
     private final Job chapterJob;
 
     @Autowired
     public PathService(
-            IDatabaseLearningStorage databaseLearningStorage,
-            IDatabaseSpaceStorage databaseSpaceStorage,
+            IDatabasePathStorage pathStorage,
+            IDatabaseSpaceStorage spaceStorage,
             JobOperator jobOperator,
             JobRepository jobRepository,
             Job chapterJob) {
-        this.databaseLearningStorage = databaseLearningStorage;
-        this.databaseSpaceStorage = databaseSpaceStorage;
+        this.pathStorage = pathStorage;
+        this.spaceStorage = spaceStorage;
         this.jobOperator = jobOperator;
         this.jobRepository = jobRepository;
         this.chapterJob = chapterJob;
@@ -64,7 +64,7 @@ public class PathService implements IPathService {
     @Override
     public LearningPath getLearningPath(String owner, Long spaceId) {
         var space = getSpaceOrThrow(owner, spaceId);
-        return databaseLearningStorage.read(space.getId());
+        return pathStorage.read(space.getId());
     }
 
     @Override
@@ -103,7 +103,7 @@ public class PathService implements IPathService {
             log.info("Stopped job {} for learning path in space with id {}", learningPath.getJobId(), spaceId);
         }
 
-        databaseLearningStorage.delete(spaceId);
+        pathStorage.delete(spaceId);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class PathService implements IPathService {
             return;
         }
 
-        databaseLearningStorage.updateSettings(space.getId(), settings);
+        pathStorage.updateSettings(space.getId(), settings);
     }
 
     private LearningPath getLearningPathOrThrow(String owner, Long spaceId) {
@@ -130,7 +130,7 @@ public class PathService implements IPathService {
     }
 
     private Space getSpaceOrThrow(String username, Long spaceId) {
-        var optSpace = databaseSpaceStorage.read(spaceId);
+        var optSpace = spaceStorage.read(spaceId);
         if (optSpace.isEmpty()) {
             throw NotFoundException.spaceNotFoundException(spaceId);
         }

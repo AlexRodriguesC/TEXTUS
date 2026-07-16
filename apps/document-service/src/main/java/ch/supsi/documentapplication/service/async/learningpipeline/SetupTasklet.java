@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.service.async.learningpipeline;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseLearningStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import lombok.extern.log4j.Log4j2;
@@ -26,9 +26,9 @@ public class SetupTasklet extends ProcessingTasklet {
     private Long executionId;
 
     private final IDatabaseSpaceStorage databaseSpaceStorage;
-    private final IDatabaseLearningStorage databaseLearningStorage;
+    private final IDatabasePathStorage databaseLearningStorage;
 
-    public SetupTasklet(IDatabaseSpaceStorage databaseSpaceStorage, IDatabaseLearningStorage databaseLearningStorage) {
+    public SetupTasklet(IDatabaseSpaceStorage databaseSpaceStorage, IDatabasePathStorage databaseLearningStorage) {
         this.databaseSpaceStorage = databaseSpaceStorage;
         this.databaseLearningStorage = databaseLearningStorage;
     }

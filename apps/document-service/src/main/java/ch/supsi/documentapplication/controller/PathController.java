@@ -27,11 +27,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Paths", description = "Endpoints for handling learning paths within a space")
 public class PathController {
 
-    private final IPathService learningService;
+    private final IPathService pathService;
 
     @Autowired
-    public PathController(IPathService learningService) {
-        this.learningService = learningService;
+    public PathController(IPathService pathService) {
+        this.pathService = pathService;
     }
 
 
@@ -53,7 +53,7 @@ public class PathController {
             @Parameter(hidden = true) Authentication authentication) {
 
         String username = authentication.getName();
-        learningService.updateSettings(username, spaceId, PathSettings.from(settings));
+        pathService.updateSettings(username, spaceId, PathSettings.from(settings));
         return ResponseEntity.ok().build();
     }
 
@@ -75,7 +75,7 @@ public class PathController {
     public ResponseEntity<Void> extractLearningPath(@Parameter(description = "The ID of the space to generate the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
                                                     @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        learningService.createLearningPath(username, spaceId);
+        pathService.createLearningPath(username, spaceId);
         return ResponseEntity.accepted().build();
     }
 
@@ -94,7 +94,7 @@ public class PathController {
     public ResponseEntity<LearningPathJobDTO> getLearningPathJob(@Parameter(description = "The ID of the space to retrieve the learning-path job for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
                                                                  @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        var status = learningService.getLearningPathStatus(username, spaceId);
+        var status = pathService.getLearningPathStatus(username, spaceId);
         return ResponseEntity.ok(new LearningPathJobDTO(status));
     }
 
@@ -113,7 +113,7 @@ public class PathController {
     public ResponseEntity<LearningPathResponseDTO> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
                                                                    @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        var learningPath = learningService.getLearningPath(username, spaceId);
+        var learningPath = pathService.getLearningPath(username, spaceId);
 
         if (learningPath == null) {
             throw NotFoundException.learningPathNotFound(spaceId);
@@ -137,7 +137,7 @@ public class PathController {
     public ResponseEntity<Void> deleteLearningPath(@Parameter(description = "The ID of the space to delete the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
                                                    @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        learningService.deleteLearningPath(username, spaceId);
+        pathService.deleteLearningPath(username, spaceId);
         return ResponseEntity.noContent().build();
     }
 

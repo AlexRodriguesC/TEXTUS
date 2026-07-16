@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.service.async.learningpipeline;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseLearningStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.Topic;
@@ -26,12 +26,12 @@ import org.springframework.stereotype.Component;
 public class ChapterGenerationTasklet extends ProcessingTasklet {
 
     private final IDatabaseTopicStorage databaseTopicStorage;
-    private final IDatabaseLearningStorage databaseLearningStorage;
+    private final IDatabasePathStorage databaseLearningStorage;
     private final OpenAIChapterClient openAIChapterClient;
 
     public ChapterGenerationTasklet(
             IDatabaseTopicStorage databaseTopicStorage,
-            IDatabaseLearningStorage databaseLearningStorage,
+            IDatabasePathStorage databaseLearningStorage,
             OpenAIChapterClient chapterClient) {
         this.databaseTopicStorage = databaseTopicStorage;
         this.databaseLearningStorage = databaseLearningStorage;
