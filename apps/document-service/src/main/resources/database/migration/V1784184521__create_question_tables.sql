@@ -7,3 +7,10 @@ CREATE TABLE IF NOT EXISTS documents.question
     explanation TEXT,
     distractors  TEXT[]
 )
+
+CREATE TABLE IF NOT EXISTS documents.distractor
+(
+    id           BIGSERIAL PRIMARY KEY,
+    question_id BIGINT REFERENCES documents.question(id) ON DELETE CASCADE,
+    distractor   TEXT
+)

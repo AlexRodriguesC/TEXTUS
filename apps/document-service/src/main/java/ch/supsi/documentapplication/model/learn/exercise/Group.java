@@ -3,10 +3,9 @@ package ch.supsi.documentapplication.model.learn.exercise;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
-import java.util.Map;
 
 @JsonTypeName("GROUP")
-public class Group extends BaseExercise<Map<String, List<String>>> {
+public class Group extends BaseExercise<List<GroupAnswer>> {
 
     @Override
     public ExerciseType getType() {

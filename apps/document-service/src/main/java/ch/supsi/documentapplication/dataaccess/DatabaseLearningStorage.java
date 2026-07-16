@@ -5,18 +5,24 @@ import ch.supsi.documentapplication.model.learn.Lesson2;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 
 import java.util.List;
+import java.util.Map;
 
 import ch.supsi.documentapplication.model.learn.exercise.Group;
 import ch.supsi.documentapplication.model.learn.exercise.Pair;
 import ch.supsi.documentapplication.model.learn.exercise.Question;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class DatabaseLearningStorage extends DatabaseStorage implements IDatabaseLearningStorage {
 
+    private final ObjectMapper objectMapper;
+
     public DatabaseLearningStorage(JdbcClient jdbcClient) {
         super(jdbcClient);
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -85,14 +91,11 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     private void createPair(Long exerciseId, Pair pair) {
-        var answer = pair.getAnswer();
         Long id = jdbcClient
-                .sql("SELECT documents.create_pair(:exerciseId, :request, :leftValue, :rightValue, :explanation)")
+                .sql("SELECT documents.create_pair(:exerciseId, :request, :pairs::jsonb)")
                 .param("exerciseId", exerciseId)
                 .param("request", pair.getRequest())
-                .param("leftValue", answer.getLeft())
-                .param("rightValue", answer.getRight())
-                .param("explanation", pair.getExplanation())
+                .param("pairs", toPairsJson(pair.getAnswer()))
                 .query(Long.class)
                 .single();
         pair.setId(id);
@@ -125,5 +128,16 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                 .param("isCorrect", !attempt.isAnswerWrong())
                 .param("feedback", attempt.getFeedback())
                 .update();
+    }
+
+    private String toPairsJson(List<org.apache.commons.lang3.tuple.Pair<String, String>> pairs) {
+        try {
+            var nodes = pairs.stream()
+                    .map(p -> Map.of("left", p.getLeft(), "right", p.getRight()))
+                    .toList();
+            return objectMapper.writeValueAsString(nodes);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

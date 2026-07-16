@@ -34,7 +34,7 @@ public abstract class BaseExercise<T> implements IExercise<T> {
     protected boolean completed = false;
 
     protected String request;
-    protected Answer<T> answer;
+    protected T answer;
 
     @Override
     public String getRequest() {
@@ -43,7 +43,7 @@ public abstract class BaseExercise<T> implements IExercise<T> {
 
     @Override
     public T getAnswer() {
-        return answer.getAnswer();
+        return answer;
     }
 
     public abstract ExerciseType getType();

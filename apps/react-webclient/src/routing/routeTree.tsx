@@ -12,6 +12,8 @@ import SpaceChat from "@/pages/space/SpaceChat.tsx";
 import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 import ChapterGuide from "@/pages/space/learn/ChapterGuide.tsx";
+import Question from "@/pages/space/learn/Question.tsx";
+import Lesson from "@/pages/space/learn/Lesson.tsx";
 
 const rootRoute = createRootRoute({
   notFoundComponent: NotFoundPage,
@@ -66,7 +68,7 @@ const registerRoute = createRoute({
 const homeRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: PathConstants.HOME,
-  component: HomePage,
+  component: Lesson,
 });
 
 const spacesRoute = createRoute({
