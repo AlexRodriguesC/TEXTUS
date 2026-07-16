@@ -3,8 +3,8 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.LearningPath;
-import ch.supsi.documentapplication.model.learn.Node;
-import ch.supsi.documentapplication.model.learn.NodeType;
+import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.model.learn.LessonType;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
@@ -40,15 +40,15 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .query(Long.class)
                 .single();
 
-        var nodes = chapter.getNodes();
+        var nodes = chapter.getLesson2s();
 
-        for (Node node : nodes) {
+        for (Lesson2 lesson2 : nodes) {
             jdbcClient
                     .sql("SELECT documents.create_node(:chapter_id, :index, :type, :topics)")
                     .param("chapter_id", chapterId)
-                    .param("index", node.getIndex())
-                    .param("type", node.getType().name().toLowerCase())
-                    .param("topics", node.getTopics().toArray(new Long[0]))
+                    .param("index", lesson2.getIndex())
+                    .param("type", lesson2.getType().name().toLowerCase())
+                    .param("topics", lesson2.getTopics().toArray(new Long[0]))
                     .query(Long.class)
                     .single();
         }
@@ -101,14 +101,14 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .list();
 
         for (Chapter chapter : chapters) {
-            List<Node> nodes = getNodesByChapterId(chapter.getId());
-            chapter.setNodes(nodes);
+            List<Lesson2> lesson2s = getNodesByChapterId(chapter.getId());
+            chapter.setLesson2s(lesson2s);
         }
 
         return new LearningPath(jobId, settings, chapters);
     }
 
-    private List<Node> getNodesByChapterId(Long chapterId) {
+    private List<Lesson2> getNodesByChapterId(Long chapterId) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_nodes(:chapter_id)")
                 .param("chapter_id", chapterId)
@@ -116,7 +116,7 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                     Long id = rs.getLong("id");
                     Integer index = rs.getInt("index");
                     String typeStr = rs.getString("type");
-                    NodeType type = NodeType.valueOf(typeStr.toUpperCase());
+                    LessonType type = LessonType.valueOf(typeStr.toUpperCase());
 
                     java.sql.Array topicsArray = rs.getArray("topics");
                     List<Long> topics;
@@ -127,7 +127,7 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                         topics = List.of();
                     }
 
-                    return new Node(id, type, index, topics);
+                    return new Lesson2(id, type, index, topics);
                 })
                 .list();
     }

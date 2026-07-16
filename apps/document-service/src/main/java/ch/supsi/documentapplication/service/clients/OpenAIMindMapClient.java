@@ -2,11 +2,13 @@ package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.learn.Topic;
+import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.util.List;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.core.retry.RetryOperations;
 import org.springframework.core.retry.RetryTemplate;
 
 public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
@@ -17,7 +19,7 @@ public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
 
     public OpenAIMindMapClient(
             ChatClient chatClient,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplate,
             MindMapValidator mindMapValidator,
             PromptTemplate promptTemplate) {
         super(chatClient, retryTemplate, promptTemplate);

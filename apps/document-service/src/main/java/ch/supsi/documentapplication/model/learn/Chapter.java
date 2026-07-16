@@ -24,7 +24,7 @@ public class Chapter {
 
     @Setter
     @JsonIgnore
-    private List<Node> nodes;
+    private List<Lesson2> lesson2s;
 
     @JsonCreator
     public Chapter(
@@ -37,7 +37,7 @@ public class Chapter {
         this.description = description;
         this.labels = labels;
         this.topics = null;
-        this.nodes = null;
+        this.lesson2s = null;
     }
 
     public Chapter(Integer index, String title, String description, List<Long> labels, List<Long> topics) {
@@ -46,7 +46,7 @@ public class Chapter {
         this.description = description;
         this.labels = labels;
         this.topics = topics;
-        this.nodes = null;
+        this.lesson2s = null;
     }
 
     public Chapter(Long id, Integer index, String title, String description, List<Long> topics) {
@@ -72,23 +72,23 @@ public class Chapter {
      */
     public void buildNodes() {
         if (this.topics == null || this.topics.isEmpty()) {
-            this.nodes = new ArrayList<>();
+            this.lesson2s = new ArrayList<>();
             return;
         }
 
         int stepCount = getStepCount(this.topics.size());
         List<List<Long>> groups = distributeTopics(this.topics, stepCount);
 
-        List<Node> result = new ArrayList<>(groups.size());
+        List<Lesson2> result = new ArrayList<>(groups.size());
         for (int i = 0; i < groups.size(); i++) {
-            NodeType type = (i == groups.size() - 1) ? NodeType.CHECKPOINT : NodeType.LESSON;
-            if (type == NodeType.LESSON) {
-                result.add(new Node(type, i, groups.get(i)));
+            LessonType type = (i == groups.size() - 1) ? LessonType.CHECKPOINT : LessonType.LESSON;
+            if (type == LessonType.LESSON) {
+                result.add(new Lesson2(type, i, groups.get(i)));
             } else {
-                result.add(new Node(type, i, this.topics));
+                result.add(new Lesson2(type, i, this.topics));
             }
         }
-        this.nodes = result;
+        this.lesson2s = result;
     }
 
     private static int getStepCount(int topicCount) {

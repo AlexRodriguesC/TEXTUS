@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.learn.Chapter;
+import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import ch.supsi.documentapplication.service.validator.Validator;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.retry.RetryOperations;
 import org.springframework.core.retry.RetryTemplate;
 
 public class OpenAIChapterClient extends Client<List<Label>, List<Chapter>> {
@@ -18,7 +20,7 @@ public class OpenAIChapterClient extends Client<List<Label>, List<Chapter>> {
 
     public OpenAIChapterClient(
             ChatClient chatClient,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplate,
             Validator<List<Chapter>, List<Label>> chapterValidator,
             PromptTemplate promptTemplate) {
         super(chatClient, retryTemplate, promptTemplate);

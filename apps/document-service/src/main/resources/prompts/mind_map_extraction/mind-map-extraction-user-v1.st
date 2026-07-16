@@ -20,9 +20,9 @@ Hard constraints:
 - Do not omit any topicId.
 - Do not repeat any topicId.
 - Do not invent any topicId.
-- Do not invent any extra node.
-- There must be exactly one root node.
-- Every node must have this exact shape:
+- Do not invent any extra lesson2.
+- There must be exactly one root lesson2.
+- Every lesson2 must have this exact shape:
   {
     "topicId": number,
     "children": [ ... ]
@@ -55,8 +55,8 @@ Required internal procedure:
    - no topicId outside INPUT_TOPICS appears
    - the result is a single connected tree
    - there is exactly one root
-   - no node appears as a descendant of itself
-   - every node has a children array
+   - no lesson2 appears as a descendant of itself
+   - every lesson2 has a children array
    - no extra keys are present
 6. If any check fails, revise internally until all checks pass.
 7. Return only the final JSON tree.

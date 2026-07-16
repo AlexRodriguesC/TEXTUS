@@ -1,6 +1,5 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
-import ch.supsi.documentapplication.controller.LearningController;
 import ch.supsi.documentapplication.model.LessonStatus;
 import ch.supsi.documentapplication.model.learn.Lesson;
 import io.swagger.v3.oas.annotations.media.Schema;

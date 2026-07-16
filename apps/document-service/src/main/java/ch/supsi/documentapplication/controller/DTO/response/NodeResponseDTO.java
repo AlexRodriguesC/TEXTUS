@@ -1,9 +1,8 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
-import ch.supsi.documentapplication.model.learn.NodeType;
+import ch.supsi.documentapplication.model.learn.LessonType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public record NodeResponseDTO(
 
         @NotNull
         @Schema(description = "Type of the node (either LESSON or CHECKPOINT)", example = "LESSON")
-        NodeType type,
+        LessonType type,
 
         @NotNull
         @Schema(description = "List of topic IDs associated with this node", example = "[101, 102, 103]")

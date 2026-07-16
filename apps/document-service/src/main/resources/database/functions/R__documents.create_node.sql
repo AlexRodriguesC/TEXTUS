@@ -27,7 +27,7 @@ BEGIN
         RAISE EXCEPTION 'Topic ids not found: %', v_missing;
     END IF;
 
-    INSERT INTO documents.node (index, type, chapter_id)
+    INSERT INTO documents.lesson2 (index, type, chapter_id)
     VALUES (p_index, p_type, p_chapter_id)
     RETURNING id INTO v_node_id;
 

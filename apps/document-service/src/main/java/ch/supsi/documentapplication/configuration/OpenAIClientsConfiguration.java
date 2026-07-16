@@ -2,12 +2,10 @@ package ch.supsi.documentapplication.configuration;
 
 import ch.supsi.documentapplication.configuration.properties.PromptProperties;
 import ch.supsi.documentapplication.exception.PromptTemplateLoadException;
+import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
-import ch.supsi.documentapplication.service.clients.exercise.OpenAIGroupClient;
-import ch.supsi.documentapplication.service.clients.exercise.OpenAIListClient;
-import ch.supsi.documentapplication.service.clients.exercise.OpenAIPairClient;
-import ch.supsi.documentapplication.service.clients.exercise.OpenAIQuestionClient;
+import ch.supsi.documentapplication.service.clients.exercise.*;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.io.IOException;
@@ -39,9 +37,14 @@ public class OpenAIClientsConfiguration {
     }
 
     @Bean
+    RetryTemplateWrapper retryTemplateWrapper(RetryTemplate retryTemplate) {
+        return new RetryTemplateWrapper(retryTemplate);
+    }
+
+    @Bean
     public OpenAIChapterClient openAIChapterClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
             ResourceLoader resourceLoader) {
@@ -58,13 +61,13 @@ public class OpenAIClientsConfiguration {
 
         var chapterValidator = new ChapterValidator();
 
-        return new OpenAIChapterClient(chatClient, retryTemplate, chapterValidator, promptTemplate);
+        return new OpenAIChapterClient(chatClient, retryTemplateWrapper, chapterValidator, promptTemplate);
     }
 
     @Bean
     public OpenAIMindMapClient mindMapClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
             ResourceLoader resourceLoader) {
@@ -81,96 +84,109 @@ public class OpenAIClientsConfiguration {
 
         var mindMapValidator = new MindMapValidator();
 
-        return new OpenAIMindMapClient(chatClient, retryTemplate, mindMapValidator, promptTemplate);
+        return new OpenAIMindMapClient(chatClient, retryTemplateWrapper, mindMapValidator, promptTemplate);
     }
 
     @Bean
     public OpenAISummarizationClient openAISummarizationClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getSummarizationUser(),
                 promptProperties.getSummarizationSystem(),
-                (client, template) -> new OpenAISummarizationClient(client, retryTemplate, template));
+                (client, template) -> new OpenAISummarizationClient(client, retryTemplateWrapper, template));
     }
 
     @Bean
     public OpenAITopicExtractionClient openAITopicExtractionClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getTopicExtractionUser(),
                 promptProperties.getTopicExtractionSystem(),
-                (client, template) -> new OpenAITopicExtractionClient(client, retryTemplate, template));
+                (client, template) -> new OpenAITopicExtractionClient(client, retryTemplateWrapper, template));
     }
 
     @Bean
     public OpenAIQuestionClient openAIQuestionClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getQuestionUser(),
                 promptProperties.getQuestionSystem(),
-                (client, template) -> new OpenAIQuestionClient(client, retryTemplate, template));
+                (client, template) -> new OpenAIQuestionClient(client, retryTemplateWrapper, template));
     }
 
     @Bean
     public OpenAIListClient openAIListClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getListUser(),
                 promptProperties.getListSystem(),
-                (client, template) -> new OpenAIListClient(client, retryTemplate, template));
+                (client, template) -> new OpenAIListClient(client, retryTemplateWrapper, template));
     }
 
     @Bean
     public OpenAIGroupClient openAIGroupClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getGroupUser(),
                 promptProperties.getGroupSystem(),
-                (client, template) -> new OpenAIGroupClient(client, retryTemplate, template));
+                (client, template) -> new OpenAIGroupClient(client, retryTemplateWrapper, template));
     }
 
     @Bean
     public OpenAIPairClient openAIPairClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
+            RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, retryTemplate, templateRenderer, resourceLoader,
+                chatBuilder, templateRenderer, resourceLoader,
                 promptProperties.getPairUser(),
                 promptProperties.getPairSystem(),
-                (client, template) -> new OpenAIPairClient(client, retryTemplate, template));
+                (client, template) -> new OpenAIPairClient(client, retryTemplateWrapper, template));
+    }
+
+    @Bean
+    public OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient(
+            ChatClient.Builder chatBuilder,
+            RetryTemplateWrapper retryTemplateWrapper,
+            PromptProperties promptProperties,
+            StTemplateRenderer templateRenderer,
+            ResourceLoader resourceLoader) {
+        return createPromptClient(
+                chatBuilder, templateRenderer, resourceLoader,
+                promptProperties.getFeedbackUser(),
+                promptProperties.getFeedbackSystem(),
+                (client, template) -> new OpenAIExerciseFeedbackClient(client, retryTemplateWrapper, template));
     }
 
     private <T> T createPromptClient(
             ChatClient.Builder chatBuilder,
-            RetryTemplate retryTemplate,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader,
             String userPromptPath,

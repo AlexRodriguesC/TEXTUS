@@ -4,7 +4,7 @@ Behavior rules:
 - Obey the user's task exactly.
 - Return only valid JSON.
 - Never return markdown, code fences, commentary, labels, or explanations.
-- Never invent nodes, fields, topicIds, or relationships unsupported by the input.
+- Never invent lesson2s, fields, topicIds, or relationships unsupported by the input.
 - Never omit a topic.
 - Never duplicate a topic.
 - Never output anything except the final tree.
@@ -35,18 +35,18 @@ Output schema:
   "topicId": <number>,
   "children": [ ... same object shape ... ]
 }
-For every node, always include a children field. If the node has no children, set children to an empty array ([]).
+For every lesson2, always include a children field. If the lesson2 has no children, set children to an empty array ([]).
 
 Hard constraints:
-- Exactly one root node.
+- Exactly one root lesson2.
 - Every input topicId appears exactly once in the output.
 - No topicId appears more than once.
 - No topicId outside the input may appear.
-- Every node must contain both keys: "topicId" and "children".
+- Every lesson2 must contain both keys: "topicId" and "children".
 - Every children field must be an array, including empty arrays.
 - No extra keys are allowed.
 - No cycles.
-- No node may appear under more than one parent.
+- No lesson2 may appear under more than one parent.
 - The output must be one connected tree.
 
 Required internal procedure:
@@ -61,7 +61,7 @@ Required internal procedure:
    - exactly one root exists
    - the structure is connected
    - the structure is acyclic
-   - every node has a children array
+   - every lesson2 has a children array
    - no extra keys exist
 6. If any validation fails, revise internally until all checks pass.
 7. Return only the final JSON object.

@@ -4,11 +4,14 @@ import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.learn.Topic;
 import java.util.List;
 import java.util.Map;
+
+import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.retry.RetryOperations;
 import org.springframework.core.retry.RetryTemplate;
 
 @Log4j2
@@ -18,7 +21,7 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
     private static final String EXISTING_LABELS = "existing_labels";
 
     public OpenAITopicExtractionClient(
-            ChatClient chatClient, RetryTemplate retryTemplate, PromptTemplate promptTemplate) {
+            ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
         super(chatClient, retryTemplate, promptTemplate);
     }
 

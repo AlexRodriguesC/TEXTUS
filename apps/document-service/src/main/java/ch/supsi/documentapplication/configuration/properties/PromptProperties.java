@@ -32,4 +32,7 @@ public class PromptProperties {
 
     private String questionSystem;
     private String questionUser;
+
+    private String feedbackSystem;
+    private String feedbackUser;
 }

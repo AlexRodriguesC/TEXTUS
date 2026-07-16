@@ -1,7 +1,6 @@
 package ch.supsi.documentapplication.model.learn;
 
 import ch.supsi.documentapplication.model.LessonStatus;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,6 +8,7 @@ import lombok.Getter;
 @Getter
 public class Lesson {
     private Long nodeId;
+    private Topic currentTopic;
     private LessonStatus status;
     private double mastery;
     private int attemptsUsed;

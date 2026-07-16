@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS documents.node
+CREATE TABLE IF NOT EXISTS documents.lesson2
 (
     id          BIGSERIAL PRIMARY KEY,
     index INTEGER,

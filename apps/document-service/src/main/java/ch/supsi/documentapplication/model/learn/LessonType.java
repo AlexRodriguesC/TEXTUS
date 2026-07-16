@@ -1,6 +1,6 @@
 package ch.supsi.documentapplication.model.learn;
 
-public enum NodeType {
+public enum LessonType {
     LESSON,
     CHECKPOINT
 }
