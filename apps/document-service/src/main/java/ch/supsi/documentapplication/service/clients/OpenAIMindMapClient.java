@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.retry.RetryOperations;
-import org.springframework.core.retry.RetryTemplate;
 
 public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
 

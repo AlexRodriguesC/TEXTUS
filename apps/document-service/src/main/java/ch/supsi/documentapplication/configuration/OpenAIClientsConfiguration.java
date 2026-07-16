@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.function.BiFunction;
-
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -95,7 +94,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getSummarizationUser(),
                 promptProperties.getSummarizationSystem(),
                 (client, template) -> new OpenAISummarizationClient(client, retryTemplateWrapper, template));
@@ -109,7 +110,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getTopicExtractionUser(),
                 promptProperties.getTopicExtractionSystem(),
                 (client, template) -> new OpenAITopicExtractionClient(client, retryTemplateWrapper, template));
@@ -123,7 +126,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getQuestionUser(),
                 promptProperties.getQuestionSystem(),
                 (client, template) -> new OpenAIQuestionClient(client, retryTemplateWrapper, template));
@@ -137,7 +142,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getListUser(),
                 promptProperties.getListSystem(),
                 (client, template) -> new OpenAIListClient(client, retryTemplateWrapper, template));
@@ -151,7 +158,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getGroupUser(),
                 promptProperties.getGroupSystem(),
                 (client, template) -> new OpenAIGroupClient(client, retryTemplateWrapper, template));
@@ -165,7 +174,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getPairUser(),
                 promptProperties.getPairSystem(),
                 (client, template) -> new OpenAIPairClient(client, retryTemplateWrapper, template));
@@ -179,7 +190,9 @@ public class OpenAIClientsConfiguration {
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader) {
         return createPromptClient(
-                chatBuilder, templateRenderer, resourceLoader,
+                chatBuilder,
+                templateRenderer,
+                resourceLoader,
                 promptProperties.getFeedbackUser(),
                 promptProperties.getFeedbackSystem(),
                 (client, template) -> new OpenAIExerciseFeedbackClient(client, retryTemplateWrapper, template));

@@ -7,5 +7,4 @@ public abstract class Answer<T> {
 
     protected T answer;
     protected String explanation;
-
 }

@@ -24,7 +24,7 @@ public class Chapter {
 
     @Setter
     @JsonIgnore
-    private List<Lesson2> lesson2s;
+    private List<Lesson2> lessons;
 
     @JsonCreator
     public Chapter(
@@ -37,7 +37,7 @@ public class Chapter {
         this.description = description;
         this.labels = labels;
         this.topics = null;
-        this.lesson2s = null;
+        this.lessons = null;
     }
 
     public Chapter(Integer index, String title, String description, List<Long> labels, List<Long> topics) {
@@ -46,7 +46,7 @@ public class Chapter {
         this.description = description;
         this.labels = labels;
         this.topics = topics;
-        this.lesson2s = null;
+        this.lessons = null;
     }
 
     public Chapter(Long id, Integer index, String title, String description, List<Long> topics) {
@@ -72,7 +72,7 @@ public class Chapter {
      */
     public void buildNodes() {
         if (this.topics == null || this.topics.isEmpty()) {
-            this.lesson2s = new ArrayList<>();
+            this.lessons = new ArrayList<>();
             return;
         }
 
@@ -88,7 +88,7 @@ public class Chapter {
                 result.add(new Lesson2(type, i, this.topics));
             }
         }
-        this.lesson2s = result;
+        this.lessons = result;
     }
 
     private static int getStepCount(int topicCount) {

@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.model.learn.exercise;
 
 import ch.supsi.documentapplication.model.learn.ExerciseType;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("PAIR")
 public class Pair extends BaseExercise<org.apache.commons.lang3.tuple.Pair<String, String>> {
 
     @Override

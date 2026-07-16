@@ -1,13 +1,11 @@
 package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.exception.RetriesFailedException;
+import java.util.function.Supplier;
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.core.retry.Retryable;
-import org.springframework.stereotype.Component;
-
-import java.util.function.Supplier;
 
 public class RetryTemplateWrapper implements org.springframework.core.retry.RetryOperations {
 
@@ -17,9 +15,8 @@ public class RetryTemplateWrapper implements org.springframework.core.retry.Retr
         this.retryTemplate = retryTemplate;
     }
 
-
     @Override
-    public <R> R execute(@NonNull Retryable<R> retryable) throws RetryException {
+    public <R> R execute(@NonNull Retryable<R> retryable) throws RetriesFailedException {
         try {
             return retryTemplate.execute(retryable);
         } catch (RetryException e) {

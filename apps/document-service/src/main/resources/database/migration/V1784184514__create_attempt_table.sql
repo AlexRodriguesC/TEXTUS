@@ -1,12 +1,10 @@
 CREATE TABLE IF NOT EXISTS documents.attempt
 (
-    id               BIGSERIAL PRIMARY KEY,
-    exercise_id      BIGINT REFERENCES documents.exercise (id) ON DELETE CASCADE,
-    node_id        BIGINT REFERENCES documents.lesson2 (id) ON DELETE CASCADE,
-    user_id          TEXT REFERENCES users.user (username) ON DELETE CASCADE,
-
-    responses        JSONB NOT NULL,                -- raw submitted answer payload, family-specific shape
-    is_correct       BOOLEAN NOT NULL,
-    prior_mastery    NUMERIC(4,3),
-    posterior_mastery NUMERIC(4,3)
+    id          BIGSERIAL PRIMARY KEY,
+    exercise_id BIGINT REFERENCES documents.exercise (id) ON DELETE CASCADE,
+    lesson_id     BIGINT REFERENCES documents.lesson (id) ON DELETE CASCADE,
+    user_id     TEXT REFERENCES users.user (username) ON DELETE CASCADE,
+    response    JSONB   NOT NULL,
+    is_correct  BOOLEAN NOT NULL,
+    feedback    TEXT
 );

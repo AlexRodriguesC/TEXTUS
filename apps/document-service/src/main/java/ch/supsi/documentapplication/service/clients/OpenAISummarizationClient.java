@@ -1,14 +1,11 @@
 package ch.supsi.documentapplication.service.clients;
 
 import ch.supsi.documentapplication.model.Page;
-import java.util.Map;
-
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
+import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.retry.RetryOperations;
-import org.springframework.core.retry.RetryTemplate;
 
 @Log4j2
 public class OpenAISummarizationClient extends Client<String, Page> {

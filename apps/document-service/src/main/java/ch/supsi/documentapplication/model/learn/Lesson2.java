@@ -1,10 +1,8 @@
 package ch.supsi.documentapplication.model.learn;
 
-import java.util.List;
-
 import ch.supsi.documentapplication.model.LessonStatus;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
-import ch.supsi.documentapplication.model.learn.exercise.Exercise;
+import java.util.List;
 import lombok.Getter;
 
 @Getter
@@ -14,21 +12,32 @@ public class Lesson2 {
     private static final double P_S = 0.10;
 
     private Long id;
+    private Long chapterId;
     private final Integer index;
     private LessonType type;
     private List<Long> topics;
-    private List<Exercise> exercises;
-    private Long currentTopic;
-    private LessonStatus status;
+    private List<BaseExercise<?>> exercises;
+    private Long currentTopic = 0L;
     private double mastery = 0.10;
     private int attemptsLeft = 10;
 
-
-    public Lesson2(Long id, LessonType type, Integer index, List<Long> topics) {
+    public Lesson2(
+            Long id,
+            Long chapterId,
+            Integer index,
+            LessonType type,
+            List<Long> topics,
+            Long currentTopic,
+            int attemptsLeft,
+            double mastery) {
         this.id = id;
-        this.type = type;
+        this.chapterId = chapterId;
         this.index = index;
+        this.type = type;
         this.topics = topics;
+        this.currentTopic = currentTopic;
+        this.attemptsLeft = attemptsLeft;
+        this.mastery = mastery;
     }
 
     public Lesson2(LessonType type, Integer index, List<Long> topics) {
@@ -42,11 +51,20 @@ public class Lesson2 {
     }
 
     public Integer getExercisesLength() {
-        return exercises.size();
+        return exercises == null ? 0 : exercises.size();
     }
 
-    public void addExercise(Exercise exercise) {
+    public void addExercise(BaseExercise<?> exercise) {
         exercises.add(exercise);
+    }
+
+    public LessonStatus getStatus() {
+        if (isMastered()) {
+            return LessonStatus.MASTERED;
+        } else if (attemptsLeft <= 0) {
+            return LessonStatus.EXHAUSTED;
+        }
+        return LessonStatus.IN_PROGRESS;
     }
 
     public void advanceCurrentTopic() {
@@ -71,14 +89,13 @@ public class Lesson2 {
         return exercises != null && exercises.stream().anyMatch(e -> !e.isCompleted());
     }
 
-    public Exercise getExerciseInProgress() {
+    public BaseExercise<?> getExerciseInProgress() {
         return exercises.stream().filter(e -> !e.isCompleted()).findFirst().orElse(null);
     }
 
     public void updateMastery(boolean answerWrong) {
-        Exercise exercise = getExerciseInProgress();
-        BaseExercise<?> baseExercise = exercise.getBaseExercise();
-        double guessProbability = baseExercise.getGuessProbability();
+        BaseExercise<?> exercise = getExerciseInProgress();
+        double guessProbability = exercise.getGuessProbability();
 
         double increment;
         if (answerWrong) {

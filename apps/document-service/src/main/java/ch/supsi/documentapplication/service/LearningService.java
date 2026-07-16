@@ -9,15 +9,14 @@ import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.Lesson2;
 import ch.supsi.documentapplication.model.learn.Topic;
-import ch.supsi.documentapplication.model.learn.exercise.Exercise;
+import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import ch.supsi.documentapplication.service.clients.exercise.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 public class LearningService extends Service implements ILearningService {
@@ -32,7 +31,16 @@ public class LearningService extends Service implements ILearningService {
     private final OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient;
 
     @Autowired
-    public LearningService(IDatabaseSpaceStorage databaseSpaceStorage, DatabasePathStorage databasePathStorage, IDatabaseLearningStorage databaseLearningStorage, OpenAIGroupClient groupClient, OpenAIListClient listClient, OpenAIPairClient pairClient, OpenAIQuestionClient questionClient, DatabaseTopicStorage databaseTopicStorage, OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient) {
+    public LearningService(
+            IDatabaseSpaceStorage databaseSpaceStorage,
+            DatabasePathStorage databasePathStorage,
+            IDatabaseLearningStorage databaseLearningStorage,
+            OpenAIGroupClient groupClient,
+            OpenAIListClient listClient,
+            OpenAIPairClient pairClient,
+            OpenAIQuestionClient questionClient,
+            DatabaseTopicStorage databaseTopicStorage,
+            OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient) {
         super(databaseSpaceStorage);
         this.databasePathStorage = databasePathStorage;
         this.databaseLearningStorage = databaseLearningStorage;
@@ -45,15 +53,15 @@ public class LearningService extends Service implements ILearningService {
     }
 
     @Override
-    public Lesson2 getLesson2(String owner, Long spaceId, Long lessonId) throws ApplicationException {
+    public Lesson2 getLesson(String owner, Long spaceId, Long lessonId) throws ApplicationException {
         return databaseLearningStorage.readLesson(lessonId);
     }
 
     @Override
-    public Exercise getNextExercise(String owner, Long spaceId, Long nodeId) throws ApplicationException {
+    public BaseExercise<?> getNextExercise(String owner, Long spaceId, Long nodeId) throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
         var path = databasePathStorage.read(space.getId());
-        var lesson = getLesson2(owner, spaceId, nodeId);
+        var lesson = getLesson(owner, spaceId, nodeId);
 
         if (lesson.hasExerciseInProgress()) {
             return lesson.getExerciseInProgress();
@@ -63,15 +71,16 @@ public class LearningService extends Service implements ILearningService {
         var type = rollExerciseType(settings);
         var topic = findCurrentTopic(space.getId(), lesson);
 
-        var exerciseContent = switch (type) {
-            case LIST -> listClient.getResult(topic);
-            case GROUP -> groupClient.getResult(topic);
-            case QUESTION -> questionClient.getResult(topic);
-            case PAIR -> pairClient.getResult(topic);
-        };
-
-        var exercise = new Exercise(lesson.getExercisesLength(), topic.getId(), false, type, exerciseContent);
-        exercise = databaseLearningStorage.createExercise(exercise);
+        BaseExercise<?> exercise =
+                switch (type) {
+                    case LIST -> listClient.getResult(topic);
+                    case GROUP -> groupClient.getResult(topic);
+                    case QUESTION -> questionClient.getResult(topic);
+                    case PAIR -> pairClient.getResult(topic);
+                };
+        exercise.setIndex(lesson.getExercisesLength());
+        exercise.setTopicId(topic.getId());
+        exercise = databaseLearningStorage.createExercise(exercise, lesson.getId());
 
         lesson.advanceCurrentTopic();
         lesson.addExercise(exercise);
@@ -87,20 +96,21 @@ public class LearningService extends Service implements ILearningService {
     }
 
     @Override
-    public List<Exercise> getExercises(String owner, Long spaceId, Long nodeId) throws ApplicationException {
+    public List<BaseExercise<?>> getExercises(String owner, Long spaceId, Long nodeId) throws ApplicationException {
         getSpaceOrThrow(owner, spaceId);
-        var lesson = getLesson2(owner, spaceId, nodeId);
+        var lesson = getLesson(owner, spaceId, nodeId);
 
         return lesson.getExercises();
     }
 
     @Override
-    public AttemptResponseDTO submitAttempt(String owner, Long spaceId, Long nodeId, AttemptRequestDTO request) throws ApplicationException {
+    public AttemptResponseDTO submitAttempt(String owner, Long spaceId, Long nodeId, AttemptRequestDTO request)
+            throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
-        var lesson = getLesson2(owner, spaceId, nodeId);
-        Exercise exercise = lesson.getExerciseInProgress();
+        var lesson = getLesson(owner, spaceId, nodeId);
+        BaseExercise<?> exercise = lesson.getExerciseInProgress();
         Topic topic = findCurrentTopic(space.getId(), lesson);
-        Attempt<?> attempt = Attempt.from(request, exercise.getBaseExercise(), topic);
+        Attempt<?> attempt = Attempt.from(request, exercise, topic);
         boolean isAnswerWrong = attempt.isAnswerWrong();
 
         if (isAnswerWrong) {
@@ -108,9 +118,9 @@ public class LearningService extends Service implements ILearningService {
             attempt.setFeedback(feedback);
         }
 
-        databaseLearningStorage.create(attempt);
+        databaseLearningStorage.create(attempt, owner, lesson.getId(), exercise.getId());
 
-        exercise.complete(!isAnswerWrong);
+        exercise.setCompleted(!isAnswerWrong);
         databaseLearningStorage.updateExercise(exercise);
 
         lesson.updateMastery(isAnswerWrong);
@@ -127,9 +137,7 @@ public class LearningService extends Service implements ILearningService {
         weights.put(ExerciseType.GROUP, settings.getGroupPercentage());
         weights.put(ExerciseType.PAIR, settings.getPairPercentage());
 
-        int total = weights.values().stream()
-                .mapToInt(v -> v == null ? 0 : v)
-                .sum();
+        int total = weights.values().stream().mapToInt(v -> v == null ? 0 : v).sum();
 
         if (total <= 0) {
             throw new IllegalStateException("PathSettings percentages must sum to a positive value");

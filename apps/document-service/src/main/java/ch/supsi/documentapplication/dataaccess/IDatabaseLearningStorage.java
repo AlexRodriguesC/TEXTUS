@@ -2,19 +2,19 @@ package ch.supsi.documentapplication.dataaccess;
 
 import ch.supsi.documentapplication.model.Attempt;
 import ch.supsi.documentapplication.model.learn.Lesson2;
-import ch.supsi.documentapplication.model.learn.exercise.Exercise;
-
+import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import java.util.List;
 
 public interface IDatabaseLearningStorage {
-    List<Exercise> getExercises(Long spaceId, Long nodeId);
+    List<BaseExercise<?>> getExercises(Long spaceId, Long nodeId);
 
-    Exercise createExercise(Exercise exercise);
+    BaseExercise<?> createExercise(BaseExercise<?> exercise, Long lessonId);
 
     Lesson2 readLesson(Long lessonId);
+
     void update(Lesson2 lesson);
 
-    void create(Attempt<?> attempt);
+    void create(Attempt<?> attempt, String userId, Long lessonId, Long exerciseId);
 
-    void updateExercise(Exercise exercise);
+    void updateExercise(BaseExercise<?> exercise);
 }

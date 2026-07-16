@@ -1,19 +1,29 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
-import ch.supsi.documentapplication.model.LessonStatus;
-import ch.supsi.documentapplication.model.learn.Lesson;
+import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.model.learn.LessonType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Represents the state of a node's lesson, including BKT mastery and completion status")
+import java.util.List;
+
+@Schema(description = "Represents the current state of a lesson (node) within a learning path")
 public record LessonResponseDTO(
-        @Schema(description = "Identifier of the node this lesson belongs to") Long nodeId,
-        @Schema(description = "Current lesson status", example = "IN_PROGRESS") LessonStatus status,
+        @Schema(description = "Identifier of the lesson (node)") Long id,
+        @Schema(description = "Type of the lesson", example = "LESSON") LessonType type,
+        @Schema(description = "Ordered list of topic IDs associated with this lesson") List<Long> topics,
+        @Schema(description = "ID of the current topic being worked on") Long currentTopic,
         @Schema(description = "Current BKT mastery probability, between 0 and 1", example = "0.42") double mastery,
-        @Schema(description = "Number of attempts used so far in this lesson", example = "3") int attemptsUsed,
-        @Schema(description = "Maximum number of attempts allowed before the lesson is exhausted", example = "10") int maxAttempts
+        @Schema(description = "Number of attempts remaining before the lesson is exhausted", example = "7") int attemptsLeft
 ) {
 
-    public static LessonResponseDTO from(Lesson lesson) {
-        return new LessonResponseDTO(lesson.getNodeId(), lesson.getStatus(), lesson.getMastery(), lesson.getAttemptsUsed(), lesson.getMaxAttempts());
+    public static LessonResponseDTO from(Lesson2 lesson) {
+        return new LessonResponseDTO(
+                lesson.getId(),
+                lesson.getType(),
+                lesson.getTopics(),
+                lesson.getCurrentTopic(),
+                lesson.getMastery(),
+                lesson.getAttemptsLeft()
+        );
     }
 }

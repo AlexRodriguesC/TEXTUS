@@ -40,15 +40,19 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .query(Long.class)
                 .single();
 
-        var nodes = chapter.getLesson2s();
+        var lessons = chapter.getLessons();
 
-        for (Lesson2 lesson2 : nodes) {
+        for (Lesson2 lesson : lessons) {
             jdbcClient
-                    .sql("SELECT documents.create_node(:chapter_id, :index, :type, :topics)")
+                    .sql(
+                            "SELECT (documents.create_lesson(:chapter_id, :index, :type, :current_topic, :attempts_left, :mastery, :topics)).id")
                     .param("chapter_id", chapterId)
-                    .param("index", lesson2.getIndex())
-                    .param("type", lesson2.getType().name().toLowerCase())
-                    .param("topics", lesson2.getTopics().toArray(new Long[0]))
+                    .param("index", lesson.getIndex())
+                    .param("type", lesson.getType().name().toLowerCase())
+                    .param("topics", lesson.getTopics().toArray(new Long[0]))
+                    .param("current_topic", lesson.getCurrentTopic())
+                    .param("mastery", lesson.getMastery())
+                    .param("attempts_left", lesson.getAttemptsLeft())
                     .query(Long.class)
                     .single();
         }
@@ -101,22 +105,30 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .list();
 
         for (Chapter chapter : chapters) {
-            List<Lesson2> lesson2s = getNodesByChapterId(chapter.getId());
-            chapter.setLesson2s(lesson2s);
+            List<Lesson2> lessons = getLessonsByChapterId(chapter.getId());
+            chapter.setLessons(lessons);
         }
 
         return new LearningPath(jobId, settings, chapters);
     }
 
-    private List<Lesson2> getNodesByChapterId(Long chapterId) {
+    private List<Lesson2> getLessonsByChapterId(Long chapterId) {
         return jdbcClient
-                .sql("SELECT * FROM documents.read_nodes(:chapter_id)")
+                .sql("SELECT * FROM documents.read_lessons(:chapter_id)")
                 .param("chapter_id", chapterId)
                 .query((rs, rowNum) -> {
                     Long id = rs.getLong("id");
                     Integer index = rs.getInt("index");
                     String typeStr = rs.getString("type");
                     LessonType type = LessonType.valueOf(typeStr.toUpperCase());
+
+                    Long currentTopic = rs.getLong("current_topic");
+                    if (rs.wasNull()) {
+                        currentTopic = null;
+                    }
+
+                    int attemptsLeft = rs.getInt("attempts_left");
+                    double mastery = rs.getDouble("mastery");
 
                     java.sql.Array topicsArray = rs.getArray("topics");
                     List<Long> topics;
@@ -127,7 +139,7 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                         topics = List.of();
                     }
 
-                    return new Lesson2(id, type, index, topics);
+                    return new Lesson2(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
                 })
                 .list();
     }

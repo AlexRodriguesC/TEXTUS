@@ -2,8 +2,6 @@ package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.JobFailedToStartException;
-import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.exception.UnauthorizedException;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;

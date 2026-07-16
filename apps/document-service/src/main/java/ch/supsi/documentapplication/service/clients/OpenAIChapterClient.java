@@ -9,8 +9,6 @@ import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.retry.RetryOperations;
-import org.springframework.core.retry.RetryTemplate;
 
 public class OpenAIChapterClient extends Client<List<Label>, List<Chapter>> {
 

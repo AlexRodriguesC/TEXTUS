@@ -44,7 +44,7 @@ public record ChapterResponseDTO(
 {
 
     public static ChapterResponseDTO from(Chapter chapter) {
-        var nodes = chapter.getLesson2s();
+        var nodes = chapter.getLessons();
         var nodeDTOs = new ArrayList<NodeResponseDTO>();
         for (Lesson2 lesson2 : nodes) {
             NodeResponseDTO dto = new NodeResponseDTO(lesson2.getId(), lesson2.getType(), lesson2.getTopics());

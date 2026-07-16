@@ -28,7 +28,4 @@ public abstract class Service {
         }
         return space;
     }
-
-
-
 }

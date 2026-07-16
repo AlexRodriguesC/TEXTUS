@@ -1,16 +1,12 @@
 package ch.supsi.documentapplication.service.clients;
 
-import java.util.Map;
-
 import ch.supsi.documentapplication.exception.RetriesFailedException;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
+import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.retry.RetryException;
-import org.springframework.core.retry.RetryOperations;
-import org.springframework.core.retry.RetryTemplate;
 
 public abstract class Client<I, O> {
 

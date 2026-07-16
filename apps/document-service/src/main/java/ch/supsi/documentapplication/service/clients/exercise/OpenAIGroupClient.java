@@ -2,15 +2,11 @@ package ch.supsi.documentapplication.service.clients.exercise;
 
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.Group;
-import ch.supsi.documentapplication.model.learn.exercise.Question;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.Client;
+import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.core.retry.RetryOperations;
-import org.springframework.core.retry.RetryTemplate;
-
-import java.util.Map;
 
 public class OpenAIGroupClient extends Client<Topic, Group> {
 

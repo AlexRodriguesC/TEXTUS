@@ -1,10 +1,8 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.*;
-import ch.supsi.documentapplication.model.Attempt;
-import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.Lesson2;
-import ch.supsi.documentapplication.model.learn.exercise.Exercise;
+import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/spaces/{spaceId}/nodes/{nodeId}")
+@RequestMapping("api/v1/spaces/{spaceId}/lessons/{lessonId}")
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Nodes", description = "Endpoints for handling learning path nodes and their associated exercises within a space")
+@Tag(name = "Lessons", description = "Endpoints for handling learning path lessons and their associated exercises within a space")
 public class LearningController {
 
     private final ILearningService learningService;
@@ -36,32 +34,32 @@ public class LearningController {
         this.learningService = learningService;
     }
 
-    @PostMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Start or resume the lesson for a lesson2", description = """
-        Starts a new lesson for the given lesson2, or resumes the existing in-progress
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Start or resume the lesson", description = """
+        Starts a new lesson, or resumes the existing in-progress
         lesson if one already exists for the current user. Triggered when the user
-        clicks a lesson2 on their learning path.
+        clicks a lesson on their learning path.
         """)
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "New lesson created"),
             @ApiResponse(responseCode = "409", description = "Existing lesson already in progress"),
-            @ApiResponse(responseCode = "404", description = "Space or lesson2 not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Space or lesson not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<LessonResponseDTO> startLesson(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId,
+            @PathVariable Long lessonId,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        Lesson2 lesson = learningService.getLesson2(owner, spaceId, nodeId);
+        Lesson2 lesson = learningService.getLesson(owner, spaceId, lessonId);
 
         return lesson != null
                 ? ResponseEntity.status(HttpStatus.CREATED).body(null)
                 : ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
-    @GetMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get lesson status and mastery", description = """
         Returns the current status of the lesson associated with this lesson2, including
         the user's mastery probability as computed by Bayesian Knowledge Tracing (BKT),
@@ -75,16 +73,16 @@ public class LearningController {
     })
     public ResponseEntity<LessonResponseDTO> getLesson(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId,
+            @PathVariable Long lessonId,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        Lesson2 lesson = learningService.getLesson2(owner, spaceId, nodeId);
+        Lesson2 lesson = learningService.getLesson(owner, spaceId, lessonId);
 
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(LessonResponseDTO.from(lesson));
     }
 
-    @GetMapping(value = "/lesson/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the next exercise for the lesson", description = """
         Returns the next not-yet-completed exercise for this lesson2's lesson, selected
         dynamically based on BKT mastery and exercise family. Returns 204 No Content
@@ -98,13 +96,12 @@ public class LearningController {
     })
     public ResponseEntity<ExerciseResponseDTO> getNextExercise(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId,
+            @PathVariable Long lessonId,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        Exercise exercise = learningService.getNextExercise(owner, spaceId, nodeId);
-
-        return ResponseEntity.ok(null);
+        BaseExercise<?> exercise = learningService.getNextExercise(owner, spaceId, lessonId);
+        return ResponseEntity.ok(ExerciseResponseDTO.from(exercise));
     }
 
     @GetMapping(value = "/lesson/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -118,14 +115,14 @@ public class LearningController {
             @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson2", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<List<ExerciseResponseDTO>> getExercises(
+    public ResponseEntity<ExercisesResponseDTO> getExercises(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId,
+            @PathVariable Long lessonId,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        var exercises = learningService.getExercises(owner, spaceId, nodeId);
-        return ResponseEntity.ok(null);
+        var exercises = learningService.getExercises(owner, spaceId, lessonId);
+        return ResponseEntity.ok(new ExercisesResponseDTO(exercises.stream().map(ExerciseResponseDTO::from).toList()));
     }
 
     @PostMapping(value = "/lesson/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -144,11 +141,11 @@ public class LearningController {
     })
     public ResponseEntity<AttemptResponseDTO> submitAttempt(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId,
+            @PathVariable Long lessonId,
             @RequestBody AttemptRequestDTO request,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        return ResponseEntity.status(HttpStatus.CREATED).body(learningService.submitAttempt(owner, spaceId, nodeId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(learningService.submitAttempt(owner, spaceId, lessonId, request));
     }
 }
