@@ -21,10 +21,9 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
-public class PathService implements IPathService {
+public class PathService extends ch.supsi.documentapplication.service.Service implements IPathService {
 
     private final IDatabasePathStorage pathStorage;
-    private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final JobRepository jobRepository;
     private final Job chapterJob;
@@ -36,8 +35,8 @@ public class PathService implements IPathService {
             JobOperator jobOperator,
             JobRepository jobRepository,
             Job chapterJob) {
+        super(spaceStorage);
         this.pathStorage = pathStorage;
-        this.spaceStorage = spaceStorage;
         this.jobOperator = jobOperator;
         this.jobRepository = jobRepository;
         this.chapterJob = chapterJob;
@@ -127,21 +126,5 @@ public class PathService implements IPathService {
         }
 
         return learningPath;
-    }
-
-    private Space getSpaceOrThrow(String username, Long spaceId) {
-        var optSpace = spaceStorage.read(spaceId);
-        if (optSpace.isEmpty()) {
-            throw NotFoundException.spaceNotFoundException(spaceId);
-        }
-        var space = optSpace.get();
-        return validateOwner(username, space);
-    }
-
-    private Space validateOwner(String requester, Space space) {
-        if (!space.getOwner().equals(requester)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(requester, space.getId());
-        }
-        return space;
     }
 }

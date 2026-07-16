@@ -20,4 +20,16 @@ public class PromptProperties {
 
     private String chapterExtractionSystem;
     private String chapterExtractionUser;
+
+    private String groupSystem;
+    private String groupUser;
+
+    private String listSystem;
+    private String listUser;
+
+    private String pairSystem;
+    private String pairUser;
+
+    private String questionSystem;
+    private String questionUser;
 }

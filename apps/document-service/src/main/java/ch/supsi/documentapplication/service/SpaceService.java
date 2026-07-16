@@ -21,9 +21,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2
-public class SpaceService implements ISpaceService {
+public class SpaceService extends ch.supsi.documentapplication.service.Service implements ISpaceService {
 
-    private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job mindMapJob;
     private final JobRepository jobRepository;
@@ -34,6 +33,7 @@ public class SpaceService implements ISpaceService {
             JobOperator asyncJobOperator,
             Job mindMapJob,
             JobRepository jobRepository) {
+        super(spaceStorage);
         this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.mindMapJob = mindMapJob;
@@ -117,21 +117,5 @@ public class SpaceService implements ISpaceService {
         return status.isRunning()
                 ? MindMapStatus.GENERATING
                 : status.isUnsuccessful() ? MindMapStatus.FAILED : MindMapStatus.DONE;
-    }
-
-    private Space getSpaceOrThrow(String username, Long spaceId) {
-        var optSpace = spaceStorage.read(spaceId);
-        if (optSpace.isEmpty()) {
-            throw NotFoundException.spaceNotFoundException(spaceId);
-        }
-        var space = optSpace.get();
-        return validateOwner(username, space);
-    }
-
-    private Space validateOwner(String requester, Space space) {
-        if (!space.getOwner().equals(requester)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(requester, space.getId());
-        }
-        return space;
     }
 }

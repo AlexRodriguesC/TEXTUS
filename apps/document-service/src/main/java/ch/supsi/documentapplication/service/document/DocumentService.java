@@ -19,13 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Log4j2
 @Service
-public class DocumentService implements IDocumentService {
+public class DocumentService extends ch.supsi.documentapplication.service.Service implements IDocumentService {
 
     public static final String SPACE_ID = "SPACE_ID";
 
     private final IFileSystemDocumentStorage documentFsStorage;
     private final IDatabaseDocumentStorage databaseDocumentStorage;
-    private final IDatabaseSpaceStorage spaceStorage;
     private final JobOperator jobOperator;
     private final Job documentJob;
     private final JobRepository jobRepository;
@@ -38,9 +37,9 @@ public class DocumentService implements IDocumentService {
             JobOperator asyncJobOperator,
             Job documentJob,
             JobRepository jobRepository) {
+        super(spaceStorage);
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
-        this.spaceStorage = spaceStorage;
         this.jobOperator = asyncJobOperator;
         this.documentJob = documentJob;
         this.jobRepository = jobRepository;
@@ -132,21 +131,5 @@ public class DocumentService implements IDocumentService {
         }
 
         databaseDocumentStorage.deleteDocument(spaceId, documentId);
-    }
-
-    private Space getSpaceOrThrow(String username, Long spaceId) {
-        var optSpace = spaceStorage.read(spaceId);
-        if (optSpace.isEmpty()) {
-            throw NotFoundException.spaceNotFoundException(spaceId);
-        }
-        var space = optSpace.get();
-        return validateOwner(username, space);
-    }
-
-    private Space validateOwner(String requester, Space space) {
-        if (!space.getOwner().equals(requester)) {
-            throw UnauthorizedException.userNotOwnerOfSpace(requester, space.getId());
-        }
-        return space;
     }
 }

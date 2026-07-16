@@ -1,16 +1,21 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.*;
+import ch.supsi.documentapplication.model.learn.Lesson;
+import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,9 +26,12 @@ import java.util.List;
 @Tag(name = "Nodes", description = "Endpoints for handling learning path nodes and their associated exercises within a space")
 public class LearningController {
 
-    // ---------------------------------------------------------------------
-    // Lesson lifecycle
-    // ---------------------------------------------------------------------
+    private final ILearningService learningService;
+
+    @Autowired
+    public LearningController(ILearningService learningService) {
+        this.learningService = learningService;
+    }
 
     @PostMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Start or resume the lesson for a node", description = """
@@ -33,19 +41,21 @@ public class LearningController {
         """)
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "New lesson created"),
-            @ApiResponse(responseCode = "200", description = "Existing in-progress lesson resumed"),
+            @ApiResponse(responseCode = "409", description = "Existing lesson already in progress"),
             @ApiResponse(responseCode = "404", description = "Space or node not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<LessonResponseDTO> startLesson(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId
+            @PathVariable Long nodeId,
+            @Parameter(hidden = true) Authentication authentication
     ) {
-        LessonResponseDTO lesson = null; // service call goes here
-        boolean wasCreated = true; // determined by service
-        return wasCreated
-                ? ResponseEntity.status(HttpStatus.CREATED).body(lesson)
-                : ResponseEntity.ok(lesson);
+        String owner = authentication.getName();
+        Lesson lesson = learningService.getLesson(owner, spaceId, nodeId);
+
+        return lesson != null
+                ? ResponseEntity.status(HttpStatus.CREATED).body(LessonResponseDTO.from(lesson))
+                : ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
     @GetMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,14 +72,14 @@ public class LearningController {
     })
     public ResponseEntity<LessonResponseDTO> getLesson(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId
+            @PathVariable Long nodeId,
+            @Parameter(hidden = true) Authentication authentication
     ) {
-        return ResponseEntity.ok(null); // service call goes here
-    }
+        String owner = authentication.getName();
+        Lesson lesson = learningService.getLesson(owner, spaceId, nodeId);
 
-    // ---------------------------------------------------------------------
-    // Exercises
-    // ---------------------------------------------------------------------
+        return ResponseEntity.ok(LessonResponseDTO.from(lesson));
+    }
 
     @GetMapping(value = "/lesson/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the next exercise for the lesson", description = """
@@ -85,9 +95,11 @@ public class LearningController {
     })
     public ResponseEntity<ExerciseResponseDTO> getNextExercise(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId
+            @PathVariable Long nodeId,
+            @Parameter(hidden = true) Authentication authentication
     ) {
-        return ResponseEntity.ok(null); // service call goes here
+        String owner = authentication.getName();
+        return ResponseEntity.ok(learningService.getNextExercise(owner, spaceId, nodeId));
     }
 
     @GetMapping(value = "/lesson/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -103,14 +115,12 @@ public class LearningController {
     })
     public ResponseEntity<List<ExerciseResponseDTO>> getExercises(
             @PathVariable Long spaceId,
-            @PathVariable Long nodeId
+            @PathVariable Long nodeId,
+            @Parameter(hidden = true) Authentication authentication
     ) {
-        return ResponseEntity.ok(null); // service call goes here
+        String owner = authentication.getName();
+        return ResponseEntity.ok(learningService.getExercises(owner, spaceId, nodeId));
     }
-
-    // ---------------------------------------------------------------------
-    // Attempts
-    // ---------------------------------------------------------------------
 
     @PostMapping(value = "/lesson/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Submit an attempt for the lesson's current exercise", description = """
@@ -129,8 +139,10 @@ public class LearningController {
     public ResponseEntity<AttemptResponseDTO> submitAttempt(
             @PathVariable Long spaceId,
             @PathVariable Long nodeId,
-            @RequestBody AttemptRequestDTO request
+            @RequestBody AttemptRequestDTO request,
+            @Parameter(hidden = true) Authentication authentication
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(null); // service call goes here
+        String owner = authentication.getName();
+        return ResponseEntity.status(HttpStatus.CREATED).body(learningService.submitAttempt(owner, spaceId, nodeId, request));
     }
 }
