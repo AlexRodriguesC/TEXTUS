@@ -1,144 +1,184 @@
 package ch.supsi.documentapplication.controller;
 
-import ch.supsi.documentapplication.controller.DTO.request.PatchSettingsDTO;
-import ch.supsi.documentapplication.controller.DTO.response.*;
-import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.model.PathSettings;
-import ch.supsi.documentapplication.service.ILearningService;
+import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.List;
+
 @RestController
-@RequestMapping("api/v1/spaces/{spaceId}/paths")
+@RequestMapping("api/v1/spaces/{spaceId}/nodes/{nodeId}")
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Paths", description = "Endpoints for handling learning paths within a space")
+@Tag(name = "Nodes", description = "Endpoints for handling learning path nodes and their associated exercises within a space")
 public class LearningController {
 
-    private final ILearningService learningService;
+    // ---------------------------------------------------------------------
+    // Lesson lifecycle
+    // ---------------------------------------------------------------------
 
-    @Autowired
-    public LearningController(ILearningService learningService) {
-        this.learningService = learningService;
-    }
-
-
-    @PutMapping(value = "/settings", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Update learning path settings", description = """
-            Updates the distribution percentages for question, list, group, and pair content types.
-            All values must be between 0 and 100, and their sum must equal 100.
-            """)
+    @PostMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Start or resume the lesson for a node", description = """
+        Starts a new lesson for the given node, or resumes the existing in-progress
+        lesson if one already exists for the current user. Triggered when the user
+        clicks a node on their learning path.
+        """)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input, values out of range or sum not 100", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "201", description = "New lesson created"),
+            @ApiResponse(responseCode = "200", description = "Existing in-progress lesson resumed"),
+            @ApiResponse(responseCode = "404", description = "Space or node not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<?> updatePathSettings(
-            @PathVariable("spaceId") @NotNull Long spaceId,
-            @Valid @RequestBody PatchSettingsDTO settings,
-            @Parameter(hidden = true) Authentication authentication) {
-
-        String username = authentication.getName();
-        learningService.updateSettings(username, spaceId, PathSettings.from(settings));
-        return ResponseEntity.ok().build();
+    public ResponseEntity<LessonResponseDTO> startLesson(
+            @PathVariable Long spaceId,
+            @PathVariable Long nodeId
+    ) {
+        LessonResponseDTO lesson = null; // service call goes here
+        boolean wasCreated = true; // determined by service
+        return wasCreated
+                ? ResponseEntity.status(HttpStatus.CREATED).body(lesson)
+                : ResponseEntity.ok(lesson);
     }
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Generate a learning path for the specified space", description = """
-            Starts asynchronous learning-path generation for the specified space.
-            The learning path is created from the mind-map topics currently associated with the space.
-            The request is accepted for background processing and the result may not be immediately available.
-            """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "202", description = "Learning path generation accepted"),
-                    @ApiResponse(responseCode = "400", description = "Invalid request or the space cannot be processed", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "409", description = "A learning-path generation is already in progress for this space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<Void> extractLearningPath(@Parameter(description = "The ID of the space to generate the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                    @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        learningService.createLearningPath(username, spaceId);
-        return ResponseEntity.accepted().build();
-    }
-
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/jobs")
-    @Operation(summary = "Get learning-path job status for the specified space", description = """
-        Returns the current status of the learning-path
-        generation job associated with the specified space.
+    @GetMapping(value = "/lesson", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get lesson status and mastery", description = """
+        Returns the current status of the lesson associated with this node, including
+        the user's mastery probability as computed by Bayesian Knowledge Tracing (BKT),
+        the number of attempts used so far, and whether the lesson has been completed
+        (mastered or exhausted).
         """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "200", description = "Job status retrieved"),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or job not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<LearningPathJobDTO> getLearningPathJob(@Parameter(description = "The ID of the space to retrieve the learning-path job for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                                 @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        var status = learningService.getLearningPathStatus(username, spaceId);
-        return ResponseEntity.ok(new LearningPathJobDTO(status));
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lesson status retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this node", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<LessonResponseDTO> getLesson(
+            @PathVariable Long spaceId,
+            @PathVariable Long nodeId
+    ) {
+        return ResponseEntity.ok(null); // service call goes here
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the learning path for the specified space", description = """
-        Returns the learning path currently generated for the specified space,
-        including its chapters and associated topics.
+    // ---------------------------------------------------------------------
+    // Exercises
+    // ---------------------------------------------------------------------
+
+    @GetMapping(value = "/lesson/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the next exercise for the lesson", description = """
+        Returns the next not-yet-completed exercise for this node's lesson, selected
+        dynamically based on BKT mastery and exercise family. Returns 204 No Content
+        once no further exercises are needed for this lesson.
         """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "200", description = "Learning path retrieved"),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<LearningPathResponseDTO> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                                   @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        var learningPath = learningService.getLearningPath(username, spaceId);
-
-        if (learningPath == null) {
-            throw NotFoundException.learningPathNotFound(spaceId);
-        }
-
-        return ResponseEntity.ok(LearningPathResponseDTO.from(learningPath));
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Next exercise returned successfully"),
+            @ApiResponse(responseCode = "204", description = "No further exercises to serve; lesson is complete"),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this node", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<ExerciseResponseDTO> getNextExercise(
+            @PathVariable Long spaceId,
+            @PathVariable Long nodeId
+    ) {
+        return ResponseEntity.ok(null); // service call goes here
     }
 
-    @DeleteMapping
-    @Operation(summary = "Delete the learning path for the specified space", description = """
-        Deletes the learning path associated with the specified space.
-        If a generation job is currently running for this path, it will be stopped first.
+    @GetMapping(value = "/lesson/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "List all exercises served for this lesson", description = """
+        Returns the full list of exercises served so far for this node's lesson, each
+        with its resolved attempt status. Useful for review or debugging; not part of
+        the primary lesson-taking flow.
         """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "204", description = "Learning path deleted"),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<Void> deleteLearningPath(@Parameter(description = "The ID of the space to delete the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                   @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        learningService.deleteLearningPath(username, spaceId);
-        return ResponseEntity.noContent().build();
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Exercises retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this node", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<List<ExerciseResponseDTO>> getExercises(
+            @PathVariable Long spaceId,
+            @PathVariable Long nodeId
+    ) {
+        return ResponseEntity.ok(null); // service call goes here
     }
 
+    // ---------------------------------------------------------------------
+    // Attempts
+    // ---------------------------------------------------------------------
+
+    @PostMapping(value = "/lesson/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Submit an attempt for the lesson's current exercise", description = """
+        Submits the user's answer for the currently active exercise of this node's lesson.
+        The backend validates the submitted exerciseId against the lesson's current exercise,
+        grades the responses, updates BKT mastery, and returns per-item feedback along with
+        the updated lesson state. The attemptId should be client-generated to support safe
+        retries without creating duplicate attempts.
+        """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Attempt recorded and feedback returned"),
+            @ApiResponse(responseCode = "409", description = "Submitted exerciseId does not match the lesson's current exercise", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this node", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<AttemptResponseDTO> submitAttempt(
+            @PathVariable Long spaceId,
+            @PathVariable Long nodeId,
+            @RequestBody AttemptRequestDTO request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(null); // service call goes here
+    }
+
+    // =====================================================================
+    // DTOs
+    // =====================================================================
+
+    @Schema(description = "Represents the state of a node's lesson, including BKT mastery and completion status")
+    public record LessonResponseDTO(
+            @Schema(description = "Identifier of the node this lesson belongs to") Long nodeId,
+            @Schema(description = "Current lesson status", example = "IN_PROGRESS") LessonStatus status,
+            @Schema(description = "Current BKT mastery probability, between 0 and 1", example = "0.42") double mastery,
+            @Schema(description = "Number of attempts used so far in this lesson", example = "3") int attemptsUsed,
+            @Schema(description = "Maximum number of attempts allowed before the lesson is exhausted", example = "10") int maxAttempts
+    ) {}
+
+    @Schema(description = "Status of a lesson")
+    public enum LessonStatus {
+        IN_PROGRESS,
+        MASTERED,
+        EXHAUSTED
+    }
+
+    @Schema(description = "Represents a single exercise served to the user for a lesson")
+    public record ExerciseResponseDTO(
+            @Schema(description = "Unique identifier of the exercise") Long exerciseId,
+            @Schema(description = "Identifier of the node this exercise belongs to") Long nodeId,
+            @Schema(description = "Exercise family type", example = "pair") String family,
+            @Schema(description = "Family-specific exercise content payload") Object content,
+            @Schema(description = "Whether this exercise has already been attempted", example = "false") boolean completed
+    ) {}
+
+    @Schema(description = "Request body for submitting an attempt at the lesson's current exercise")
+    public record AttemptRequestDTO(
+            @Schema(description = "Client-generated unique identifier for this attempt, used for idempotent retries", example = "att_5541") String attemptId,
+            @Schema(description = "Identifier of the exercise being attempted; must match the lesson's current exercise") Long exerciseId,
+            @Schema(description = "User's submitted responses, shape depends on exercise family") List<Object> responses,
+            @Schema(description = "Time taken to respond, in milliseconds", example = "4200") long responseTimeMs
+    ) {}
+
+    @Schema(description = "Feedback returned after submitting an attempt")
+    public record AttemptResponseDTO(
+            @Schema(description = "Identifier of the submitted attempt") String attemptId,
+            @Schema(description = "Identifier of the attempted exercise") Long exerciseId,
+            @Schema(description = "Whether the overall attempt was correct") boolean correct,
+            @Schema(description = "Per-item grading results, shape depends on exercise family") List<Object> results,
+            @Schema(description = "Updated lesson state after this attempt, including new mastery and status") LessonResponseDTO lesson,
+            @Schema(description = "Timestamp when the attempt was recorded") Instant submittedAt
+    ) {}
 }

@@ -5,7 +5,7 @@ import ch.supsi.documentapplication.model.learn.LearningPath;
 import ch.supsi.documentapplication.model.learn.LearningPathStatus;
 import jakarta.validation.constraints.NotNull;
 
-public interface ILearningService {
+public interface IPathService {
 
     void createLearningPath(String owner, Long spaceId);
 

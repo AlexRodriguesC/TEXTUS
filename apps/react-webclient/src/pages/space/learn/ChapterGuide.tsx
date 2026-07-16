@@ -17,12 +17,12 @@ function ChapterGuide() {
 
     // Resolve chapter data
     const chapter = path?.chapters?.find(c => c.index === chapterId);
-    const chapterTopics = chapter?.topics ?? [];
+    const chapterTopics = chapter?.nodes.flatMap(n => n.topics) ?? [];
 
     // Filter topics client-side
     const tops = useMemo(
         () => topics.filter(t => chapterTopics.includes(t.id)),
-        [topics, chapterTopics]
+        [topics]
     );
 
     useEffect(() => {

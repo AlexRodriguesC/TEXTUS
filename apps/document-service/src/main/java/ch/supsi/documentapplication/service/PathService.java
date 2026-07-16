@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service
-public class LearningService implements ILearningService {
+public class PathService implements IPathService {
 
     private final IDatabaseLearningStorage databaseLearningStorage;
     private final IDatabaseSpaceStorage databaseSpaceStorage;
@@ -30,7 +30,7 @@ public class LearningService implements ILearningService {
     private final Job chapterJob;
 
     @Autowired
-    public LearningService(
+    public PathService(
             IDatabaseLearningStorage databaseLearningStorage,
             IDatabaseSpaceStorage databaseSpaceStorage,
             JobOperator jobOperator,

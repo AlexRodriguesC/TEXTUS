@@ -1,11 +1,21 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.learn.LearningPath;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record LearningPathResponseDTO(@NotNull PathSettingsResponseDTO settings, @NotNull List<ChapterResponseDTO> chapters) {
+@Schema(description = "Response DTO containing the full learning path with settings and chapters")
+public record LearningPathResponseDTO(
+        @NotNull
+        @Schema(description = "Settings of the learning path")
+        PathSettingsResponseDTO settings,
+
+        @NotNull
+        @Schema(description = "List of chapters in the learning path")
+        List<ChapterResponseDTO> chapters
+) {
 
     public static LearningPathResponseDTO from(LearningPath learningPath) {
         PathSettingsResponseDTO settings = PathSettingsResponseDTO.from(learningPath.getSettings());

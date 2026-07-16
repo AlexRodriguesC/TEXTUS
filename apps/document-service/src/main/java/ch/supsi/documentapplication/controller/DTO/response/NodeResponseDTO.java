@@ -1,14 +1,23 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.learn.NodeType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
 
+@Schema(description = "Response DTO containing a node in a learning path chapter")
 public record NodeResponseDTO(
-        @NotNull Long id,
-        @NotNull NodeType type,
-        @NotNull List<Long> topics
-) {
-}
+        @NotNull
+        @Schema(description = "Unique identifier of the node", example = "1")
+        Long id,
+
+        @NotNull
+        @Schema(description = "Type of the node (either LESSON or CHECKPOINT)", example = "LESSON")
+        NodeType type,
+
+        @NotNull
+        @Schema(description = "List of topic IDs associated with this node", example = "[101, 102, 103]")
+        List<@NotNull Long> topics
+) {}
