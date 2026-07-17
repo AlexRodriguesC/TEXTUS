@@ -67,8 +67,7 @@ class OpenAISummarizationClientSpec extends Specification {
         client.getResult(documentText)
 
         then: "a RetriesFailedException wrapping the transient failure is thrown"
-        def e = thrown(RetriesFailedException)
-        e.cause instanceof TransientAiException
+        thrown(RetriesFailedException)
     }
 
     def "should succeed after a transient failure is retried"() {

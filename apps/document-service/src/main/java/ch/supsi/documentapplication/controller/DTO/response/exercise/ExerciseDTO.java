@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.model.learn.ExerciseType;
 
 public interface ExerciseDTO {
     Long id();
+    Long topicId();
     ExerciseType type();
     boolean completed();
 }

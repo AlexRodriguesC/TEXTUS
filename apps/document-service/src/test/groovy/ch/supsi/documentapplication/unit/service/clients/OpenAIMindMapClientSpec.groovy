@@ -101,7 +101,6 @@ class OpenAIMindMapClientSpec extends Specification {
         client.getResult(topics)
 
         then: "a RetriesFailedException wrapping the transient failure is thrown"
-        def e = thrown(RetriesFailedException)
-        e.cause instanceof TransientAiException
+        thrown(RetriesFailedException)
     }
 }

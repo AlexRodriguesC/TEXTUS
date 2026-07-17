@@ -15,15 +15,15 @@ public class ExerciseMapper {
     public ExerciseDTO toDto(BaseExercise<?> exercise) {
         return switch (exercise) {
             case Question q -> new QuestionResponseDTO(
-                    q.getId(),
+                    q.getId(), q.getTopicId(),
                     q.getRequest(), q.isCompleted(), ExerciseType.QUESTION, q.getShuffledDistractors());
 
             case ch.supsi.documentapplication.model.learn.exercise.List l -> new ListResponseDTO(
-                    l.getId(),
+                    l.getId(), l.getTopicId(),
                     l.getRequest(), l.isCompleted(), ExerciseType.LIST, l.getShuffledList());
 
             case Group g -> new GroupResponseDTO(
-                    g.getId(),
+                    g.getId(), g.getTopicId(),
                     g.getRequest(), g.isCompleted(), ExerciseType.GROUP, g.getLabels(), g.getShuffledValues());
 
             case PairExercise p -> {
@@ -32,6 +32,7 @@ public class ExerciseMapper {
 
                 yield new PairResponseDTO(
                         p.getId(),
+                        p.getTopicId(),
                         p.getRequest(), p.isCompleted(), ExerciseType.PAIR,
                         shuffledPairs.getLeft(), shuffledPairs.getRight());
             }

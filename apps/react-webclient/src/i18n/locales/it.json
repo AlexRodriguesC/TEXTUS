@@ -103,7 +103,15 @@
       "success": "Spazio eliminato con successo."
     }
   },
+  "exercise": {
+    "guide": {
+      "tooltip": "Clicca per mostrare la guida",
+      "title": "L'esercizio corrente si basa sul seguente argomento"
+    }
+  },
   "button": {
+    "submit": "Invia",
+    "skip": "Salta",
     "apply": "Modifica",
     "start": "Iniziamo!",
     "next": "Avanti",

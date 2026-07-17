@@ -13,9 +13,9 @@ import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.Group
+import ch.supsi.documentapplication.model.learn.exercise.LeftRight
 import ch.supsi.documentapplication.model.learn.exercise.PairExercise
 import ch.supsi.documentapplication.model.learn.exercise.Question
-import org.apache.commons.lang3.tuple.Pair
 import spock.lang.Subject
 
 class DatabaseLearningStorageSpec extends DatabaseSpec {
@@ -231,7 +231,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         pair.setIndex(0)
         pair.setExplanation("Explain pairs")
         pair.setRequest("Match these pairs")
-        pair.setAnswer([Pair.of("cat", "meow"), Pair.of("dog", "bark")])
+        pair.setAnswer([new LeftRight("cat", "meow"), new LeftRight("dog", "bark")])
 
         when:
         storage.createExercise(pair, lessonId)
@@ -239,19 +239,19 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
 
         then:
         saved.request == "Match these pairs"
-        saved.answer.collect { [it.left, it.right] }.sort() ==
+        saved.answer.collect { [it.left(), it.right()] }.sort() ==
                 [["cat", "meow"], ["dog", "bark"]].sort()
 
         when:
         pair.setId(saved.id)
         pair.setRequest("Match these new pairs")
-        pair.setAnswer([Pair.of("cow", "moo")])
+        pair.setAnswer([new LeftRight("cow", "moo")])
         storage.updateExercise(pair)
         def updated = storage.getExercises(lessonId).find { it.id == pair.id } as PairExercise
 
         then:
         updated.request == "Match these new pairs"
-        updated.answer.collect { [it.left, it.right] } == [["cow", "moo"]]
+        updated.answer.collect { [it.left(), it.right()] } == [["cow", "moo"]]
     }
 
 
@@ -293,14 +293,12 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         Lesson lesson = storage.readLesson(lessonId)
 
         when:
-        lesson.setCurrentTopic(topicId)
         lesson.setAttemptsLeft(5)
         lesson.setMastery(0.42d)
         storage.update(lesson)
         Lesson updated = storage.readLesson(lessonId)
 
         then:
-        updated.currentTopic == topicId
         updated.attemptsLeft == 5
         updated.mastery == 0.42d
     }

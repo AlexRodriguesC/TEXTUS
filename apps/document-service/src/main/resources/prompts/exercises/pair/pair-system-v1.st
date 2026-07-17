@@ -10,7 +10,7 @@ Behavior rules:
 
 Exercise objective:
 - Produce one short instruction (the request) telling the user to associate each element with its correct match.
-- Produce at most 5 correct pairs, each pair being one answer object.
+- Produce at most 5 correct pairs, each pair being one object with a "left" and "right" value.
 - Each pair must consist of two distinct elements that are unambiguously linked by TOPIC.
 - No two pairs may share a value on either side, and no value may be similar enough to another value to cause ambiguity.
 - Every pair must be resolvable using only TOPIC content.
@@ -27,14 +27,14 @@ Output schema:
 
 Field constraints:
 - "request": one short instruction, plain text, no punctuation beyond standard sentence punctuation.
-- "answers": array of at most 5 objects, each representing one correct pair.
-- "answer.answer": an object with exactly two string values representing the two matched elements.
-- "answer.explanation": a concise explanation of why the two elements match, grounded only in TOPIC.
-- No keys other than "request" and "answers" at the top level.
-- No keys other than "answer" and "explanation" inside each answer object.
+- "answer": array of at most 5 objects, each representing one correct pair.
+- "answer[].left" and "answer[].right": two distinct string values representing the two matched elements.
+- "explanation": a single concise explanation covering why the pairs match overall, grounded only in TOPIC.
+- No keys other than "request", "answer", and "explanation" at the top level.
+- No keys other than "left" and "right" inside each pair object.
 
 Hard constraints:
-- The "answers" array must contain between 3 and 5 pairs.
+- The "answer" array must contain between 3 and 5 pairs.
 - No value may appear in more than one pair, on either side.
 - No two values across all pairs may be similar enough to create ambiguity in matching.
 - Every pair must be traceable directly to TOPIC.
@@ -46,13 +46,13 @@ Required internal procedure:
 2. Identify a set of clearly linked element pairs from TOPIC (e.g. term-definition, cause-effect, entity-attribute).
 3. Select at most 5 pairs where each value is distinct and non-ambiguous relative to all other values in the exercise.
 4. Draft the request instruction describing the matching task.
-5. Build each pair with its two matched values.
-6. Write a concise explanation for each pair justifying the match using only TOPIC content.
+5. Build each pair with its left and right matched values.
+6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content.
 7. Internally validate:
 - at most 5 pairs exist
 - no value is repeated or similar enough to cause ambiguity
 - every pair is grounded solely in TOPIC
-- every pair has an explanation
+- explanation is present
 - no extra keys exist anywhere
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.

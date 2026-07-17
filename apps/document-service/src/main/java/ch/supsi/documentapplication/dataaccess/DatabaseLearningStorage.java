@@ -3,10 +3,7 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.model.Attempt;
 import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.LessonType;
-import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
-import ch.supsi.documentapplication.model.learn.exercise.Group;
-import ch.supsi.documentapplication.model.learn.exercise.PairExercise;
-import ch.supsi.documentapplication.model.learn.exercise.Question;
+import ch.supsi.documentapplication.model.learn.exercise.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -126,8 +122,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                     String answerJson = rs.getString("answer");
                     Map<String, java.util.List<String>> answer;
                     try {
-                        answer = new ObjectMapper()
-                                .readValue(answerJson, new TypeReference<Map<String, java.util.List<String>>>() {});
+                        answer = new ObjectMapper().readValue(answerJson, new TypeReference<>() {});
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to parse group answer JSON", e);
                     }
@@ -153,12 +148,12 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                     p.setRequest(rs.getString("request"));
 
                     String pairsJson = rs.getString("pairs");
-                    java.util.List<Pair<String, String>> pairs;
+                    java.util.List<LeftRight> pairs;
                     try {
-                        java.util.List<Map<String, String>> raw = new ObjectMapper()
-                                .readValue(pairsJson, new TypeReference<List<Map<String, String>>>() {});
+                        java.util.List<Map<String, String>> raw =
+                                new ObjectMapper().readValue(pairsJson, new TypeReference<>() {});
                         pairs = raw.stream()
-                                .map(m -> Pair.of(m.get("left"), m.get("right")))
+                                .map(m -> new LeftRight(m.get("left"), m.get("right")))
                                 .toList();
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to parse pairs JSON", e);
@@ -286,7 +281,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
 
     private void updateList(Long exerciseId, ch.supsi.documentapplication.model.learn.exercise.List list) {
         jdbcClient
-                .sql("SELECT documents.update_list(:exerciseId, :request, :answer::text[])")
+                .sql("SELECT documents.update_list(:exerciseId::bigint, :request::text, :answer::text[])")
                 .param("exerciseId", exerciseId)
                 .param("request", list.getRequest())
                 .param("answer", toTextArray(list.getAnswer()))
@@ -345,7 +340,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
         jdbcClient
                 .sql("SELECT documents.update_lesson(:lessonId, :currentTopic, :attemptsLeft, :mastery)")
                 .param("lessonId", lesson.getId())
-                .param("currentTopic", lesson.getCurrentTopic())
+                .param("currentTopic", lesson.getCurrentTopicId())
                 .param("attemptsLeft", lesson.getAttemptsLeft())
                 .param("mastery", lesson.getMastery())
                 .query()
@@ -374,10 +369,10 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
         }
     }
 
-    private String toPairsJson(List<org.apache.commons.lang3.tuple.Pair<String, String>> pairs) {
+    private String toPairsJson(List<LeftRight> pairs) {
         try {
             var nodes = pairs.stream()
-                    .map(p -> Map.of("left", p.getLeft(), "right", p.getRight()))
+                    .map(p -> Map.of("left", p.left(), "right", p.right()))
                     .toList();
             return objectMapper.writeValueAsString(nodes);
         } catch (JsonProcessingException e) {

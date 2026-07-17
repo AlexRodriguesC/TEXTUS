@@ -9,6 +9,7 @@ const PathConstants = {
   SPACE_MIND_MAP: "/spaces/$spaceId/mind_map",
   SPACE_LEARN: "/spaces/$spaceId/learn",
   SPACE_LEARN_GUIDE: "/spaces/$spaceId/learn/$chapterId/guide",
+  LESSON: "/spaces/$spaceId/learn/$chapterId/lesson/$lessonId",
 } as const;
 
 export default PathConstants;

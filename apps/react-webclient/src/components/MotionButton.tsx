@@ -4,11 +4,13 @@ import type {PropsWithChildren} from "react";
 
 interface MotionButtonProps extends PropsWithChildren {
     completed?: boolean;
+    onClick?: () => void;
 }
 
-function MotionButton({ children, completed = false }: MotionButtonProps) {
+function MotionButton({ children, completed = false, onClick = () => {} }: MotionButtonProps) {
   return (
     <motion.button
+        onClick={onClick}
       data-slot="button"
       whileHover={{ scale: completed ? 1.0 : 1.1 }}
       transition={{ type: "spring", stiffness: 0, damping: 10 }}
@@ -18,7 +20,7 @@ function MotionButton({ children, completed = false }: MotionButtonProps) {
         "shadow-[0_3px_0_var(--color-ring)]",
         "active:shadow-none active:translate-y-1",
         "transition-[box-shadow,transform] duration-75",
-        completed ? "border-green-500" : "border-primary",
+        "border-primary",
         "size-12",
         "flex items-center justify-center",
         "shrink-0",
@@ -27,7 +29,7 @@ function MotionButton({ children, completed = false }: MotionButtonProps) {
         "overflow-hidden",
       )}
     >
-      <span className={cn(!completed && "grayscale", "flex items-center justify-center w-full h-full")}>
+      <span className={cn("flex items-center justify-center w-full h-full")}>
         {children}
       </span>
     </motion.button>

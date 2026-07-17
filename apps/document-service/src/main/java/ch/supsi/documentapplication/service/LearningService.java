@@ -90,7 +90,7 @@ public class LearningService extends Service implements ILearningService {
     private Topic findCurrentTopic(Long spaceId, Lesson lesson) throws ApplicationException {
         var topics = databaseTopicStorage.getBySpaceId(spaceId);
         return topics.stream()
-                .filter(t -> Objects.equals(t.getId(), lesson.getCurrentTopic()))
+                .filter(t -> Objects.equals(t.getId(), lesson.getCurrentTopicId()))
                 .findFirst()
                 .orElse(null);
     }

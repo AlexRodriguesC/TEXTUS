@@ -12,6 +12,7 @@ import SpaceChat from "@/pages/space/SpaceChat.tsx";
 import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 import ChapterGuide from "@/pages/space/learn/ChapterGuide.tsx";
+import Lesson from "@/pages/space/learn/lesson/Lesson.tsx";
 
 const rootRoute = createRootRoute({
   notFoundComponent: NotFoundPage,
@@ -105,6 +106,12 @@ const spaceChapterGuideRoute = createRoute({
   component: ChapterGuide
 })
 
+const lessonRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: PathConstants.LESSON,
+  component: Lesson,
+});
+
 const notFoundRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.NOT_FOUND,
@@ -114,5 +121,5 @@ const notFoundRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([homeRoute, notFoundRoute]),
   authRoute.addChildren([loginRoute, registerRoute]),
-  protectedRoute.addChildren([spacesRoute, spaceMenuRoute, spaceChatRoute, spaceMapRoute, spaceLearnRoute, spaceChapterGuideRoute]),
+  protectedRoute.addChildren([spacesRoute, spaceMenuRoute, spaceChatRoute, spaceMapRoute, spaceLearnRoute, spaceChapterGuideRoute, lessonRoute]),
 ]);

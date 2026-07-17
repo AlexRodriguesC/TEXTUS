@@ -7,21 +7,19 @@ import {
     useGetLearningPath,
     useGetLearningPathJob, useUpdatePathSettings
 } from "@/client/generated/paths/paths.ts";
-import type {
-    ChapterResponseDTO,
-    ErrorResponseDTO,
-    LearningPathJobDTO,
-    LearningPathJobDTOStatus,
-    LearningPathResponseDTO, NodeResponseDTO, PathSettingsResponseDTO,
-} from "@/client/model";
 import {useTranslation} from "react-i18next";
 import {failureToast, successToast} from "@/lib/toasts.ts";
 import {useQueryClient} from "@tanstack/react-query";
+import type {
+    ChapterResponseDTO, ErrorResponseDTO, LearningPathJobDTO,
+    LearningPathJobDTOStatus,
+    LearningPathResponseDTO,
+    PathSettingsResponseDTO
+} from "@/client/model";
 
 export interface LearningPath extends LearningPathResponseDTO {}
 export interface LearningPathSettings extends PathSettingsResponseDTO {}
 export interface Chapter extends ChapterResponseDTO {}
-export interface Node extends NodeResponseDTO {}
 
 type LearningPathStatus = LearningPathJobDTOStatus
 

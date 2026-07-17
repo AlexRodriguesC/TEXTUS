@@ -1,8 +1,7 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.*;
-import ch.supsi.documentapplication.controller.DTO.response.exercise.ExerciseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.exercise.ExerciseMapper;
+import ch.supsi.documentapplication.controller.DTO.response.exercise.*;
 import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import ch.supsi.documentapplication.service.ILearningService;
@@ -86,12 +85,19 @@ public class LearningController {
 
     @GetMapping(value = "/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the next exercise for the lesson", description = """
-        Returns the next not-yet-completed exercise for this lesson's lesson, selected
-        dynamically based on BKT mastery and exercise family. Returns 204 No Content
-        once no further exercises are needed for this lesson.
-        """)
+    Returns the next not-yet-completed exercise for this lesson's lesson, selected
+    dynamically based on BKT mastery and exercise family. Returns 204 No Content
+    once no further exercises are needed for this lesson.
+    """)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Next exercise returned successfully"),
+            @ApiResponse(responseCode = "200", description = "Next exercise returned successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(oneOf = {
+                                    QuestionResponseDTO.class,
+                                    ListResponseDTO.class,
+                                    PairResponseDTO.class,
+                                    GroupResponseDTO.class
+                            }))),
             @ApiResponse(responseCode = "204", description = "No further exercises to serve; lesson is complete"),
             @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Schema(description = "Represents a chapter within a learning path, including its position, title, description, and the nodes (collections of topics) contained in it.")
-public record ChapterResponseDTO(
+public record   ChapterResponseDTO(
         @NotNull
         @Schema(
                 description = "Relative position of the chapter inside the path (0-based index, e.g., 0 for first, 1 for second)",
@@ -36,18 +36,18 @@ public record ChapterResponseDTO(
 
         @NotNull
         @Schema(
-                description = "List of nodes (collections of topics) that make up the chapter",
+                description = "List of lessons (collections of topics) that make up the chapter",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        List<NodeResponseDTO> nodes
+        List<LessonResponseDTO> lessons
 )
 {
 
     public static ChapterResponseDTO from(Chapter chapter) {
         var nodes = chapter.getLessons();
-        var nodeDTOs = new ArrayList<NodeResponseDTO>();
+        var nodeDTOs = new ArrayList<LessonResponseDTO>();
         for (Lesson lesson : nodes) {
-            NodeResponseDTO dto = new NodeResponseDTO(lesson.getId(), lesson.getType(), lesson.getTopics());
+            LessonResponseDTO dto = LessonResponseDTO.from(lesson);
             nodeDTOs.add(dto);
         }
 

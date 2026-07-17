@@ -17,7 +17,7 @@ function ChapterGuide() {
 
     // Resolve chapter data
     const chapter = path?.chapters?.find(c => c.index === chapterId);
-    const chapterTopics = chapter?.nodes.flatMap(n => n.topics) ?? [];
+    const chapterTopics = chapter?.lessons.flatMap(n => n.topics) ?? [];
 
     // Filter topics client-side
     const tops = useMemo(

@@ -22,12 +22,12 @@ Hard constraints:
   ],
   "explanation": ""
 }
-- "answers" must contain between 3 and 5 pair objects.
+- "answer" must contain between 3 and 5 pair objects.
 - No value may repeat across pairs, on either side.
 - No two values may be similar enough to cause ambiguity when matching.
-- "explanation" must clearly justify why the two elements in the pair match, grounded only in TOPIC.
-- No keys other than "request" and "answers" are allowed at the top level.
-- No keys other than "answer" and "explanation" are allowed inside each answer object.
+- "explanation" must clearly justify why the pairs match overall, grounded only in TOPIC.
+- No keys other than "request", "answer", and "explanation" are allowed at the top level.
+- No keys other than "left" and "right" are allowed inside each pair object.
 - Output ONLY valid JSON.
 - Output no prose, no markdown, no code fences.
 
@@ -42,13 +42,13 @@ Required internal procedure:
 2. Identify the clearest associative relationships implied by TOPIC.
 3. Select at most 5 pairs where every value is unique and unambiguous relative to all others in the set.
 4. Write a short request instructing the matching task.
-5. Build each pair with its two matched values.
-6. Write a concise explanation for each pair justifying the match using only TOPIC content.
+5. Build each pair with its left and right matched values.
+6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content.
 7. Before answering, verify all of the following privately:
 - there are between 3 and 5 pairs
 - no value is duplicated or ambiguously similar to another
 - every pair is grounded solely in TOPIC
-- every pair includes an explanation
+- explanation is present
 - no extra keys are present anywhere
 8. If any check fails, revise internally until all checks pass.
 9. Return only the final JSON object.
@@ -62,4 +62,4 @@ When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
 Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
 
-TOPIC:
+TOPIC: <topic>

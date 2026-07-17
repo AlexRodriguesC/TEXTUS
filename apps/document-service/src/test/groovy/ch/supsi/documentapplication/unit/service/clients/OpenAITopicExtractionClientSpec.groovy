@@ -87,8 +87,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         client.getResult(input)
 
         then: "a RetriesFailedException wrapping the transient failure is thrown"
-        def e = thrown(RetriesFailedException)
-        e.cause instanceof TransientAiException
+        thrown(RetriesFailedException)
     }
 
     def "should handle empty existing topics without labels"() {

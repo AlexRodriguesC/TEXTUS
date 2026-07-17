@@ -3,28 +3,37 @@ import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import {useEffect, useRef, useState} from "react";
 import {Separator} from "@/components/ui/separator.tsx";
-import PathNode, {type PathNodeType} from "@/pages/space/learn/PathNodeType.tsx";
-import {NodeResponseDTOType} from "@/client/model/nodeResponseDTOType.ts";
-import type {ChapterResponseDTO, NodeResponseDTO} from "@/client/model";
 import useLearningPath from "@/hooks/useLearningPath.ts";
+import {useNavigate} from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
+import useSpaceId from "@/hooks/useSpaceId.ts";
+import {type ChapterResponseDTO} from "@/client/model";
+import PathNode from "@/pages/space/learn/PathNodeType.tsx";
+import {cn} from "@/lib/utils.ts";
 
 const OFFSETS = [0, 60, 0, -60];
 
-function toPathNode(node: NodeResponseDTO): PathNodeType {
-    return {
-        topics: node.topics,
-        type: node.type === NodeResponseDTOType.CHECKPOINT ? "trophy" : "star",
-    };
-}
-
 function ChapterPath({ chapter }: { chapter: ChapterResponseDTO; sectionIndex: number }) {
-    const nodes = chapter.nodes.map(toPathNode);
+    const navigate = useNavigate();
+    const { strSpaceId } = useSpaceId();
 
     return (
         <div className={"flex flex-col items-center gap-2 pb-8"} data-chapter-index={chapter.index}>
             <div className={"flex flex-col items-center gap-6 pt-4"}>
-                {chapter.nodes.map((node, i) => (
-                    <PathNode key={node.id} node={nodes[i]} offset={OFFSETS[i % OFFSETS.length]} />
+                {chapter.lessons.map((lesson, i) => (
+                    <PathNode
+                        key={lesson.id}
+                        onClick={() => navigate({
+                            to: PathConstants.LESSON,
+                            params: {
+                                spaceId: strSpaceId!,
+                                chapterId: chapter.index.toString(),
+                                lessonId: lesson.id.toString()
+                            }
+                        })}
+                        node={lesson}
+                        offset={OFFSETS[i % OFFSETS.length]}
+                    />
                 ))}
             </div>
         </div>
@@ -37,6 +46,8 @@ function SpaceLearn() {
     const chaptersRef = useRef<HTMLDivElement[]>([]);
     const viewportRef = useRef<HTMLDivElement>(null);
     const ratiosRef = useRef<Map<number, number>>(new Map());
+
+    const completedCount = path?.chapters.flatMap((c) => c.lessons).filter((l) => l.completed).length ?? 0;
 
     useEffect(() => {
         if (!path?.chapters.length || !viewportRef.current) return;
@@ -92,7 +103,7 @@ function SpaceLearn() {
                 <ScrollArea className="h-full w-full min-h-0" viewportRef={viewportRef}>
                     <div className={"flex h-full flex-col items-center"}>
                         {path.chapters.map((chapter, i) => (
-                            <div key={chapter.index} className="flex flex-col">
+                            <div key={chapter.index} className={cn("flex flex-col", i < completedCount + 1 ? "" : "grayscale")}>
                                 <ChapterPath chapter={chapter} sectionIndex={i + 1} />
                                 {i < path.chapters.length - 1 && (
                                     <div className="flex items-center gap-3 my-4">

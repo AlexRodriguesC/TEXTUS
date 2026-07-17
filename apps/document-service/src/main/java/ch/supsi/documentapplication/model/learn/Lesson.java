@@ -12,6 +12,7 @@ public class Lesson {
 
     private static final double P_T = 0.03;
     private static final double P_S = 0.10;
+    private static final int MAX_ATTEMPTS = 10;
 
     private Long id;
     private Long chapterId;
@@ -27,7 +28,7 @@ public class Lesson {
     private double mastery = 0.10;
 
     @Setter
-    private int attemptsLeft = 10;
+    private int attemptsLeft = MAX_ATTEMPTS;
 
     public Lesson(
             Long id,
@@ -55,8 +56,16 @@ public class Lesson {
         this.topics = topics;
     }
 
-    public Long getCurrentTopic() {
+    public int getMaxAttempts() {
+        return MAX_ATTEMPTS;
+    }
+
+    public Long getCurrentTopicId() {
         return topics.get(Math.toIntExact(currentTopic));
+    }
+
+    public Long getCurrentTopic() {
+        return currentTopic;
     }
 
     public void consumeAttempt() {

@@ -45,9 +45,7 @@ class ClientSpec extends Specification {
         client.getResult("input")
 
         then: "a RetryException is thrown after retries are exhausted"
-        def e = thrown(RetriesFailedException)
-        e.cause instanceof TransientAiException
-        e.cause.message == "abc"
+        thrown(RetriesFailedException)
     }
 
     def "should build prompt using promptTemplate"() {

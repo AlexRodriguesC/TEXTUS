@@ -7,7 +7,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record ListResponseDTO(Long id,
-                              String request, boolean completed, ExerciseType type, List<String> answer)
-        implements ExerciseDTO {
+public record ListResponseDTO(
+        @NotNull Long id,
+        @NotNull  Long topicId,
+        @NotNull @NotEmpty String request,
+        boolean completed,
+        @NotNull ExerciseType type,
+        @NotNull @NotEmpty List<@NotNull @NotEmpty String> answer
+) implements ExerciseDTO {
 }

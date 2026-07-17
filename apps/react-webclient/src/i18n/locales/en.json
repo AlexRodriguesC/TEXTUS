@@ -115,7 +115,15 @@
       "success": "Space deleted successfully."
     }
   },
+  "exercise": {
+    "guide": {
+      "tooltip": "Click to show the guide",
+      "title": "The current exercise is based on the following topic"
+    }
+  },
   "button": {
+    "submit": "Submit",
+    "skip": "Skip",
     "apply": "Apply",
     "start": "Let's go!",
     "next": "Next",

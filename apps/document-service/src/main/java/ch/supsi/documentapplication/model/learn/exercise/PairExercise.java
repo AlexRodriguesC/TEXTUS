@@ -9,10 +9,10 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
 @JsonTypeName("PAIR")
-public class PairExercise extends BaseExercise<List<org.apache.commons.lang3.tuple.Pair<String, String>>> {
+public class PairExercise extends BaseExercise<List<LeftRight>> {
 
     @Override
-    public boolean isAnswerCorrect(List<org.apache.commons.lang3.tuple.Pair<String, String>> userResponse) {
+    public boolean isAnswerCorrect(List<LeftRight> userResponse) {
         if (userResponse == null) {
             return false;
         }
@@ -23,10 +23,10 @@ public class PairExercise extends BaseExercise<List<org.apache.commons.lang3.tup
             return false;
         }
         // Sort both lists to compare pairs ignoring order
-        List<Pair<String, String>> sortedExpected = new ArrayList<>(this.answer);
-        List<Pair<String, String>> sortedActual = new ArrayList<>(userResponse);
-        Comparator<org.apache.commons.lang3.tuple.Pair<String, String>> pairComparator =
-                Comparator.comparing(Pair<String, String>::getLeft).thenComparing(Pair::getRight);
+        List<LeftRight> sortedExpected = new ArrayList<>(this.answer);
+        List<LeftRight> sortedActual = new ArrayList<>(userResponse);
+        Comparator<LeftRight> pairComparator =
+                Comparator.comparing(LeftRight::left).thenComparing(LeftRight::right);
         sortedExpected.sort(pairComparator);
         sortedActual.sort(pairComparator);
         return sortedExpected.equals(sortedActual);
@@ -34,9 +34,9 @@ public class PairExercise extends BaseExercise<List<org.apache.commons.lang3.tup
 
     public Pair<List<String>, List<String>> getShuffledPairs() {
         List<String> left =
-                new ArrayList<>(this.answer.stream().map(Pair::getLeft).toList());
+                new ArrayList<>(this.answer.stream().map(LeftRight::left).toList());
         List<String> right =
-                new ArrayList<>(this.answer.stream().map(Pair::getRight).toList());
+                new ArrayList<>(this.answer.stream().map(LeftRight::right).toList());
         Collections.shuffle(left);
         Collections.shuffle(right);
         return Pair.of(left, right);
