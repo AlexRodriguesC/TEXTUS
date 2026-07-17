@@ -2,8 +2,7 @@ CREATE TABLE IF NOT EXISTS documents.pair_exercise
 (
     id          BIGSERIAL PRIMARY KEY,
     exercise_id BIGINT REFERENCES documents.exercise (id) ON DELETE CASCADE,
-    request     TEXT NOT NULL,
-    explanation      TEXT
+    request     TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS documents.pair_answer

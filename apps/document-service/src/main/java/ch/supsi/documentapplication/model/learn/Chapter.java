@@ -24,7 +24,7 @@ public class Chapter {
 
     @Setter
     @JsonIgnore
-    private List<Lesson2> lessons;
+    private List<Lesson> lessons;
 
     @JsonCreator
     public Chapter(
@@ -79,13 +79,13 @@ public class Chapter {
         int stepCount = getStepCount(this.topics.size());
         List<List<Long>> groups = distributeTopics(this.topics, stepCount);
 
-        List<Lesson2> result = new ArrayList<>(groups.size());
+        List<Lesson> result = new ArrayList<>(groups.size());
         for (int i = 0; i < groups.size(); i++) {
             LessonType type = (i == groups.size() - 1) ? LessonType.CHECKPOINT : LessonType.LESSON;
             if (type == LessonType.LESSON) {
-                result.add(new Lesson2(type, i, groups.get(i)));
+                result.add(new Lesson(type, i, groups.get(i)));
             } else {
-                result.add(new Lesson2(type, i, this.topics));
+                result.add(new Lesson(type, i, this.topics));
             }
         }
         this.lessons = result;

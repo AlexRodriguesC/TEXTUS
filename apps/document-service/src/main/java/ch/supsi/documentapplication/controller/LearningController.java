@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.*;
-import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.controller.DTO.response.exercise.ExerciseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.exercise.ExerciseMapper;
+import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import ch.supsi.documentapplication.service.ILearningService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("api/v1/spaces/{spaceId}/lessons/{lessonId}")
 @SecurityRequirement(name = "bearerAuth")
@@ -28,10 +28,12 @@ import java.util.List;
 public class LearningController {
 
     private final ILearningService learningService;
+    private final ExerciseMapper exerciseMapper;
 
     @Autowired
-    public LearningController(ILearningService learningService) {
+    public LearningController(ILearningService learningService, ExerciseMapper exerciseMapper) {
         this.learningService = learningService;
+        this.exerciseMapper = exerciseMapper;
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -52,23 +54,23 @@ public class LearningController {
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        Lesson2 lesson = learningService.getLesson(owner, spaceId, lessonId);
+        Lesson lesson = learningService.getLesson(owner, spaceId, lessonId);
 
         return lesson != null
-                ? ResponseEntity.status(HttpStatus.CREATED).body(null)
+                ? ResponseEntity.status(HttpStatus.CREATED).body(LessonResponseDTO.from(lesson))
                 : ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get lesson status and mastery", description = """
-        Returns the current status of the lesson associated with this lesson2, including
+        Returns the current status of the lesson associated with this lesson, including
         the user's mastery probability as computed by Bayesian Knowledge Tracing (BKT),
         the number of attempts used so far, and whether the lesson has been completed
         (mastered or exhausted).
         """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lesson status retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson2", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<LessonResponseDTO> getLesson(
@@ -77,42 +79,42 @@ public class LearningController {
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
-        Lesson2 lesson = learningService.getLesson(owner, spaceId, lessonId);
+        Lesson lesson = learningService.getLesson(owner, spaceId, lessonId);
 
         return ResponseEntity.ok(LessonResponseDTO.from(lesson));
     }
 
     @GetMapping(value = "/exercise", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the next exercise for the lesson", description = """
-        Returns the next not-yet-completed exercise for this lesson2's lesson, selected
+        Returns the next not-yet-completed exercise for this lesson's lesson, selected
         dynamically based on BKT mastery and exercise family. Returns 204 No Content
         once no further exercises are needed for this lesson.
         """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Next exercise returned successfully"),
             @ApiResponse(responseCode = "204", description = "No further exercises to serve; lesson is complete"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson2", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public ResponseEntity<ExerciseResponseDTO> getNextExercise(
+    public ResponseEntity<ExerciseDTO> getNextExercise(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();
         BaseExercise<?> exercise = learningService.getNextExercise(owner, spaceId, lessonId);
-        return ResponseEntity.ok(ExerciseResponseDTO.from(exercise));
+        return ResponseEntity.ok(exerciseMapper.toDto(exercise));
     }
 
     @GetMapping(value = "/lesson/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all exercises served for this lesson", description = """
-        Returns the full list of exercises served so far for this lesson2's lesson, each
+        Returns the full list of exercises served so far for this lesson's lesson, each
         with its resolved attempt status. Useful for review or debugging; not part of
         the primary lesson-taking flow.
         """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Exercises retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson2", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<ExercisesResponseDTO> getExercises(
@@ -127,7 +129,7 @@ public class LearningController {
 
     @PostMapping(value = "/lesson/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Submit an attempt for the lesson's current exercise", description = """
-        Submits the user's answer for the currently active exercise of this lesson2's lesson.
+        Submits the user's answer for the currently active exercise of this lesson's lesson.
         The backend validates the submitted exerciseId against the lesson's current exercise,
         grades the responses, updates BKT mastery, and returns per-item feedback along with
         the updated lesson state. The attemptId should be client-generated to support safe
@@ -136,7 +138,7 @@ public class LearningController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Attempt recorded and feedback returned"),
             @ApiResponse(responseCode = "409", description = "Submitted exerciseId does not match the lesson's current exercise", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson2", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<AttemptResponseDTO> submitAttempt(

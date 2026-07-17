@@ -1,8 +1,10 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException
+import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.MindMap
 import ch.supsi.documentapplication.model.learn.Topic
+import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.validator.MindMapValidator
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
 import org.springframework.ai.chat.client.ChatClient
@@ -25,7 +27,7 @@ class OpenAIMindMapClientSpec extends Specification {
     ChatClient chatClient = Mock()
     ChatClient.ChatClientRequestSpec requestSpec = Mock()
     ChatClient.CallResponseSpec callResponseSpec = Mock()
-    RetryTemplate retryTemplate
+    RetryTemplateWrapper retryTemplate
     MindMapValidator mindMapValidator = Mock()
     PromptTemplate promptTemplate = Mock()
 
@@ -35,7 +37,7 @@ class OpenAIMindMapClientSpec extends Specification {
                 .includes(TransientAiException.class)
                 .delay(Duration.ofMillis(10))
                 .build()
-        retryTemplate = new RetryTemplate(retryPolicy)
+        retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
         client = new OpenAIMindMapClient(chatClient, retryTemplate, mindMapValidator, promptTemplate)
     }
@@ -69,7 +71,7 @@ class OpenAIMindMapClientSpec extends Specification {
         result == expectedMindMap
     }
 
-    def "should retry and eventually throw RetryException when validations keep failing"() {
+    def "should retry and eventually throw RetriesFailedException when validations keep failing"() {
         given: "a list of topics and a rendered prompt"
         def topics = [topic(1L, randomStr(), randomStr())]
         def mindMap = new MindMap()
@@ -84,10 +86,10 @@ class OpenAIMindMapClientSpec extends Specification {
         client.getResult(topics)
 
         then: "the validation exception propagates"
-        thrown(RetryException)
+        thrown(RetriesFailedException)
     }
 
-    def "should retry and eventually throw RetryException when chatClient keeps failing transiently"() {
+    def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
         given: "a list of topics"
         def topics = [topic(1L, randomStr(), randomStr())]
 
@@ -98,8 +100,8 @@ class OpenAIMindMapClientSpec extends Specification {
         when: "getResult is invoked"
         client.getResult(topics)
 
-        then: "a RetryException wrapping the transient failure is thrown"
-        def e = thrown(RetryException)
+        then: "a RetriesFailedException wrapping the transient failure is thrown"
+        def e = thrown(RetriesFailedException)
         e.cause instanceof TransientAiException
     }
 }

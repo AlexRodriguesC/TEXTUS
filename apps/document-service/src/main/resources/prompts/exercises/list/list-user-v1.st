@@ -15,11 +15,9 @@ Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
 - The output object must have this exact shape:
 {
-"request": string,
-"answer": {
-"answer": [ string, ... ],
-"explaination": string
-}
+  "request": "",
+  "answer": ["element1", "element2", "..."],
+  "explanation": ""
 }
 - "answer.answer" must be an array of at least three unique strings representing the correct order.
 - No element may be duplicated or omitted.

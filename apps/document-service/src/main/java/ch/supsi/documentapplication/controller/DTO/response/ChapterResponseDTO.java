@@ -1,7 +1,7 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.learn.Chapter;
-import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.model.learn.Lesson;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -46,8 +46,8 @@ public record ChapterResponseDTO(
     public static ChapterResponseDTO from(Chapter chapter) {
         var nodes = chapter.getLessons();
         var nodeDTOs = new ArrayList<NodeResponseDTO>();
-        for (Lesson2 lesson2 : nodes) {
-            NodeResponseDTO dto = new NodeResponseDTO(lesson2.getId(), lesson2.getType(), lesson2.getTopics());
+        for (Lesson lesson : nodes) {
+            NodeResponseDTO dto = new NodeResponseDTO(lesson.getId(), lesson.getType(), lesson.getTopics());
             nodeDTOs.add(dto);
         }
 

@@ -16,13 +16,12 @@ Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
 - The output object must have this exact shape:
 {
-"request": string,
-"answer": [
-{
-"answer": { "label1": [ string, ... ], "label2": [ string, ... ] },
-"explanation": string
-}
-]
+  "request": "",
+  "answer": {
+    "label1": ["item1", "item2"],
+    "label2": ["item3"]
+  },
+  "explanation": ""
 }
 - "answer" must contain exactly one object.
 - "answer.answer" must have EXACTLY two keys, never fewer, never more.

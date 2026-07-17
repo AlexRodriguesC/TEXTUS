@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.LearningPath;
-import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.LessonType;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
 
         var lessons = chapter.getLessons();
 
-        for (Lesson2 lesson : lessons) {
+        for (Lesson lesson : lessons) {
             jdbcClient
                     .sql(
                             "SELECT (documents.create_lesson(:chapter_id, :index, :type, :current_topic, :attempts_left, :mastery, :topics)).id")
@@ -105,14 +105,14 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .list();
 
         for (Chapter chapter : chapters) {
-            List<Lesson2> lessons = getLessonsByChapterId(chapter.getId());
+            List<Lesson> lessons = getLessonsByChapterId(chapter.getId());
             chapter.setLessons(lessons);
         }
 
         return new LearningPath(jobId, settings, chapters);
     }
 
-    private List<Lesson2> getLessonsByChapterId(Long chapterId) {
+    private List<Lesson> getLessonsByChapterId(Long chapterId) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_lessons(:chapter_id)")
                 .param("chapter_id", chapterId)
@@ -139,7 +139,7 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                         topics = List.of();
                     }
 
-                    return new Lesson2(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
+                    return new Lesson(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
                 })
                 .list();
     }

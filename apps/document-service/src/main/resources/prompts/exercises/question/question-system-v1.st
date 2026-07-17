@@ -20,12 +20,10 @@ Exercise objective:
 
 Output schema:
 {
-"question": "",
-"answer": {
-"answer": "",
-"explanation": ""
-},
-"distractor": [ "", "..." ]
+  "request": "",
+  "answer": "",
+  "explanation": "",
+  "distractor": ["", "..."]
 }
 
 Field constraints:

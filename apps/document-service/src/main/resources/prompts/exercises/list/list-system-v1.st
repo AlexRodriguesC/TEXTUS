@@ -16,11 +16,9 @@ Exercise objective:
 
 Output schema:
 {
-"request": "",
-"answer": {
-"answer": [ "element1", "element2", "..." ],
-"explaination": ""
-}
+  "request": "",
+  "answer": ["element1", "element2", "..."],
+  "explanation": ""
 }
 
 Field constraints:

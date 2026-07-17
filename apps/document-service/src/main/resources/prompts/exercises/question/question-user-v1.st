@@ -15,12 +15,10 @@ Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
 - The output object must have this exact shape:
 {
-"question": string,
-"answer": {
-"answer": string,
-"explanation": string
-},
-"distractor": [ string, ... ]
+  "request": "",
+  "answer": "",
+  "explanation": "",
+  "distractor": ["", "..."]
 }
 - Exactly one correct answer must exist in "answer.answer".
 - If true/false, "distractor" must contain exactly one value, the opposite boolean.

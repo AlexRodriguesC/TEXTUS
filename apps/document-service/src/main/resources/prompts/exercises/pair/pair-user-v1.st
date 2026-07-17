@@ -15,13 +15,12 @@ Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
 - The output object must have this exact shape:
 {
-"request": string,
-"answers": [
-{
-"answer": { "first": string, "second": string },
-"explanation": string
-}
-]
+  "request": "",
+  "answer": [
+    { "left": "", "right": "" },
+    { "left": "", "right": "" }
+  ],
+  "explanation": ""
 }
 - "answers" must contain between 3 and 5 pair objects.
 - No value may repeat across pairs, on either side.

@@ -34,7 +34,7 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.lesson2.json", "./tsconfig.app.json"],
+        project: ["./tsconfig.lesson.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
@@ -63,7 +63,7 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.lesson2.json", "./tsconfig.app.json"],
+        project: ["./tsconfig.lesson.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...

@@ -7,7 +7,7 @@ import ch.supsi.documentapplication.exception.ApplicationException;
 import ch.supsi.documentapplication.model.Attempt;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
-import ch.supsi.documentapplication.model.learn.Lesson2;
+import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import ch.supsi.documentapplication.service.clients.exercise.*;
@@ -53,7 +53,7 @@ public class LearningService extends Service implements ILearningService {
     }
 
     @Override
-    public Lesson2 getLesson(String owner, Long spaceId, Long lessonId) throws ApplicationException {
+    public Lesson getLesson(String owner, Long spaceId, Long lessonId) throws ApplicationException {
         return databaseLearningStorage.readLesson(lessonId);
     }
 
@@ -87,7 +87,7 @@ public class LearningService extends Service implements ILearningService {
         return exercise;
     }
 
-    private Topic findCurrentTopic(Long spaceId, Lesson2 lesson) throws ApplicationException {
+    private Topic findCurrentTopic(Long spaceId, Lesson lesson) throws ApplicationException {
         var topics = databaseTopicStorage.getBySpaceId(spaceId);
         return topics.stream()
                 .filter(t -> Objects.equals(t.getId(), lesson.getCurrentTopic()))

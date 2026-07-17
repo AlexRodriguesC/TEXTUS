@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS documents.exercise
     topic_id     BIGINT NOT NULL REFERENCES documents.topic (id) ON DELETE CASCADE,
     family  TEXT NOT NULL CHECK (family IN ('question', 'pair', 'group', 'list')),
     index   INTEGER NOT NULL,
+    explanation TEXT,
     completed BOOLEAN NOT NULL DEFAULT FALSE
 );

@@ -1,6 +1,5 @@
 package ch.supsi.documentapplication.model.learn.exercise;
 
-import ch.supsi.documentapplication.model.learn.ExerciseType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -13,7 +12,7 @@ import lombok.Setter;
     @JsonSubTypes.Type(value = Question.class, name = "QUESTION"),
     @JsonSubTypes.Type(value = List.class, name = "LIST"),
     @JsonSubTypes.Type(value = Group.class, name = "GROUP"),
-    @JsonSubTypes.Type(value = Pair.class, name = "PAIR")
+    @JsonSubTypes.Type(value = PairExercise.class, name = "PAIR")
 })
 public abstract class BaseExercise<T> implements IExercise<T> {
 
@@ -33,8 +32,19 @@ public abstract class BaseExercise<T> implements IExercise<T> {
     @Setter
     protected boolean completed = false;
 
+    @Setter
     protected String request;
+
+    @Setter
     protected T answer;
+
+    @Setter
+    protected String explanation;
+
+    @Override
+    public String getExplanation() {
+        return explanation;
+    }
 
     @Override
     public String getRequest() {
@@ -45,8 +55,4 @@ public abstract class BaseExercise<T> implements IExercise<T> {
     public T getAnswer() {
         return answer;
     }
-
-    public abstract ExerciseType getType();
-
-    public abstract double getGuessProbability();
 }

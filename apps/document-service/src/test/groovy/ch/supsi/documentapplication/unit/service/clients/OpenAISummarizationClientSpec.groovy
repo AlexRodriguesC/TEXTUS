@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.unit.service.clients
 
+import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.Page
+import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
@@ -22,7 +24,7 @@ class OpenAISummarizationClientSpec extends Specification {
     ChatClient chatClient = Mock()
     ChatClient.ChatClientRequestSpec requestSpec = Mock()
     ChatClient.CallResponseSpec callResponseSpec = Mock()
-    RetryTemplate retryTemplate
+    RetryTemplateWrapper retryTemplate
     PromptTemplate promptTemplate = Mock()
 
     def setup() {
@@ -31,7 +33,7 @@ class OpenAISummarizationClientSpec extends Specification {
                 .includes(TransientAiException.class)
                 .delay(Duration.ofMillis(10))
                 .build()
-        retryTemplate = new RetryTemplate(retryPolicy)
+        retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
         client = new OpenAISummarizationClient(chatClient, retryTemplate, promptTemplate)
     }
@@ -53,7 +55,7 @@ class OpenAISummarizationClientSpec extends Specification {
         result == expectedPage
     }
 
-    def "should retry and eventually throw RetryException when chatClient keeps failing transiently"() {
+    def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
         given: "a document text"
         def documentText = "some document content"
 
@@ -64,8 +66,8 @@ class OpenAISummarizationClientSpec extends Specification {
         when: "getResult is invoked"
         client.getResult(documentText)
 
-        then: "a RetryException wrapping the transient failure is thrown"
-        def e = thrown(RetryException)
+        then: "a RetriesFailedException wrapping the transient failure is thrown"
+        def e = thrown(RetriesFailedException)
         e.cause instanceof TransientAiException
     }
 

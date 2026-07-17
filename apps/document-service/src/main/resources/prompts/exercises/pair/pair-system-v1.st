@@ -17,14 +17,12 @@ Exercise objective:
 
 Output schema:
 {
-"request": "",
-"answers": [
-{
-"answer": { "first": "", "second": "" },
-"explanation": ""
-},
-"..."
-]
+  "request": "",
+  "answer": [
+    { "left": "", "right": "" },
+    { "left": "", "right": "" }
+  ],
+  "explanation": ""
 }
 
 Field constraints:
