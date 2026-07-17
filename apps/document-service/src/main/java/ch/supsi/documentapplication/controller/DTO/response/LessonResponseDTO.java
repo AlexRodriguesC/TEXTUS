@@ -24,7 +24,7 @@ public record LessonResponseDTO(
                 lesson.getId(),
                 lesson.getType(),
                 lesson.isMastered(),
-                lesson.getCurrentTopicId(),
+                lesson.getCurrentTopic(),
                 lesson.getTopics(),
                 lesson.getMastery(),
                 lesson.getMaxAttempts(),

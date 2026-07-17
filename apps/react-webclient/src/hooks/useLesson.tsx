@@ -25,9 +25,11 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
 
     const nextExercise = nextExerciseData && isExerciseResponse(nextExerciseData) ? nextExerciseData.data : undefined;
 
-    const lesson = data && isLessonResponse(data) ? data.data : undefined;
-
-    return { lesson, isLoading, nextExercise, exerciseLoading };
+    return {
+        lesson: data && isLessonResponse(data) ? data.data : undefined,
+        isLoading,
+        nextExercise,
+        exerciseLoading };
 }
 
 export default useLesson;

@@ -15,16 +15,16 @@ public record AttemptRequestDTO(
         String attemptId,
         @Schema(description = "Identifier of the exercise being attempted; must match the lesson's current exercise")
         Long exerciseId,
-        @Schema(description = "User's submitted responses, shape depends on exercise family")
-        List<Object> responses
+        @Schema(description = "User's submitted response")
+        Object response
 ) {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public <T> T getResponsesAs(Class<T> targetClass) {
-        return MAPPER.convertValue(responses, targetClass);
+        return MAPPER.convertValue(response, targetClass);
     }
 
     public <T> T getResponsesAs(TypeReference<T> typeReference) {
-        return MAPPER.convertValue(responses, typeReference);
+        return MAPPER.convertValue(response, typeReference);
     }
 }

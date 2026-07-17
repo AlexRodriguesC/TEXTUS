@@ -340,7 +340,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
         jdbcClient
                 .sql("SELECT documents.update_lesson(:lessonId, :currentTopic, :attemptsLeft, :mastery)")
                 .param("lessonId", lesson.getId())
-                .param("currentTopic", lesson.getCurrentTopicId())
+                .param("currentTopic", lesson.getCurrentTopic())
                 .param("attemptsLeft", lesson.getAttemptsLeft())
                 .param("mastery", lesson.getMastery())
                 .query()
@@ -349,16 +349,25 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
 
     @Override
     public void create(Attempt<?> attempt, String userId, Long lessonId, Long exerciseId) {
+
+        String responseJson;
+        try {
+            responseJson = objectMapper.writeValueAsString(attempt.getUserResponse());
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize attempt response", e);
+        }
+
         jdbcClient
                 .sql(
                         "SELECT * FROM documents.create_attempt(:exerciseId, :lessonId, :userId, :response::jsonb, :isCorrect, :feedback)")
                 .param("exerciseId", exerciseId)
                 .param("lessonId", lessonId)
                 .param("userId", userId)
-                .param("response", attempt.getUserResponse())
+                .param("response", responseJson)
                 .param("isCorrect", !attempt.isAnswerWrong())
                 .param("feedback", attempt.getFeedback())
-                .update();
+                .query()
+                .listOfRows();
     }
 
     private String toGroupJson(Map<String, List<String>> map) {

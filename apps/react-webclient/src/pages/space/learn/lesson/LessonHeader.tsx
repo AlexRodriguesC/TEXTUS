@@ -15,7 +15,6 @@ function LessonHeader() {
         return <div>Loading...</div>;
     }
 
-    const attemptsLeft = lesson!.attemptsLeft;
     const maxAttempts = lesson!.maxAttempts;
 
     return (
@@ -35,7 +34,7 @@ function LessonHeader() {
             {/* Mobile: single heart with count */}
             <div className="flex sm:hidden items-center gap-1">
                 <img src="/heart.webp" alt={"hearts"} className="h-10 w-10" />
-                <span className="text-sm font-semibold">x{attemptsLeft}</span>
+                <span className="text-sm font-semibold">x{lesson!.attemptsLeft}</span>
             </div>
 
             {/* Desktop/tablet: stacked hearts */}
@@ -45,7 +44,7 @@ function LessonHeader() {
                         alt={"hearts"}
                         src="/heart.webp"
                         key={i}
-                        className={`h-10 w-10 -ml-4 first:ml-0 ${i >= attemptsLeft ? "grayscale" : ""}`}
+                        className={`h-10 w-10 -ml-4 first:ml-0 ${i >= lesson!.attemptsLeft ? "grayscale" : ""}`}
                         style={{ zIndex: maxAttempts - i }}
                     />
                 ))}

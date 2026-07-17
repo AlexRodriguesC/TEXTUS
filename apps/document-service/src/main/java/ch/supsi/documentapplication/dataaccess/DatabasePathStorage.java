@@ -119,26 +119,13 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 .query((rs, rowNum) -> {
                     Long id = rs.getLong("id");
                     Integer index = rs.getInt("index");
-                    String typeStr = rs.getString("type");
-                    LessonType type = LessonType.valueOf(typeStr.toUpperCase());
-
+                    LessonType type = LessonType.valueOf(rs.getString("type").toUpperCase());
                     Long currentTopic = rs.getLong("current_topic");
-                    if (rs.wasNull()) {
-                        currentTopic = null;
-                    }
-
                     int attemptsLeft = rs.getInt("attempts_left");
                     double mastery = rs.getDouble("mastery");
 
-                    java.sql.Array topicsArray = rs.getArray("topics");
-                    List<Long> topics;
-                    if (topicsArray != null) {
-                        Long[] arr = (Long[]) topicsArray.getArray();
-                        topics = Arrays.asList(arr);
-                    } else {
-                        topics = List.of();
-                    }
-
+                    List<Long> topics =
+                            Arrays.asList((Long[]) rs.getArray("topics").getArray());
                     return new Lesson(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
                 })
                 .list();
