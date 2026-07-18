@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     DndContext,
     closestCenter,
@@ -11,8 +11,14 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PairResponseDTO } from "@/client/model";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 
+interface LeftRight {
+    left: string;
+    right: string;
+}
+
 interface PairProps {
     pair: PairResponseDTO;
+    onAnswer?: (answer: LeftRight[] | null) => void;
 }
 
 function DroppableLeft({ left, assignedRight, onRemove }: { left: string; assignedRight: string | undefined; onRemove: () => void }) {
@@ -67,7 +73,7 @@ function RightPool({ children }: { children: React.ReactNode }) {
     );
 }
 
-function Pair({ pair }: PairProps) {
+function Pair({ pair, onAnswer }: PairProps) {
     const leftItems = pair.left ?? [];
     const rightItems = pair.right ?? [];
 
@@ -108,12 +114,25 @@ function Pair({ pair }: PairProps) {
         });
     }
 
+    useEffect(() => {
+        if (!onAnswer) return;
+
+        const allAssigned = leftItems.length > 0 && leftItems.every((left) => assignments[left] !== undefined);
+
+        if (allAssigned) {
+            const answer: LeftRight[] = leftItems.map((left) => ({ left, right: assignments[left] }));
+            onAnswer(answer);
+        } else {
+            onAnswer(null);
+        }
+    }, [assignments, leftItems, onAnswer]);
+
     const usedRights = new Set(Object.values(assignments));
     const remainingRights = rightItems.filter((r) => !usedRights.has(r));
 
     return (
         <div className={"flex flex-col gap-8"}>
-           <ExerciseHeader question={pair.request} topicId={pair.topicId} />
+            <ExerciseHeader question={pair.request} topicId={pair.topicId} />
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <div className="flex flex-col gap-3">

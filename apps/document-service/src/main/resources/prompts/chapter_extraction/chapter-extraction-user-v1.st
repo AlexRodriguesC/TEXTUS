@@ -22,6 +22,8 @@ Hard constraints:
 - Do not repeat any labelId.
 - Do not invent any labelId.
 - Do not invent any extra chapter beyond what the grouping requires.
+- Every chapter must contain at least 3 labelIds; never produce a chapter with fewer than 3.
+- If the total number of input labelIds is fewer than 3, produce exactly one chapter containing all of them.
 - Each chapter object must have this exact shape:
 {
 "index": number,
@@ -32,6 +34,7 @@ Hard constraints:
 - "index" starts at 0 and increases sequentially with no gaps.
 - "title" must be 2 to 3 words.
 - "description" must be 6 to 7 words and summarize the chapter's focus.
+- "labelIds" must contain 3 or more numbers, unless the fewer-than-3-total-input exception applies.
 - No keys other than "index", "title", "description", "labelIds" are allowed.
 - Output ONLY valid JSON.
 - Output no prose, no markdown, no code fences.
@@ -42,24 +45,28 @@ How to choose structure:
 - Order chapters from foundational or introductory topics to specific, advanced, or applied topics.
 - If two labels are related but ambiguous in order, place the more general one in the earlier chapter.
 - Keep each chapter focused on one coherent theme; avoid mixing unrelated concepts in the same chapter.
-- Prefer 4 to 10 labels per chapter where possible.
+- Prefer 4 to 10 labels per chapter where possible, never fewer than 3.
+- If a coherent cluster naturally has fewer than 3 labels, merge it into the most semantically related neighboring chapter rather than keeping it undersized.
+- If splitting a large chapter would leave any resulting sub-chapter with fewer than 3 labels, do not split it; keep it as one chapter instead.
 
 Required internal procedure:
 1. Read all labels.
 2. Build a private coverage set containing every input labelId.
 3. Cluster labelIds into coherent thematic groups.
-4. Order groups by conceptual prerequisite progression.
-5. Assign sequential index values, a short title, and a short description to each group.
-6. Before answering, verify all of the following privately:
+4. Merge any cluster with fewer than 3 labelIds into its most semantically related neighboring cluster until every cluster has at least 3 labelIds.
+5. Order groups by conceptual prerequisite progression.
+6. Assign sequential index values, a short title, and a short description to each group.
+7. Before answering, verify all of the following privately:
 - every input labelId appears exactly once
 - no labelId appears more than once
 - no labelId is missing
 - no labelId outside INPUT_LABELS appears
+- every chapter has at least 3 labelIds, unless the fewer-than-3-total-input exception applies
 - indices are sequential starting at 0 with no gaps
 - every chapter has title, description, and labelIds
 - no extra keys are present
-7. If any check fails, revise internally until all checks pass.
-8. Return only the final JSON array.
+8. If any check fails, revise internally until all checks pass, prioritizing merging undersized chapters over any other adjustment.
+9. Return only the final JSON array.
 
 Important:
 Do not describe your reasoning.

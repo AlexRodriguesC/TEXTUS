@@ -4,6 +4,8 @@ import ch.supsi.documentapplication.controller.DTO.response.AttemptRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.AttemptResponseDTO;
 import ch.supsi.documentapplication.dataaccess.*;
 import ch.supsi.documentapplication.exception.ApplicationException;
+import ch.supsi.documentapplication.exception.LessonAttemptsExhaustedException;
+import ch.supsi.documentapplication.exception.LessonPrerequisiteNotSatisfiedException;
 import ch.supsi.documentapplication.model.Attempt;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
@@ -58,10 +60,16 @@ public class LearningService extends Service implements ILearningService {
     }
 
     @Override
-    public BaseExercise<?> getNextExercise(String owner, Long spaceId, Long nodeId) throws ApplicationException {
+    public BaseExercise<?> getNextExercise(String owner, Long spaceId, Long lessonId) throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
         var path = databasePathStorage.read(space.getId());
-        var lesson = getLesson(owner, spaceId, nodeId);
+        var lesson = getLesson(owner, spaceId, lessonId);
+        var prerequisite = path.getPrerequisiteLesson(lesson.getId());
+
+        if (!lesson.canBeStarted(prerequisite)) {
+            throw LessonPrerequisiteNotSatisfiedException.lessonPrerequisiteNotSatisfied(
+                    lesson.getId(), prerequisite.getId());
+        }
 
         if (lesson.hasExerciseInProgress()) {
             return lesson.getExerciseInProgress();
@@ -108,6 +116,11 @@ public class LearningService extends Service implements ILearningService {
             throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
         var lesson = getLesson(owner, spaceId, nodeId);
+
+        if (!lesson.hasAttemptsLeft()) {
+            throw LessonAttemptsExhaustedException.lessonAttemptsExhausted();
+        }
+
         BaseExercise<?> exercise = lesson.getExerciseInProgress();
         Topic topic = findCurrentTopic(space.getId(), lesson);
         Attempt<?> attempt = Attempt.from(request, exercise, topic);
@@ -120,10 +133,10 @@ public class LearningService extends Service implements ILearningService {
 
         databaseLearningStorage.create(attempt, owner, lesson.getId(), exercise.getId());
 
-        exercise.setCompleted(!isAnswerWrong);
         databaseLearningStorage.updateExercise(exercise);
 
         lesson.updateMastery(isAnswerWrong);
+        exercise.setCompleted(!isAnswerWrong);
         lesson.consumeAttempt();
         databaseLearningStorage.update(lesson);
 

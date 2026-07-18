@@ -10,6 +10,7 @@ import java.util.List;
 @Schema(description = "Represents the current state of a lesson (node) within a learning path")
 public record LessonResponseDTO(
         @Schema(description = "Identifier of the lesson (node)") @NotNull Long id,
+        @Schema(description = "Index (position) of the lesson inside its chapter") @NotNull Integer index,
         @Schema(description = "Type of the lesson", example = "LESSON") @NotNull LessonType type,
         @NotNull boolean completed,
         @Schema(description = "ID of the current topic being worked on") @NotNull Long currentTopic,
@@ -22,6 +23,7 @@ public record LessonResponseDTO(
     public static LessonResponseDTO from(Lesson lesson) {
         return new LessonResponseDTO(
                 lesson.getId(),
+                lesson.getIndex(),
                 lesson.getType(),
                 lesson.isMastered(),
                 lesson.getCurrentTopic(),

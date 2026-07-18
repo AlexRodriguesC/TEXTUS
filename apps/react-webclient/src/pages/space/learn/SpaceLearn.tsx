@@ -1,4 +1,5 @@
-import SpaceLearnEmpty from "@/pages/space/learn/SpaceLearnEmpty.tsx";import CenteredPage from "@/components/CenteredPage.tsx";
+import SpaceLearnEmpty from "@/pages/space/learn/SpaceLearnEmpty.tsx";
+import CenteredPage from "@/components/CenteredPage.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import {useEffect, useRef, useState} from "react";
@@ -7,34 +8,61 @@ import useLearningPath from "@/hooks/useLearningPath.ts";
 import {useNavigate} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-import {type ChapterResponseDTO} from "@/client/model";
+import {type ChapterResponseDTO, type LessonResponseDTO} from "@/client/model";
 import PathNode from "@/pages/space/learn/PathNodeType.tsx";
 import {cn} from "@/lib/utils.ts";
 
 const OFFSETS = [0, 60, 0, -60];
 
-function ChapterPath({ chapter }: { chapter: ChapterResponseDTO; sectionIndex: number }) {
+function getPrerequisiteLesson(
+    chapters: ChapterResponseDTO[],
+    chapterIndex: number,
+    lesson: LessonResponseDTO
+): LessonResponseDTO | null {
+    if (lesson.index > 0) {
+        const chapter = chapters.find((c) => c.index === chapterIndex);
+        return chapter?.lessons.find((l) => l.index === lesson.index - 1) ?? null;
+    }
+
+    const previousChapter = chapters.find((c) => c.index === chapterIndex - 1);
+    if (!previousChapter || previousChapter.lessons.length === 0) {
+        return null;
+    }
+
+    return previousChapter.lessons.reduce((max, l) => (l.index > max.index ? l : max));
+}
+
+function ChapterPath({ chapter, chapters }: { chapter: ChapterResponseDTO; chapters: ChapterResponseDTO[]; sectionIndex: number }) {
     const navigate = useNavigate();
     const { strSpaceId } = useSpaceId();
 
     return (
         <div className={"flex flex-col items-center gap-2 pb-8"} data-chapter-index={chapter.index}>
             <div className={"flex flex-col items-center gap-6 pt-4"}>
-                {chapter.lessons.map((lesson, i) => (
-                    <PathNode
-                        key={lesson.id}
-                        onClick={() => navigate({
-                            to: PathConstants.LESSON,
-                            params: {
-                                spaceId: strSpaceId!,
-                                chapterId: chapter.index.toString(),
-                                lessonId: lesson.id.toString()
-                            }
-                        })}
-                        node={lesson}
-                        offset={OFFSETS[i % OFFSETS.length]}
-                    />
-                ))}
+                {chapter.lessons.map((lesson, i) => {
+                    const prerequisite = getPrerequisiteLesson(chapters, chapter.index, lesson);
+                    const disabled = prerequisite !== null && !prerequisite.completed;
+
+                    return (
+                        <PathNode
+                            key={lesson.id}
+                            onClick={() => {
+                                if (disabled) return;
+                                navigate({
+                                    to: PathConstants.LESSON,
+                                    params: {
+                                        spaceId: strSpaceId!,
+                                        chapterId: chapter.index.toString(),
+                                        lessonId: lesson.id.toString()
+                                    }
+                                });
+                            }}
+                            node={lesson}
+                            offset={OFFSETS[i % OFFSETS.length]}
+                            disabled={disabled}
+                        />
+                    );
+                })}
             </div>
         </div>
     );
@@ -103,8 +131,8 @@ function SpaceLearn() {
                 <ScrollArea className="h-full w-full min-h-0" viewportRef={viewportRef}>
                     <div className={"flex h-full flex-col items-center"}>
                         {path.chapters.map((chapter, i) => (
-                            <div key={chapter.index} className={cn("flex flex-col", i < completedCount + 1 ? "" : "grayscale")}>
-                                <ChapterPath chapter={chapter} sectionIndex={i + 1} />
+                            <div key={chapter.index} className={cn("flex flex-col")}>
+                                <ChapterPath chapter={chapter} chapters={path.chapters} sectionIndex={i + 1} />
                                 {i < path.chapters.length - 1 && (
                                     <div className="flex items-center gap-3 my-4">
                                         <Separator className="flex-1 bg-border/50" />

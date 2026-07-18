@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     DndContext,
     closestCenter,
@@ -20,6 +20,7 @@ import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 
 interface ListProps {
     list: ListResponseDTO;
+    onAnswer?: (answer: string[] | null) => void;
 }
 
 interface SortableItemProps {
@@ -55,7 +56,7 @@ function SortableItem({ id, value }: SortableItemProps) {
     );
 }
 
-function List({ list }: ListProps) {
+function List({ list, onAnswer }: ListProps) {
     const [items, setItems] = useState(
         list.answer.map((value, i) => ({ id: `${i}-${value}`, value }))
     );
@@ -72,6 +73,11 @@ function List({ list }: ListProps) {
             return arrayMove(prev, oldIndex, newIndex);
         });
     }
+
+    useEffect(() => {
+        if (!onAnswer) return;
+        onAnswer(items.map((i) => i.value));
+    }, [items, onAnswer]);
 
     return (
         <div className={"flex flex-col gap-8"}>

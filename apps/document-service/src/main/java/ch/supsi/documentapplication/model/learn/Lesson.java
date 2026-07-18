@@ -12,7 +12,7 @@ public class Lesson {
 
     private static final double P_T = 0.03;
     private static final double P_S = 0.10;
-    private static final int MAX_ATTEMPTS = 10;
+    private static final int MAX_ATTEMPTS = 5;
 
     private Long id;
     private Long chapterId;
@@ -56,6 +56,10 @@ public class Lesson {
         this.topics = topics;
     }
 
+    public boolean canBeStarted(Lesson prerequisite) {
+        return prerequisite == null || prerequisite.isMastered();
+    }
+
     public int getMaxAttempts() {
         return MAX_ATTEMPTS;
     }
@@ -87,6 +91,10 @@ public class Lesson {
             return LessonStatus.EXHAUSTED;
         }
         return LessonStatus.IN_PROGRESS;
+    }
+
+    public boolean hasAttemptsLeft() {
+        return attemptsLeft > 0;
     }
 
     public void advanceCurrentTopic() {

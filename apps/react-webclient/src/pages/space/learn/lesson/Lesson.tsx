@@ -15,7 +15,6 @@ import {useQueryClient} from "@tanstack/react-query";
 import {getGetLessonQueryKey} from "@/client/generated/lessons/lessons.ts";
 
 function Lesson() {
-    const queryClient = useQueryClient();
     const { lessonId } = useLessonId();
     const { spaceId } = useSpaceId();
     const { isLoading, nextExercise, exerciseLoading } = useLesson({lessonId: lessonId});
@@ -28,13 +27,13 @@ function Lesson() {
         }
 
         if (nextExercise.type === "LIST") {
-            return <List list={nextExercise}></List>
+            return <List list={nextExercise}  onAnswer={setAnswer}></List>
         } else if (nextExercise.type === "QUESTION") {
             return <Question question={nextExercise} onAnswer={setAnswer}></Question>
         } else if (nextExercise.type === "GROUP") {
-            return <Group group={nextExercise}></Group>
+            return <Group group={nextExercise}  onAnswer={setAnswer}></Group>
         } else if (nextExercise.type === "PAIR") {
-            return <Pair pair={nextExercise}></Pair>
+            return <Pair pair={nextExercise}  onAnswer={setAnswer}></Pair>
         }
         return <div>Invalid exercise type</div>
     }, [nextExercise, exerciseLoading, isLoading])

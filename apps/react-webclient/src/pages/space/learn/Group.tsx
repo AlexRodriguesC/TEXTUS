@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     DndContext,
     closestCenter,
@@ -13,6 +13,7 @@ import type {GroupResponseDTO} from "@/client/model";
 
 interface GroupProps {
     group: GroupResponseDTO;
+    onAnswer?: (answer: Record<string, string[]> | null) => void;
 }
 
 interface DroppableLabelProps {
@@ -99,7 +100,7 @@ function KeyPool({ children }: { children: React.ReactNode }) {
     );
 }
 
-function Group({ group }: GroupProps) {
+function Group({ group, onAnswer }: GroupProps) {
     const labels = group.labels ?? [];
     const keys = group.keys ?? [];
 
@@ -140,12 +141,29 @@ function Group({ group }: GroupProps) {
         });
     }
 
+    useEffect(() => {
+        if (!onAnswer) return;
+
+        const usedKeys = new Set(Object.values(assignments).flat());
+        const allAssigned = keys.length > 0 && keys.every((k) => usedKeys.has(k));
+
+        if (allAssigned) {
+            const answer: Record<string, string[]> = {};
+            for (const label of labels) {
+                answer[label] = assignments[label] ?? [];
+            }
+            onAnswer(answer);
+        } else {
+            onAnswer(null);
+        }
+    }, [assignments, keys, labels, onAnswer]);
+
     const usedKeys = new Set(Object.values(assignments).flat());
     const remainingKeys = keys.filter((k) => !usedKeys.has(k));
 
     return (
         <div className={"flex flex-col gap-8"}>
-            <ExerciseHeader question={group.request} topic={group.topicId}/>
+            <ExerciseHeader question={group.request} topicId={group.topicId}/>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <div className="flex flex-col gap-3">

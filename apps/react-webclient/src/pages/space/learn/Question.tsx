@@ -1,9 +1,6 @@
 import {Button} from "@/components/ui/button.tsx";
 import type {QuestionResponseDTO} from "@/client/model";
-import {useMemo, useState} from "react";
-import useTopics from "@/hooks/useTopics.tsx";
-import TopicInformationModal from "@/pages/space/learn/TopicInformationModal.tsx";
-import {cn} from "@/lib/utils.ts";
+import {useState} from "react";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 
 interface QuestionProps {

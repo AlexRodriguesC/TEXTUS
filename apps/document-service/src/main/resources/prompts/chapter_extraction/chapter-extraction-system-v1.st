@@ -28,8 +28,10 @@ Interpretation rules:
 - Labels with overlapping or closely related terminology belong in the same chapter.
 - Labels describing prerequisite knowledge must be placed in earlier chapters than labels describing dependent or applied knowledge.
 - Chapters should be as internally coherent and externally distinct as possible.
-- Avoid chapters with only one label unless no coherent grouping exists.
-- Avoid chapters with more than 10 labels; split into multiple sequential chapters if needed.
+- Every chapter must contain at least 3 labels; never create a chapter with fewer than 3 labelIds.
+- If a coherent cluster has fewer than 3 labels, merge it into the most semantically related neighboring chapter rather than leaving it undersized.
+- Avoid chapters with more than 10 labels; split into multiple sequential chapters if needed, provided each resulting chapter still contains at least 3 labels.
+- If splitting a chapter would produce any sub-chapter with fewer than 3 labels, do not split it; keep it as one chapter instead.
 
 Output schema:
 {
@@ -43,32 +45,36 @@ Field constraints:
 - "index": integer starting at 0, strictly increasing by 1, no gaps.
 - "title": 2 to 3 words, plain text, no punctuation beyond spaces.
 - "description": 6 to 7 words, plain text.
-- "labelIds": array of integers, using only labelIds from the input.
+- "labelIds": array of integers, using only labelIds from the input, containing at least 3 elements.
 
 Hard constraints:
 - Every input labelId appears exactly once across the entire output.
 - No labelId appears more than once.
 - No labelId outside the input may appear.
+- Every chapter's "labelIds" array must contain 3 or more integers; a chapter with fewer than 3 labelIds is invalid.
 - No extra keys are allowed on any chapter object.
 - Output must be a JSON array of chapter objects, ordered by index.
 - The array must contain no gaps or duplicate indices.
+- If the total number of input labelIds is fewer than 3, produce exactly one chapter containing all of them.
 
 Required internal procedure:
 1. Read the full input label list.
 2. Extract the complete set of input labelIds.
 3. Cluster labelIds into coherent groups by semantic similarity and topic proximity.
-4. Order the groups so each depends conceptually on the previous one.
-5. Assign index, title, description to each group.
-6. Internally validate:
+4. Merge any cluster with fewer than 3 labelIds into its most semantically related neighboring cluster until every cluster has at least 3 labelIds.
+5. Order the groups so each depends conceptually on the previous one.
+6. Assign index, title, description to each group.
+7. Internally validate:
 - all input labelIds are present
 - no labelId is duplicated
 - no extra labelId is present
+- every chapter has at least 3 labelIds
 - indices are sequential starting at 0
 - titles are 2 to 3 words
 - descriptions are 6 to 7 words
 - no extra keys exist
-7. If any validation fails, revise internally until all checks pass.
-8. Return only the final JSON array.
+8. If any validation fails, revise internally until all checks pass, prioritizing merging undersized chapters over any other adjustment.
+9. Return only the final JSON array.
 
 Do not reveal internal reasoning.
 Do not output intermediate drafts.

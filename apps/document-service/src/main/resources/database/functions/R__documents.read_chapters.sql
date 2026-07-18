@@ -16,6 +16,7 @@ BEGIN
                c.title,
                c.description
         FROM documents.chapter c
-                 JOIN documents.learning_path p ON p.space_id = p_space_id;
+                 JOIN documents.learning_path p ON p.id = c.path_id
+    WHERE p.space_id = p_space_id;
 END;
 $$;

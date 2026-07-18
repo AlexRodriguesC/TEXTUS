@@ -50,7 +50,7 @@ function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
 
   const submitCreate = useCallback(() => {
     createSpace.mutate({ data: { icon, name, description } });
-  }, [createSpace, name, description]);
+  }, [createSpace, name, description, icon]);
 
   return (
     <SpaceDialogForm

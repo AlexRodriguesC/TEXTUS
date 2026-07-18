@@ -29,7 +29,10 @@ function LessonHeader() {
                 </Button>
             </Link>
 
-            <Progress value={100} className="flex-1 **:data-[slot=progress-track]:h-3" />
+            <Progress
+                value={Math.min(0.95, Math.max(0.10, lesson!.mastery)) * 100}
+                className="flex-1 **:data-[slot=progress-track]:h-3"
+            />
 
             {/* Mobile: single heart with count */}
             <div className="flex sm:hidden items-center gap-1">

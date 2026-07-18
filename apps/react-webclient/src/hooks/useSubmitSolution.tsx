@@ -1,5 +1,10 @@
 import type {AttemptRequestDTO, AttemptRequestDTOExerciseType} from "@/client/model";
-import {getGetLessonQueryKey, useSubmitAttempt} from "@/client/generated/lessons/lessons.ts";
+import {
+    getGetLessonQueryKey,
+    getGetNextExerciseQueryKey,
+    getNextExercise,
+    useSubmitAttempt
+} from "@/client/generated/lessons/lessons.ts";
 import {useQueryClient} from "@tanstack/react-query";
 
 function useSubmitSolution({ spaceId, lessonId }: { spaceId: number | undefined; lessonId: number | undefined }) {
@@ -9,6 +14,7 @@ function useSubmitSolution({ spaceId, lessonId }: { spaceId: number | undefined;
         mutation: {
             onSuccess: () => {
                 queryClient.invalidateQueries({queryKey: getGetLessonQueryKey(spaceId!, lessonId!)})
+                queryClient.invalidateQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)})
             },
         }
     });
