@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Eye, EyeClosed, HomeIcon } from "lucide-react";
+import { Eye, EyeClosed } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -25,6 +25,7 @@ import type { ApiError } from "@/client/mutator.ts";
 import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.tsx";
 import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
+import HomeLink from "@/components/HomeLink.tsx";
 
 function hasToken(resp: registerResponse): resp is registerResponseSuccess {
   return "data" in resp && "token" in resp.data;
@@ -87,12 +88,7 @@ function RegistrationPage() {
         <Card className="w-full max-w-sm h-fit">
           <CardHeader>
             <div className={"flex justify-end pt-0"}>
-              <Link to={PathConstants.HOME}>
-                <HomeIcon
-                  size={20}
-                  style={{ color: "var(--muted-foreground)" }}
-                />
-              </Link>
+              <HomeLink/>
             </div>
             <div>
               <CardTitle>{t("registration.info")}</CardTitle>

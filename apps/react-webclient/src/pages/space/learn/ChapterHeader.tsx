@@ -1,5 +1,5 @@
-import type { Chapter } from "@/hooks/useLearningPath.ts";
-import { useTranslation } from "react-i18next";
+import { type Chapter } from "@/hooks/useLearningPath.ts";
+import {useTranslation} from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { NotebookIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -14,15 +14,23 @@ function ChapterHeader({ chapter }: ChapterHeaderProps) {
   const { t } = useTranslation();
   const { strSpaceId } = useSpaceId();
 
+  const totalLessons = chapter.lessons.length;
+  const masteredLessons = chapter.lessons.map(l => l.completed).filter(l => l).length
+
   return (
     <div
       className={
         "sticky top-1 z-10 flex flex-col w-full md:flex-row gap-2 items-center justify-between px-4 py-3 bg-primary/40"
       }
     >
-      <p className={"font-extrabold text-primary-foreground truncate"}>
-        {chapter.title}
-      </p>
+      <div className={"flex flex-col md:flex-row gap-4 items-center md:items-baseline"}>
+        <p className={"font-extrabold text-primary-foreground truncate min-w-0"}>
+          {chapter.title}
+        </p>
+        <p className="text-muted-foreground text-sm shrink-0">
+          {t("chapter.header.lessons-left", {count: totalLessons - masteredLessons})}
+        </p>
+      </div>
       <Button
         variant={"secondary"}
         className={"bg-foreground/20 w-full md:w-fit"}

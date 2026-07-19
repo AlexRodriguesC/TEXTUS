@@ -43,7 +43,7 @@ class OpenAIMindMapClientSpec extends Specification {
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
-        return new Topic(id, title, summary, labels)
+        return new Topic(id, "a", 1, title, summary, labels)
     }
 
     static String randomStr() {

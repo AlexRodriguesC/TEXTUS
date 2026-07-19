@@ -118,6 +118,7 @@
     }
   },
   "button": {
+    "back-to-top": "Torna su",
     "continue": "Continua",
     "review-topics": "Ripassa Argomenti",
     "submit": "Invia",
@@ -228,11 +229,20 @@
       "cta": "Genera percorso di apprendimento",
       "cta-add": "Aggiungi documenti",
       "cta-regenerate": "Rigenera percorso di apprendimento"
-    }
+    },
+    "end": "Hai raggiunto la fine del percorso di apprendimento"
   },
   "chapter": {
+    "guide": {
+      "location": "Questo argomento si trova alla pagina {{page}} del documento {{documentName}}"
+    },
     "header": {
-      "guide": "Guida"
+      "guide": "Guida",
+      "lessons-left": "{{count}} lezioni rimanenti da completare!"
     }
+  },
+  "loading": {
+    "title": "Genio in caricamento",
+    "description": "Anche i cervelloni ci mettono un attimo. Pure noi."
   }
 }

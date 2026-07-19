@@ -130,6 +130,7 @@
     }
   },
   "button": {
+    "back-to-top": "Back to top",
     "continue": "Continue",
     "review-topics": "Review Topics",
     "submit": "Submit",
@@ -241,11 +242,20 @@
       "cta": "Generate learning path",
       "cta-add": "Add documents",
       "cta-regenerate": "Regenerate learning path"
-    }
+    },
+    "end": "You've reached the end of the path"
   },
   "chapter": {
+    "guide": {
+      "location": "This topic can be found on page {{page}} of the document {{documentName}}"
+    },
     "header": {
-      "guide": "Guide"
+      "guide": "Guide",
+      "lessons-left": "{{count}} lessons left to master!"
     }
+  },
+  "loading": {
+    "title": "Loading brilliance",
+    "description": "Great minds take a second. So do we."
   }
 }

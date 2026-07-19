@@ -5,15 +5,17 @@ import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import { useEffect, useRef, useState } from "react";
 import { Separator } from "@/components/ui/separator.tsx";
 import useLearningPath from "@/hooks/useLearningPath.ts";
-import { useNavigate } from "@tanstack/react-router";
-import PathConstants from "@/routing/pathConstants.ts";
-import useSpaceId from "@/hooks/useSpaceId.ts";
 import {
   type ChapterResponseDTO,
   type LessonResponseDTO,
 } from "@/client/model";
 import PathNode from "@/pages/space/learn/PathNodeType.tsx";
 import { cn } from "@/lib/utils.ts";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
+import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {useTranslation} from "react-i18next";
+import {ArrowUp} from "lucide-react";
 
 const OFFSETS = [0, 60, 0, -60];
 
@@ -44,8 +46,6 @@ function ChapterPath({
   chapter: ChapterResponseDTO;
   chapters: ChapterResponseDTO[];
 }) {
-  const navigate = useNavigate();
-  const { strSpaceId } = useSpaceId();
 
   return (
       <div
@@ -64,17 +64,6 @@ function ChapterPath({
             return (
                 <PathNode
                     key={lesson.id}
-                    onClick={() => {
-                      if (disabled) return;
-                      navigate({
-                        to: PathConstants.LESSON,
-                        params: {
-                          spaceId: strSpaceId!,
-                          chapterId: chapter.index.toString(),
-                          lessonId: lesson.id.toString(),
-                        },
-                      });
-                    }}
                     node={lesson}
                     offset={OFFSETS[i % OFFSETS.length]}
                     disabled={disabled}
@@ -87,12 +76,14 @@ function ChapterPath({
 }
 
 function SpaceLearn() {
-  const { path, status } = useLearningPath();
+  const { path, status, isPathLoading } = useLearningPath();
+  const { t } = useTranslation();
   const [activeChapter, setActiveChapter] = useState<ChapterResponseDTO | null>(
       null,
   );
   const [headerHeight, setHeaderHeight] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
   const intersectingRef = useRef<Set<number>>(new Set());
 
@@ -110,6 +101,15 @@ function SpaceLearn() {
     ro.observe(headerRef.current);
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!viewportRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setViewportHeight(entry.contentRect.height);
+    });
+    ro.observe(viewportRef.current);
+    return () => ro.disconnect();
+  }, [isPathLoading, path?.chapters.length]);
 
   useEffect(() => {
     if (!path?.chapters.length || !viewportRef.current || headerHeight === 0) {
@@ -155,6 +155,10 @@ function SpaceLearn() {
     return () => observer.disconnect();
   }, [path, headerHeight]);
 
+  if (isPathLoading) {
+    return <LoadingScreen/>
+  }
+
   if (
       path === undefined ||
       status === "NOT_CREATED" ||
@@ -170,7 +174,7 @@ function SpaceLearn() {
         <div className="h-full w-full max-w-[90%] lg:max-w-[40%] flex flex-col min-h-0">
           <ScrollArea className="h-full w-full min-h-0" viewportRef={viewportRef}>
             <div ref={headerRef} className="sticky top-0 z-20 w-full bg-background">
-              <ChapterHeader chapter={current} />
+              <ChapterHeader key={current.index} chapter={current} />
             </div>
 
             <div className="flex h-full flex-col items-center pt-4">
@@ -191,6 +195,32 @@ function SpaceLearn() {
                     )}
                   </div>
               ))}
+
+              <div
+                  className="flex w-full flex-col items-center justify-center gap-4"
+                  style={{ minHeight: Math.max(viewportHeight - headerHeight, 0) }}
+              >
+                <div className="opacity-60">
+                  <ResponsiveLottie src={"/animations/not_found.lottie"} />
+                </div>
+
+                <p className="text-muted-foreground text-sm opacity-60">
+                  {t("learning-path.end")}
+                </p>
+
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        viewportRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+                    }
+                >
+                  <div className={"flex flex-row gap-2 items-center"}>
+                    <ArrowUp/>
+                    {t("button.back-to-top")}
+                  </div>
+                </Button>
+              </div>
             </div>
           </ScrollArea>
         </div>

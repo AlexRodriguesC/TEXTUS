@@ -1,3 +1,6 @@
 package ch.supsi.documentapplication.model.learn.exercise;
 
-public record LeftRight(String left, String right) {}
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+public record LeftRight(@NotNull @NotEmpty String left, @NotNull @NotEmpty String right) {}

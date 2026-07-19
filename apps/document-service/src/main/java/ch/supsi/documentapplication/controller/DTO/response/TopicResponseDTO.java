@@ -11,6 +11,15 @@ public record TopicResponseDTO(
         @Schema(description = "Unique identifier of the topic", example = "1")
         Long id,
 
+        @NotNull
+        @NotEmpty
+        @Schema(description = "Name of the source file containing the topic", example = "java_basics.pdf")
+        String sourceFileName,
+
+        @NotNull
+        @Schema(description = "Page number in the source file where the topic is located", example = "1")
+        Long page,
+
         @NotNull @NotEmpty
         @Schema(description = "Title of the topic", example = "Introduction to Java")
         String title,

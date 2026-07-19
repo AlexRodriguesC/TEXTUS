@@ -2,6 +2,7 @@ import { AuthContext, type User } from "@/context/AuthContext.tsx";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import {useQueryClient} from "@tanstack/react-query";
 
 const USERNAME = "USERNAME";
 const TOKEN = "TOKEN";
@@ -9,6 +10,7 @@ const EXPIRES_AT = "EXPIRES_AT";
 
 function AuthenticationProvider({ children }: React.PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
+  const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const logoutTimerRef = useRef<number | null>(null);
 
@@ -23,10 +25,11 @@ function AuthenticationProvider({ children }: React.PropsWithChildren) {
     clearLogoutTimer();
     setUser(null);
     setIsAuthenticated(false);
+    queryClient.clear();
     localStorage.removeItem(TOKEN);
     localStorage.removeItem(EXPIRES_AT);
     localStorage.removeItem(USERNAME);
-  }, [clearLogoutTimer]);
+  }, [clearLogoutTimer, queryClient]);
 
   useEffect(() => {
     const handler = () => logout();

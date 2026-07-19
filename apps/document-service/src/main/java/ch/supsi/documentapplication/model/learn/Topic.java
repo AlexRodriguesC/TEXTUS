@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @Getter
@@ -14,6 +15,14 @@ public class Topic {
 
     @JsonIgnore
     private Long id;
+
+    @ToString.Exclude
+    @Setter
+    private String sourceFileName;
+
+    @ToString.Exclude
+    @Setter
+    private Long page;
 
     @ToString.Exclude
     private String title;

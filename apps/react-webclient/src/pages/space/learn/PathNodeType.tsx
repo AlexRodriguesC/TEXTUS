@@ -4,7 +4,7 @@ import type { LessonResponseDTO } from "@/client/model";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import PathNodePopover from "@/pages/space/learn/PathNodePopover.tsx";
 
-function PathNode({ node, offset, onClick, disabled }: { node: LessonResponseDTO; offset: number; onClick: () => void; disabled?: boolean }) {
+function PathNode({ node, offset, disabled }: { node: LessonResponseDTO; offset: number; disabled?: boolean }) {
   const [open, setOpen] = React.useState(false);
 
   const wrappedOnClick = () => {
@@ -12,12 +12,19 @@ function PathNode({ node, offset, onClick, disabled }: { node: LessonResponseDTO
       setOpen((prev) => !prev);
       return;
     }
-    //onClick();
   };
+
+  const onOpenChange = (next: boolean) => {
+    if (disabled) {
+      setOpen(false);
+      return;
+    }
+    setOpen(next);
+  }
 
   return (
       <div className={"flex justify-center"} style={{ transform: `translateX(${offset}px)` }}>
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverTrigger asChild>
             <MotionButton disabled={disabled} onClick={wrappedOnClick}>
               {getNodeIcon(node.type)}
@@ -36,8 +43,8 @@ export default PathNode;
 function getNodeIcon(type: LessonResponseDTO["type"]): React.ReactNode {
   switch (type) {
     case "CHECKPOINT":
-      return <img className="w-fit h-fit" src="/checkpoint.png" alt="trophy" />;
+      return <img className="w-fit h-fit" src="/checkpoint.webp" alt="trophy" />;
     case "LESSON":
-      return <img src="/lesson.png" alt="star" />;
+      return <img src="/lesson.webp" alt="star" />;
   }
 }

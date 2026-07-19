@@ -10,6 +10,7 @@ import { ApiError } from "@/client/mutator.ts";
 import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 import TutorialContextProvider from "@/provider/TutorialContextProvider.tsx";
 import RightSidebarOpenProvider from "@/provider/RightSidebarOpenProvider.tsx";
+import AuthenticationProvider from "@/provider/AuthenticationProvider.tsx";
 
 const router = createRouter({ routeTree });
 
@@ -38,13 +39,15 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientContext value={queryClient}>
-      <SidebarOpenProvider>
-        <RightSidebarOpenProvider>
-          <TutorialContextProvider>
-            <RouterProvider router={router} />
-          </TutorialContextProvider>
-        </RightSidebarOpenProvider>
-      </SidebarOpenProvider>
+      <AuthenticationProvider>
+        <SidebarOpenProvider>
+          <RightSidebarOpenProvider>
+            <TutorialContextProvider>
+              <RouterProvider router={router} />
+            </TutorialContextProvider>
+          </RightSidebarOpenProvider>
+        </SidebarOpenProvider>
+      </AuthenticationProvider>
     </QueryClientContext>
   );
 }

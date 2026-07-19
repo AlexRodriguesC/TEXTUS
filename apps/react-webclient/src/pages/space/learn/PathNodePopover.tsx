@@ -7,6 +7,8 @@ import {cn} from "@/lib/utils.ts";
 import {useTranslation} from "react-i18next";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLearningPath from "@/hooks/useLearningPath.ts";
+import {Link} from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
 
 interface PathNodePopoverProps {
     lessonId: number;
@@ -22,7 +24,7 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
 
     const content = (() => {
         if (isLoading) {
-            return <div>Loading...</div>;
+            return <div className={"loading-dots"}/>;
         }
 
         if (lesson!.isMastered()) {
@@ -35,17 +37,19 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
 
         if (lesson!.attemptsLeft === 0) {
             return (
-                <>
+                <div className={cn("flex flex-col gap-2", className)}>
                     <RetryLessonButton lesson={lesson!}/>
                     <ReviewTopicsButton onCancel={() => {}} strSpaceId={strSpaceId} chapterId={chapterId}/>
-                </>
+                </div>
             )
         }
 
         return (
             <div className={cn("flex flex-col gap-2", className)}>
                 <div className={"flex flex-row md:flex-col gap-2"}>
-                    <Button className="order-1 md:order-2">{t("button.continue")}</Button>
+                    <Link className="order-1 md:order-2" to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: lesson!.id.toString() ?? "", chapterId: chapterId.toString() ?? ""}}>
+                        <Button className={"w-full"}>{t("button.continue")}</Button>
+                    </Link>
                     <LessonAttemptsIndicator
                         className="order-2 md:order-1 place-self-center"
                         maxAttempts={lesson!.maxAttempts}

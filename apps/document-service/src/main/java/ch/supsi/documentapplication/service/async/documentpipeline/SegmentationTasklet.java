@@ -7,7 +7,6 @@ import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -48,13 +47,13 @@ public class SegmentationTasklet extends ProcessingTasklet {
 
         List<String> contents = extractContents(fsDocument);
 
-        contents = contents.stream()
-                .filter(s -> !s.isBlank())
-                .filter(s -> s.length() >= MIN_PAGE_TEXT_LENGTH)
-                .collect(Collectors.toCollection(ArrayList::new));
-
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
+            if (pageText.isBlank() || pageText.length() < MIN_PAGE_TEXT_LENGTH) {
+                log.debug("Skipped empty page {} for document {}", page, documentId);
+                continue;
+            }
+
             Integer pageNumber = page + 1;
             String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
             log.debug("Created page {} for document {}, page {}", pageId, documentId, page);

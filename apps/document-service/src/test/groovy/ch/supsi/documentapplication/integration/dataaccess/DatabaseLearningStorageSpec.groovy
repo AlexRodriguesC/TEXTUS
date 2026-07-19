@@ -97,7 +97,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
     private Long createTopic(Long spaceId, Long jobId) {
         Long pageId = createPage(spaceId, jobId)
 
-        Topic topic = new Topic(null, "Topic title", "Topic summary", ["label1", "label2"])
+        Topic topic = new Topic(null, "a", 1, "Topic title", "Topic summary", ["label1", "label2"])
         topicStorage.create(topic, pageId)
 
         return jdbcClient

@@ -75,6 +75,12 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     private Topic mapToTopic(ResultSet rs) throws SQLException {
         Array sqlLabels = rs.getArray(LABELS);
         List<String> labels = sqlLabels != null ? Arrays.asList((String[]) sqlLabels.getArray()) : List.of();
-        return new Topic(rs.getLong(ID), rs.getString(TITLE), rs.getString(SUMMARY), labels);
+        return new Topic(
+                rs.getLong(ID),
+                rs.getString("src_file_name"),
+                rs.getLong("page_id"),
+                rs.getString(TITLE),
+                rs.getString(SUMMARY),
+                labels);
     }
 }

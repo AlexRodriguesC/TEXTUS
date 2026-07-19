@@ -1,3 +1,4 @@
+import { forwardRef, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -5,25 +6,36 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { CircleQuestionMark } from "lucide-react";
 
-interface InformationQuestionMarkProps {
+interface InformationQuestionMarkProps
+    extends React.ComponentPropsWithoutRef<typeof CircleQuestionMark> {
   tooltip: string;
-  onClick?: () => void;
-  size?: number;
 }
 
-function InformationQuestionMark({
-  tooltip,
-  onClick,
-  size,
-}: InformationQuestionMarkProps) {
+const InformationQuestionMark = forwardRef<
+    SVGSVGElement,
+    InformationQuestionMarkProps
+>(({ tooltip, onClick, size, ...props }, ref) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Tooltip>
-      <TooltipTrigger>
-        <CircleQuestionMark onClick={onClick} size={size} />
-      </TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
+          <CircleQuestionMark
+              ref={ref}
+              size={size}
+              onClick={(e) => {
+                e?.stopPropagation();
+                setOpen((prev) => !prev);
+                onClick?.(e);
+              }}
+              {...props}
+          />
+        </TooltipTrigger>
+        <TooltipContent>{tooltip}</TooltipContent>
+      </Tooltip>
   );
-}
+});
+
+InformationQuestionMark.displayName = "InformationQuestionMark";
 
 export default InformationQuestionMark;

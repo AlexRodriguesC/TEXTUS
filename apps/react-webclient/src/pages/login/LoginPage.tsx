@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import * as React from "react";
-import { Eye, EyeClosed, HomeIcon } from "lucide-react";
+import { Eye, EyeClosed } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
@@ -23,6 +23,7 @@ import { successToast } from "@/lib/toasts.ts";
 import type { ApiError } from "@/client/mutator.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import { ErrorCard } from "@/components/ErrorCard.tsx";
+import HomeLink from "@/components/HomeLink.tsx";
 
 function isSuccessResponse(resp: loginResponse): resp is loginResponseSuccess {
   return "data" in resp && "token" in resp.data;
@@ -110,12 +111,7 @@ function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <div className={"flex justify-end pt-0"}>
-              <Link to={PathConstants.HOME}>
-                <HomeIcon
-                  size={20}
-                  style={{ color: "var(--muted-foreground)" }}
-                />
-              </Link>
+              <HomeLink/>
             </div>
             <div>
               <CardTitle>{t("login.info")}</CardTitle>

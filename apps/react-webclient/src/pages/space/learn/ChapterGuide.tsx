@@ -7,8 +7,11 @@ import PathConstants from "@/routing/pathConstants.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import ChapterGuideBreadcrumbs from "@/pages/space/learn/ChapterGuideBreadcrumbs.tsx";
+import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
+import {useTranslation} from "react-i18next";
 
 function ChapterGuide() {
+  const {t:tr} = useTranslation();
   const { chapterId } = useChapterId();
   const { spaceId } = useSpaceId();
   const { path } = useLearningPath();
@@ -55,15 +58,18 @@ function ChapterGuide() {
           <ChapterGuideBreadcrumbs chapter={chapter} />
           <div className="flex flex-col gap-4">
             {tops.map((t) => (
-              <div
-                key={t.id}
-                className="border p-4 hover:bg-muted/50 transition-colors"
-              >
-                <h2 className="font-semibold">{t.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t.summary}
-                </p>
-              </div>
+                <div
+                    key={t.id}
+                    className="border p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className={"flex justify-end text-foreground/40"}>
+                    <InformationQuestionMark tooltip={tr("chapter.guide.location", { page: t.page, documentName: t.sourceFileName })}/>
+                  </div>
+                  <h2 className="font-semibold">{t.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t.summary}
+                  </p>
+                </div>
             ))}
           </div>
         </div>

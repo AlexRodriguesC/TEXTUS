@@ -5,7 +5,7 @@ import CenteredPage from "@/components/CenteredPage.tsx";
 import LessonHeader from "@/pages/space/learn/lesson/LessonHeader.tsx";
 import LessonFooter from "@/pages/space/learn/lesson/LessonFooter.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import List from "@/pages/space/learn/List.tsx";
 import Group from "@/pages/space/learn/Group.tsx";
 import Pair from "@/pages/space/learn/Pair.tsx";
@@ -15,6 +15,7 @@ import AttemptsExhausted from "@/pages/space/learn/lesson/AttemptsExhausted.tsx"
 import {useQueryClient} from "@tanstack/react-query";
 import {getGetNextExerciseQueryKey} from "@/client/generated/lessons/lessons.ts";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 function Lesson() {
   const queryClient = useQueryClient();
@@ -24,48 +25,45 @@ function Lesson() {
     lessonId: lessonId,
   });
   const [answer, setAnswer] = useState<any | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const { isPending: isAttemptLoading, submitSolution } = useSubmitSolution({
     spaceId,
     lessonId,
   });
 
-  const handleAnswer = (answer: any, isCorrect: boolean | null) => {
-    setAnswer(answer);
-    setIsCorrect(isCorrect);
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
   const handleNext = () => {
-    queryClient.invalidateQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)})
+    queryClient.invalidateQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)}).then(() => {
+      setAnswer(null);
+      setSubmitted(false);
+    })
   }
 
-  const exercise = useMemo(() => {
+  const exercise = (() => {
     if (isLoading || exerciseLoading || !nextExercise) {
-      return <div>loading</div>;
+      return <LoadingScreen />;
     }
 
     if (nextExercise.type === "LIST") {
-      return <List list={nextExercise} onAnswer={setAnswer}></List>;
+      return <List key={nextExercise.id} list={nextExercise} onAnswer={setAnswer}></List>;
     } else if (nextExercise.type === "QUESTION") {
-      return <Question question={nextExercise} submitted={submitted} onAnswer={handleAnswer}></Question>;
+      return <Question key={nextExercise.id} question={nextExercise} submitted={submitted} onAnswer={setAnswer}></Question>;
     } else if (nextExercise.type === "GROUP") {
-      return <Group group={nextExercise} onAnswer={setAnswer}></Group>;
+      return <Group key={nextExercise.id} group={nextExercise} onAnswer={setAnswer}></Group>;
     } else if (nextExercise.type === "PAIR") {
-      return <Pair pair={nextExercise} onAnswer={setAnswer}></Pair>;
+      return <Pair key={nextExercise.id} pair={nextExercise} onAnswer={setAnswer}></Pair>;
     }
     return <div>Invalid exercise type</div>;
-  }, [nextExercise, exerciseLoading, isLoading, isAttemptLoading]);
+  })();
 
   const handleConfirm = () => {
     if (!nextExercise || answer === null) return;
     submitSolution(nextExercise.id, nextExercise.type, answer);
     setSubmitted(true);
   };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   const content = (() => {
     if (lesson!.attemptsLeft === 0) {
@@ -75,7 +73,7 @@ function Lesson() {
       return <LessonCompleted />;
     }
     if (exerciseLoading) {
-      return <div className="flex flex-col items-center gap-4">Loading...</div>;
+      return <LoadingScreen/>;
     }
     return exercise;
   })();
