@@ -16,6 +16,7 @@ import {useQueryClient} from "@tanstack/react-query";
 import {getGetNextExerciseQueryKey} from "@/client/generated/lessons/lessons.ts";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
+import type {GroupResponseDTO, ListResponseDTO, PairResponseDTO, QuestionResponseDTO} from "@/client/model";
 
 function Lesson() {
   const queryClient = useQueryClient();
@@ -36,10 +37,14 @@ function Lesson() {
   }
 
   const handleNext = () => {
-    queryClient.invalidateQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)}).then(() => {
+    queryClient.resetQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)}).then(() => {
       setAnswer(null);
       setSubmitted(false);
     })
+  }
+
+  const handleSkip = (exercise: ListResponseDTO | GroupResponseDTO | PairResponseDTO | QuestionResponseDTO) => {
+
   }
 
   const exercise = (() => {
@@ -52,11 +57,11 @@ function Lesson() {
     } else if (nextExercise.type === "QUESTION") {
       return <Question key={nextExercise.id} question={nextExercise} submitted={submitted} onAnswer={setAnswer}></Question>;
     } else if (nextExercise.type === "GROUP") {
-      return <Group key={nextExercise.id} group={nextExercise} onAnswer={setAnswer}></Group>;
+      return <Group key={nextExercise.id} group={nextExercise} onAnswer={setAnswer} submitted={submitted}></Group>;
     } else if (nextExercise.type === "PAIR") {
-      return <Pair key={nextExercise.id} pair={nextExercise} onAnswer={setAnswer}></Pair>;
+      return <Pair key={nextExercise.id} pair={nextExercise} onAnswer={setAnswer} submitted={submitted}></Pair>;
     }
-    return <div>Invalid exercise type</div>;
+    throw new Error("Invalid exercise type");
   })();
 
   const handleConfirm = () => {
@@ -66,15 +71,18 @@ function Lesson() {
   };
 
   const content = (() => {
-    if (lesson!.attemptsLeft === 0) {
-      return <AttemptsExhausted />;
-    }
-    if (lesson!.isMastered()) {
-      return <LessonCompleted />;
-    }
     if (exerciseLoading) {
       return <LoadingScreen/>;
     }
+
+    if (lesson!.attemptsLeft === 0) {
+      return <AttemptsExhausted />;
+    }
+
+    if (lesson!.isMastered()) {
+      return <LessonCompleted />;
+    }
+
     return exercise;
   })();
 

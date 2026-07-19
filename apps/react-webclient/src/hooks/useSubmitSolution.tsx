@@ -24,9 +24,6 @@ function useSubmitSolution({
         await queryClient.invalidateQueries({
           queryKey: getGetLessonQueryKey(spaceId!, lessonId!),
         });
-        await queryClient.invalidateQueries({
-          queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!),
-        });
       },
     },
   });

@@ -3,10 +3,9 @@ import { useTranslation } from "react-i18next";
 import useLessonId from "@/hooks/useLessonId.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLesson from "@/hooks/useLesson.tsx";
-import {ArrowRight, RotateCcw} from "lucide-react";
+import {ArrowRight} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useLearningPath from "@/hooks/useLearningPath.ts";
-import { Spinner } from "@/components/ui/spinner";
 import PathConstants from "@/routing/pathConstants.ts";
 import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
@@ -15,6 +14,7 @@ interface LessonFooterProps {
   onCancel: () => void;
   onConfirm: () => void;
   onNext?: () => void;
+  onSkip?: () => void;
   confirmationEnabled?: boolean;
   submitted: boolean;
 }
@@ -44,12 +44,12 @@ function LessonFooter({
         : null;
 
   const content = (() => {
-      if (lesson!.isMastered()) {
+      if (lesson.isMastered()) {
           return <>
               <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
 
               <Link to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: nextLesson?.id.toString() ?? "", chapterId: nextChapter?.index.toString() ?? ""}}>
-                  <Button className={"flex flex-row items-center"} disabled={lesson?.isDeleting} onClick={() => lesson?.deleteExercises()}>
+                  <Button className={"flex flex-row items-center"} disabled={lesson.isDeleting} onClick={() => lesson.deleteExercises()}>
                       <ArrowRight size={16} />
                       {t("button.next")}
                   </Button>
@@ -57,11 +57,11 @@ function LessonFooter({
           </>
       }
 
-      if (lesson!.attemptsLeft === 0) {
+      if (lesson.attemptsLeft === 0) {
           return (
               <>
                   <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
-                  <RetryLessonButton lesson={lesson!}/>
+                  <RetryLessonButton lesson={lesson}/>
               </>
           )
       }
@@ -73,7 +73,7 @@ function LessonFooter({
               </Button>
               {
                   submitted ? (
-                      <Button disabled={confirmationEnabled} onClick={onNext}>
+                      <Button disabled={false} onClick={onNext}>
                           {t("button.next")}
                       </Button>
                   ) : (

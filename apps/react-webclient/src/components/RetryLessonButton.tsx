@@ -8,7 +8,7 @@ function RetryLessonButton({lesson}: {lesson: Lesson}) {
     const { t } = useTranslation();
 
     return (
-        <Button disabled={lesson?.isDeleting} onClick={() => lesson?.deleteExercises()}>
+        <Button disabled={lesson?.isDeleting} onClick={() => lesson.deleteExercises()}>
             {lesson?.isDeleting ? <Spinner/> : <RotateCcw size={16} />}
             {t("button.retry")}
         </Button>

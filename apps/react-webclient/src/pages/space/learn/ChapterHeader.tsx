@@ -5,6 +5,8 @@ import { NotebookIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
+import {cn} from "@/lib/utils.ts";
+import {useTheme} from "@/hooks/useTheme.ts";
 
 interface ChapterHeaderProps {
   chapter: Chapter;
@@ -12,6 +14,7 @@ interface ChapterHeaderProps {
 
 function ChapterHeader({ chapter }: ChapterHeaderProps) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const { strSpaceId } = useSpaceId();
 
   const totalLessons = chapter.lessons.length;
@@ -20,20 +23,21 @@ function ChapterHeader({ chapter }: ChapterHeaderProps) {
   return (
     <div
       className={
-        "sticky top-1 z-10 flex flex-col w-full md:flex-row gap-2 items-center justify-between px-4 py-3 bg-primary/40"
+        cn("sticky top-1 z-10 flex flex-col w-full md:flex-row gap-2 items-center justify-between px-4 py-3",
+            theme == "dark" ? "bg-primary/40" : "bg-primary/40")
       }
     >
       <div className={"flex flex-col md:flex-row gap-4 items-center md:items-baseline"}>
         <p className={"font-extrabold text-primary-foreground truncate min-w-0"}>
           {chapter.title}
         </p>
-        <p className="text-muted-foreground text-sm shrink-0">
+        <p className="text-muted text-sm shrink-0">
           {t("chapter.header.lessons-left", {count: totalLessons - masteredLessons})}
         </p>
       </div>
       <Button
         variant={"secondary"}
-        className={"bg-foreground/20 w-full md:w-fit"}
+        className={cn("w-full md:w-fit", theme == "dark" ? "bg-foreground/20" : "bg-foreground/10")}
       >
         <Link
           to={PathConstants.SPACE_LEARN_GUIDE}
