@@ -1,13 +1,10 @@
 import { MeshGradientBackground } from "@/components/ui/mesh-gradient.tsx";
 import { useTheme } from "@/hooks/useTheme.ts";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar.tsx";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/left-sidebar/Sidebar.tsx";
-import {type PropsWithChildren, useRef} from "react";
+import { type PropsWithChildren, useRef } from "react";
 import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
-import {RightSidebar} from "@/components/right-sidebar/RightSidebar.tsx";
+import { RightSidebar } from "@/components/right-sidebar/RightSidebar.tsx";
 import * as React from "react";
 import useTutorial from "@/hooks/useTutorial.tsx";
 import LayoutHeader from "@/LayoutHeader.tsx";
@@ -39,54 +36,71 @@ export default function MainLayout({
       speed={1}
     >
       {sidebarEnabled ? (
-      <SidebarProvider open={open} onOpenChange={setOpen}>
-        <LayoutInner
-            leftOpen={leftOpen} setLeftOpen={setLeftOpen}
-            rightOpen={rightOpen} setRightOpen={setRightOpen}
-        >
-          {children}
-        </LayoutInner>
-      </SidebarProvider>
+        <SidebarProvider open={open} onOpenChange={setOpen}>
+          <LayoutInner
+            leftOpen={leftOpen}
+            setLeftOpen={setLeftOpen}
+            rightOpen={rightOpen}
+            setRightOpen={setRightOpen}
+          >
+            {children}
+          </LayoutInner>
+        </SidebarProvider>
       ) : (
-      <main className="flex justify-center items-center h-full w-full">{children}</main>
+        <main className="flex justify-center items-center h-full w-full">
+          {children}
+        </main>
       )}
     </MeshGradientBackground>
   );
 }
 
 function LayoutInner({
-                       leftOpen, setLeftOpen,
-                       rightOpen, setRightOpen,
-                       children,
-                     }: {
-  leftOpen: boolean
-  setLeftOpen: (v: boolean) => void
-  rightOpen: boolean
-  setRightOpen: (v: boolean) => void
-  children: React.ReactNode
+  leftOpen,
+  setLeftOpen,
+  rightOpen,
+  setRightOpen,
+  children,
+}: {
+  leftOpen: boolean;
+  setLeftOpen: (v: boolean) => void;
+  rightOpen: boolean;
+  setRightOpen: (v: boolean) => void;
+  children: React.ReactNode;
 }) {
-    const { spaceId } = useSpaceId();
-    const { tutorialEnabled } = useTutorial();
-    const showRightSidebar = spaceId !== undefined && !tutorialEnabled;
+  const { spaceId } = useSpaceId();
+  const { tutorialEnabled } = useTutorial();
+  const showRightSidebar = spaceId !== undefined && !tutorialEnabled;
 
   const rightTogglePortalRef = useRef<HTMLDivElement>(null);
 
   return (
-      <SidebarProvider open={leftOpen} onOpenChange={setLeftOpen} className="h-svh min-h-0 overflow-hidden">
-        <AppSidebar />
-        <SidebarInset className="bg-transparent flex flex-col flex-1 min-w-0 h-full">
-          <LayoutHeader showRightToggle={showRightSidebar} rightTogglePortalRef={rightTogglePortalRef} />
-          <main className="flex justify-center h-full w-full min-w-0 min-h-0 overflow-hidden">
-            {children}
-          </main>
-        </SidebarInset>
+    <SidebarProvider
+      open={leftOpen}
+      onOpenChange={setLeftOpen}
+      className="h-svh min-h-0 overflow-hidden"
+    >
+      <AppSidebar />
+      <SidebarInset className="bg-transparent flex flex-col flex-1 min-w-0 h-full">
+        <LayoutHeader
+          showRightToggle={showRightSidebar}
+          rightTogglePortalRef={rightTogglePortalRef}
+        />
+        <main className="flex justify-center h-full w-full min-w-0 min-h-0 overflow-hidden">
+          {children}
+        </main>
+      </SidebarInset>
 
-        {showRightSidebar && (
-            <SidebarProvider open={rightOpen} onOpenChange={setRightOpen} className="w-auto shrink-0 h-svh min-h-0 overflow-hidden">
-              <RightSidebarToggle containerRef={rightTogglePortalRef} />
-              <RightSidebar />
-            </SidebarProvider>
-        )}
-      </SidebarProvider>
+      {showRightSidebar && (
+        <SidebarProvider
+          open={rightOpen}
+          onOpenChange={setRightOpen}
+          className="w-auto shrink-0 h-svh min-h-0 overflow-hidden"
+        >
+          <RightSidebarToggle containerRef={rightTogglePortalRef} />
+          <RightSidebar />
+        </SidebarProvider>
+      )}
+    </SidebarProvider>
   );
 }

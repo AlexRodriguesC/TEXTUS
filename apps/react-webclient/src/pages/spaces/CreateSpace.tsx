@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
 import {
+  type createSpaceResponse,
   getReadSpacesQueryKey,
   useCreateSpace,
 } from "@/client/generated/spaces/spaces.ts";
@@ -27,7 +28,7 @@ function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
 
   const createSpace = useCreateSpace({
     mutation: {
-      onSuccess: async (resp) => {
+      onSuccess: async (resp: createSpaceResponse) => {
         await queryClient.invalidateQueries({
           queryKey: getReadSpacesQueryKey(),
         });
@@ -35,9 +36,7 @@ function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
         setIcon(defaultIcon);
         setName(defaultName);
         setDescription(defaultDescription);
-        if (onSuccess) {
-          onSuccess(resp.data.id)
-        }
+        onSuccess?.(resp.data.id);
       },
       onError: async () => {
         failureToastAction(

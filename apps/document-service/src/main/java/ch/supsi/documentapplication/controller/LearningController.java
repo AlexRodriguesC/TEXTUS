@@ -112,7 +112,7 @@ public class LearningController {
         return ResponseEntity.ok(exerciseMapper.toDto(exercise));
     }
 
-    @GetMapping(value = "/lesson/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all exercises served for this lesson", description = """
         Returns the full list of exercises served so far for this lesson's lesson, each
         with its resolved attempt status. Useful for review or debugging; not part of
@@ -133,7 +133,28 @@ public class LearningController {
         return ResponseEntity.ok(new ExercisesResponseDTO(exercises.stream().map(ExerciseResponseDTO::from).toList()));
     }
 
-    @PostMapping(value = "/lesson/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/exercises", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Delete all exercises for this lesson", description = """
+    Deletes every exercise served so far for this lesson, resetting its attempt
+    history.
+    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Exercises deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Lesson attempts not exhausted", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    public ResponseEntity<Void> deleteExercises(
+            @PathVariable Long spaceId,
+            @PathVariable Long lessonId,
+            @Parameter(hidden = true) Authentication authentication
+    ) {
+        String owner = authentication.getName();
+        learningService.deleteExercises(owner, spaceId, lessonId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/exercise/attempts", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Submit an attempt for the lesson's current exercise", description = """
         Submits the user's answer for the currently active exercise of this lesson's lesson.
         The backend validates the submitted exerciseId against the lesson's current exercise,

@@ -5,18 +5,23 @@ import {
   useGetMindMap,
   useGetMindMapJob,
 } from "@/client/generated/mind-maps/mind-maps.ts";
-import type {ErrorResponseDTO, MindMapJobDTO, MindMapJobDTOStatus, MindMapResponseDTO, NodeDTO} from "@/client/model";
+import type {
+  ErrorResponseDTO,
+  MindMapJobDTO,
+  MindMapJobDTOStatus,
+  MindMapResponseDTO,
+  NodeDTO,
+} from "@/client/model";
 
-type MindMapStatus = MindMapJobDTOStatus
+type MindMapStatus = MindMapJobDTOStatus;
 
 function useMindMap(spaceId: number | undefined) {
   const { t } = useTranslation();
 
   const { data: mindMapData } = useGetMindMap(spaceId ?? -1, {
-    query:
-        {
-          enabled: spaceId != undefined
-        }
+    query: {
+      enabled: spaceId != undefined,
+    },
   });
 
   const maybeData = mindMapData?.data;
@@ -25,7 +30,6 @@ function useMindMap(spaceId: number | undefined) {
   if (maybeData && isMindMapDTO(maybeData) && maybeData.nodes) {
     mindMap = { nodes: maybeData.nodes };
   }
-
 
   const extractMindMap = useExtractMindMap({
     mutation: {
@@ -41,14 +45,14 @@ function useMindMap(spaceId: number | undefined) {
   const { data } = useGetMindMapJob(spaceId ?? -1, {
     query: {
       refetchInterval: (query) => {
-        const jobData = query.state.data?.data
-        if (!jobData || !isMindMapJobDTO(jobData)) return 2000
-        const done = jobData.status === "DONE"
-        const hasNodes = mindMap.nodes.length > 0
-        return done || hasNodes ? false : 2000
+        const jobData = query.state.data?.data;
+        if (!jobData || !isMindMapJobDTO(jobData)) return 2000;
+        const done = jobData.status === "DONE";
+        const hasNodes = mindMap.nodes.length > 0;
+        return done || hasNodes ? false : 2000;
       },
       refetchIntervalInBackground: true,
-      enabled: spaceId != undefined
+      enabled: spaceId != undefined,
     },
   });
 
@@ -65,11 +69,15 @@ function useMindMap(spaceId: number | undefined) {
   };
 }
 
-function isMindMapJobDTO(data: ErrorResponseDTO | MindMapJobDTO): data is MindMapJobDTO {
+function isMindMapJobDTO(
+  data: ErrorResponseDTO | MindMapJobDTO,
+): data is MindMapJobDTO {
   return "status" in data;
 }
 
-function isMindMapDTO(data: ErrorResponseDTO | MindMapResponseDTO): data is MindMapResponseDTO {
+function isMindMapDTO(
+  data: ErrorResponseDTO | MindMapResponseDTO,
+): data is MindMapResponseDTO {
   return "nodes" in data;
 }
 

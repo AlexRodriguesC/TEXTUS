@@ -2,8 +2,10 @@ package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.controller.DTO.response.AttemptRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.AttemptResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.LessonResponseDTO;
 import ch.supsi.documentapplication.dataaccess.*;
 import ch.supsi.documentapplication.exception.ApplicationException;
+import ch.supsi.documentapplication.exception.InvalidInputException;
 import ch.supsi.documentapplication.exception.LessonAttemptsExhaustedException;
 import ch.supsi.documentapplication.exception.LessonPrerequisiteNotSatisfiedException;
 import ch.supsi.documentapplication.model.Attempt;
@@ -71,6 +73,10 @@ public class LearningService extends Service implements ILearningService {
                     lesson.getId(), prerequisite.getId());
         }
 
+        if (lesson.isMastered()) {
+            throw LessonPrerequisiteNotSatisfiedException.lessonAlreadyCompleted(lesson.getId());
+        }
+
         if (lesson.hasExerciseInProgress()) {
             return lesson.getExerciseInProgress();
         }
@@ -127,20 +133,37 @@ public class LearningService extends Service implements ILearningService {
         boolean isAnswerWrong = attempt.isAnswerWrong();
 
         if (isAnswerWrong) {
-            String feedback = openAIExerciseFeedbackClient.getResult(attempt);
-            attempt.setFeedback(feedback);
+            lesson.consumeAttempt();
+            // String feedback = openAIExerciseFeedbackClient.getResult(attempt);
+            attempt.setFeedback("feedback");
         }
 
         databaseLearningStorage.create(attempt, owner, lesson.getId(), exercise.getId());
 
-        databaseLearningStorage.updateExercise(exercise);
-
         lesson.updateMastery(isAnswerWrong);
-        exercise.setCompleted(!isAnswerWrong);
-        lesson.consumeAttempt();
+        exercise.setCompleted(true);
+        databaseLearningStorage.updateExercise(exercise);
         databaseLearningStorage.update(lesson);
 
-        return null;
+        return new AttemptResponseDTO(
+                exercise.getId(),
+                !isAnswerWrong,
+                isAnswerWrong ? attempt.getFeedback() : exercise.getExplanation(),
+                LessonResponseDTO.from(lesson));
+    }
+
+    @Override
+    public void deleteExercises(String owner, Long spaceId, Long lessonId) {
+        getSpaceOrThrow(owner, spaceId);
+        var lesson = getLesson(owner, spaceId, lessonId);
+
+        if (lesson.hasAttemptsLeft()) {
+            throw InvalidInputException.attemptsNotExhausted();
+        }
+        lesson.reset();
+        databaseLearningStorage.update(lesson);
+
+        databaseLearningStorage.deleteExercises(lesson.getId());
     }
 
     private ExerciseType rollExerciseType(PathSettings settings) {

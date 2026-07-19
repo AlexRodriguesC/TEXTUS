@@ -16,26 +16,21 @@ public class ExerciseMapper {
         return switch (exercise) {
             case Question q -> new QuestionResponseDTO(
                     q.getId(), q.getTopicId(),
-                    q.getRequest(), q.isCompleted(), ExerciseType.QUESTION, q.getShuffledDistractors());
+                    q.getRequest(), q.isCompleted(), ExerciseType.QUESTION, q.getAnswer(), q.getDistractor());
 
             case ch.supsi.documentapplication.model.learn.exercise.List l -> new ListResponseDTO(
                     l.getId(), l.getTopicId(),
-                    l.getRequest(), l.isCompleted(), ExerciseType.LIST, l.getShuffledList());
+                    l.getRequest(), l.isCompleted(), ExerciseType.LIST, l.getAnswer());
 
             case Group g -> new GroupResponseDTO(
                     g.getId(), g.getTopicId(),
-                    g.getRequest(), g.isCompleted(), ExerciseType.GROUP, g.getLabels(), g.getShuffledValues());
+                    g.getRequest(), g.isCompleted(), ExerciseType.GROUP, g.getAnswer());
 
-            case PairExercise p -> {
-
-                var shuffledPairs = p.getShuffledPairs();
-
-                yield new PairResponseDTO(
-                        p.getId(),
-                        p.getTopicId(),
-                        p.getRequest(), p.isCompleted(), ExerciseType.PAIR,
-                        shuffledPairs.getLeft(), shuffledPairs.getRight());
-            }
+            case PairExercise p -> new PairResponseDTO(
+                    p.getId(),
+                    p.getTopicId(),
+                    p.getRequest(), p.isCompleted(), ExerciseType.PAIR,
+                    p.getAnswer());
 
             default -> throw new IllegalArgumentException("Unsupported exercise type: " + exercise.getClass());
         };

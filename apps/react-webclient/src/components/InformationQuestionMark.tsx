@@ -8,10 +8,14 @@ import { CircleQuestionMark } from "lucide-react";
 interface InformationQuestionMarkProps {
   tooltip: string;
   onClick?: () => void;
-  size?: number
+  size?: number;
 }
 
-function InformationQuestionMark({ tooltip, onClick, size }: InformationQuestionMarkProps) {
+function InformationQuestionMark({
+  tooltip,
+  onClick,
+  size,
+}: InformationQuestionMarkProps) {
   return (
     <Tooltip>
       <TooltipTrigger>

@@ -7,11 +7,7 @@ function Logo() {
       className={`flex items-center gap-2 flex-row`}
       to={PathConstants.HOME}
     >
-      <img
-        src="/book.svg"
-        alt="logo"
-        className={`h-8 w-8 object-contain`}
-      />
+      <img src="/book.svg" alt="logo" className={`h-8 w-8 object-contain`} />
       <div className="font-playfair font-bold text-muted-foreground">
         TEXTUS
       </div>

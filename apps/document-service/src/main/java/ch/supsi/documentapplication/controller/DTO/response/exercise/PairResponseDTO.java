@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.controller.DTO.response.exercise;
 
 import ch.supsi.documentapplication.model.learn.ExerciseType;
+import ch.supsi.documentapplication.model.learn.exercise.LeftRight;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,8 +12,7 @@ public record PairResponseDTO(
         @NotNull Long topicId,
         @NotNull @NotEmpty String request, 
         boolean completed, 
-        @NotNull ExerciseType type, 
-        @NotNull @NotEmpty List<@NotNull @NotEmpty String> left, 
-        @NotNull @NotEmpty List<@NotNull @NotEmpty String> right
+        @NotNull ExerciseType type,
+        @NotNull @NotEmpty List<@NotNull LeftRight> pairs
 ) implements ExerciseDTO {
 }

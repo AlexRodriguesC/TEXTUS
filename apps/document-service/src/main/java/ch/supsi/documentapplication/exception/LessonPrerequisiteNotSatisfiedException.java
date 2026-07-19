@@ -14,4 +14,9 @@ public class LessonPrerequisiteNotSatisfiedException extends ApplicationExceptio
                 "Lesson with id %d cannot be started because prerequisite lesson with id %d is not completed",
                 requestedLessonId, prerequisiteLessonId));
     }
+
+    public static LessonPrerequisiteNotSatisfiedException lessonAlreadyCompleted(Long lessonId) {
+        return new LessonPrerequisiteNotSatisfiedException(
+                format("Cannot generate new exercise for lesson with id %d because it's already completed", lessonId));
+    }
 }

@@ -12,6 +12,7 @@ public record QuestionResponseDTO(
         @NotNull @NotEmpty String request,
         boolean completed,
         @NotNull ExerciseType type,
-        @NotNull @NotEmpty List<@NotNull @NotEmpty String> answers
+        @NotNull @NotEmpty String answer,
+        @NotNull @NotEmpty List<String> distractors
 ) implements ExerciseDTO {
 }

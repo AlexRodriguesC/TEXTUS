@@ -6,7 +6,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 import MotionButton from "@/components/MotionButton.tsx";
 
 interface NodeProps {
@@ -22,9 +22,7 @@ function Node({ completed = false, title, summary, children }: NodeProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <MotionButton completed={completed}>
-          {children}
-        </MotionButton>
+        <MotionButton completed={completed}>{children}</MotionButton>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

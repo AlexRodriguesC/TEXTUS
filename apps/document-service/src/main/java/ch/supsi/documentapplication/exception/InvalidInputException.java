@@ -11,4 +11,8 @@ public class InvalidInputException extends ApplicationException {
     public static InvalidInputException invalidSettings() {
         return new InvalidInputException("The provided settings are invalid.");
     }
+
+    public static InvalidInputException attemptsNotExhausted() {
+        return new InvalidInputException("Attempts for specified lesson not exhausted");
+    }
 }

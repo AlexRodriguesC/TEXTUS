@@ -79,32 +79,32 @@ const spacesRoute = createRoute({
 const spaceMenuRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MENU,
-  component: SpaceMenu
-})
+  component: SpaceMenu,
+});
 
 const spaceChatRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_CHAT,
-  component: SpaceChat
-})
+  component: SpaceChat,
+});
 
 const spaceMapRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MIND_MAP,
-  component: SpaceMap
-})
+  component: SpaceMap,
+});
 
 const spaceLearnRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN,
-  component: SpaceLearn
-})
+  component: SpaceLearn,
+});
 
 const spaceChapterGuideRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN_GUIDE,
-  component: ChapterGuide
-})
+  component: ChapterGuide,
+});
 
 const lessonRoute = createRoute({
   getParentRoute: () => protectedRoute,
@@ -121,5 +121,13 @@ const notFoundRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([homeRoute, notFoundRoute]),
   authRoute.addChildren([loginRoute, registerRoute]),
-  protectedRoute.addChildren([spacesRoute, spaceMenuRoute, spaceChatRoute, spaceMapRoute, spaceLearnRoute, spaceChapterGuideRoute, lessonRoute]),
+  protectedRoute.addChildren([
+    spacesRoute,
+    spaceMenuRoute,
+    spaceChatRoute,
+    spaceMapRoute,
+    spaceLearnRoute,
+    spaceChapterGuideRoute,
+    lessonRoute,
+  ]),
 ]);

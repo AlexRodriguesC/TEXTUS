@@ -116,12 +116,22 @@
     }
   },
   "exercise": {
+    "completed": {
+      "title": "Congratulations!",
+      "description": "You've completed the lesson. Keep up the good work!"
+    },
+    "exhausted": {
+      "title": "You've used up your attempts for now",
+      "description": "No worries! Take a moment to review the topics you've covered, and come back later to try again. Every attempt helps you learn."
+    },
     "guide": {
       "tooltip": "Click to show the guide",
       "title": "The current exercise is based on the following topic"
     }
   },
   "button": {
+    "continue": "Continue",
+    "review-topics": "Review Topics",
     "submit": "Submit",
     "skip": "Skip",
     "apply": "Apply",

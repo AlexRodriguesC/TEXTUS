@@ -13,6 +13,7 @@ public class Lesson {
     private static final double P_T = 0.03;
     private static final double P_S = 0.10;
     private static final int MAX_ATTEMPTS = 5;
+    public static final double INITIAL_MASTERY = 0.10;
 
     private Long id;
     private Long chapterId;
@@ -25,7 +26,7 @@ public class Lesson {
     private Long currentTopic = 0L;
 
     @Setter
-    private double mastery = 0.10;
+    private double mastery = INITIAL_MASTERY;
 
     @Setter
     private int attemptsLeft = MAX_ATTEMPTS;
@@ -140,5 +141,10 @@ public class Lesson {
         mastery = increment + (1 - increment) * P_T;
         mastery = Math.max(0, mastery);
         mastery = Math.min(1, mastery);
+    }
+
+    public void reset() {
+        this.mastery = INITIAL_MASTERY;
+        this.attemptsLeft = MAX_ATTEMPTS;
     }
 }

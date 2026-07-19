@@ -65,7 +65,7 @@
   },
   "space": {
     "stepper": {
-      "prerequisite":  "Carica almeno un documento prima di continuare"
+      "prerequisite": "Carica almeno un documento prima di continuare"
     },
     "icon": "Icona",
     "name": "Nome",
@@ -104,12 +104,22 @@
     }
   },
   "exercise": {
+    "completed": {
+      "title": "Congratulazioni!",
+      "description": "Hai completato la lezione. Continua così!"
+    },
+    "exhausted": {
+      "title": "Hai esaurito i tentativi per ora",
+      "description": "Nessun problema! Approfitta di questo momento per rivedere gli argomenti trattati, e torna più tardi per riprovare. Ogni tentativo ti aiuta a imparare."
+    },
     "guide": {
       "tooltip": "Clicca per mostrare la guida",
       "title": "L'esercizio corrente si basa sul seguente argomento"
     }
   },
   "button": {
+    "continue": "Continua",
+    "review-topics": "Ripassa Argomenti",
     "submit": "Invia",
     "skip": "Salta",
     "apply": "Modifica",

@@ -103,7 +103,7 @@ function SpaceMap() {
     },
   });
 
-  let topics: TopicResponseDTO[] = []
+  let topics: TopicResponseDTO[] = [];
   if (data && data.data && "topics" in data.data) {
     topics = data.data.topics;
   }

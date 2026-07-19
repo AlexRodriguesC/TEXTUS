@@ -3,10 +3,8 @@ package ch.supsi.documentapplication.model.learn.exercise;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
 
 @JsonTypeName("PAIR")
 public class PairExercise extends BaseExercise<List<LeftRight>> {
@@ -30,16 +28,6 @@ public class PairExercise extends BaseExercise<List<LeftRight>> {
         sortedExpected.sort(pairComparator);
         sortedActual.sort(pairComparator);
         return sortedExpected.equals(sortedActual);
-    }
-
-    public Pair<List<String>, List<String>> getShuffledPairs() {
-        List<String> left =
-                new ArrayList<>(this.answer.stream().map(LeftRight::left).toList());
-        List<String> right =
-                new ArrayList<>(this.answer.stream().map(LeftRight::right).toList());
-        Collections.shuffle(left);
-        Collections.shuffle(right);
-        return Pair.of(left, right);
     }
 
     @Override

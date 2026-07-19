@@ -14,8 +14,8 @@ import {
   type FileRejection,
   useDropzone as rootUseDropzone,
 } from "react-dropzone";
-import type {ButtonProps} from "@base-ui/react";
-import {Button} from "@/components/ui/button.tsx";
+import type { ButtonProps } from "@base-ui/react";
+import { Button } from "@/components/ui/button.tsx";
 
 type DropzoneResult<TUploadRes, TUploadError> =
   | {
@@ -677,7 +677,7 @@ const DropzoneRemoveFile = forwardRef<
   }
   return (
     <Button
-        variant={"ghost"}
+      variant={"ghost"}
       ref={ref}
       onClick={context.onRemoveFile}
       type="button"

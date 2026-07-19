@@ -20,7 +20,11 @@ import en from "emoji-picker-react/dist/data/emojis-en";
 import it from "emoji-picker-react/dist/data/emojis-it";
 import type { EmojiData } from "emoji-picker-react/dist/types/exposedTypes";
 import { useState } from "react";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover.tsx";
 
 type SpaceDialogFormProps = {
   id: string;
@@ -87,7 +91,10 @@ function SpaceDialogForm({
         }}
       >
         {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
-        <DialogContent onCloseAutoFocus={() => setOpen(false)} showCloseButton={false}>
+        <DialogContent
+          onCloseAutoFocus={() => setOpen(false)}
+          showCloseButton={false}
+        >
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{descriptionText}</DialogDescription>
@@ -98,21 +105,28 @@ function SpaceDialogForm({
               <Label htmlFor="space-icon">{t("space.icon")}</Label>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-full justify-start text-2xl">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-full justify-start text-2xl"
+                  >
                     {displayIcon}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent onWheel={(e) => e.stopPropagation()} className="w-fit h-fit bg-transparent border-none shadow-none p-0">
+                <PopoverContent
+                  onWheel={(e) => e.stopPropagation()}
+                  className="w-fit h-fit bg-transparent border-none shadow-none p-0"
+                >
                   <EmojiPicker
-                      emojiData={emojiData}
-                      height={350}
-                      width={300}
-                      skinTonesDisabled
-                      theme={theme === "light" ? Theme.LIGHT : Theme.DARK}
-                      onEmojiClick={(e) => {
-                        onIconChange(e.unified)
-                        setOpen(false)
-                      }}
+                    emojiData={emojiData}
+                    height={350}
+                    width={300}
+                    skinTonesDisabled
+                    theme={theme === "light" ? Theme.LIGHT : Theme.DARK}
+                    onEmojiClick={(e) => {
+                      onIconChange(e.unified);
+                      setOpen(false);
+                    }}
                   />
                 </PopoverContent>
               </Popover>
@@ -145,7 +159,10 @@ function SpaceDialogForm({
 
           <DialogFooter className={"flex flex-col md:flex-row gap-2"}>
             <DialogClose className={"order-0"} asChild>
-              <Button type="submit" form={id}>
+              <Button
+                  type="button"
+                  onClick={() => onSubmit()}
+              >
                 {submitLabel}
               </Button>
             </DialogClose>

@@ -21,14 +21,19 @@ type DestructiveActionButtonProps = {
 function DestructiveActionButton({
   title,
   onConfirm,
-    ...props
+  ...props
 }: DestructiveActionButtonProps & React.ComponentProps<"button">) {
   const { t } = useTranslation();
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button disabled={props.disabled} variant="ghost" size="icon" aria-label="Delete">
+        <Button
+          disabled={props.disabled}
+          variant="ghost"
+          size="icon"
+          aria-label="Delete"
+        >
           <Trash2 className="size-4" color={"red"} />
         </Button>
       </DialogTrigger>
@@ -42,19 +47,19 @@ function DestructiveActionButton({
         <DialogFooter className="flex flex-col md:flex-row">
           <DialogClose asChild>
             <Button
-                type="button"
-                variant="secondary"
-                className="flex-1 order-1 md:order-2"
+              type="button"
+              variant="secondary"
+              className="flex-1 order-1 md:order-2"
             >
               {t("action.destructive.cancel")}
             </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
-                type="button"
-                variant="ghost"
-                className="text-red-500 flex-1 order-2 md:order-1"
-                onClick={onConfirm}
+              type="button"
+              variant="ghost"
+              className="text-red-500 flex-1 order-2 md:order-1"
+              onClick={onConfirm}
             >
               {t("action.destructive.confirm")}
             </Button>

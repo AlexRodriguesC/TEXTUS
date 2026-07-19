@@ -6,7 +6,8 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu, SidebarTrigger,
+  SidebarMenu,
+  SidebarTrigger,
 } from "@/components/ui/sidebar.tsx";
 import SidebarSpaces from "@/components/left-sidebar/SidebarSpaces.tsx";
 import SidebarHome from "@/components/left-sidebar/SidebarHome.tsx";
@@ -20,7 +21,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <SidebarTrigger/>
+        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent>
         <SidebarAddSpace />

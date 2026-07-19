@@ -12,13 +12,13 @@ function MapNode({ data }: NodeProps) {
   return (
     <>
       <Handle type="target" position={Position.Top} style={hideHandle} />
-        <Node
-            completed={data.completed}
-            title={data.title}
-            summary={data.summary}
-        >
-            {data.id}
-        </Node>
+      <Node
+        completed={data.completed}
+        title={data.title}
+        summary={data.summary}
+      >
+        {data.id}
+      </Node>
       <Handle type="source" position={Position.Bottom} style={hideHandle} />
     </>
   );

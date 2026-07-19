@@ -40,6 +40,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
             String family = (String) row.get("family");
             Integer index = ((Number) row.get("index")).intValue();
             String explanation = (String) row.get("explanation");
+            boolean completed = (boolean) row.get("completed");
 
             BaseExercise<?> exercise =
                     switch (family) {
@@ -54,6 +55,7 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
             exercise.setTopicId(topicId);
             exercise.setIndex(index);
             exercise.setExplanation(explanation);
+            exercise.setCompleted(completed);
 
             exercises.add(exercise);
         }
@@ -249,12 +251,14 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     @Override
     public void updateExercise(BaseExercise<?> exercise) {
         jdbcClient
-                .sql("SELECT documents.update_exercise(:exerciseId, :topicId, :family, :index, :explanation)")
+                .sql(
+                        "SELECT documents.update_exercise(:exerciseId, :topicId, :family, :index, :explanation, :completed)")
                 .param("exerciseId", exercise.getId())
                 .param("topicId", exercise.getTopicId())
                 .param("family", exercise.getType().name().toLowerCase())
                 .param("index", exercise.getIndex())
                 .param("explanation", exercise.getExplanation())
+                .param("completed", exercise.isCompleted())
                 .query()
                 .listOfRows();
 
@@ -266,6 +270,15 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
             case PairExercise pair -> updatePair(exercise.getId(), pair);
             default -> throw new IllegalArgumentException("Unsupported exercise type: " + exercise.getClass());
         }
+    }
+
+    @Override
+    public void deleteExercises(Long lessonId) {
+        jdbcClient
+                .sql("SELECT documents.delete_exercises_by_lesson(:lessonId)")
+                .param("lessonId", lessonId)
+                .query()
+                .listOfRows();
     }
 
     private void updateQuestion(Long exerciseId, Question question) {

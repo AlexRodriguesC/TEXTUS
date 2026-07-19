@@ -1,4 +1,4 @@
-import {RightSidebarOpenContext} from "@/context/RightSidebarOpenContext.tsx";
+import { RightSidebarOpenContext } from "@/context/RightSidebarOpenContext.tsx";
 import { type ReactNode, useState } from "react";
 
 function RightSidebarOpenProvider({ children }: { children: ReactNode }) {

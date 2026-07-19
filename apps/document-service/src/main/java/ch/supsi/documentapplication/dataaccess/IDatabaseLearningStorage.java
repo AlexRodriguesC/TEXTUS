@@ -17,4 +17,6 @@ public interface IDatabaseLearningStorage {
     void create(Attempt<?> attempt, String userId, Long lessonId, Long exerciseId);
 
     void updateExercise(BaseExercise<?> exercise);
+
+    void deleteExercises(Long lessonId);
 }

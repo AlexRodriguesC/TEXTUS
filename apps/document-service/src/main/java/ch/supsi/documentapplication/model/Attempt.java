@@ -5,11 +5,11 @@ import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.*;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.tuple.Pair;
 
 @Getter
 public class Attempt<T> {
@@ -32,14 +32,20 @@ public class Attempt<T> {
         return switch (request.exerciseType()) {
             case QUESTION -> build(request, (BaseExercise<String>) persistedExercise, String.class, topic);
             case LIST -> build(
-                    request, (BaseExercise<java.util.List<String>>) persistedExercise, new TypeReference<>() {}, topic);
+                    request,
+                    (BaseExercise<java.util.List<String>>) persistedExercise,
+                    new TypeReference<java.util.List<String>>() {},
+                    topic);
             case GROUP -> build(
                     request,
                     (BaseExercise<Map<String, java.util.List<String>>>) persistedExercise,
-                    new TypeReference<>() {},
+                    new TypeReference<Map<String, java.util.List<String>>>() {},
                     topic);
             case PAIR -> build(
-                    request, (BaseExercise<Pair<String, String>>) persistedExercise, new TypeReference<>() {}, topic);
+                    request,
+                    (BaseExercise<List<LeftRight>>) persistedExercise,
+                    new TypeReference<List<LeftRight>>() {},
+                    topic);
         };
     }
 

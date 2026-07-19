@@ -17,4 +17,6 @@ public interface ILearningService {
 
     AttemptResponseDTO submitAttempt(String owner, Long spaceId, Long nodeId, AttemptRequestDTO request)
             throws ApplicationException;
+
+    void deleteExercises(String owner, Long spaceId, Long lessonId);
 }
