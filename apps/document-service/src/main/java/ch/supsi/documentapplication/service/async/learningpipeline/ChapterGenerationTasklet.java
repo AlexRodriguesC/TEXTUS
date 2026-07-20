@@ -6,9 +6,7 @@ import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.extern.log4j.Log4j2;
@@ -58,31 +56,57 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                 .toList();
 
         List<Chapter> chapters = openAIChapterClient.getResult(labels);
-        List<Chapter> finalChapters = new ArrayList<>();
-
-        List<Topic> remainingTopics = new ArrayList<>(topics);
         Map<Long, String> labelById = labels.stream().collect(Collectors.toMap(Label::id, Label::name));
 
-        for (Chapter chapter : chapters) {
-            List<String> chapterLabelNames =
-                    chapter.getLabels().stream().map(labelById::get).toList();
+        List<Set<String>> chapterLabelNames = chapters.stream()
+                .map(chapter -> chapter.getLabels().stream().map(labelById::get).collect(Collectors.toSet()))
+                .toList();
 
-            List<Topic> matchingTopics = remainingTopics.stream()
-                    .filter(topic -> topic.getLabels().stream().anyMatch(chapterLabelNames::contains))
-                    .toList();
-
-            remainingTopics.removeAll(matchingTopics);
-
-            var matchingAsLong = matchingTopics.stream().map(Topic::getId).toList();
-            finalChapters.add(new Chapter(
-                    chapter.getIndex(),
-                    chapter.getTitle(),
-                    chapter.getDescription(),
-                    chapter.getLabels(),
-                    matchingAsLong));
+        Map<Integer, List<Long>> topicsByChapterIndex = new HashMap<>();
+        for (int i = 0; i < chapters.size(); i++) {
+            topicsByChapterIndex.put(i, new ArrayList<>());
         }
 
-        finalChapters.forEach(Chapter::buildNodes);
+        for (Topic topic : topics) {
+            int bestChapterIndex = -1;
+            int bestOverlap = 0;
+
+            for (int i = 0; i < chapterLabelNames.size(); i++) {
+                long overlap = topic.getLabels().stream()
+                        .filter(chapterLabelNames.get(i)::contains)
+                        .count();
+                if (overlap > bestOverlap) {
+                    bestOverlap = (int) overlap;
+                    bestChapterIndex = i;
+                }
+            }
+
+            if (bestChapterIndex == -1) {
+                throw new IllegalStateException("Topic with id " + topic.getId()
+                        + " matches no chapter labels; this indicates a bug upstream.");
+            }
+
+            topicsByChapterIndex.get(bestChapterIndex).add(topic.getId());
+        }
+
+        List<Chapter> finalChapters = new ArrayList<>();
+        int nextIndex = 0;
+        for (int i = 0; i < chapters.size(); i++) {
+            List<Long> chapterTopics = topicsByChapterIndex.get(i);
+            if (chapterTopics.isEmpty()) {
+                log.debug(
+                        "Dropping chapter '{}' for space {} because it has no matching topics",
+                        chapters.get(i).getTitle(),
+                        spaceId);
+                continue;
+            }
+
+            Chapter chapter = chapters.get(i);
+            finalChapters.add(new Chapter(
+                    nextIndex++, chapter.getTitle(), chapter.getDescription(), chapter.getLabels(), chapterTopics));
+        }
+
+        finalChapters.forEach(Chapter::buildLessons);
 
         for (Chapter chapter : finalChapters) {
             databaseLearningStorage.create(pathId, chapter, spaceId);

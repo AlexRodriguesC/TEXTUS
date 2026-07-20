@@ -37,7 +37,7 @@ function Lesson() {
   }
 
   const handleNext = () => {
-    queryClient.resetQueries({queryKey: getGetNextExerciseQueryKey(spaceId!, lessonId!)}).then(() => {
+    queryClient.resetQueries({queryKey: getGetNextExerciseQueryKey(spaceId, lessonId)}).then(() => {
       setAnswer(null);
       setSubmitted(false);
     })

@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useTranslation } from "react-i18next";
 import useLessonId from "@/hooks/useLessonId.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLesson from "@/hooks/useLesson.tsx";
-import {ArrowRight} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useLearningPath from "@/hooks/useLearningPath.ts";
 import PathConstants from "@/routing/pathConstants.ts";
@@ -11,28 +12,28 @@ import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
 
 interface LessonFooterProps {
-  onCancel: () => void;
-  onConfirm: () => void;
-  onNext?: () => void;
-  onSkip?: () => void;
-  confirmationEnabled?: boolean;
-  submitted: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+    onNext?: () => void;
+    onSkip?: () => void;
+    confirmationEnabled?: boolean;
+    submitted: boolean;
 }
 
 function LessonFooter({
-  onCancel,
-  onConfirm,
-    onNext,
-  confirmationEnabled = false,
-    submitted,
-}: LessonFooterProps) {
-  const { t } = useTranslation();
-  const { lessonId } = useLessonId();
-  const { strSpaceId } = useSpaceId();
-  const { lesson } = useLesson({ lessonId: lessonId });
-  const { path } = useLearningPath();
+                          onCancel,
+                          onConfirm,
+                          onNext,
+                          confirmationEnabled = false,
+                          submitted,
+                      }: LessonFooterProps) {
+    const { t } = useTranslation();
+    const { lessonId } = useLessonId();
+    const { strSpaceId } = useSpaceId();
+    const { lesson, exerciseLoading } = useLesson({ lessonId: lessonId });
+    const { path } = useLearningPath();
 
-  const chapterId = path?.chapters.flatMap(chapter => chapter.lessons).findIndex(lesson => lesson.id === lessonId) ?? 0;
+    const chapterId = path?.chapters.flatMap(chapter => chapter.lessons).findIndex(lesson => lesson.id === lessonId) ?? 0;
 
     const flatLessons = path?.chapters.flatMap((chapter) => chapter.lessons) ?? [];
     const currentIndex = flatLessons.findIndex((l) => l.id === lessonId);
@@ -43,47 +44,56 @@ function LessonFooter({
         ? path?.chapters.find((c) => c.lessons.some((l) => l.id === nextLesson.id))
         : null;
 
-  const content = (() => {
-      if (lesson.isMastered()) {
-          return <>
-              <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
+    if (!lesson) {
+        return (
+            <div className={"flex flex-row items-center justify-between w-full"}>
+                <Skeleton className={"h-9 w-24"} />
+                <Skeleton className={"h-9 w-28"} />
+            </div>
+        );
+    }
 
-              <Link to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: nextLesson?.id.toString() ?? "", chapterId: nextChapter?.index.toString() ?? ""}}>
-                  <Button className={"flex flex-row items-center"} disabled={lesson.isDeleting} onClick={() => lesson.deleteExercises()}>
-                      <ArrowRight size={16} />
-                      {t("button.next")}
-                  </Button>
-              </Link>
-          </>
-      }
+    const content = (() => {
+        if (lesson.isMastered()) {
+            return <>
+                <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
 
-      if (lesson.attemptsLeft === 0) {
-          return (
-              <>
-                  <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
-                  <RetryLessonButton lesson={lesson}/>
-              </>
-          )
-      }
+                <Link to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: nextLesson?.id.toString() ?? "", chapterId: nextChapter?.index.toString() ?? ""}}>
+                    <Button className={"flex flex-row items-center"} disabled={lesson.isDeleting} onClick={() => lesson.deleteExercises()}>
+                        <ArrowRight size={16} />
+                        {t("button.next")}
+                    </Button>
+                </Link>
+            </>
+        }
 
-      return (
-          <>
-              <Button onClick={onCancel} variant={"outline"}>
-                  {t("button.skip")}
-              </Button>
-              {
-                  submitted ? (
-                      <Button disabled={false} onClick={onNext}>
-                          {t("button.next")}
-                      </Button>
-                  ) : (
-                      <Button disabled={!confirmationEnabled} onClick={onConfirm}>
-                          {t("button.submit")}
-                      </Button>
-                  )
-              }
-          </>
-      )
+        if (lesson.attemptsLeft === 0) {
+            return (
+                <>
+                    <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
+                    <RetryLessonButton lesson={lesson}/>
+                </>
+            )
+        }
+
+        return (
+            <>
+                <Button disabled={exerciseLoading} onClick={onCancel} variant={"outline"}>
+                    {t("button.skip")}
+                </Button>
+                {
+                    submitted ? (
+                        <Button disabled={exerciseLoading} onClick={onNext}>
+                            {t("button.next")}
+                        </Button>
+                    ) : (
+                        <Button disabled={!confirmationEnabled} onClick={onConfirm}>
+                            {t("button.submit")}
+                        </Button>
+                    )
+                }
+            </>
+        )
     })();
 
     return (

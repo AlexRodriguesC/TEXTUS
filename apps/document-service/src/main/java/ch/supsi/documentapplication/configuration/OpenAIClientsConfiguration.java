@@ -11,8 +11,8 @@ import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.function.BiFunction;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
@@ -22,6 +22,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.retry.*;
 import org.springframework.util.FileCopyUtils;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @Log4j2
@@ -42,25 +43,48 @@ public class OpenAIClientsConfiguration {
 
     @Bean
     public OpenAIChapterClient openAIChapterClient(
+            ObjectMapper objectMapper,
             ChatClient.Builder chatBuilder,
             RetryTemplateWrapper retryTemplateWrapper,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
             ResourceLoader resourceLoader) {
+
         var userPromptResource = resourceLoader.getResource(promptProperties.getChapterExtractionUser());
         String userPromptText = copyToString(userPromptResource);
-
         PromptTemplate promptTemplate = PromptTemplate.builder()
                 .renderer(templateRenderer)
                 .template(userPromptText)
                 .build();
 
         var systemPromptResource = resourceLoader.getResource(promptProperties.getChapterExtractionSystem());
-        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+        String systemPromptText = copyToString(systemPromptResource);
+
+        var feedbackUserPromptResource =
+                resourceLoader.getResource(promptProperties.getChapterExtractionFeedbackUser());
+        String feedbackUserPromptText = copyToString(feedbackUserPromptResource);
+        PromptTemplate feedbackPromptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(feedbackUserPromptText)
+                .build();
+
+        var feedbackSystemPromptResource =
+                resourceLoader.getResource(promptProperties.getChapterExtractionFeedbackSystem());
+        String feedbackSystemPromptText = copyToString(feedbackSystemPromptResource);
+
+        ChatClient chatClient = chatBuilder.build();
 
         var chapterValidator = new ChapterValidator();
 
-        return new OpenAIChapterClient(chatClient, retryTemplateWrapper, chapterValidator, promptTemplate);
+        return new OpenAIChapterClient(
+                objectMapper,
+                chatClient,
+                retryTemplateWrapper,
+                systemPromptText,
+                promptTemplate,
+                feedbackSystemPromptText,
+                feedbackPromptTemplate,
+                chapterValidator);
     }
 
     @Bean
@@ -79,11 +103,13 @@ public class OpenAIClientsConfiguration {
                 .build();
 
         var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
-        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+        String systemPromptText = copyToString(systemPromptResource);
+        ChatClient chatClient = chatBuilder.build();
 
         var mindMapValidator = new MindMapValidator();
 
-        return new OpenAIMindMapClient(chatClient, retryTemplateWrapper, mindMapValidator, promptTemplate);
+        return new OpenAIMindMapClient(
+                chatClient, retryTemplateWrapper, systemPromptText, promptTemplate, mindMapValidator);
     }
 
     @Bean
@@ -99,7 +125,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getSummarizationUser(),
                 promptProperties.getSummarizationSystem(),
-                (client, template) -> new OpenAISummarizationClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAISummarizationClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -115,7 +142,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getTopicExtractionUser(),
                 promptProperties.getTopicExtractionSystem(),
-                (client, template) -> new OpenAITopicExtractionClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAITopicExtractionClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -131,7 +159,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getQuestionUser(),
                 promptProperties.getQuestionSystem(),
-                (client, template) -> new OpenAIQuestionClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAIQuestionClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -147,7 +176,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getListUser(),
                 promptProperties.getListSystem(),
-                (client, template) -> new OpenAIListClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAIListClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -163,7 +193,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getGroupUser(),
                 promptProperties.getGroupSystem(),
-                (client, template) -> new OpenAIGroupClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAIGroupClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -179,7 +210,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getPairUser(),
                 promptProperties.getPairSystem(),
-                (client, template) -> new OpenAIPairClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAIPairClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean
@@ -195,7 +227,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getFeedbackUser(),
                 promptProperties.getFeedbackSystem(),
-                (client, template) -> new OpenAIExerciseFeedbackClient(client, retryTemplateWrapper, template));
+                (client, systemPrompt, template) ->
+                        new OpenAIExerciseFeedbackClient(client, retryTemplateWrapper, systemPrompt, template));
     }
 
     private <T> T createPromptClient(
@@ -204,7 +237,7 @@ public class OpenAIClientsConfiguration {
             ResourceLoader resourceLoader,
             String userPromptPath,
             String systemPromptPath,
-            BiFunction<ChatClient, PromptTemplate, T> factory) {
+            TriFunction<ChatClient, String, PromptTemplate, T> factory) {
 
         var userPromptResource = resourceLoader.getResource(userPromptPath);
         String userPromptText = copyToString(userPromptResource);
@@ -215,9 +248,10 @@ public class OpenAIClientsConfiguration {
                 .build();
 
         var systemPromptResource = resourceLoader.getResource(systemPromptPath);
-        ChatClient chatClient = chatBuilder.defaultSystem(systemPromptResource).build();
+        String systemPromptText = copyToString(systemPromptResource);
+        ChatClient chatClient = chatBuilder.build();
 
-        return factory.apply(chatClient, promptTemplate);
+        return factory.apply(chatClient, systemPromptText, promptTemplate);
     }
 
     private String copyToString(Resource resource) {

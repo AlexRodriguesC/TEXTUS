@@ -32,7 +32,6 @@ public class LearningService extends Service implements ILearningService {
     private final OpenAIPairClient pairClient;
     private final OpenAIQuestionClient questionClient;
     private final DatabaseTopicStorage databaseTopicStorage;
-    private final OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient;
 
     @Autowired
     public LearningService(
@@ -43,8 +42,7 @@ public class LearningService extends Service implements ILearningService {
             OpenAIListClient listClient,
             OpenAIPairClient pairClient,
             OpenAIQuestionClient questionClient,
-            DatabaseTopicStorage databaseTopicStorage,
-            OpenAIExerciseFeedbackClient openAIExerciseFeedbackClient) {
+            DatabaseTopicStorage databaseTopicStorage) {
         super(databaseSpaceStorage);
         this.databasePathStorage = databasePathStorage;
         this.databaseLearningStorage = databaseLearningStorage;
@@ -53,7 +51,6 @@ public class LearningService extends Service implements ILearningService {
         this.pairClient = pairClient;
         this.questionClient = questionClient;
         this.databaseTopicStorage = databaseTopicStorage;
-        this.openAIExerciseFeedbackClient = openAIExerciseFeedbackClient;
     }
 
     @Override

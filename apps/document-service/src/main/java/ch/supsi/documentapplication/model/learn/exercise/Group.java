@@ -45,19 +45,6 @@ public class Group extends BaseExercise<Map<String, List<String>>> {
         return true;
     }
 
-    public List<String> getLabels() {
-        return new ArrayList<>(this.answer.keySet());
-    }
-
-    public List<String> getShuffledValues() {
-        List<String> original = new ArrayList<>();
-        for (List<String> values : this.answer.values()) {
-            original.addAll(values);
-        }
-        Collections.shuffle(original);
-        return original;
-    }
-
     @Override
     public ExerciseType getType() {
         return ExerciseType.GROUP;

@@ -7,23 +7,29 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
+@ToString
 public class Chapter {
 
     @JsonIgnore
+    @ToString.Exclude
     private Long id;
 
     private final Integer index;
     private final String title;
     private final String description;
+
     private List<Long> labels;
 
     @JsonIgnore
+    @ToString.Exclude
     private final List<Long> topics;
 
     @Setter
     @JsonIgnore
+    @ToString.Exclude
     private List<Lesson> lessons;
 
     @JsonCreator
@@ -60,50 +66,50 @@ public class Chapter {
     /**
      * Constructs and populates the node list for this chapter based on its topics.
      * <p>
-     * This method organizes the chapter's topics into a structured hierarchy of nodes.
-     * If no topics are present, an empty nodes list is created. Otherwise, topics are
-     * distributed across multiple groups based on a calculated step count, and each group
-     * is converted into a Node. Lesson-type nodes contain distributed topic subsets,
-     * while the final node is designated as a checkpoint node containing all topics.
+     * Every chapter must have at least one topic; a chapter with zero topics indicates
+     * an upstream bug and results in an exception rather than an empty lesson list.
      * <p>
-     * The distribution of topics across nodes is determined by the topic count:
-     * up to 3 topics result in 3 nodes, up to 6 topics result in 5 nodes, and
-     * more than 6 topics result in 8 nodes.
+     * Topics are split into lesson groups of at least 3 topics each (subject to the
+     * total topic count), followed by a single checkpoint lesson that is not
+     * associated with any topics. A chapter therefore always has at least 2 lessons:
+     * one content lesson and the trailing checkpoint.
+     * <p>
+     * The number of content lessons is {@code floor(topicCount / 3)}, with a minimum
+     * of 1. Remaining topics beyond an exact multiple of 3 are distributed round-robin
+     * across the lesson groups, so no group differs from another by more than one topic,
+     * and every group is guaranteed to have at least 3 topics whenever
+     * {@code topicCount >= 3}. If the chapter has fewer than 3 topics in total, the
+     * single content lesson simply contains all of them, since no valid grouping of
+     * size 3 or more exists in that case.
      */
-    public void buildNodes() {
+    public void buildLessons() {
         if (this.topics == null || this.topics.isEmpty()) {
-            this.lessons = new ArrayList<>();
-            return;
+            throw new IllegalStateException(
+                    "Chapter with id " + this.id + " has no topics; this indicates a bug upstream.");
         }
 
-        int stepCount = getStepCount(this.topics.size());
-        List<List<Long>> groups = distributeTopics(this.topics, stepCount);
+        int lessonCount = computeLessonCount(this.topics.size());
+        List<List<Long>> groups = distributeTopics(this.topics, lessonCount);
 
-        List<Lesson> result = new ArrayList<>(groups.size());
-        for (int i = 0; i < groups.size(); i++) {
-            LessonType type = (i == groups.size() - 1) ? LessonType.CHECKPOINT : LessonType.LESSON;
-            if (type == LessonType.LESSON) {
-                result.add(new Lesson(type, i, groups.get(i)));
-            } else {
-                result.add(new Lesson(type, i, this.topics));
-            }
+        List<Lesson> result = new ArrayList<>(lessonCount + 1);
+        for (int i = 0; i < lessonCount; i++) {
+            result.add(new Lesson(LessonType.LESSON, i, groups.get(i)));
         }
+        result.add(new Lesson(LessonType.CHECKPOINT, lessonCount, List.of()));
         this.lessons = result;
     }
 
-    private static int getStepCount(int topicCount) {
-        if (topicCount <= 3) return topicCount;
-        if (topicCount <= 6) return 5;
-        return 8;
+    private static int computeLessonCount(int topicCount) {
+        return Math.max(1, topicCount / 3);
     }
 
-    private static List<List<Long>> distributeTopics(List<Long> topics, int stepCount) {
-        List<List<Long>> groups = new ArrayList<>(stepCount);
-        for (int i = 0; i < stepCount; i++) {
+    private static List<List<Long>> distributeTopics(List<Long> topics, int lessonCount) {
+        List<List<Long>> groups = new ArrayList<>(lessonCount);
+        for (int i = 0; i < lessonCount; i++) {
             groups.add(new ArrayList<>());
         }
         for (int i = 0; i < topics.size(); i++) {
-            groups.get(i % stepCount).add(topics.get(i));
+            groups.get(i % lessonCount).add(topics.get(i));
         }
         return groups;
     }

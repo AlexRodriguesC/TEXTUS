@@ -72,6 +72,8 @@
     "description": "Descrizione"
   },
   "spaces": {
+    "reset-search": "Cancella ricerca",
+    "not-found": "Nessuno spazio corrisponde ai criteri di ricerca",
     "search": "Cerca spazi",
     "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Aggiungi spazio\" in alto a sinistra per iniziare.",
     "add": {
@@ -215,6 +217,9 @@
     }
   },
   "learning-path": {
+    "popover": {
+      "loading": "Preparazione lezione"
+    },
     "settings": {
       "success": "Impostazioni del percorso di apprendimento aggiornate con successo",
       "error": "Si è verificato un errore durante l'aggiornamento delle impostazioni del percorso di apprendimento"

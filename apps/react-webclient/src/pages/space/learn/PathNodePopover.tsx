@@ -16,18 +16,22 @@ interface PathNodePopoverProps {
 }
 
 function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
-    const {isLoading, lesson} = useLesson({lessonId: lessonId});
+    const {lesson, isLoading} = useLesson({lessonId: lessonId});
     const {t} = useTranslation();
     const {strSpaceId} = useSpaceId();
     const {path} = useLearningPath();
     const chapterId = path?.chapters.flatMap(chapter => chapter.lessons).findIndex(lesson => lesson.id === lessonId) ?? 0;
 
     const content = (() => {
-        if (isLoading) {
-            return <div className={"loading-dots"}/>;
+        if (!lesson || isLoading) {
+            return (
+                <p className={"loading-dots"}>
+                    {t("learning-path.popover.loading")}
+                </p>
+            )
         }
 
-        if (lesson!.isMastered()) {
+        if (lesson.isMastered()) {
             return (
                 <>
 
@@ -35,10 +39,10 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
             )
         }
 
-        if (lesson!.attemptsLeft === 0) {
+        if (lesson.attemptsLeft === 0) {
             return (
                 <div className={cn("flex flex-col gap-2", className)}>
-                    <RetryLessonButton lesson={lesson!}/>
+                    <RetryLessonButton lesson={lesson}/>
                     <ReviewTopicsButton onCancel={() => {}} strSpaceId={strSpaceId} chapterId={chapterId}/>
                 </div>
             )
@@ -47,13 +51,13 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
         return (
             <div className={cn("flex flex-col gap-2", className)}>
                 <div className={"flex flex-row md:flex-col gap-2"}>
-                    <Link className="order-1 md:order-2" to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: lesson!.id.toString() ?? "", chapterId: chapterId.toString() ?? ""}}>
+                    <Link className="order-1 md:order-2" to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: lesson.id.toString() ?? "", chapterId: chapterId.toString() ?? ""}}>
                         <Button className={"w-full"}>{t("button.continue")}</Button>
                     </Link>
                     <LessonAttemptsIndicator
                         className="order-2 md:order-1 place-self-center"
-                        maxAttempts={lesson!.maxAttempts}
-                        attemptsLeft={lesson!.attemptsLeft}
+                        maxAttempts={lesson.maxAttempts}
+                        attemptsLeft={lesson.attemptsLeft}
                     />
                 </div>
                 <ReviewTopicsButton className={"order-3"} onCancel={() => {}} strSpaceId={strSpaceId} chapterId={chapterId}/>

@@ -13,8 +13,11 @@ public class OpenAISummarizationClient extends Client<String, Page> {
     private static final String DOCUMENT_TEXT = "document_text";
 
     public OpenAISummarizationClient(
-            ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

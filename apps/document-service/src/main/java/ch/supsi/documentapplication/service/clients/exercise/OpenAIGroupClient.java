@@ -12,8 +12,12 @@ public class OpenAIGroupClient extends Client<Topic, Group> {
 
     private static final String TOPIC = "topic";
 
-    public OpenAIGroupClient(ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+    public OpenAIGroupClient(
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

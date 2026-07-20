@@ -17,8 +17,11 @@ public class OpenAIExerciseFeedbackClient extends Client<Attempt<?>, String> {
     public static final String TOPIC = "topic";
 
     public OpenAIExerciseFeedbackClient(
-            ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

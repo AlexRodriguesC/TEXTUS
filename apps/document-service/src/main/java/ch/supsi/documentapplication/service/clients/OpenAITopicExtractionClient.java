@@ -18,8 +18,11 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
     private static final String EXISTING_LABELS = "existing_labels";
 
     public OpenAITopicExtractionClient(
-            ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

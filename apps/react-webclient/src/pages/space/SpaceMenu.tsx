@@ -40,7 +40,7 @@ function SpaceMenu() {
     <CenteredPage>
       <div className={"max-w-[80%] place-content-center"}>
         <div className={"flex w-full justify-end"}>
-          <span className="flex items-center h-[2em] leading-none overflow-hidden">
+          <span className="flex items-center h-[2em] leading-none overflow-hidden cursor-pointer">
             {!tutorialEnabled && (
               <InformationQuestionMark
                 size={16}

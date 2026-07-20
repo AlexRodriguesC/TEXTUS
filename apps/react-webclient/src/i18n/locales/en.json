@@ -85,6 +85,8 @@
   },
   "spaces": {
     "search": "Search spaces",
+    "reset-search": "Reset search",
+    "not-found": "No spaces match your search criteria",
     "add-spaces": "Looks like there’s nothing here yet. Click \"Add space\" in the top left corner to get started.",
     "add": {
       "success": "Space created successfully.",
@@ -228,6 +230,9 @@
     }
   },
   "learning-path": {
+    "popover": {
+      "loading": "Preparing lesson"
+    },
     "settings": {
       "success": "Learning path settings updated successfully",
       "error": "Something went wrong while updating the learning path settings"

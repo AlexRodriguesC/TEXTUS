@@ -18,9 +18,10 @@ public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
     public OpenAIMindMapClient(
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
-            MindMapValidator mindMapValidator,
-            PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+            String systemPrompt,
+            PromptTemplate promptTemplate,
+            MindMapValidator mindMapValidator) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
         this.mindMapValidator = mindMapValidator;
     }
 

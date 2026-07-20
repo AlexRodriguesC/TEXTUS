@@ -264,7 +264,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         lesson.type == LessonType.LESSON
         lesson.index == 0
         lesson.currentTopic == 0
-        lesson.attemptsLeft == 10
+        lesson.attemptsLeft == lesson.getMaxAttempts()
         lesson.mastery == 0.10d
         lesson.exercisesLength == 0
     }

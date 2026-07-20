@@ -21,6 +21,9 @@ public class PromptProperties {
     private String chapterExtractionSystem;
     private String chapterExtractionUser;
 
+    private String chapterExtractionFeedbackSystem;
+    private String chapterExtractionFeedbackUser;
+
     private String groupSystem;
     private String groupUser;
 

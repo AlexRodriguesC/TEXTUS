@@ -10,6 +10,10 @@ function useLessonId() {
     : undefined;
   const strLessonId = params?.lessonId ? params.lessonId : undefined;
 
+  if (!numericLessonId && strLessonId) throw new Error(
+      "useLessonId must be used within a valid path containing a lessonId"
+  )
+
   return { lessonId: numericLessonId, strLessonId };
 }
 

@@ -5,9 +5,22 @@ import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import java.util.List;
 
-public class ChapterValidator implements Validator<List<Chapter>, List<Label>> {
+public class ChapterValidator implements FeedbackAwareValidator<List<Chapter>, List<Label>, ChapterFeedback> {
 
+    @Override
     public void validate(List<Chapter> actual, List<Label> expected) {
+        if (actual == null || expected == null) {
+            throw AIOutputMappingFailedException.create("chapter", "chapters or labels cannot be null");
+        }
+
+        ChapterFeedback feedback = extractFeedback(actual, expected);
+        if (!feedback.isValid()) {
+            throw AIOutputMappingFailedException.create("chapter", "chapters and labels do not match");
+        }
+    }
+
+    @Override
+    public ChapterFeedback extractFeedback(List<Chapter> actual, List<Label> expected) {
         if (actual == null || expected == null) {
             throw AIOutputMappingFailedException.create("chapter", "chapters or labels cannot be null");
         }
@@ -16,14 +29,21 @@ public class ChapterValidator implements Validator<List<Chapter>, List<Label>> {
                 actual.stream().flatMap(ch -> ch.getLabels().stream()).toList();
         List<Long> expectedIds = expected.stream().map(Label::id).toList();
 
-        if (actualIds.size() != expectedIds.size()) {
-            throw AIOutputMappingFailedException.create("chapter", "chapters and labels do not match");
-        }
+        List<Long> missing = expectedIds.stream()
+                .filter(id -> !actualIds.contains(id))
+                .distinct()
+                .toList();
 
-        for (Long actualId : actualIds) {
-            if (!expectedIds.contains(actualId)) {
-                throw AIOutputMappingFailedException.create("chapter", "chapters do not match");
-            }
-        }
+        List<Long> extra = actualIds.stream()
+                .filter(id -> !expectedIds.contains(id))
+                .distinct()
+                .toList();
+
+        List<Long> duplicates = actualIds.stream()
+                .filter(id -> java.util.Collections.frequency(actualIds, id) > 1)
+                .distinct()
+                .toList();
+
+        return new ChapterFeedback(missing, duplicates, extra);
     }
 }

@@ -12,8 +12,12 @@ public class OpenAIListClient extends Client<Topic, List> {
 
     private static final String TOPIC = "topic";
 
-    public OpenAIListClient(ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+    public OpenAIListClient(
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

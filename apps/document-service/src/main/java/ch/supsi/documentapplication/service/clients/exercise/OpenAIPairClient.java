@@ -12,8 +12,12 @@ public class OpenAIPairClient extends Client<Topic, PairExercise> {
 
     private static final String TOPIC = "topic";
 
-    public OpenAIPairClient(ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+    public OpenAIPairClient(
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override

@@ -13,8 +13,11 @@ public class OpenAIQuestionClient extends Client<Topic, Question> {
     public static final String TOPIC = "topic";
 
     public OpenAIQuestionClient(
-            ChatClient chatClient, RetryTemplateWrapper retryTemplate, PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, promptTemplate);
+            ChatClient chatClient,
+            RetryTemplateWrapper retryTemplate,
+            String systemPrompt,
+            PromptTemplate promptTemplate) {
+        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override
