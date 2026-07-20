@@ -3,11 +3,15 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.model.PageChunk;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,32 +74,50 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
     }
 
     @Override
-    public String readNextPage(UUID documentId) {
+    public boolean chunkExists(UUID documentId, int pageNumber) {
+        Path pagePath = getPageDirectoryPath(documentId).resolve(String.valueOf(pageNumber));
+        return Files.exists(pagePath) && Files.isRegularFile(pagePath);
+    }
+
+    @Override
+    public List<PageChunk> listChunks(UUID documentId, int limit) {
         Path pageDirectory = getPageDirectoryPath(documentId);
 
         if (!Files.exists(pageDirectory) || !Files.isDirectory(pageDirectory)) {
-            return null;
+            return List.of();
         }
 
         try (var stream = Files.list(pageDirectory)) {
-            Path nextPagePath = stream.filter(Files::isRegularFile)
-                    .min((p1, p2) -> {
-                        Integer page1 = Integer.parseInt(p1.getFileName().toString());
-                        Integer page2 = Integer.parseInt(p2.getFileName().toString());
-                        return page1.compareTo(page2);
+            return stream.filter(Files::isRegularFile)
+                    .sorted(Comparator.comparingInt(
+                            path -> Integer.parseInt(path.getFileName().toString())))
+                    .limit(limit)
+                    .map(path -> {
+                        try {
+                            int pageNumber = Integer.parseInt(path.getFileName().toString());
+                            return new PageChunk(pageNumber, Files.readString(path));
+                        } catch (Exception e) {
+                            throw new FileSystemException(e.getMessage());
+                        }
                     })
-                    .orElse(null);
-
-            if (nextPagePath == null) {
-                return null;
-            }
-
-            return Files.readString(nextPagePath);
+                    .toList();
+        } catch (FileSystemException e) {
+            throw e;
         } catch (Exception e) {
-            String errorMessage = String.format("Unable to read next page for document %s", documentId);
+            String errorMessage = String.format("Unable to list page chunks for document %s", documentId);
             log.error(errorMessage, e);
             throw new FileSystemException(errorMessage);
         }
+    }
+
+    @Override
+    public Optional<PageChunk> readNextChunk(UUID documentId) {
+        return listChunks(documentId, 1).stream().findFirst();
+    }
+
+    @Override
+    public String readNextPage(UUID documentId) {
+        return readNextChunk(documentId).map(PageChunk::content).orElse(null);
     }
 
     @Override
@@ -190,28 +212,6 @@ public class FileSystemDocumentStorage implements IFileSystemDocumentStorage {
             }
         } catch (Exception e) {
             String errorMessage = String.format("Unable to delete document %s", documentId);
-            log.error(errorMessage, e);
-            throw new FileSystemException(errorMessage);
-        }
-    }
-
-    @Override
-    public void deleteAll() {
-        if (basePathDoesNotExist()) {
-            log.warn("Tried to delete base path {} but it does not exist", basePath);
-            return;
-        }
-
-        try (var paths = Files.walk(basePath)) {
-            paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
-                try {
-                    Files.deleteIfExists(path);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (Exception e) {
-            String errorMessage = String.format("Unable to delete base path %s", basePath);
             log.error(errorMessage, e);
             throw new FileSystemException(errorMessage);
         }

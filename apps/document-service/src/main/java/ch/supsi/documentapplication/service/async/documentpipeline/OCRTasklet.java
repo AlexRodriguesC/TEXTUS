@@ -39,6 +39,7 @@ public class OCRTasklet extends ProcessingTasklet {
     private final IFileSystemDocumentStorage documentStorage;
     private final LanguageDetector languageDetector;
     private final String tessdataPath;
+    private final int maxParallelism;
 
     @Autowired
     public OCRTasklet(
@@ -48,6 +49,7 @@ public class OCRTasklet extends ProcessingTasklet {
         this.documentStorage = documentStorage;
         this.languageDetector = languageDetector;
         this.tessdataPath = appProperties.getTessdataPath();
+        this.maxParallelism = appProperties.getMaxParallelism();
     }
 
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
@@ -92,7 +94,7 @@ public class OCRTasklet extends ProcessingTasklet {
     private byte[] performOcr(PDDocument pdfDocument, String tesseractLanguageCode) throws Exception {
         PDFRenderer renderer = new PDFRenderer(pdfDocument);
 
-        int threads = Math.min(4, Runtime.getRuntime().availableProcessors());
+        int threads = maxParallelism;
 
         long ocrStart = System.currentTimeMillis();
         List<Future<File>> futures = new ArrayList<>();

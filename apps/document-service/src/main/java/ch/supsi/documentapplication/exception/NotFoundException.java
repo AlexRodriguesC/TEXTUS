@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.exception;
 
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 
 public class NotFoundException extends ApplicationException {
@@ -30,5 +31,9 @@ public class NotFoundException extends ApplicationException {
 
     public static NotFoundException learningPathNotFound(Long spaceId) {
         return new NotFoundException(format("Learning path for space with id %d not found", spaceId));
+    }
+
+    public static NotFoundException chatNotFound(UUID chatId) {
+        return new NotFoundException(format("Chat with id %s not found", chatId));
     }
 }

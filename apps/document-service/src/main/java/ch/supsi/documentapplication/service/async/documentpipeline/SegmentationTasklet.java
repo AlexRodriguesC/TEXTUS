@@ -55,6 +55,11 @@ public class SegmentationTasklet extends ProcessingTasklet {
             }
 
             Integer pageNumber = page + 1;
+            if (fileSystemDocumentStorage.chunkExists(getDocumentIdAsUUID(), pageNumber)) {
+                log.debug("Chunk for page {} already exists for document {}, skipping", pageNumber, documentId);
+                continue;
+            }
+
             String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
             log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
         }

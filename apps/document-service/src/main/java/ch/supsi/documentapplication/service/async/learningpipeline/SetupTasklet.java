@@ -22,8 +22,8 @@ public class SetupTasklet extends ProcessingTasklet {
     @Value("#{jobParameters['SPACE_ID']}")
     protected Long spaceId;
 
-    @Value("#{stepExecution.jobExecution.id}")
-    private Long executionId;
+    @Value("#{stepExecution.jobExecution.jobInstanceId}")
+    private Long jobInstanceId;
 
     private final IDatabaseSpaceStorage databaseSpaceStorage;
     private final IDatabasePathStorage databaseLearningStorage;
@@ -46,7 +46,7 @@ public class SetupTasklet extends ProcessingTasklet {
             return RepeatStatus.FINISHED;
         }
 
-        Long pathId = databaseLearningStorage.createLearningPath(optSpace.get().getId(), executionId);
+        Long pathId = databaseLearningStorage.createLearningPath(optSpace.get().getId(), jobInstanceId);
         chunkContext
                 .getStepContext()
                 .getStepExecution()

@@ -21,8 +21,8 @@ public class SetupTasklet implements Tasklet {
     @Value("#{jobParameters['SPACE_ID']}")
     protected Long spaceId;
 
-    @Value("#{stepExecution.jobExecution.id}")
-    private Long executionId;
+    @Value("#{stepExecution.jobExecution.jobInstanceId}")
+    private Long jobInstanceId;
 
     private final DatabaseSpaceStorage databaseSpaceStorage;
 
@@ -42,7 +42,7 @@ public class SetupTasklet implements Tasklet {
             return RepeatStatus.FINISHED;
         }
 
-        Long mapId = databaseSpaceStorage.createMindMap(optSpace.get().getId(), executionId);
+        Long mapId = databaseSpaceStorage.createMindMap(optSpace.get().getId(), jobInstanceId);
         chunkContext
                 .getStepContext()
                 .getStepExecution()

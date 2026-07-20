@@ -14,7 +14,7 @@ public class AppProperties {
     private int maxDocumentSize;
 
     private int maxChunksPerStep;
-    private int topicExtractionBatchSize;
+    private int maxParallelism;
 
     private String tessdataPath;
     private int ocrThreshold;

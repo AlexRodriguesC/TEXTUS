@@ -5,6 +5,8 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.*;
+import ch.supsi.documentapplication.service.batch.BatchJobRecoveryService;
+import ch.supsi.documentapplication.service.batch.JobExecutionResolver;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
@@ -28,6 +30,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
     private final JobOperator jobOperator;
     private final Job documentJob;
     private final JobRepository jobRepository;
+    private final BatchJobRecoveryService batchJobRecoveryService;
 
     @Autowired
     public DocumentService(
@@ -36,13 +39,15 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
             Job documentJob,
-            JobRepository jobRepository) {
+            JobRepository jobRepository,
+            BatchJobRecoveryService batchJobRecoveryService) {
         super(spaceStorage);
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.jobOperator = asyncJobOperator;
         this.documentJob = documentJob;
         this.jobRepository = jobRepository;
+        this.batchJobRecoveryService = batchJobRecoveryService;
     }
 
     @Override
@@ -85,7 +90,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
 
         documents.forEach(document -> {
             var jobId = document.getJobId();
-            var jobExecution = jobRepository.getJobExecution(jobId);
+            var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, jobId);
             if (jobExecution == null) {
                 document.setStatus(DocumentStatus.FAILED);
                 return;
@@ -99,6 +104,38 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         });
 
         return documents;
+    }
+
+    @Override
+    public void retryDocument(String owner, Long spaceId, Long documentId) {
+        getSpaceOrThrow(owner, spaceId);
+
+        var documents = databaseDocumentStorage.getDocuments(spaceId);
+        var document = documents.stream()
+                .filter(doc -> doc.getId().equals(documentId))
+                .findFirst()
+                .orElseThrow(() -> NotFoundException.documentNotFoundException(documentId));
+
+        var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, document.getJobId());
+        if (jobExecution == null) {
+            throw StateConflictException.documentNotRetryable(documentId);
+        }
+
+        if (jobExecution.isRunning()) {
+            throw StateConflictException.documentStillProcessing(documentId);
+        }
+
+        if (!jobExecution.getStatus().isUnsuccessful()) {
+            throw StateConflictException.documentNotRetryable(documentId);
+        }
+
+        try {
+            batchJobRecoveryService.recoverAndRestart(jobExecution);
+        } catch (Exception e) {
+            String message = String.format("Failed to restart job for document %d", documentId);
+            log.error(message, e);
+            throw new JobFailedToStartException(message);
+        }
     }
 
     @Override
@@ -119,7 +156,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
             throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
         }
 
-        JobExecution jobExecution = jobRepository.getJobExecution(document.getJobId());
+        JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, document.getJobId());
         if (jobExecution != null && jobExecution.isRunning()) {
             try {
                 jobOperator.stop(jobExecution);

@@ -1,61 +1,194 @@
 import ChatInput from "@/components/ChatInput.tsx";
+import useChatContext from "@/hooks/useChatContext.ts";
+import useChatMessages from "@/hooks/useChatMessages.ts";
+import useChatStream from "@/hooks/useChatStream.ts";
+import useChats, { getChatsQueryKey } from "@/hooks/useChats.ts";
+import useModels from "@/hooks/useModels.ts";
+import useSpaceId from "@/hooks/useSpaceId.ts";
+import type { ChatMessageDTO } from "@/types/chat.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 
-interface Message {
-  role: "user" | "system";
-  message: string;
+type DisplayMessage = ChatMessageDTO & { id: string };
+
+type SpaceChatConversationProps = {
+  chatId: string;
+  chatTitle?: string;
+  models: { value: string; label: string }[];
+  defaultModel?: string;
+  sendMessage: ReturnType<typeof useChatStream>["sendMessage"];
+  isStreaming: boolean;
+  spaceId: number;
+};
+
+function SpaceChatConversation({
+  chatId,
+  chatTitle,
+  models,
+  defaultModel,
+  sendMessage,
+  isStreaming,
+  spaceId,
+}: SpaceChatConversationProps) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [draftMessages, setDraftMessages] = useState<DisplayMessage[]>([]);
+  const [streamingAssistant, setStreamingAssistant] = useState("");
+
+  const { messages: historyMessages, refetch } = useChatMessages(chatId);
+
+  const displayedMessages = useMemo(() => {
+    const history = historyMessages.map((message, index) => ({
+      ...message,
+      id: `${message.timestamp}-${index}`,
+    }));
+    return [...history, ...draftMessages];
+  }, [draftMessages, historyMessages]);
+
+  const messagesContainerRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    },
+    [],
+  );
+
+  const handleSubmit = useCallback(
+    async (message: string, model?: string) => {
+      if (isStreaming) {
+        return;
+      }
+
+      const userMessage: DisplayMessage = {
+        id: `draft-user-${Date.now()}`,
+        role: "user",
+        content: message,
+        timestamp: new Date().toISOString(),
+      };
+
+      setDraftMessages((current) => [...current, userMessage]);
+      setStreamingAssistant("");
+
+      try {
+        await sendMessage(chatId, message, model, (token) => {
+          setStreamingAssistant((current) => current + token);
+        });
+        await refetch();
+        await queryClient.invalidateQueries({ queryKey: getChatsQueryKey(spaceId) });
+      } finally {
+        setDraftMessages([]);
+        setStreamingAssistant("");
+      }
+    },
+    [chatId, isStreaming, queryClient, refetch, sendMessage, spaceId],
+  );
+
+  return (
+    <>
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 min-h-0 pt-3 overflow-y-auto overscroll-behavior-contain flex flex-col"
+      >
+        {displayedMessages.length === 0 && !streamingAssistant && (
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground text-center px-6">
+            {t("chat.empty.messages", { title: chatTitle ?? t("chat.new") })}
+          </div>
+        )}
+        {displayedMessages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`max-w-[85%] rounded-xl px-4 py-2 text-sm whitespace-pre-wrap wrap-break-word ${
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted"
+              }`}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {streamingAssistant && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] rounded-none px-4 py-2 text-sm whitespace-pre-wrap wrap-break-word bg-muted">
+              {streamingAssistant}
+            </div>
+          </div>
+        )}
+        {isStreaming && !streamingAssistant && (
+          <div className="flex justify-start">
+            <div className="rounded-none px-4 py-2 bg-muted">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex p-3 w-full shrink-0 place-content-center">
+        <ChatInput
+          onSubmit={(message, model) => void handleSubmit(message, model)}
+          models={models}
+          defaultModel={defaultModel}
+          disabled={isStreaming}
+        />
+      </div>
+    </>
+  );
 }
 
-const messages: Message[] = [
-  {
-    role: "user",
-    message:
-      "Can you summarize the main findings of the attached research paper?",
-  },
-  {
-    role: "system",
-    message:
-      "Sure! The paper focuses on three core findings. First, the proposed model outperforms baseline approaches by a significant margin on the benchmark dataset, achieving a 12% improvement in accuracy. Second, the authors show that this improvement holds consistently across different data distributions, suggesting the method generalizes well rather than overfitting to a specific dataset. Third, they identify a key architectural component responsible for most of the performance gain, which they validate through a series of ablation studies. Overall, the paper argues that this component could be integrated into existing architectures with minimal changes, making the approach broadly applicable rather than requiring a full redesign of current systems.",
-  },
-  {
-    role: "user",
-    message: "Interesting. Does the paper mention any limitations?",
-  },
-  {
-    role: "system",
-    message:
-      "Yes, the authors acknowledge a few limitations. The main one is computational cost: while the method improves accuracy, it also increases training time by roughly 30% compared to the baseline, which could be a barrier for teams with limited compute resources. They also note that their evaluation was limited to English-language datasets, so it's unclear how well the approach generalizes to other languages or multilingual settings. Finally, they mention that the ablation studies, while informative, were only run on a subset of the full benchmark due to time constraints, so some of the component-level conclusions might benefit from further validation on the complete dataset in future work.",
-  },
-  { role: "user", message: "Got it, thanks!" },
-];
-
 function SpaceChat() {
-  return (
-    <div className="flex flex-col w-full h-full items-center">
-      <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col overflow-hidden p-0">
-        <div className="flex-1 overflow-y-auto flex flex-col gap-4 p-4">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
-                {msg.message}
-              </div>
-            </div>
-          ))}
-        </div>
+  const { t } = useTranslation();
+  const { spaceId } = useSpaceId();
+  const { chats, isLoading: isChatsLoading } = useChats();
+  const { models, defaultModel, isLoading: isModelsLoading } = useModels();
+  const { sendMessage, isStreaming } = useChatStream();
+  const { selectedChatId } = useChatContext();
 
-        <div className="flex p-3 border-t w-full shrink-0 place-content-center">
-          <ChatInput
-            onSubmit={() => {}}
-            models={[{ label: "abc", value: "123" }]}
-          />
+  const { isLoading: isHistoryLoading } = useChatMessages(selectedChatId);
+
+  const isLoading = isChatsLoading || isHistoryLoading || isModelsLoading;
+  const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+
+  return (
+    <div className="flex w-full h-full overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 items-center overflow-hidden">
+        <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col min-h-0 overflow-hidden">
+          {isLoading ? (
+            <div className="flex flex-1 items-center justify-center text-muted-foreground gap-2">
+              <LoadingScreen/>
+            </div>
+          ) : selectedChatId ? (
+            <SpaceChatConversation
+              key={selectedChatId}
+              chatId={selectedChatId}
+              chatTitle={selectedChat?.title}
+              models={models}
+              defaultModel={defaultModel}
+              sendMessage={sendMessage}
+              isStreaming={isStreaming}
+              spaceId={spaceId}
+            />
+          ) : (
+            <>
+              <div className="flex flex-1 min-h-0 items-center justify-center text-sm text-muted-foreground text-center px-6">
+                {t("chat.empty.messages", { title: t("chat.new") })}
+              </div>
+              <div className="flex p-3 w-full shrink-0 place-content-center">
+                <ChatInput
+                  onSubmit={() => undefined}
+                  models={models}
+                  defaultModel={defaultModel}
+                  disabled
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

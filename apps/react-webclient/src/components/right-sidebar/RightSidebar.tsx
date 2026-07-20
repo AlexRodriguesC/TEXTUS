@@ -1,3 +1,4 @@
+import ChatHistorySidebar from "@/components/right-sidebar/ChatHistorySidebar.tsx";
 import {
   Sidebar,
   SidebarContent,
@@ -15,8 +16,9 @@ export function RightSidebar() {
       <SidebarHeader>
         <SidebarTrigger icon={<PanelRightIcon />} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex min-h-0 flex-col">
         <SidebarSpaceInfo />
+        <ChatHistorySidebar />
       </SidebarContent>
       <SidebarFooter className="p-0">
         <RightSidebarFooter />

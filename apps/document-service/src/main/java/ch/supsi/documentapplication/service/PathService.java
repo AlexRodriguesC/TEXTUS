@@ -7,6 +7,7 @@ import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.LearningPath;
 import ch.supsi.documentapplication.model.learn.LearningPathStatus;
+import ch.supsi.documentapplication.service.batch.JobExecutionResolver;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecution;
@@ -73,7 +74,7 @@ public class PathService extends ch.supsi.documentapplication.service.Service im
         }
 
         var jobId = learningPath.getJobId();
-        var jobExecution = jobRepository.getJobExecution(jobId);
+        var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, jobId);
         if (jobExecution == null) {
             return LearningPathStatus.NOT_CREATED;
         }
@@ -89,7 +90,7 @@ public class PathService extends ch.supsi.documentapplication.service.Service im
     public void deleteLearningPath(String owner, Long spaceId) {
         var learningPath = getLearningPathOrThrow(owner, spaceId);
 
-        JobExecution jobExecution = jobRepository.getJobExecution(learningPath.getJobId());
+        JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, learningPath.getJobId());
         if (jobExecution != null && jobExecution.isRunning()) {
             try {
                 jobOperator.stop(jobExecution);

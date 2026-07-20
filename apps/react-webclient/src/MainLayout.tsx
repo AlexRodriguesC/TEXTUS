@@ -11,6 +11,7 @@ import LayoutHeader from "@/LayoutHeader.tsx";
 import useRightSidebarOpen from "@/hooks/useRightSidebarOpen.tsx";
 import RightSidebarToggle from "@/RightSidebarToggle.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
+import { ChatProvider } from "@/provider/ChatProvider.tsx";
 
 interface MainLayoutProps extends PropsWithChildren {
   sidebarEnabled: boolean;
@@ -71,15 +72,12 @@ function LayoutInner({
   const { spaceId } = useSpaceId();
   const { tutorialEnabled } = useTutorial();
   const showRightSidebar = spaceId !== undefined && !tutorialEnabled;
+  const chatEnabled = spaceId !== undefined;
 
   const rightTogglePortalRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <SidebarProvider
-      open={leftOpen}
-      onOpenChange={setLeftOpen}
-      className="h-svh min-h-0 overflow-hidden"
-    >
+  const layout = (
+    <>
       <AppSidebar />
       <SidebarInset className="bg-transparent flex flex-col flex-1 min-w-0 h-full">
         <LayoutHeader
@@ -101,6 +99,16 @@ function LayoutInner({
           <RightSidebar />
         </SidebarProvider>
       )}
+    </>
+  );
+
+  return (
+    <SidebarProvider
+      open={leftOpen}
+      onOpenChange={setLeftOpen}
+      className="h-svh min-h-0 overflow-hidden"
+    >
+      {chatEnabled ? <ChatProvider>{layout}</ChatProvider> : layout}
     </SidebarProvider>
   );
 }

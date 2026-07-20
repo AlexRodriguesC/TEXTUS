@@ -12,4 +12,12 @@ public class StateConflictException extends ApplicationException {
         return new StateConflictException(
                 "Document with id " + documentId + " cannot be deleted because a mind map was already generated");
     }
+
+    public static StateConflictException documentStillProcessing(Long documentId) {
+        return new StateConflictException("Document with id " + documentId + " is still being processed");
+    }
+
+    public static StateConflictException documentNotRetryable(Long documentId) {
+        return new StateConflictException("Document with id " + documentId + " cannot be retried in its current state");
+    }
 }

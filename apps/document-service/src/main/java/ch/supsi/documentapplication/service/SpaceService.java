@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.exception.JobFailedToStartException;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.service.batch.JobExecutionResolver;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
@@ -105,7 +106,7 @@ public class SpaceService extends ch.supsi.documentapplication.service.Service i
         }
 
         var jobId = mindMap.getJobId();
-        var jobExecution = jobRepository.getJobExecution(jobId);
+        var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, jobId);
         if (jobExecution == null) {
             return MindMapStatus.NOT_CREATED;
         }

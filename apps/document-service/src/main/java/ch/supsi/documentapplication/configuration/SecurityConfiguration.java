@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.configuration;
 
 import ch.supsi.documentapplication.RestAuthenticationEntryPoint;
 import ch.supsi.documentapplication.service.JwtFilter;
+import jakarta.servlet.DispatcherType;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +59,11 @@ public class SecurityConfiguration {
             CorsConfigurationSource corsConfigurationSource,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint) {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                .authorizeHttpRequests(auth -> auth
+                        // SSE streaming (Flux) continues on an ASYNC dispatch after the initial authenticated request.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC)
+                        .permitAll()
+                        .requestMatchers(
                                 "/actuator/**",
                                 "/api/v1/auth/**",
                                 "/swagger-ui/**",

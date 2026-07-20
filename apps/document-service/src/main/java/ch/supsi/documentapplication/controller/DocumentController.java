@@ -57,6 +57,28 @@ public class DocumentController {
         return ResponseEntity.ok(new DocumentsResponseDTO(statusesDto));
     }
 
+    @PostMapping("/{documentId}/retry")
+    @Operation(summary = "Retry a failed document processing job", description = """
+            Restarts the document processing pipeline from the last checkpoint.
+            Only documents in a failed state can be retried.
+            """)
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "202", description = "Document processing retry accepted"),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Document or space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "409", description = "Document is not in a retryable state", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
+    public ResponseEntity<@NotNull Void> retryDocument(
+            @Parameter(description = "The ID of the space containing the document", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+            @Parameter(description = "Unique identifier of the document to retry", required = true) @PathVariable("documentId") Long documentId,
+            @Parameter(hidden = true) Authentication authentication) {
+        String owner = authentication.getName();
+        documentService.retryDocument(owner, spaceId, documentId);
+        return ResponseEntity.accepted().build();
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a document to the specified space", description = """
             Uploads a single document file for asynchronous processing.

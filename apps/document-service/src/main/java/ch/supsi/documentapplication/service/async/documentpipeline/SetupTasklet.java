@@ -22,8 +22,8 @@ public class SetupTasklet extends ProcessingTasklet {
 
     private final IDatabaseDocumentStorage databaseDocumentStorage;
 
-    @Value("#{stepExecution.jobExecution.id}")
-    private Long executionId;
+    @Value("#{stepExecution.jobExecution.jobInstanceId}")
+    private Long jobInstanceId;
 
     @Value("#{jobParameters['DOCUMENT_NAME']}")
     private String documentName;
@@ -36,7 +36,27 @@ public class SetupTasklet extends ProcessingTasklet {
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext) {
 
-        Long databaseDocId = databaseDocumentStorage.create(spaceId, executionId, documentName);
+        var jobExecutionContext = chunkContext.getStepContext().getJobExecutionContext();
+        if (jobExecutionContext.containsKey(DATABASE_DOCUMENT_ID)) {
+            log.debug("Setup already completed for job instance {}, skipping", jobInstanceId);
+            return RepeatStatus.FINISHED;
+        }
+
+        var existingDocumentId = databaseDocumentStorage.findIdByJobId(jobInstanceId);
+        if (existingDocumentId.isPresent()) {
+            log.debug(
+                    "Document record already exists for job instance {}, reusing id {}",
+                    jobInstanceId,
+                    existingDocumentId.get());
+            chunkContext
+                    .getStepContext()
+                    .getStepExecution()
+                    .getExecutionContext()
+                    .put(DATABASE_DOCUMENT_ID, existingDocumentId.get());
+            return RepeatStatus.FINISHED;
+        }
+
+        Long databaseDocId = databaseDocumentStorage.create(spaceId, jobInstanceId, documentName);
         chunkContext.getStepContext().getStepExecution().getExecutionContext().put(DATABASE_DOCUMENT_ID, databaseDocId);
 
         return RepeatStatus.FINISHED;

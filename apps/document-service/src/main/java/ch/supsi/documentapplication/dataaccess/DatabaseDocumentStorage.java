@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.dataaccess;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.*;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -64,6 +65,15 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
             log.error("Database document creation failed", e);
             throw NotFoundException.spaceNotFoundException(spaceId);
         }
+    }
+
+    @Override
+    public Optional<Long> findIdByJobId(Long jobId) {
+        return jdbcClient
+                .sql("SELECT documents.find_document_id_by_job(:job_id)")
+                .param(JOB_ID, jobId)
+                .query(Long.class)
+                .optional();
     }
 
     @Override

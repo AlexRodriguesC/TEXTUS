@@ -186,6 +186,11 @@
     },
     "status": {
       "overview": "Documents status"
+    },
+    "retry": {
+      "action": "Retry processing",
+      "success": "Document processing restarted.",
+      "error": "Failed to restart document processing."
     }
   },
   "mindmap": {
@@ -272,5 +277,17 @@
   "loading": {
     "title": "Loading brilliance",
     "description": "Great minds take a second. So do we."
+  },
+  "chat": {
+    "new": "New chat",
+    "history": "History",
+    "empty": {
+      "list": "No conversations yet.",
+      "messages": "Start a conversation in \"{{title}}\"."
+    },
+    "delete": {
+      "title": "Delete chat?",
+      "description": "This conversation and its messages will be permanently deleted."
+    }
   }
 }

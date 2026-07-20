@@ -4,18 +4,21 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.ApplicationException
-import ch.supsi.documentapplication.exception.DocumentDomainException
 import ch.supsi.documentapplication.exception.JobFailedToStartException
 import ch.supsi.documentapplication.exception.NotFoundException
+import ch.supsi.documentapplication.exception.StateConflictException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Document
-import ch.supsi.documentapplication.model.DocumentStatus
 import ch.supsi.documentapplication.model.FsDocument
 import ch.supsi.documentapplication.model.Space
+import ch.supsi.documentapplication.service.batch.BatchJobRecoveryService
 import ch.supsi.documentapplication.service.document.DocumentService
 import org.springframework.batch.core.job.Job
+import org.springframework.batch.core.job.JobExecution
+import org.springframework.batch.core.job.JobInstance
 import org.springframework.batch.core.job.parameters.JobParameters
 import org.springframework.batch.core.launch.JobOperator
+import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.multipart.MultipartFile
@@ -29,9 +32,10 @@ class DocumentServiceSpec extends Specification {
     private final JobOperator jobOperator = Mock()
     private final Job pipelineJob = Mock()
     private final JobRepository jobRepository = Mock()
+    private final BatchJobRecoveryService batchJobRecoveryService = Mock()
 
     private final DocumentService service =
-            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob, jobRepository)
+            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob, jobRepository, batchJobRecoveryService)
 
 
     Space buildSpace(Long id, String owner) {
@@ -138,5 +142,92 @@ class DocumentServiceSpec extends Specification {
         1 * spaceStorage.read(10L) >> space
         thrown(UnauthorizedException)
         0 * databaseDocumentStorage._
+    }
+
+    def "should restart failed document job"() {
+        given:
+        String owner = "alice"
+        Long spaceId = 10L
+        Long documentId = 1L
+        Long jobId = 99L
+        Optional<Space> space = buildOptSpace(spaceId, owner)
+        Document document = new Document("doc.pdf", documentId, jobId)
+        JobInstance jobInstance = Mock()
+        JobExecution jobExecution = Mock()
+
+        when:
+        service.retryDocument(owner, spaceId, documentId)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [document]
+        1 * jobRepository.getJobInstance(jobId) >> jobInstance
+        1 * jobRepository.getLastJobExecution(jobInstance) >> jobExecution
+        1 * jobExecution.isRunning() >> false
+        1 * jobExecution.getStatus() >> BatchStatus.FAILED
+        1 * batchJobRecoveryService.recoverAndRestart(jobExecution)
+    }
+
+    def "should throw not found when retrying unknown document"() {
+        given:
+        String owner = "alice"
+        Long spaceId = 10L
+        Optional<Space> space = buildOptSpace(spaceId, owner)
+
+        when:
+        service.retryDocument(owner, spaceId, 42L)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> []
+        thrown(NotFoundException)
+        0 * jobOperator._
+    }
+
+    def "should throw conflict when retrying a running document job"() {
+        given:
+        String owner = "alice"
+        Long spaceId = 10L
+        Long documentId = 1L
+        Optional<Space> space = buildOptSpace(spaceId, owner)
+        Document document = new Document("doc.pdf", documentId, 99L)
+        JobInstance jobInstance = Mock()
+        JobExecution jobExecution = Mock()
+
+        when:
+        service.retryDocument(owner, spaceId, documentId)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [document]
+        1 * jobRepository.getJobInstance(99L) >> jobInstance
+        1 * jobRepository.getLastJobExecution(jobInstance) >> jobExecution
+        1 * jobExecution.isRunning() >> true
+        thrown(StateConflictException)
+        0 * jobOperator._
+    }
+
+    def "should throw conflict when retrying a completed document job"() {
+        given:
+        String owner = "alice"
+        Long spaceId = 10L
+        Long documentId = 1L
+        Optional<Space> space = buildOptSpace(spaceId, owner)
+        Document document = new Document("doc.pdf", documentId, 99L)
+        JobInstance jobInstance = Mock()
+        JobExecution jobExecution = Mock()
+
+        when:
+        service.retryDocument(owner, spaceId, documentId)
+
+        then:
+        1 * spaceStorage.read(spaceId) >> space
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [document]
+        1 * jobRepository.getJobInstance(99L) >> jobInstance
+        1 * jobRepository.getLastJobExecution(jobInstance) >> jobExecution
+        1 * jobExecution.isRunning() >> false
+        1 * jobExecution.getStatus() >> BatchStatus.COMPLETED
+        thrown(StateConflictException)
+        0 * jobOperator._
     }
 }

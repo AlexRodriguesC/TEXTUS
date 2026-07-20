@@ -2,13 +2,14 @@ import useDocuments, {
   type Document,
   type DocumentStatus,
 } from "@/hooks/useDocuments.ts";
-import { Check, FileUp, X } from "lucide-react";
+import { Check, FileUp, RotateCcw, X } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import * as React from "react";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
 import { useTranslation } from "react-i18next";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useMindMap from "@/hooks/useMindMap.ts";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Tooltip,
   TooltipContent,
@@ -37,7 +38,7 @@ const statusToIcon = (status: DocumentStatus): React.ReactNode => {
 function SidebarDocumentInfo({ document }: SidebarDocumentInfoProps) {
   const { t } = useTranslation();
   const { spaceId } = useSpaceId();
-  const { deleteDocument } = useDocuments(spaceId);
+  const { deleteDocument, retryDocument, isRetrying } = useDocuments(spaceId);
   const { status } = useMindMap(spaceId);
 
   return (
@@ -53,13 +54,26 @@ function SidebarDocumentInfo({ document }: SidebarDocumentInfoProps) {
           <TooltipContent>{document.name}</TooltipContent>
         </Tooltip>
       </div>
-      <DestructiveActionButton
-        disabled={status == "GENERATING" || status == "DONE"}
-        title={t("document.delete", { documentName: document.name })}
-        onConfirm={() => {
-          deleteDocument(document.id);
-        }}
-      />
+      <div className={"flex flex-row gap-1 items-center"}>
+        {document.status === "FAILED" && (
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={isRetrying || status == "GENERATING" || status == "DONE"}
+            onClick={() => retryDocument(document.id)}
+            title={t("documents.retry.action")}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        )}
+        <DestructiveActionButton
+          disabled={status == "GENERATING" || status == "DONE"}
+          title={t("document.delete", { documentName: document.name })}
+          onConfirm={() => {
+            deleteDocument(document.id);
+          }}
+        />
+      </div>
     </div>
   );
 }

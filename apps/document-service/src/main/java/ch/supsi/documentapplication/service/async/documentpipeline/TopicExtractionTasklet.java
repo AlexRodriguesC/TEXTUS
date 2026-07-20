@@ -32,7 +32,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseTopicStorage databaseTopicStorage;
     private final OpenAITopicExtractionClient topicExtractionClient;
-    private final Integer batchSize;
+    private final AppProperties appProperties;
 
     @Autowired
     public TopicExtractionTasklet(
@@ -43,7 +43,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.databaseTopicStorage = databaseTopicStorage;
         this.topicExtractionClient = topicExtractionClient;
-        this.batchSize = appProperties.getTopicExtractionBatchSize();
+        this.appProperties = appProperties;
     }
 
     @Override
@@ -54,26 +54,31 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         var documents = databaseDocumentStorage.getDocuments(spaceId);
         List<Topic> existingTopics = new ArrayList<>();
 
-        try (ExecutorService executor = Executors.newFixedThreadPool(batchSize); ) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(appProperties.getMaxParallelism()); ) {
             for (var document : documents) {
                 List<Page> documentPages = databaseDocumentStorage.getPages(document.getId());
                 var documentTopics = databaseTopicStorage.getByDocumentId(document.getId());
+                existingTopics.addAll(documentTopics);
 
-                if (!documentTopics.isEmpty()) {
-                    existingTopics.addAll(documentTopics);
-                    continue;
-                }
-
-                for (List<Page> batch : partition(documentPages, batchSize)) {
+                for (List<Page> batch : partition(documentPages, appProperties.getMaxParallelism())) {
                     List<Topic> snapshot = List.copyOf(existingTopics);
 
                     List<CompletableFuture<List<Topic>>> futures = batch.stream()
+                            .filter(page -> databaseTopicStorage
+                                    .getByPageId(page.getId())
+                                    .isEmpty())
                             .map(page -> CompletableFuture.supplyAsync(
                                     () -> topicExtractionClient.getResult(Pair.of(page, snapshot)), executor))
                             .toList();
 
-                    for (int i = 0; i < batch.size(); i++) {
-                        Page page = batch.get(i);
+                    List<Page> pagesToProcess = batch.stream()
+                            .filter(page -> databaseTopicStorage
+                                    .getByPageId(page.getId())
+                                    .isEmpty())
+                            .toList();
+
+                    for (int i = 0; i < pagesToProcess.size(); i++) {
+                        Page page = pagesToProcess.get(i);
                         List<Topic> topics = futures.get(i).join();
                         existingTopics.addAll(topics);
 

@@ -11,5 +11,7 @@ public interface IDocumentService {
 
     List<Document> getDocuments(String owner, @NotNull Long spaceId);
 
+    void retryDocument(String owner, Long spaceId, Long documentId);
+
     void deleteDocument(String owner, Long spaceId, Long documentId);
 }

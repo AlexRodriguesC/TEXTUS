@@ -8,8 +8,9 @@ import type {
   DocumentsResponseDTO,
   ErrorResponseDTO,
 } from "@/client/model";
-import { successToast } from "@/lib/toasts.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { customInstance } from "@/client/mutator.ts";
+import { failureToast, successToast } from "@/lib/toasts.ts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 export interface Document {
@@ -30,10 +31,12 @@ function useDocuments(spaceId: number | undefined) {
         const queryData = query.state.data?.data;
         if (!queryData || !isDocumentResponseDTO(queryData)) return 2000;
         const documents = queryData.documents;
-        const allDone =
+        const allSettled =
           documents.length > 0 &&
-          documents.every((doc) => doc.status === "DONE");
-        return allDone ? false : 2000;
+          documents.every(
+            (doc) => doc.status === "DONE" || doc.status === "FAILED",
+          );
+        return allSettled ? false : 2000;
       },
       refetchIntervalInBackground: true,
       enabled: spaceId != undefined,
@@ -43,6 +46,26 @@ function useDocuments(spaceId: number | undefined) {
   let documents: Document[] = [];
 
   const deleteMutation = useDeleteDocument();
+
+  const retryMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      if (spaceId == null) return;
+      await customInstance(
+        `/api/v1/spaces/${spaceId}/documents/${documentId}/retry`,
+        { method: "POST" },
+      );
+    },
+    onSuccess: async () => {
+      if (spaceId == null) return;
+      await queryClient.invalidateQueries({
+        queryKey: getGetDocumentsQueryKey(spaceId),
+      });
+      successToast(t("documents.retry.success"));
+    },
+    onError: () => {
+      failureToast(t("documents.retry.error"));
+    },
+  });
 
   const deleteDocument = (documentId: number) => {
     if (spaceId == null) return;
@@ -70,6 +93,8 @@ function useDocuments(spaceId: number | undefined) {
   return {
     documents: documents,
     deleteDocument,
+    retryDocument: (documentId: number) => retryMutation.mutate(documentId),
+    isRetrying: retryMutation.isPending,
   };
 }
 
