@@ -7,7 +7,9 @@ import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
+import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
+import org.springframework.context.annotation.Bean
 import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
@@ -35,7 +37,7 @@ class OpenAISummarizationClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAISummarizationClient(chatClient, retryTemplate, promptTemplate)
+        client = new OpenAISummarizationClient(chatClient, retryTemplate, "", promptTemplate)
     }
 
     def "should call chatClient and return the summarized page"() {

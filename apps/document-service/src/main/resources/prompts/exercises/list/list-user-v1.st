@@ -13,18 +13,10 @@ The sequence must be objectively determinable from TOPIC; do not use any externa
 
 Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
-- The output object must have this exact shape:
-{
-  "request": "",
-  "answer": ["element1", "element2", "..."],
-  "explanation": ""
-}
-- "answer.answer" must be an array of at least three unique strings representing the correct order.
+- The answer array must contain at least three unique strings representing the correct order.
 - No element may be duplicated or omitted.
-- "explaination" must go through the elements one by one, in order, explaining why each is positioned where it is relative to the others, grounded only in TOPIC.
-- No keys other than "request" and "answer" are allowed at the top level.
-- No keys other than "answer" and "explaination" are allowed inside the answer object.
-- Output ONLY valid JSON.
+- The explanation must go through the elements one by one, in order, explaining why each is positioned where it is relative to the others, grounded only in TOPIC.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - Output no prose, no markdown, no code fences.
 
 How to choose structure:
@@ -39,13 +31,13 @@ Required internal procedure:
 3. Determine the one correct sequence for those elements based solely on TOPIC.
 4. Write a short request instructing the ordering task.
 5. Build the answer array in the correct order.
-6. Write an explaination that addresses every element individually, in sequence, justifying its position using only TOPIC content.
+6. Write an explanation that addresses every element individually, in sequence, justifying its position using only TOPIC content.
 7. Before answering, verify all of the following privately:
 - the array has at least three unique elements
 - the order is unambiguous and grounded solely in TOPIC
 - no element is missing, duplicated, or from outside TOPIC
-- the explaination covers every element in the array, not a subset
-- no extra keys are present anywhere
+- the explanation covers every element in the array, not a subset
+- the output conforms exactly to the provided schema
 8. If any check fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -57,5 +49,7 @@ Return only the final JSON object.
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
 Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+
+<format>
 
 TOPIC: <topic>

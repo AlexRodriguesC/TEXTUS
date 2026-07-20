@@ -4,12 +4,14 @@ import { useTranslation } from "react-i18next";
 import useLessonId from "@/hooks/useLessonId.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLesson from "@/hooks/useLesson.tsx";
-import { ArrowRight } from "lucide-react";
+import {ArrowLeft, ArrowRight} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import useLearningPath from "@/hooks/useLearningPath.ts";
 import PathConstants from "@/routing/pathConstants.ts";
 import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
+import {useQueryClient} from "@tanstack/react-query";
+import {getGetLearningPathQueryKey} from "@/client/generated/paths/paths.ts";
 
 interface LessonFooterProps {
     onCancel: () => void;
@@ -29,7 +31,8 @@ function LessonFooter({
                       }: LessonFooterProps) {
     const { t } = useTranslation();
     const { lessonId } = useLessonId();
-    const { strSpaceId } = useSpaceId();
+    const { spaceId, strSpaceId } = useSpaceId();
+    const queryClient = useQueryClient();
     const { lesson, exerciseLoading } = useLesson({ lessonId: lessonId });
     const { path } = useLearningPath();
 
@@ -59,7 +62,25 @@ function LessonFooter({
                 <ReviewTopicsButton strSpaceId={strSpaceId!} chapterId={chapterId} onCancel={onCancel} />
 
                 <Link to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: nextLesson?.id.toString() ?? "", chapterId: nextChapter?.index.toString() ?? ""}}>
-                    <Button className={"flex flex-row items-center"} disabled={lesson.isDeleting} onClick={() => lesson.deleteExercises()}>
+                    <Button className={"flex flex-row items-center"} onClick={() => queryClient.invalidateQueries({ queryKey: getGetLearningPathQueryKey(spaceId)})}>
+                        <ArrowRight size={16} />
+                        {t("button.next")}
+                    </Button>
+                </Link>
+            </>
+        }
+
+        if (lesson.isCheckpoint() && lesson.topics.length == 0) {
+            return <>
+                <Link to={PathConstants.SPACE_LEARN} params={{spaceId: strSpaceId}}>
+                    <Button className={"flex flex-row items-center"} disabled={exerciseLoading} onClick={onCancel} variant={"outline"}>
+                        <ArrowLeft size={16} />
+                        {t("button.back")}
+                    </Button>
+                </Link>
+
+                <Link to={PathConstants.LESSON} params={{spaceId: strSpaceId!, lessonId: nextLesson?.id.toString() ?? "", chapterId: nextChapter?.index.toString() ?? ""}}>
+                    <Button className={"flex flex-row items-center"}>
                         <ArrowRight size={16} />
                         {t("button.next")}
                     </Button>

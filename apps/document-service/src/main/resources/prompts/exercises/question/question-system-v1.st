@@ -18,22 +18,6 @@ Exercise objective:
 - No distractor may be a valid alternative correct answer.
 - No distractor may be identical or near-identical to the correct answer or to each other.
 
-Output schema:
-{
-  "request": "",
-  "answer": "",
-  "explanation": "",
-  "distractor": ["", "..."]
-}
-
-Field constraints:
-- "question": one clear question, plain text.
-- "answer.answer": the single correct answer, either "true", "false", or a specific text value, grounded solely in TOPIC.
-- "answer.explanation": a concise explanation of why this answer is correct, grounded only in TOPIC.
-- "distractor": array of incorrect answer strings, same format as "answer.answer" (e.g. all boolean if the question is true/false, all text otherwise).
-- No keys other than "question", "answer", "distractor" at the top level.
-- No keys other than "answer" and "explanation" inside the answer object.
-
 Hard constraints:
 - Exactly one correct answer must exist.
 - True/false questions must have exactly one distractor (the opposite value).
@@ -41,7 +25,7 @@ Hard constraints:
 - No distractor may be correct, ambiguous, or overlap in meaning with the correct answer.
 - No distractor may duplicate another distractor.
 - Every element must be traceable directly to TOPIC.
-- Output ONLY valid JSON.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - When writing string values, never use double quotes (") inside the text. Use single quotes or rewrite to avoid quoting.
 
 Required internal procedure:
@@ -56,7 +40,7 @@ Required internal procedure:
 - distractor count and format match the chosen question type
 - no distractor is correct, duplicated, or ambiguous
 - everything is grounded solely in TOPIC
-- no extra keys exist anywhere
+- the output conforms exactly to the provided schema
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -64,3 +48,5 @@ Do not reveal internal reasoning.
 Do not output intermediate drafts.
 Do not output the validation results.
 Return only the final JSON object.
+
+<format>

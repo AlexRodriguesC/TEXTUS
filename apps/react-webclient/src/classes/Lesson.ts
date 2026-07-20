@@ -94,6 +94,12 @@ class Lesson {
         return this.completed;
     }
 
+    shouldFetchNextExercise(): boolean {
+        if (this.completed) return false;
+        if (this.isCheckpoint()) return this.topics.length > 0;
+        return true;
+    }
+
     static isLessonResponse(
         resp: ErrorResponseDTO | LessonResponseDTO | { status: number },
     ): resp is { status: 200; data: LessonResponseDTO } {

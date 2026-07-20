@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.Client
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.PromptTemplate
+import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
 import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
@@ -21,6 +22,7 @@ class ClientSpec extends Specification {
 
     ChatClient chatClient = Mock()
     PromptTemplate promptTemplate = Mock()
+    BeanOutputConverter<?> beanOutputConverter = Mock()
     RetryTemplateWrapper retryTemplate
 
     def setup() {
@@ -32,7 +34,7 @@ class ClientSpec extends Specification {
 
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new Client<String, String>(chatClient, retryTemplate, promptTemplate) {
+        client = new Client<String, String>(chatClient, beanOutputConverter, retryTemplate, "", promptTemplate) {
             @Override
             protected String call(String input) {
                 throw new TransientAiException("abc")
@@ -57,7 +59,7 @@ class ClientSpec extends Specification {
         def prompt = client.getPrompt(params)
 
         then: "the prompt contains the rendered user message"
-        prompt.instructions.size() == 1
-        prompt.instructions[0].text == "rendered prompt"
+        prompt.instructions.size() == 2
+        prompt.instructions[1].text == "rendered prompt"
     }
 }

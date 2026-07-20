@@ -10,6 +10,7 @@ import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
+import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
 import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
@@ -39,7 +40,7 @@ class OpenAIMindMapClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAIMindMapClient(chatClient, retryTemplate, mindMapValidator, promptTemplate)
+        client = new OpenAIMindMapClient(chatClient, retryTemplate, "", promptTemplate, mindMapValidator)
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {

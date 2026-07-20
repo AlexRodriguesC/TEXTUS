@@ -1,12 +1,17 @@
 package ch.supsi.documentapplication.model.learn.exercise;
 
 import ch.supsi.documentapplication.model.learn.ExerciseType;
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 @JsonTypeName("PAIR")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "exerciseType", defaultImpl = PairExercise.class)
+@JsonClassDescription(
+        "A matching exercise where the user associates each left element with its correct right counterpart, expressed as a list of left/right pairs.")
 public class PairExercise extends BaseExercise<List<LeftRight>> {
 
     @Override
@@ -20,7 +25,6 @@ public class PairExercise extends BaseExercise<List<LeftRight>> {
         if (this.answer.size() != userResponse.size()) {
             return false;
         }
-        // Sort both lists to compare pairs ignoring order
         List<LeftRight> sortedExpected = new ArrayList<>(this.answer);
         List<LeftRight> sortedActual = new ArrayList<>(userResponse);
         Comparator<LeftRight> pairComparator =

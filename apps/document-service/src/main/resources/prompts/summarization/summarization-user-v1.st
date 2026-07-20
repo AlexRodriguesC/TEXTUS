@@ -8,14 +8,9 @@ Step 3 – Generate Title: Create a concise title (5–15 words) that accurately
 
 Step 4 – Generate Summary: Write a factual summary that presents the key information directly. Do NOT use introductory phrases like "the document covers," "this article discusses," or "the text describes." Instead, state the facts directly as declarative statements. For example, write "Water has a planar geometry with two bonding and two lone pairs" rather than "The document discusses water's geometry."
 
-Document:
-<document_text>
+<format>
 
-Output only a JSON object in this format:
-{
-  "title": "concise title here",
-  "summary": "factual summary with direct statements only"
-}
+Document: <document_text>
 
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.

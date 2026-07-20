@@ -14,14 +14,7 @@ Steps:
 Document:
 <page_text>
 
-Output only a JSON array in this format:
-[
-  {
-    "labels": ["label1", "label2", ...],
-    "title": "concise topic title",
-    "summary": "factual summary with direct statements only"
-  }
-]
+<format>
 
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.

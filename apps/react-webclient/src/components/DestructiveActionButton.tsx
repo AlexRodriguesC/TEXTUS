@@ -15,11 +15,13 @@ import * as React from "react";
 
 type DestructiveActionButtonProps = {
   title: string;
+  description?: string;
   onConfirm: () => void;
 };
 
 function DestructiveActionButton({
   title,
+    description,
   onConfirm,
   ...props
 }: DestructiveActionButtonProps & React.ComponentProps<"button">) {
@@ -41,7 +43,7 @@ function DestructiveActionButton({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {t("action.destructive.description")}
+            {description ? description : t("action.destructive.description")}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col md:flex-row">

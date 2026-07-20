@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.model.learn.exercise;
 
 import ch.supsi.documentapplication.model.learn.ExerciseType;
+import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 @JsonTypeName("GROUP")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "exerciseType", defaultImpl = Group.class)
+@JsonClassDescription(
+        "A grouping exercise where the user sorts a set of strings into exactly two mutually exclusive, collectively exhaustive labeled groups.")
 public class Group extends BaseExercise<Map<String, List<String>>> {
 
     @Override
@@ -33,7 +38,6 @@ public class Group extends BaseExercise<Map<String, List<String>>> {
             if (expected.size() != actual.size()) {
                 return false;
             }
-            // Sort both lists to ignore order
             List<String> sortedExpected = new ArrayList<>(expected);
             Collections.sort(sortedExpected);
             List<String> sortedActual = new ArrayList<>(actual);

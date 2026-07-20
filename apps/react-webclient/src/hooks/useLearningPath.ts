@@ -11,18 +11,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { failureToast, successToast } from "@/lib/toasts.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import type {
-  ChapterResponseDTO,
-  ErrorResponseDTO,
-  LearningPathJobDTO,
-  LearningPathJobDTOStatus,
-  LearningPathResponseDTO,
-  PathSettingsResponseDTO,
-} from "@/client/model";
-
-export interface LearningPath extends LearningPathResponseDTO {}
-export interface LearningPathSettings extends PathSettingsResponseDTO {}
-export interface Chapter extends ChapterResponseDTO {}
+import type { ErrorResponseDTO, LearningPathJobDTO, LearningPathJobDTOStatus } from "@/client/model";
+import LearningPath from "@/classes/LearningPath.ts";
+import { useMemo } from "react";
 
 type LearningPathStatus = LearningPathJobDTOStatus;
 
@@ -45,44 +36,43 @@ function useLearningPath() {
     },
   });
 
-  const { data: learningPathData, isLoading } = useGetLearningPath(
-    spaceId ?? -1,
-    {
-      query: {
-        enabled:
+  const { data: learningPathData, isLoading } = useGetLearningPath(spaceId, {
+    query: {
+      enabled:
           spaceId !== undefined &&
           !!jobData &&
           isLearningPathJobDTO(jobData.data) &&
           jobData.data.status === "DONE",
-      },
     },
-  );
-
-  const maybePath = learningPathData?.data;
-  let learningPath: LearningPath | undefined = undefined;
-  if (maybePath && isLearningPathDTO(maybePath)) {
-    learningPath = maybePath;
-  }
+  });
 
   let learningPathStatus: LearningPathStatus = "NOT_CREATED";
   if (jobData && isLearningPathJobDTO(jobData.data)) {
     learningPathStatus = jobData.data.status;
   }
 
-  const deleteLearningPath = useDeleteLearningPath({
+  const { mutate: updateSettingsMutation } = useUpdatePathSettings({
     mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: getGetLearningPathQueryKey(spaceId!),
-        });
-        await queryClient.invalidateQueries({
-          queryKey: getGetLearningPathJobQueryKey(spaceId!),
-        });
+      onSuccess: () => {
+        successToast(t("learning-path.settings.success"));
+        queryClient.invalidateQueries({ queryKey: getGetLearningPathQueryKey(spaceId) });
+      },
+      onError: () => {
+        failureToast(t("learning-path.settings.error"));
       },
     },
   });
 
-  const generateLearningPath = useExtractLearningPath({
+  const { mutate: deleteMutation, isPending: isDeleting } = useDeleteLearningPath({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.resetQueries({ queryKey: getGetLearningPathQueryKey(spaceId) });
+        await queryClient.resetQueries({ queryKey: getGetLearningPathJobQueryKey(spaceId) });
+      },
+    },
+  });
+
+  const { mutate: generateMutation, isPending: isGenerating } = useExtractLearningPath({
     mutation: {
       onSuccess: () => {
         successToast(t("learning-path.creation.success"));
@@ -93,44 +83,27 @@ function useLearningPath() {
     },
   });
 
-  const updateSettingsInternal = useUpdatePathSettings({
-    mutation: {
-      onSuccess: () => {
-        successToast(t("learning-path.settings.success"));
-        queryClient.invalidateQueries({
-          queryKey: getGetLearningPathQueryKey(spaceId!),
-        });
-      },
-      onError: () => {
-        failureToast(t("learning-path.settings.error"));
-      },
-    },
-  });
+  const path = useMemo(() => {
+    if (spaceId === undefined) return undefined;
 
-  const updateSettings = (settings: LearningPathSettings) => {
-    updateSettingsInternal.mutate({ spaceId: spaceId!, data: settings });
-  };
+    const maybePath = learningPathData?.data;
+    const base =
+        maybePath && LearningPath.isLearningPathDTO(maybePath)
+            ? LearningPath.from(maybePath)
+            : new LearningPath([], {} as never);
+
+    return base.withRuntime(spaceId, updateSettingsMutation, deleteMutation, generateMutation, isDeleting, isGenerating);
+  }, [learningPathData, spaceId, updateSettingsMutation, deleteMutation, generateMutation, isDeleting, isGenerating]);
 
   return {
-    path: learningPath,
+    path,
     isPathLoading: isLoading,
     status: learningPathStatus,
-    generateLearningPath,
-    deleteLearningPath,
-    updateSettings,
   };
 }
 
 export default useLearningPath;
 
-function isLearningPathDTO(
-  data: ErrorResponseDTO | LearningPathResponseDTO,
-): data is LearningPathResponseDTO {
-  return "chapters" in data && "settings" in data;
-}
-
-function isLearningPathJobDTO(
-  data: ErrorResponseDTO | LearningPathJobDTO,
-): data is LearningPathJobDTO {
+function isLearningPathJobDTO(data: ErrorResponseDTO | LearningPathJobDTO): data is LearningPathJobDTO {
   return "status" in data;
 }

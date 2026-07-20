@@ -2,19 +2,17 @@ import useLearningPath from "@/hooks/useLearningPath.ts";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import useSpaceId from "@/hooks/useSpaceId.ts";
 import { X } from "lucide-react";
 
 function GeneratePathButton() {
   const { t } = useTranslation();
-  const { spaceId } = useSpaceId();
-  const { status, deleteLearningPath, generateLearningPath } =
+  const { path, status } =
     useLearningPath();
 
   if (status === "NOT_CREATED") {
     return (
       <Button
-        onClick={() => generateLearningPath.mutate({ spaceId: spaceId! })}
+        onClick={() => path?.regenerate()}
         className={"w-full"}
       >
         {t("learning-path.empty.cta")}
@@ -37,8 +35,8 @@ function GeneratePathButton() {
     return (
       <Button
         onClick={() => {
-          deleteLearningPath.mutate({ spaceId: spaceId! });
-          generateLearningPath.mutate({ spaceId: spaceId! });
+            path?.delete()
+            path?.regenerate()
         }}
         className={"w-full"}
       >
@@ -54,14 +52,8 @@ function GeneratePathButton() {
     return (
       <Button
         onClick={() => {
-          deleteLearningPath.mutate(
-            { spaceId: spaceId! },
-            {
-              onSuccess: () => {
-                generateLearningPath.mutate({ spaceId: spaceId! });
-              },
-            },
-          );
+            path?.delete()
+            path?.regenerate()
         }}
         className={"w-full"}
       >

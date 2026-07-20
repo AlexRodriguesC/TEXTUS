@@ -93,13 +93,13 @@ public class LearningService extends Service implements ILearningService {
         exercise.setTopicId(topic.getId());
         exercise = databaseLearningStorage.createExercise(exercise, lesson.getId());
 
-        lesson.advanceCurrentTopic();
         lesson.addExercise(exercise);
         return exercise;
     }
 
     private Topic findCurrentTopic(Long spaceId, Lesson lesson) throws ApplicationException {
         var topics = databaseTopicStorage.getBySpaceId(spaceId);
+
         return topics.stream()
                 .filter(t -> Objects.equals(t.getId(), lesson.getCurrentTopicId()))
                 .findFirst()
@@ -119,6 +119,11 @@ public class LearningService extends Service implements ILearningService {
             throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
         var lesson = getLesson(owner, spaceId, nodeId);
+        var path = databasePathStorage.read(space.getId());
+        var chapter = path.getChapters().stream()
+                .filter(c -> c.getId().equals(lesson.getChapterId()))
+                .findFirst()
+                .orElse(null);
 
         if (!lesson.hasAttemptsLeft()) {
             throw LessonAttemptsExhaustedException.lessonAttemptsExhausted();
@@ -131,22 +136,28 @@ public class LearningService extends Service implements ILearningService {
 
         if (isAnswerWrong) {
             lesson.consumeAttempt();
-            // String feedback = openAIExerciseFeedbackClient.getResult(attempt);
-            attempt.setFeedback("feedback");
+            Lesson checkPoint = chapter.getLessons().stream()
+                    .filter(Lesson::isCheckpoint)
+                    .findFirst()
+                    .orElse(null);
+            if (checkPoint != null
+                    && checkPoint.getTopics() != null
+                    && !checkPoint.getTopics().contains(topic.getId())) {
+                checkPoint.getTopics().add(topic.getId());
+                databaseLearningStorage.update(checkPoint);
+            }
         }
 
         databaseLearningStorage.create(attempt, owner, lesson.getId(), exercise.getId());
 
         lesson.updateMastery(isAnswerWrong);
+        lesson.advanceCurrentTopic();
         exercise.setCompleted(true);
+        exercise.setCorrect(!isAnswerWrong);
         databaseLearningStorage.updateExercise(exercise);
         databaseLearningStorage.update(lesson);
 
-        return new AttemptResponseDTO(
-                exercise.getId(),
-                !isAnswerWrong,
-                isAnswerWrong ? attempt.getFeedback() : exercise.getExplanation(),
-                LessonResponseDTO.from(lesson));
+        return new AttemptResponseDTO(exercise.getId(), !isAnswerWrong, LessonResponseDTO.from(lesson));
     }
 
     @Override

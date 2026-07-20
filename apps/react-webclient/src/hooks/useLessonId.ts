@@ -14,7 +14,7 @@ function useLessonId() {
       "useLessonId must be used within a valid path containing a lessonId"
   )
 
-  return { lessonId: numericLessonId, strLessonId };
+  return { lessonId: numericLessonId!, strLessonId: strLessonId! };
 }
 
 export default useLessonId;

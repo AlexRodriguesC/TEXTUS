@@ -9,6 +9,5 @@ import java.util.List;
 public record AttemptResponseDTO(
         @Schema(description = "Identifier of the attempted exercise") Long exerciseId,
         @Schema(description = "Whether the overall attempt was correct") boolean correct,
-        @Schema(description = "Feedback for the provided attempt") String feedback,
         @Schema(description = "Updated lesson state after this attempt, including new mastery and status") LessonResponseDTO lesson
 ) {}

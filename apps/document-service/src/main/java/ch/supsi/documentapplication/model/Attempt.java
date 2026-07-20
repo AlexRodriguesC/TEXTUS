@@ -9,17 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class Attempt<T> {
 
-    private BaseExercise<T> exercise;
-    private T userResponse;
-    private Topic topic;
-
-    @Setter
-    private String feedback;
+    private final BaseExercise<T> exercise;
+    private final T userResponse;
+    private final Topic topic;
 
     private Attempt(BaseExercise<T> exercise, T userResponse, Topic topic) {
         this.exercise = exercise;

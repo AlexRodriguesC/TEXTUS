@@ -22,14 +22,8 @@ Hard constraints:
 - Do not invent any topicId.
 - Do not invent any extra node.
 - There must be exactly one root node.
-- Every node must have this exact shape:
-  {
-    "topicId": number,
-    "children": [ ... ]
-  }
-- "children" must always be present, even if empty.
-- No keys other than "topicId" and "children" are allowed.
-- Output ONLY valid JSON.
+- "children" must always be present on every node, even if empty.
+- Output ONLY valid JSON, matching exactly the schema below.
 - Output no prose, no markdown, no code fences.
 
 How to choose structure:
@@ -49,15 +43,15 @@ Required internal procedure:
 3. Select exactly one root topicId from that set.
 4. Attach every remaining topicId exactly once somewhere under the root.
 5. Before answering, verify all of the following privately:
-   - every input topicId appears exactly once
-   - no topicId appears more than once
-   - no topicId is missing
-   - no topicId outside INPUT_TOPICS appears
-   - the result is a single connected tree
-   - there is exactly one root
-   - no node appears as a descendant of itself
-   - every node has a children array
-   - no extra keys are present
+- every input topicId appears exactly once
+- no topicId appears more than once
+- no topicId is missing
+- no topicId outside INPUT_TOPICS appears
+- the result is a single connected tree
+- there is exactly one root
+- no node appears as a descendant of itself
+- every node has a children array
+- the output conforms exactly to the provided schema
 6. If any check fails, revise internally until all checks pass.
 7. Return only the final JSON tree.
 
@@ -69,6 +63,8 @@ Return only the final JSON object.
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
 Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+
+<format>
 
 INPUT_TOPICS:
 <topics>

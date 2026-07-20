@@ -2,11 +2,13 @@ package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.exception.RetriesFailedException;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.core.retry.Retryable;
 
+@Slf4j
 public class RetryTemplateWrapper implements org.springframework.core.retry.RetryOperations {
 
     private final RetryTemplate retryTemplate;
@@ -20,7 +22,8 @@ public class RetryTemplateWrapper implements org.springframework.core.retry.Retr
         try {
             return retryTemplate.execute(retryable);
         } catch (RetryException e) {
-            throw RetriesFailedException.failedToMapLLMOutput();
+            log.error("Retries failed", e);
+            throw RetriesFailedException.failedToMapLLMOutput(e.getCause());
         }
     }
 

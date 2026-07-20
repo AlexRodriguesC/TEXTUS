@@ -15,31 +15,13 @@ Exercise objective:
 - Every string used must be unambiguously classifiable under exactly one of the two labels based on TOPIC.
 - Avoid labels or strings that require knowledge outside TOPIC to classify correctly.
 
-Output schema:
-{
-  "request": "",
-  "answer": {
-    "label1": ["item1", "item2"],
-    "label2": ["item3"]
-  },
-  "explanation": ""
-}
-
-Field constraints:
-- "request": one short instruction, plain text, no punctuation beyond standard sentence punctuation.
-- "answer": array containing exactly one object.
-- "answer.answer": a JSON object with EXACTLY two keys (the two labels), each mapping to a non-empty array of strings.
-- "answer.explanation": in-depth yet concise justification of why each string belongs to its label, plain text.
-- No keys other than "request" and "answer" at the top level.
-- No keys other than "answer" and "explanation" inside each answer object.
-
 Hard constraints:
-- The map inside "answer.answer" must contain EXACTLY two keys, never one, never three or more.
+- The answer map must contain EXACTLY two keys, never one, never three or more.
 - Every string assigned to a label must be traceable to TOPIC.
 - No string may appear under more than one label.
 - No string may be duplicated within the same label.
 - No label may be empty.
-- Output ONLY valid JSON.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - When writing string values, never use double quotes (") inside the text. Use single quotes or rewrite to avoid quoting.
 
 Required internal procedure:
@@ -50,12 +32,12 @@ Required internal procedure:
 5. Assign every extracted string to exactly one of the two labels.
 6. Write a concise, in-depth explanation justifying each classification using only TOPIC content.
 7. Internally validate:
-- exactly two labels exist in the map
+- exactly two labels exist in the answer map
 - every string is assigned to exactly one label
 - no string is duplicated or omitted
 - no label is empty
 - all content derives solely from TOPIC
-- no extra keys exist anywhere
+- the output conforms exactly to the provided schema
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -63,3 +45,5 @@ Do not reveal internal reasoning.
 Do not output intermediate drafts.
 Do not output the validation results.
 Return only the final JSON object.
+
+<format>

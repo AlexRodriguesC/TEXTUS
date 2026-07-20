@@ -5,21 +5,16 @@ import { Button } from "@/components/ui/button.tsx";
 import useDocuments from "@/hooks/useDocuments.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { useMemo } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import GeneratePathButton from "@/pages/space/learn/GeneratePathButton.tsx";
 
 function SpaceLearnEmpty() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { spaceId, strSpaceId } = useSpaceId();
   const { documents } = useDocuments(spaceId);
 
-  const hasDocuments = useMemo(() => documents.length > 0, [documents]);
-
-  if (!spaceId) {
-    navigate({ to: PathConstants.NOT_FOUND });
-  }
+  const hasDocuments = useMemo(() => documents.length > 0, [documents.length]);
 
   return (
     <CenteredPage>

@@ -4,9 +4,11 @@ import ch.supsi.documentapplication.model.Attempt;
 import ch.supsi.documentapplication.model.Feedback;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.Client;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 
 public class OpenAIExerciseFeedbackClient extends Client<Attempt<?>, String> {
 
@@ -21,17 +23,17 @@ public class OpenAIExerciseFeedbackClient extends Client<Attempt<?>, String> {
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate) {
-        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
+        super(chatClient, new BeanOutputConverter<>(String.class), retryTemplate, systemPrompt, promptTemplate);
     }
 
     @Override
     protected String call(Attempt<?> attempt) {
-        Map<String, Object> params = Map.ofEntries(
-                Map.entry(EXERCISE_TYPE, attempt.getExerciseType()),
-                Map.entry(EXERCISE, attempt.getExercise()),
-                Map.entry(USER_RESPONSE, attempt.getUserResponse()),
-                Map.entry(CORRECT_ANSWER, attempt.getAnswer()),
-                Map.entry(TOPIC, attempt.getTopic()));
+        Map<String, Object> params = new HashMap<>();
+        params.put(EXERCISE_TYPE, attempt.getExerciseType());
+        params.put(EXERCISE, attempt.getExercise());
+        params.put(USER_RESPONSE, attempt.getUserResponse());
+        params.put(CORRECT_ANSWER, attempt.getAnswer());
+        params.put(TOPIC, attempt.getTopic());
         var prompt = getPrompt(params);
 
         return chatClient.prompt(prompt).call().entity(Feedback.class).getFeedback();

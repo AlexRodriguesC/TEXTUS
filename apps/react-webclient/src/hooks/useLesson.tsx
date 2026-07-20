@@ -21,14 +21,6 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
     query: { enabled: spaceId !== undefined && lessonId !== undefined },
   });
 
-  const isLessonReady = !isLoading && data && "status" in data && data.status === 200 && !data.data.completed;
-
-  const { data: nextExerciseData, isLoading: exerciseLoading } = useGetNextExercise(
-      spaceId ?? ignored,
-      lessonId ?? ignored,
-      { query: { enabled: spaceId !== undefined && lessonId !== undefined && isLessonReady } },
-  );
-
   const { mutateAsync: deleteExercisesMutation, isPending } = useDeleteExercises({
     mutation: {
       onSuccess: async () => {
@@ -39,15 +31,30 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
     },
   });
 
-  const nextExercise =
-      nextExerciseData && "status" in nextExerciseData && nextExerciseData.status === 200
-          ? nextExerciseData.data
-          : undefined;
-
   const lesson = useMemo(() => {
     if (!data || !("status" in data) || data.status !== 200 || spaceId === undefined) return undefined;
     return Lesson.from(data.data).withRuntime(spaceId, deleteExercisesMutation, isPending);
   }, [data, spaceId, deleteExercisesMutation, isPending]);
+
+  const { data: nextExerciseData, isLoading: exerciseLoading } = useGetNextExercise(
+      spaceId ?? ignored,
+      lessonId ?? ignored,
+      {
+        query: {
+          enabled:
+              spaceId !== undefined &&
+              lessonId !== undefined &&
+              !isLoading &&
+              !!lesson &&
+              lesson.shouldFetchNextExercise(),
+        },
+      },
+  );
+
+  const nextExercise =
+      nextExerciseData && "status" in nextExerciseData && nextExerciseData.status === 200
+          ? nextExerciseData.data
+          : undefined;
 
   return { lesson, isLoading, nextExercise, exerciseLoading };
 }

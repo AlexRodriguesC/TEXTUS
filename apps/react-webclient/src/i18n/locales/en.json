@@ -118,6 +118,12 @@
     }
   },
   "exercise": {
+    "checkpoint": {
+      "description": {
+        "exercises": "You conquered every topic you'd missed!",
+        "no-exercises": "Perfect run, no mistakes to fix!"
+      }
+    },
     "completed": {
       "title": "Congratulations!",
       "description": "You've completed the lesson. Keep up the good work!"
@@ -230,6 +236,10 @@
     }
   },
   "learning-path": {
+    "delete": {
+      "title": "Delete learning path?",
+      "description": "All exercises and their progress will be lost. This action cannot be undone."
+    },
     "popover": {
       "loading": "Preparing lesson"
     },

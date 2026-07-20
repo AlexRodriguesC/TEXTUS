@@ -4,4 +4,6 @@ Labels must be maximally descriptive—each label should convey as much specific
 Labels must be extremely granular and specific—two topics should only share a label if they discuss the exact same narrow subject. Do not use broad or generic labels that could apply to many different topics.
 Prefer reusing labels from the provided existing labels list; only create a new label if no existing one is precise enough to match the topic exactly.
 Summaries must state facts directly—never use meta-descriptive phrases like "the document discusses" or "this section covers."
-Output only valid JSON.
+Output only valid JSON, matching exactly the schema below.
+
+<format>

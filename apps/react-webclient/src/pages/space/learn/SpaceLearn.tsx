@@ -29,14 +29,7 @@ function getPrerequisiteLesson(
     return chapter?.lessons.find((l) => l.index === lesson.index - 1) ?? null;
   }
 
-  const previousChapter = chapters.find((c) => c.index === chapterIndex - 1);
-  if (!previousChapter || previousChapter.lessons.length === 0) {
-    return null;
-  }
-
-  return previousChapter.lessons.reduce((max, l) =>
-      l.index > max.index ? l : max,
-  );
+  return null;
 }
 
 function ChapterPath({
@@ -155,7 +148,7 @@ function SpaceLearn() {
     return () => observer.disconnect();
   }, [path, headerHeight]);
 
-  if (isPathLoading) {
+  if (status !== "NOT_CREATED" && isPathLoading) {
     return <LoadingScreen/>
   }
 

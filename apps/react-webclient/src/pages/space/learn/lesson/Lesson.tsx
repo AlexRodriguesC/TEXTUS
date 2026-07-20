@@ -17,6 +17,7 @@ import {getGetNextExerciseQueryKey} from "@/client/generated/lessons/lessons.ts"
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import type {GroupResponseDTO, ListResponseDTO, PairResponseDTO, QuestionResponseDTO} from "@/client/model";
+import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
 
 function Lesson() {
   const queryClient = useQueryClient();
@@ -81,6 +82,10 @@ function Lesson() {
 
     if (lesson!.isMastered()) {
       return <LessonCompleted />;
+    }
+
+    if (lesson!.isCheckpoint() && lesson?.topics.length === 0) {
+      return <LessonCheckpointCompleted/>
     }
 
     return exercise;

@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 
 public abstract class FeedbackLoopClient<I, O> extends Client<I, O> {
 
@@ -14,17 +15,19 @@ public abstract class FeedbackLoopClient<I, O> extends Client<I, O> {
 
     public FeedbackLoopClient(
             ChatClient chatClient,
+            BeanOutputConverter<O> converter,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate,
             String feedbackSystemPrompt,
             PromptTemplate feedbackPromptTemplate) {
-        super(chatClient, retryTemplate, systemPrompt, promptTemplate);
+        super(chatClient, converter, retryTemplate, systemPrompt, promptTemplate);
         this.feedbackSystemPrompt = feedbackSystemPrompt;
         this.feedbackPromptTemplate = feedbackPromptTemplate;
     }
 
     protected Prompt getFeedbackPrompt(Map<String, Object> params) {
+        params.put(FORMAT, converter.getFormat());
         var filledUserPrompt = feedbackPromptTemplate.render(params);
         var userPrompt = UserMessage.builder().text(filledUserPrompt).build();
         return new Prompt(userPrompt);

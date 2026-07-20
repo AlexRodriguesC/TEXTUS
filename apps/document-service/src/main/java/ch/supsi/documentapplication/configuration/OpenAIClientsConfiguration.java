@@ -131,6 +131,7 @@ public class OpenAIClientsConfiguration {
 
     @Bean
     public OpenAITopicExtractionClient openAITopicExtractionClient(
+            ObjectMapper objectMapper,
             ChatClient.Builder chatBuilder,
             RetryTemplateWrapper retryTemplateWrapper,
             PromptProperties promptProperties,
@@ -142,8 +143,8 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getTopicExtractionUser(),
                 promptProperties.getTopicExtractionSystem(),
-                (client, systemPrompt, template) ->
-                        new OpenAITopicExtractionClient(client, retryTemplateWrapper, systemPrompt, template));
+                (client, systemPrompt, template) -> new OpenAITopicExtractionClient(
+                        objectMapper, client, retryTemplateWrapper, systemPrompt, template));
     }
 
     @Bean

@@ -1,8 +1,10 @@
 package ch.supsi.documentapplication.model.learn;
 
+import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -11,16 +13,27 @@ import lombok.ToString;
 
 @Getter
 @ToString
+@JsonClassDescription(
+        "One chapter in a flat, ordered list forming a coherent conceptual hierarchy, grouping a set of label ids into one self-contained unit of learning.")
 public class Chapter {
 
     @JsonIgnore
     @ToString.Exclude
     private Long id;
 
+    @JsonPropertyDescription(
+            "Zero-based position of this chapter in the overall sequence. Must be strictly increasing by 1 across all chapters, with no gaps, reflecting learning progression from foundational to advanced.")
     private final Integer index;
+
+    @JsonPropertyDescription("A concise chapter title, 2 to 3 words, plain text, no punctuation beyond spaces.")
     private final String title;
+
+    @JsonPropertyDescription(
+            "A concise chapter description, 6 to 7 words, plain text, summarizing the chapter's focus.")
     private final String description;
 
+    @JsonPropertyDescription(
+            "The label ids grouped into this chapter, based on semantic similarity and topic proximity. Must contain at least 3 elements, unless the total label count across all chapters is fewer than 3, and no more than 10 elements unless splitting would violate the minimum.")
     private List<Long> labels;
 
     @JsonIgnore
@@ -95,7 +108,7 @@ public class Chapter {
         for (int i = 0; i < lessonCount; i++) {
             result.add(new Lesson(LessonType.LESSON, i, groups.get(i)));
         }
-        result.add(new Lesson(LessonType.CHECKPOINT, lessonCount, List.of()));
+        result.add(new Lesson(LessonType.CHECKPOINT, lessonCount, new ArrayList<>()));
         this.lessons = result;
     }
 

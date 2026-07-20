@@ -10,35 +10,17 @@ Behavior rules:
 
 Exercise objective:
 - Produce one short instruction (the request) telling the user to associate each element with its correct match.
-- Produce at most 5 correct pairs, each pair being one object with a "left" and "right" value.
+- Produce at most 5 correct pairs, each pair consisting of a left and right value.
 - Each pair must consist of two distinct elements that are unambiguously linked by TOPIC.
 - No two pairs may share a value on either side, and no value may be similar enough to another value to cause ambiguity.
 - Every pair must be resolvable using only TOPIC content.
 
-Output schema:
-{
-  "request": "",
-  "answer": [
-    { "left": "", "right": "" },
-    { "left": "", "right": "" }
-  ],
-  "explanation": ""
-}
-
-Field constraints:
-- "request": one short instruction, plain text, no punctuation beyond standard sentence punctuation.
-- "answer": array of at most 5 objects, each representing one correct pair.
-- "answer[].left" and "answer[].right": two distinct string values representing the two matched elements.
-- "explanation": a single concise explanation covering why the pairs match overall, grounded only in TOPIC.
-- No keys other than "request", "answer", and "explanation" at the top level.
-- No keys other than "left" and "right" inside each pair object.
-
 Hard constraints:
-- The "answer" array must contain between 3 and 5 pairs.
+- The pairs must number between 3 and 5.
 - No value may appear in more than one pair, on either side.
 - No two values across all pairs may be similar enough to create ambiguity in matching.
 - Every pair must be traceable directly to TOPIC.
-- Output ONLY valid JSON.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - When writing string values, never use double quotes (") inside the text. Use single quotes or rewrite to avoid quoting.
 
 Required internal procedure:
@@ -49,11 +31,11 @@ Required internal procedure:
 5. Build each pair with its left and right matched values.
 6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content.
 7. Internally validate:
-- at most 5 pairs exist
+- between 3 and 5 pairs exist
 - no value is repeated or similar enough to cause ambiguity
 - every pair is grounded solely in TOPIC
 - explanation is present
-- no extra keys exist anywhere
+- the output conforms exactly to the provided schema
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -61,3 +43,5 @@ Do not reveal internal reasoning.
 Do not output intermediate drafts.
 Do not output the validation results.
 Return only the final JSON object.
+
+<format>

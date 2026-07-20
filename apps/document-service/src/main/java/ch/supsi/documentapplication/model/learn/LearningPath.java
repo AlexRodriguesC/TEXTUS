@@ -1,7 +1,6 @@
 package ch.supsi.documentapplication.model.learn;
 
 import ch.supsi.documentapplication.model.PathSettings;
-import java.util.Comparator;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -37,26 +36,9 @@ public class LearningPath {
             return null;
         }
 
-        if (lesson.getIndex() > 0) {
-            return chapter.getLessons().stream()
-                    .filter(l -> l.getIndex() == lesson.getIndex() - 1)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        int chapterIdx = chapters.indexOf(chapter);
-        if (chapterIdx == 0) {
-            return null;
-        }
-
-        Chapter previousChapter = chapters.get(chapterIdx - 1);
-        List<Lesson> previousLessons = previousChapter.getLessons();
-        if (previousLessons.isEmpty()) {
-            return null;
-        }
-
-        return previousLessons.stream()
-                .max(Comparator.comparingInt(Lesson::getIndex))
+        return chapter.getLessons().stream()
+                .filter(l -> l.getIndex() == lesson.getIndex() - 1)
+                .findFirst()
                 .orElse(null);
     }
 }

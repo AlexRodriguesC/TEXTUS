@@ -4,7 +4,5 @@ CREATE TABLE IF NOT EXISTS documents.attempt
     exercise_id BIGINT REFERENCES documents.exercise (id) ON DELETE CASCADE,
     lesson_id     BIGINT REFERENCES documents.lesson (id) ON DELETE CASCADE,
     user_id     TEXT REFERENCES users.user (username) ON DELETE CASCADE,
-    response    JSONB   NOT NULL,
-    is_correct  BOOLEAN NOT NULL,
-    feedback    TEXT
+    response    JSONB   NOT NULL
 );

@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS documents.exercise
     family  TEXT NOT NULL CHECK (family IN ('question', 'pair', 'group', 'list')),
     index   INTEGER NOT NULL,
     explanation TEXT,
-    completed BOOLEAN NOT NULL DEFAULT FALSE
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    correct BOOLEAN
 );

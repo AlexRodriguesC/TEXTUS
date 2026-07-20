@@ -14,23 +14,11 @@ Every string and label must originate exclusively from TOPIC; do not use any ext
 
 Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
-- The output object must have this exact shape:
-{
-  "request": "",
-  "answer": {
-    "label1": ["item1", "item2"],
-    "label2": ["item3"]
-  },
-  "explanation": ""
-}
-- "answer" must contain exactly one object.
-- "answer.answer" must have EXACTLY two keys, never fewer, never more.
+- The answer map must have EXACTLY two keys, never fewer, never more.
 - Every string must appear under exactly one label, never zero, never both.
 - No label may be empty.
-- "explanation" must be in-depth yet concise, justifying each classification using only TOPIC content.
-- No keys other than "request" and "answer" are allowed at the top level.
-- No keys other than "answer" and "explanation" are allowed inside the answer object.
-- Output ONLY valid JSON.
+- The explanation must be in-depth yet concise, justifying each classification using only TOPIC content.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - Output no prose, no markdown, no code fences.
 
 How to choose structure:
@@ -47,11 +35,11 @@ Required internal procedure:
 5. Build the answer map with exactly two labels and assign every string to exactly one.
 6. Write a concise, in-depth explanation grounded only in TOPIC.
 7. Before answering, verify all of the following privately:
-- the map has exactly two keys
+- the answer map has exactly two keys
 - every string is assigned to exactly one label
 - no string is missing, duplicated, or from outside TOPIC
 - no label is empty
-- no extra keys are present anywhere
+- the output conforms exactly to the provided schema
 8. If any check fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -63,5 +51,7 @@ Return only the final JSON object.
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
 Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+
+<format>
 
 TOPIC: <topic>

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
+import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.retry.RetryException
@@ -16,6 +17,7 @@ import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
 import spock.lang.Subject
+import tools.jackson.databind.ObjectMapper
 
 import java.time.Duration
 
@@ -38,7 +40,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAITopicExtractionClient(chatClient, retryTemplate, promptTemplate)
+        client = new OpenAITopicExtractionClient(new ObjectMapper(), chatClient, retryTemplate, "", promptTemplate)
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
@@ -67,7 +69,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         then: "the prompt is rendered using the page summary and distinct labels"
         1 * promptTemplate.render({ Map params ->
             params["page_text"] == "page summary text" &&
-                    params["existing_labels"] as Set == ["label1", "label2", "label3"] as Set
+                    params["existing_labels"] == '["label1","label2","label3"]'
         }) >> "rendered prompt"
 
         and: "the returned topics match what the chatClient produced"
@@ -105,7 +107,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         def result = client.getResult(input)
 
         then: "the prompt is rendered with an empty labels list"
-        1 * promptTemplate.render({ Map params -> params["existing_labels"] == [] }) >> "rendered prompt"
+        1 * promptTemplate.render({ Map params -> params["existing_labels"] == '[]' }) >> "rendered prompt"
 
         and: "the extracted topics are returned"
         result == expectedTopics

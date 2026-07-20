@@ -13,6 +13,11 @@ public class ApplicationException extends RuntimeException {
         this.httpStatus = httpStatus;
     }
 
+    public ApplicationException(HttpStatus httpStatus, String message, Throwable cause) {
+        super(message, cause);
+        this.httpStatus = httpStatus;
+    }
+
     public static ApplicationException internalServerError(String message) {
         return new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }

@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.model.learn.LearningPath;
 import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.LessonType;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
@@ -124,8 +125,8 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                     int attemptsLeft = rs.getInt("attempts_left");
                     double mastery = rs.getDouble("mastery");
 
-                    List<Long> topics =
-                            Arrays.asList((Long[]) rs.getArray("topics").getArray());
+                    List<Long> topics = new ArrayList<>(
+                            Arrays.asList((Long[]) rs.getArray("topics").getArray()));
                     return new Lesson(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
                 })
                 .list();

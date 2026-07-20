@@ -4,7 +4,8 @@ CREATE OR REPLACE FUNCTION documents.update_exercise(
     p_family TEXT,
     p_index INT,
     p_explanation TEXT,
-    p_completed BOOLEAN
+    p_completed BOOLEAN,
+    p_correct BOOLEAN
 ) RETURNS VOID AS $$
 BEGIN
     UPDATE documents.exercise
@@ -12,7 +13,8 @@ BEGIN
         family = p_family,
         index = p_index,
         explanation = p_explanation,
-        completed = p_completed
+        completed = p_completed,
+        correct = p_correct
     WHERE id = p_exercise_id;
 END;
 $$ LANGUAGE plpgsql;

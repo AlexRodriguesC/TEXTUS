@@ -57,6 +57,10 @@ public class Lesson {
         this.topics = topics;
     }
 
+    public boolean isCheckpoint() {
+        return type == LessonType.CHECKPOINT;
+    }
+
     public boolean canBeStarted(Lesson prerequisite) {
         return prerequisite == null || prerequisite.isMastered();
     }
@@ -102,14 +106,7 @@ public class Lesson {
         if (topics == null || topics.isEmpty()) {
             return;
         }
-        int index = topics.indexOf(currentTopic);
-        if (index < 0) {
-            // currentTopic not found in topics; fallback to first topic
-            currentTopic = topics.getFirst();
-        } else {
-            int nextIndex = (index + 1) % topics.size();
-            currentTopic = topics.get(nextIndex);
-        }
+        currentTopic = (currentTopic + 1) % topics.size();
     }
 
     public boolean isMastered() {

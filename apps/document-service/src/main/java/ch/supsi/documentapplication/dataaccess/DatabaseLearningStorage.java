@@ -252,13 +252,14 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     public void updateExercise(BaseExercise<?> exercise) {
         jdbcClient
                 .sql(
-                        "SELECT documents.update_exercise(:exerciseId, :topicId, :family, :index, :explanation, :completed)")
+                        "SELECT documents.update_exercise(:exerciseId, :topicId, :family, :index, :explanation, :completed, :correct)")
                 .param("exerciseId", exercise.getId())
                 .param("topicId", exercise.getTopicId())
                 .param("family", exercise.getType().name().toLowerCase())
                 .param("index", exercise.getIndex())
                 .param("explanation", exercise.getExplanation())
                 .param("completed", exercise.isCompleted())
+                .param("correct", exercise.isCorrect())
                 .query()
                 .listOfRows();
 
@@ -371,14 +372,11 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
         }
 
         jdbcClient
-                .sql(
-                        "SELECT * FROM documents.create_attempt(:exerciseId, :lessonId, :userId, :response::jsonb, :isCorrect, :feedback)")
+                .sql("SELECT * FROM documents.create_attempt(:exerciseId, :lessonId, :userId, :response::jsonb)")
                 .param("exerciseId", exerciseId)
                 .param("lessonId", lessonId)
                 .param("userId", userId)
                 .param("response", responseJson)
-                .param("isCorrect", !attempt.isAnswerWrong())
-                .param("feedback", attempt.getFeedback())
                 .query()
                 .listOfRows();
     }

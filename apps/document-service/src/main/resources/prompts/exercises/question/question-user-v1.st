@@ -13,21 +13,12 @@ Everything must be grounded exclusively in TOPIC; do not use any external inform
 
 Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
-- The output object must have this exact shape:
-{
-  "request": "",
-  "answer": "",
-  "explanation": "",
-  "distractor": ["", "..."]
-}
-- Exactly one correct answer must exist in "answer.answer".
-- If true/false, "distractor" must contain exactly one value, the opposite boolean.
-- If text-based, "distractor" must contain between 2 and 4 wrong but plausible values.
+- Exactly one correct answer must exist.
+- If true/false, the distractors must contain exactly one value, the opposite boolean as a string.
+- If text-based, the distractors must contain between 2 and 4 wrong but plausible values.
 - No distractor may be correct, ambiguous, or too similar to the correct answer or to another distractor.
-- "explanation" must clearly justify why the answer is correct, grounded only in TOPIC.
-- No keys other than "question", "answer", "distractor" are allowed at the top level.
-- No keys other than "answer" and "explanation" are allowed inside the answer object.
-- Output ONLY valid JSON.
+- The explanation must clearly justify why the answer is correct, grounded only in TOPIC.
+- Output ONLY valid JSON, matching exactly the schema provided to you.
 - Output no prose, no markdown, no code fences.
 
 How to choose structure:
@@ -47,7 +38,7 @@ Required internal procedure:
 - distractor count and format match the question type
 - no distractor is correct, duplicated, or ambiguous
 - everything is grounded solely in TOPIC
-- no extra keys are present anywhere
+- the output conforms exactly to the provided schema
 8. If any check fails, revise internally until all checks pass.
 9. Return only the final JSON object.
 
@@ -59,5 +50,7 @@ Return only the final JSON object.
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
 Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+
+<format>
 
 TOPIC: <topic>

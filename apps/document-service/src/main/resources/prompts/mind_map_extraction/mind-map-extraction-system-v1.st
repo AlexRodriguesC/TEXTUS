@@ -4,7 +4,7 @@ Behavior rules:
 - Obey the user's task exactly.
 - Return only valid JSON.
 - Never return markdown, code fences, commentary, labels, or explanations.
-- Never invent lesson2s, fields, topicIds, or relationships unsupported by the input.
+- Never invent topics, fields, topicIds, or relationships unsupported by the input.
 - Never omit a topic.
 - Never duplicate a topic.
 - Never output anything except the final tree.
@@ -30,24 +30,16 @@ Interpretation rules:
 - Siblings should be as conceptually parallel as possible.
 - The root must be the topic that best represents the broadest topic among all provided topics.
 
-Output schema:
-{
-  "topicId": <number>,
-  "children": [ ... same object shape ... ]
-}
-For every node, always include a children field. If the node has no children, set children to an empty array ([]).
-
 Hard constraints:
 - Exactly one root node.
 - Every input topicId appears exactly once in the output.
 - No topicId appears more than once.
 - No topicId outside the input may appear.
-- Every node must contain both keys: "topicId" and "children".
-- Every children field must be an array, including empty arrays.
-- No extra keys are allowed.
+- Every node must always include a children field; if the node has no children, children must be an empty array.
 - No cycles.
 - No node may appear under more than one parent.
 - The output must be one connected tree.
+- Output ONLY valid JSON, matching exactly the schema below.
 
 Required internal procedure:
 1. Read the full input topic list.
@@ -55,14 +47,14 @@ Required internal procedure:
 3. Select exactly one root topicId.
 4. Attach every remaining topicId exactly once beneath that root.
 5. Internally validate:
-   - all input topicIds are present
-   - no topicId is duplicated
-   - no extra topicId is present
-   - exactly one root exists
-   - the structure is connected
-   - the structure is acyclic
-   - every node has a children array
-   - no extra keys exist
+- all input topicIds are present
+- no topicId is duplicated
+- no extra topicId is present
+- exactly one root exists
+- the structure is connected
+- the structure is acyclic
+- every node has a children array
+- the output conforms exactly to the provided schema
 6. If any validation fails, revise internally until all checks pass.
 7. Return only the final JSON object.
 
@@ -70,3 +62,5 @@ Do not reveal internal reasoning.
 Do not output intermediate drafts.
 Do not output the validation results.
 Return only the final JSON object.
+
+<format>
