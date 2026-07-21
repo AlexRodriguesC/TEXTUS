@@ -17,6 +17,9 @@ import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -65,5 +68,43 @@ class SpaceControllerSpec extends Specification {
         then:
         result.andExpect(status().isOk())
         result.andExpect(jsonPath('$.id').value(42))
+    }
+
+    def "should list spaces for owner"() {
+        given:
+        spaceService.getSpaces("pippo") >> [new Space(1L, "pippo", "icon", "Space", "desc")]
+
+        when:
+        def result = mockMvc.perform(get("/api/v1/spaces").principal(authentication))
+
+        then:
+        result.andExpect(status().isOk())
+        result.andExpect(jsonPath('$[0].spaceId').value(1))
+        result.andExpect(jsonPath('$[0].name').value("Space"))
+    }
+
+    def "should delete space"() {
+        when:
+        def result = mockMvc.perform(delete("/api/v1/spaces/1").principal(authentication))
+
+        then:
+        1 * spaceService.delete("pippo", 1L)
+        result.andExpect(status().isNoContent())
+    }
+
+    def "should update space"() {
+        given:
+        def body = new ObjectMapper().writeValueAsString([icon: "new", name: "Updated", description: "New desc"])
+
+        when:
+        def result = mockMvc.perform(
+                patch("/api/v1/spaces/1")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+
+        then:
+        1 * spaceService.update(_ as Space)
+        result.andExpect(status().isNoContent())
     }
 }

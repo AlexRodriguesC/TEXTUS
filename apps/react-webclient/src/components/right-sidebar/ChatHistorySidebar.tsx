@@ -11,10 +11,10 @@ import useChats from "@/hooks/useChats.ts";
 import { cn } from "@/lib/utils.ts";
 import PathConstants from "@/routing/pathConstants.ts";
 import { useRouterState } from "@tanstack/react-router";
-import { Loader2, Plus } from "lucide-react";
+import {Plus} from "lucide-react";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-
+import {Spinner} from "@/components/ui/spinner.tsx";
 function ChatHistorySidebar() {
   const { t } = useTranslation();
   const { state, openMobile } = useSidebar();
@@ -50,51 +50,54 @@ function ChatHistorySidebar() {
 
   return (
     <SidebarGroup className="flex min-h-0 flex-1 flex-col p-2">
-      <SidebarGroupLabel>{t("chat.history")}</SidebarGroupLabel>
-      <SidebarGroupContent className="flex shrink-0 flex-col gap-2">
-        <Button
-          className="w-full justify-start gap-2"
-          variant="outline"
-          onClick={() => void handleCreateChat()}
-          disabled={isCreating}
-        >
-          {isCreating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          {t("chat.new")}
-        </Button>
-      </SidebarGroupContent>
-      <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto">
-        <div className="space-y-1">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className={cn(
-                "group flex items-center gap-1 rounded-none px-2 py-2 text-sm cursor-pointer hover:bg-muted",
-                selectedChatId === chat.id && "bg-muted",
+      <SidebarGroupLabel className="flex items-center justify-between w-full px-4 pl-1 py-3">
+          {t("chat.history")}
+          <Button
+              className={"w-fit p-0"}
+              variant="ghost"
+              onClick={() => void handleCreateChat()}
+              disabled={isCreating}
+          >
+              {isCreating ? (
+                  <Spinner className="h-4 w-4" />
+              ) : (
+                  <span className="flex items-center justify-center rounded-full bg-background/60 h-7 w-7 shrink-0">
+              <Plus className="h-4 w-4" />
+                </span>
               )}
-            >
-              <button
-                type="button"
-                className="flex-1 text-left truncate"
-                onClick={() => setSelectedChatId(chat.id)}
-              >
-                {chat.title}
-              </button>
-              <DestructiveActionButton
-                title={t("chat.delete.title")}
-                description={t("chat.delete.description")}
-                onConfirm={() => void handleDeleteChat(chat.id)}
-              />
+          </Button>
+      </SidebarGroupLabel>
+        <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto pr-4">
+            <div className="space-y-1">
+                {chats.map((chat) => (
+                    <div
+                        key={chat.id}
+                        className={cn(
+                            "group flex items-center gap-1 rounded-none text-sm cursor-pointer hover:bg-muted",
+                            selectedChatId === chat.id && "bg-muted",
+                        )}
+                    >
+                        <Button
+                            variant="secondary"
+                            className="flex-1 justify-start text-left truncate bg-transparent hover:bg-transparent px-1"
+                            onClick={() => setSelectedChatId(chat.id)}
+                        >
+                            {chat.title}
+                        </Button>
+                        <span className="flex items-center justify-center h-7 w-7 shrink-0">
+          <DestructiveActionButton
+              title={t("chat.delete.title")}
+              description={t("chat.delete.description")}
+              onConfirm={() => void handleDeleteChat(chat.id)}
+          />
+        </span>
+                    </div>
+                ))}
+                {!isLoading && chats.length === 0 && (
+                    <p className="px-2 py-4 text-sm text-muted-foreground">{t("chat.empty.list")}</p>
+                )}
             </div>
-          ))}
-          {!isLoading && chats.length === 0 && (
-            <p className="px-2 py-4 text-sm text-muted-foreground">{t("chat.empty.list")}</p>
-          )}
-        </div>
-      </SidebarGroupContent>
+        </SidebarGroupContent>
     </SidebarGroup>
   );
 }

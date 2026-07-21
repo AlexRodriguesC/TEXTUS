@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.integration.dataaccess
 
+import ch.supsi.documentapplication.integration.IntegrationFixture
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest
@@ -19,7 +20,7 @@ import spock.lang.Specification
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
 @Rollback
-abstract class DatabaseSpec extends Specification {
+abstract class DatabaseSpec extends Specification implements IntegrationFixture {
 
     @Shared
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16")

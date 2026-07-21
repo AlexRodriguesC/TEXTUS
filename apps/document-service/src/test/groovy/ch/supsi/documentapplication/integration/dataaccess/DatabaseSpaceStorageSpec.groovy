@@ -13,20 +13,37 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         storage = new DatabaseSpaceStorage(jdbcClient)
     }
 
-    private Long createUser(String username = "alice", String password = "abc") {
-        jdbcClient.sql("SELECT users.create_user(:username, :password)")
-                .param("username", username)
-                .param("password", password)
-                .query()
-                .singleValue()
-        return 1L
+    def "should create space and read it back in round trip"() {
+        given:
+        createUser("space-owner")
+        def space = new Space("space-owner", "icon1", "My Space", "Space description")
+
+        when:
+        Long spaceId = storage.create(space)
+        def readSpace = storage.read(spaceId)
+
+        then:
+        readSpace.isPresent()
+        readSpace.get().id == spaceId
+        readSpace.get().owner == "space-owner"
+        readSpace.get().icon == "icon1"
+        readSpace.get().name == "My Space"
+        readSpace.get().description == "Space description"
     }
 
-    private Long createSpace(String owner = "alice", String icon = "abc", String name = "space", String description = "desc") {
-        return storage.create(new Space(owner, icon, name, description))
+    def "should create space and list it when reading all spaces for owner"() {
+        given:
+        createUser("list-owner")
+        def space = new Space("list-owner", "icon2", "Listed Space", "Listed description")
+
+        when:
+        Long spaceId = storage.create(space)
+        def spaces = storage.readAll("list-owner")
+
+        then:
+        spaces*.id.contains(spaceId)
+        spaces.find { it.id == spaceId }.name == "Listed Space"
     }
-
-
 
     def "should delete space"() {
         given:

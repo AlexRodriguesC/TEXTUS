@@ -6,12 +6,9 @@ import ch.supsi.documentapplication.dataaccess.DatabasePathStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseUserStorage
-import ch.supsi.documentapplication.model.Space
-import ch.supsi.documentapplication.model.User
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
-import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.Group
 import ch.supsi.documentapplication.model.learn.exercise.LeftRight
 import ch.supsi.documentapplication.model.learn.exercise.PairExercise
@@ -38,91 +35,9 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         topicStorage = new DatabaseTopicStorage(jdbcClient)
         userStorage = new DatabaseUserStorage(jdbcClient)
 
-        lessonId = createLesson()
-    }
-
-    private Long createLesson() {
-        userStorage.createUser(new User("owner", "abc"))
-        Space space = new Space("owner", "icon", "name", "description")
-        Long spaceId = spaceStorage.create(space)
-
-        Long jobId = createBatchJobInstance()
-        Long pathId = pathStorage.createLearningPath(spaceId, jobId)
-        Long topicId = createTopic(spaceId, jobId)
-
-        Lesson lesson = new Lesson(LessonType.LESSON, 0, [topicId])
-
-        Chapter chapter = new Chapter(0, "Chapter 1", "desc", List.of())
-        chapter.setLessons([lesson])
-
-        pathStorage.create(pathId, chapter, spaceId)
-
-        this.topicId = topicId
-
-        return jdbcClient
-                .sql("SELECT id FROM documents.lesson WHERE chapter_id = (SELECT id FROM documents.chapter WHERE path_id = :pathId)")
-                .param("pathId", pathId)
-                .query(Long.class)
-                .single()
-    }
-
-    private Long createDocument(Long spaceId, Long jobId) {
-        return jdbcClient
-                .sql("""
-                INSERT INTO documents.document (name, job_id, space_id)
-                VALUES ('test-document', :jobId, :spaceId)
-                RETURNING id
-                """)
-                .param("jobId", jobId)
-                .param("spaceId", spaceId)
-                .query(Long.class)
-                .single()
-    }
-
-    private Long createPage(Long spaceId, Long jobId) {
-        Long documentId = createDocument(spaceId, jobId)
-
-        return jdbcClient
-                .sql("""
-                INSERT INTO documents.page (space_id, document_id, title, summary)
-                VALUES (:spaceId, :documentId, 'test title', 'test summary')
-                RETURNING id
-                """)
-                .param("spaceId", spaceId)
-                .param("documentId", documentId)
-                .query(Long.class)
-                .single()
-    }
-
-    private Long createTopic(Long spaceId, Long jobId) {
-        Long pageId = createPage(spaceId, jobId)
-
-        Topic topic = new Topic(null, "a", 1, "Topic title", "Topic summary", ["label1", "label2"])
-        topicStorage.create(topic, pageId)
-
-        return jdbcClient
-                .sql("SELECT id FROM documents.topic WHERE page_id = :pageId")
-                .param("pageId", pageId)
-                .query(Long.class)
-                .single()
-    }
-
-    private Long createBatchJobInstance() {
-        Long jobInstanceId = jdbcClient
-                .sql("SELECT COALESCE(MAX(job_instance_id), 0) + 1 FROM documents.batch_job_instance")
-                .query(Long.class)
-                .single()
-
-        jdbcClient
-                .sql("""
-                INSERT INTO documents.batch_job_instance (job_instance_id, version, job_name, job_key)
-                VALUES (:jobInstanceId, 0, 'test-job', :jobKey)
-                """)
-                .param("jobInstanceId", jobInstanceId)
-                .param("jobKey", UUID.randomUUID().toString().substring(0, 32))
-                .update()
-
-        return jobInstanceId
+        def fixture = createLearningPathWithLesson()
+        lessonId = fixture.lessonId
+        topicId = fixture.topicId
     }
 
     def "creates and reads back a question exercise, then updates it"() {

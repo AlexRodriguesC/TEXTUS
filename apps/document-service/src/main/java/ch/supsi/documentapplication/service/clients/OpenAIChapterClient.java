@@ -72,9 +72,9 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
                     .map(c -> new ChapterSkeleton(c.getIndex(), c.getTitle(), c.getDescription()))
                     .toList();
 
-            Map<String, Object> feedbackParams = Map.of(
-                    CHAPTERS, objectMapper.writeValueAsString(skeletons),
-                    MISSING_LABEL_IDS, objectMapper.writeValueAsString(feedback.missingLabelIds()));
+            Map<String, Object> feedbackParams = new HashMap<>();
+            feedbackParams.put(CHAPTERS, objectMapper.writeValueAsString(skeletons));
+            feedbackParams.put(MISSING_LABEL_IDS, objectMapper.writeValueAsString(feedback.missingLabelIds()));
             var feedbackPrompt = getFeedbackPrompt(feedbackParams);
             log.info("Feedback prompt: {}", feedbackPrompt);
 
