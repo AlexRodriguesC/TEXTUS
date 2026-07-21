@@ -17,7 +17,7 @@ function TopicInformationModal({ topic }: { topic: TopicResponseDTO }) {
   return (
       <Dialog>
         <DialogTrigger asChild>
-          <InformationQuestionMark tooltip={t("exercise.guide.tooltip")} />
+          <InformationQuestionMark className={"cursor-pointer"} tooltip={t("exercise.guide.tooltip")} />
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>

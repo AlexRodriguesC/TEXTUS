@@ -7,7 +7,6 @@ import ch.supsi.documentapplication.model.learn.exercise.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.Getter;
 
 @Getter
@@ -70,6 +69,6 @@ public class Attempt<T> {
     }
 
     public boolean isAnswerWrong() {
-        return !Objects.equals(userResponse, exercise.getAnswer());
+        return !exercise.isAnswerCorrect(userResponse);
     }
 }

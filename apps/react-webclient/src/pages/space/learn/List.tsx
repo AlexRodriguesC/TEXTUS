@@ -17,18 +17,22 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { ListResponseDTO } from "@/client/model";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
+import { cn } from "@/lib/utils.ts";
 
 interface ListProps {
   list: ListResponseDTO;
+  submitted: boolean;
   onAnswer?: (answer: string[] | null) => void;
 }
 
 interface SortableItemProps {
   id: string;
   value: string;
+  disabled: boolean;
+  status?: "correct" | "incorrect" | null;
 }
 
-function SortableItem({ id, value }: SortableItemProps) {
+function SortableItem({ id, value, disabled, status }: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -36,7 +40,7 @@ function SortableItem({ id, value }: SortableItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -48,21 +52,30 @@ function SortableItem({ id, value }: SortableItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded-md border bg-background p-3"
+      className={cn(
+        "flex items-center gap-2 rounded-md border p-3",
+        status === "correct" &&
+          "border-primary bg-primary text-primary-foreground",
+        status === "incorrect" &&
+          "border-destructive bg-destructive text-destructive-foreground",
+        status == null && "bg-background",
+      )}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab touch-none text-muted-foreground"
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
+      {!disabled && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-muted-foreground"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      )}
       <span>{value}</span>
     </div>
   );
 }
 
-function List({ list, onAnswer }: ListProps) {
+function List({ list, submitted, onAnswer }: ListProps) {
   const [items, setItems] = useState(() => {
     const arr = list.answer.map((value, i) => ({ id: `${i}-${value}`, value }));
     for (let i = arr.length - 1; i > 0; i--) {
@@ -75,6 +88,7 @@ function List({ list, onAnswer }: ListProps) {
   const sensors = useSensors(useSensor(PointerSensor));
 
   function handleDragEnd(event: DragEndEvent) {
+    if (submitted) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -103,9 +117,20 @@ function List({ list, onAnswer }: ListProps) {
           strategy={verticalListSortingStrategy}
         >
           <div className="flex flex-col gap-2">
-            {items.map((item) => (
-              <SortableItem key={item.id} id={item.id} value={item.value} />
-            ))}
+            {items.map((item, index) => {
+              const isCorrect = item.value === list.answer[index];
+              return (
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  value={item.value}
+                  disabled={submitted}
+                  status={
+                    submitted ? (isCorrect ? "correct" : "incorrect") : null
+                  }
+                />
+              );
+            })}
           </div>
         </SortableContext>
       </DndContext>

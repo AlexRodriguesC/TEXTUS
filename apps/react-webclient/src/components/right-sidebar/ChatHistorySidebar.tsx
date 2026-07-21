@@ -102,7 +102,7 @@ function ChatHistorySidebar() {
                     <div
                         key={chat.id}
                         className={cn(
-                            "group flex items-center gap-1 rounded-none text-sm cursor-pointer hover:bg-muted",
+                            "group/chat-row flex items-center gap-1 rounded-none text-sm cursor-pointer hover:bg-muted",
                             selectedChatId === chat.id && "bg-muted",
                         )}
                     >
@@ -113,13 +113,13 @@ function ChatHistorySidebar() {
                         >
                             {chat.title}
                         </Button>
-                        <span className="flex items-center justify-center h-7 w-7 shrink-0">
-          <DestructiveActionButton
-              title={t("chat.delete.title")}
-              description={t("chat.delete.description")}
-              onConfirm={() => void handleDeleteChat(chat.id)}
-          />
-        </span>
+                        <span className="flex items-center justify-center h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover/chat-row:opacity-100">
+                <DestructiveActionButton
+                    title={t("chat.delete.title")}
+                    description={t("chat.delete.description")}
+                    onConfirm={() => void handleDeleteChat(chat.id)}
+                />
+            </span>
                     </div>
                 ))}
                 {!isLoading && chats.length === 0 && (

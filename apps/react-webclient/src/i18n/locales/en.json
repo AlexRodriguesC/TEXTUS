@@ -135,6 +135,13 @@
     "guide": {
       "tooltip": "Click to show the guide",
       "title": "The current exercise is based on the following topic"
+    },
+    "help": {
+      "button": "Get help",
+      "title": "Exercise help",
+      "skipped": "Skipped",
+      "unknownTopic": "Unknown topic",
+      "message": "I need help understanding why I got this exercise wrong.\n\nTopic:\n{{topic}}\n\nExercise ({{exerciseType}}):\n{{prompt}}\n\nCorrect solution:\n{{correctSolution}}\n\nMy response:\n{{userResponse}}\n\nPlease help me understand why my answer was incorrect and what led to my mistake."
     }
   },
   "button": {

@@ -23,6 +23,9 @@ public class Question extends BaseExercise<String> {
 
     @Override
     public boolean isAnswerCorrect(String userResponse) {
+        if (userResponse == null) {
+            return false;
+        }
         return this.answer.equals(userResponse);
     }
 

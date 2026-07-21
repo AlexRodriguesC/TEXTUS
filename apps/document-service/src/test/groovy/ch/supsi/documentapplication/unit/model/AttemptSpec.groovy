@@ -39,6 +39,36 @@ class AttemptSpec extends Specification {
         attempt.isAnswerWrong()
     }
 
+    def "should detect null question response as wrong when skipped"() {
+        given:
+        def exercise = new Question()
+        exercise.setId(1L)
+        exercise.setAnswer("4")
+        def topic = new Topic(1L, "a.pdf", 1, "title", "summary", [])
+        def request = new AttemptRequestDTO(ExerciseType.QUESTION, "att-skip", 1L, null)
+
+        when:
+        def attempt = Attempt.from(request, exercise, topic)
+
+        then:
+        attempt.isAnswerWrong()
+    }
+
+    def "should detect null list response as wrong when skipped"() {
+        given:
+        def exercise = new ch.supsi.documentapplication.model.learn.exercise.List()
+        exercise.setId(2L)
+        exercise.setAnswer(["a", "b"])
+        def topic = new Topic(1L, "a.pdf", 1, "title", "summary", [])
+        def request = new AttemptRequestDTO(ExerciseType.LIST, "att-skip", 2L, null)
+
+        when:
+        def attempt = Attempt.from(request, exercise, topic)
+
+        then:
+        attempt.isAnswerWrong()
+    }
+
     def "should build list attempt from request"() {
         given:
         def exercise = new ch.supsi.documentapplication.model.learn.exercise.List()

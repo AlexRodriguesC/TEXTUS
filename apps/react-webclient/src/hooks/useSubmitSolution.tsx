@@ -1,10 +1,10 @@
 import type {
   AttemptRequestDTO,
   AttemptRequestDTOExerciseType,
+  AttemptResponseDTO,
 } from "@/client/model";
 import {
   getGetLessonQueryKey,
-  getGetNextExerciseQueryKey,
   useSubmitAttempt,
 } from "@/client/generated/lessons/lessons.ts";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,7 @@ function useSubmitSolution({
 }) {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useSubmitAttempt({
+  const { mutateAsync, isPending } = useSubmitAttempt({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
@@ -28,12 +28,12 @@ function useSubmitSolution({
     },
   });
 
-  const submitSolution = (
+  const submitSolution = async (
     exerciseId: number,
     exerciseType: AttemptRequestDTOExerciseType,
     response: unknown,
-  ) => {
-    if (!spaceId || !lessonId) return;
+  ): Promise<AttemptResponseDTO | undefined> => {
+    if (!spaceId || !lessonId) return undefined;
 
     const payload: AttemptRequestDTO = {
       attemptId: crypto.randomUUID(),
@@ -42,7 +42,11 @@ function useSubmitSolution({
       response,
     };
 
-    return mutate({ spaceId, lessonId, data: payload });
+    const result = await mutateAsync({ spaceId, lessonId, data: payload });
+    if (result.status === 201) {
+      return result.data;
+    }
+    return undefined;
   };
 
   return { submitSolution, isPending };

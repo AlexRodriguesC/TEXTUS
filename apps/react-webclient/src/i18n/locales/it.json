@@ -123,6 +123,13 @@
     "guide": {
       "tooltip": "Clicca per mostrare la guida",
       "title": "L'esercizio corrente si basa sul seguente argomento"
+    },
+    "help": {
+      "button": "Chiedi aiuto",
+      "title": "Aiuto esercizio",
+      "skipped": "Saltato",
+      "unknownTopic": "Argomento sconosciuto",
+      "message": "Ho bisogno di aiuto per capire perché ho sbagliato questo esercizio.\n\nArgomento:\n{{topic}}\n\nEsercizio ({{exerciseType}}):\n{{prompt}}\n\nSoluzione corretta:\n{{correctSolution}}\n\nLa mia risposta:\n{{userResponse}}\n\nPer favore aiutami a capire perché la mia risposta era errata e quale errore ho commesso."
     }
   },
   "button": {

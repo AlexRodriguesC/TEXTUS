@@ -12,12 +12,12 @@ import Pair from "@/pages/space/learn/Pair.tsx";
 import useSubmitSolution from "@/hooks/useSubmitSolution.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import AttemptsExhausted from "@/pages/space/learn/lesson/AttemptsExhausted.tsx";
-import {useQueryClient} from "@tanstack/react-query";
-import {getGetNextExerciseQueryKey} from "@/client/generated/lessons/lessons.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetNextExerciseQueryKey } from "@/client/generated/lessons/lessons.ts";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
-import type {GroupResponseDTO, ListResponseDTO, PairResponseDTO, QuestionResponseDTO} from "@/client/model";
 import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
+import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
 
 function Lesson() {
   const queryClient = useQueryClient();
@@ -26,8 +26,9 @@ function Lesson() {
   const { isLoading, nextExercise, exerciseLoading, lesson } = useLesson({
     lessonId: lessonId,
   });
-  const [answer, setAnswer] = useState<any | null>(null);
+  const [answer, setAnswer] = useState<unknown | null>(null);
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
   const { isPending: isAttemptLoading, submitSolution } = useSubmitSolution({
     spaceId,
     lessonId,
@@ -38,15 +39,36 @@ function Lesson() {
   }
 
   const handleNext = () => {
-    queryClient.resetQueries({queryKey: getGetNextExerciseQueryKey(spaceId, lessonId)}).then(() => {
-      setAnswer(null);
-      setSubmitted(false);
-    })
-  }
+    queryClient
+      .resetQueries({ queryKey: getGetNextExerciseQueryKey(spaceId, lessonId) })
+      .then(() => {
+        setAnswer(null);
+        setSubmitted(false);
+        setWasCorrect(null);
+      });
+  };
 
-  const handleSkip = (exercise: ListResponseDTO | GroupResponseDTO | PairResponseDTO | QuestionResponseDTO) => {
+  const handleSkip = async () => {
+    if (!nextExercise || isAttemptLoading) return;
+    const result = await submitSolution(
+      nextExercise.id,
+      nextExercise.type,
+      null,
+    );
+    setWasCorrect(result?.correct ?? false);
+    setSubmitted(true);
+  };
 
-  }
+  const handleConfirm = async () => {
+    if (!nextExercise || answer === null || isAttemptLoading) return;
+    const result = await submitSolution(
+      nextExercise.id,
+      nextExercise.type,
+      answer,
+    );
+    setWasCorrect(result?.correct ?? false);
+    setSubmitted(true);
+  };
 
   const exercise = (() => {
     if (isLoading || exerciseLoading || !nextExercise) {
@@ -54,26 +76,51 @@ function Lesson() {
     }
 
     if (nextExercise.type === "LIST") {
-      return <List key={nextExercise.id} list={nextExercise} onAnswer={setAnswer}></List>;
-    } else if (nextExercise.type === "QUESTION") {
-      return <Question key={nextExercise.id} question={nextExercise} submitted={submitted} onAnswer={setAnswer}></Question>;
-    } else if (nextExercise.type === "GROUP") {
-      return <Group key={nextExercise.id} group={nextExercise} onAnswer={setAnswer} submitted={submitted}></Group>;
-    } else if (nextExercise.type === "PAIR") {
-      return <Pair key={nextExercise.id} pair={nextExercise} onAnswer={setAnswer} submitted={submitted}></Pair>;
+      return (
+        <List
+          key={nextExercise.id}
+          list={nextExercise}
+          submitted={submitted}
+          onAnswer={setAnswer}
+        />
+      );
+    }
+    if (nextExercise.type === "QUESTION") {
+      return (
+        <Question
+          key={nextExercise.id}
+          question={nextExercise}
+          submitted={submitted}
+          onAnswer={setAnswer}
+        />
+      );
+    }
+    if (nextExercise.type === "GROUP") {
+      return (
+        <Group
+          key={nextExercise.id}
+          group={nextExercise}
+          onAnswer={setAnswer}
+          submitted={submitted}
+        />
+      );
+    }
+    if (nextExercise.type === "PAIR") {
+      return (
+        <Pair
+          key={nextExercise.id}
+          pair={nextExercise}
+          onAnswer={setAnswer}
+          submitted={submitted}
+        />
+      );
     }
     throw new Error("Invalid exercise type");
   })();
 
-  const handleConfirm = () => {
-    if (!nextExercise || answer === null) return;
-    submitSolution(nextExercise.id, nextExercise.type, answer);
-    setSubmitted(true);
-  };
-
   const content = (() => {
     if (exerciseLoading) {
-      return <LoadingScreen/>;
+      return <LoadingScreen />;
     }
 
     if (lesson!.attemptsLeft === 0) {
@@ -85,33 +132,45 @@ function Lesson() {
     }
 
     if (lesson!.isCheckpoint() && lesson?.topics.length === 0) {
-      return <LessonCheckpointCompleted/>
+      return <LessonCheckpointCompleted />;
     }
 
-    return exercise;
+    return (
+      <>
+        {exercise}
+        {submitted && wasCorrect === false && nextExercise && (
+          <ExerciseHelpButton
+            exercise={nextExercise}
+            userAnswer={answer}
+            topicId={nextExercise.topicId}
+          />
+        )}
+      </>
+    );
   })();
 
   return (
-      <CenteredPage>
-        <div className="flex flex-col items-center gap-4 h-full w-[90%] md:w-3/5">
-          <div className="sticky top-4 flex items-center gap-3 w-full">
-            <LessonHeader />
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto w-full place-content-center">
-            {content}
-          </div>
-          <Separator></Separator>
-          <div className="sticky bottom-4 pt-4 flex items-center gap-3 w-full">
-            <LessonFooter
-                onCancel={() => setAnswer(null)}
-                submitted={submitted}
-                onConfirm={handleConfirm}
-                onNext={handleNext}
-                confirmationEnabled={answer !== null && !isAttemptLoading}
-            />
-          </div>
+    <CenteredPage>
+      <div className="flex flex-col items-center gap-4 h-full w-[90%] md:w-3/5">
+        <div className="sticky top-4 flex items-center gap-3 w-full">
+          <LessonHeader />
         </div>
-      </CenteredPage>
+        <div className="flex-1 min-h-0 overflow-y-auto w-full place-content-center">
+          {content}
+        </div>
+        <Separator></Separator>
+        <div className="sticky bottom-4 pt-4 flex items-center gap-3 w-full">
+          <LessonFooter
+            submitted={submitted}
+            onConfirm={() => void handleConfirm()}
+            onSkip={() => void handleSkip()}
+            onNext={handleNext}
+            confirmationEnabled={answer !== null && !isAttemptLoading}
+            skipEnabled={!isAttemptLoading}
+          />
+        </div>
+      </div>
+    </CenteredPage>
   );
 }
 
