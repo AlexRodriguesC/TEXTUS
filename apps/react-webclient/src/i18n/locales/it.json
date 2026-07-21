@@ -266,6 +266,11 @@
     "description": "Anche i cervelloni ci mettono un attimo. Pure noi."
   },
   "chat": {
+    "create": {
+      "title": "Crea una nuova chat",
+      "placeholder": "Una conversazione epica",
+      "confirm": "Crea"
+    },
     "new": "Nuova chat",
     "history": "Cronologia",
     "empty": {

@@ -61,7 +61,7 @@ class LearningControllerSpec extends Specification {
     @SpringBean
     AppProperties appProperties = Mock()
 
-    def lesson() {
+    static def lesson() {
         new Lesson(1L, 1L, 0, LessonType.LESSON, [10L], 0L, 5, 0.10d)
     }
 

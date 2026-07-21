@@ -12,9 +12,11 @@ import { cn } from "@/lib/utils.ts";
 import PathConstants from "@/routing/pathConstants.ts";
 import { useRouterState } from "@tanstack/react-router";
 import {Plus} from "lucide-react";
-import { useCallback } from "react";
+import {useCallback, useState} from "react";
 import { useTranslation } from "react-i18next";
 import {Spinner} from "@/components/ui/spinner.tsx";
+import {Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
+import {Input} from "@/components/ui/input.tsx";
 function ChatHistorySidebar() {
   const { t } = useTranslation();
   const { state, openMobile } = useSidebar();
@@ -28,9 +30,10 @@ function ChatHistorySidebar() {
 
   const { selectedChatId, setSelectedChatId } = useChatContext();
   const { chats, isLoading, createChat, deleteChat, isCreating } = useChats();
+    const [title, setTitle] = useState("");
 
-  const handleCreateChat = useCallback(async () => {
-    const chat = await createChat();
+  const handleCreateChat = useCallback(async (title?: string) => {
+    const chat = await createChat(title);
     setSelectedChatId(chat.id);
   }, [createChat, setSelectedChatId]);
 
@@ -52,20 +55,46 @@ function ChatHistorySidebar() {
     <SidebarGroup className="flex min-h-0 flex-1 flex-col p-2">
       <SidebarGroupLabel className="flex items-center justify-between w-full px-4 pl-1 py-3">
           {t("chat.history")}
-          <Button
-              className={"w-fit p-0"}
-              variant="ghost"
-              onClick={() => void handleCreateChat()}
-              disabled={isCreating}
-          >
-              {isCreating ? (
-                  <Spinner className="h-4 w-4" />
-              ) : (
-                  <span className="flex items-center justify-center rounded-full bg-background/60 h-7 w-7 shrink-0">
-              <Plus className="h-4 w-4" />
+          <Dialog>
+              <DialogTrigger asChild>
+                  <Button
+                      className={"w-fit p-0"}
+                      variant="ghost"
+                      disabled={isCreating}
+                  >
+                      {isCreating ? (
+                          <Spinner className="h-4 w-4" />
+                      ) : (
+                          <span className="flex items-center justify-center rounded-full bg-background/60 h-7 w-7 shrink-0">
+                    <Plus className="h-4 w-4" />
                 </span>
-              )}
-          </Button>
+                      )}
+                  </Button>
+              </DialogTrigger>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>{t("chat.create.title")}</DialogTitle>
+                  </DialogHeader>
+                  <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder={t("chat.create.placeholder")}
+                  />
+                  <DialogFooter className="flex flex-col w-full md:flex-row md:justify-between">
+                      <DialogClose asChild>
+                          <Button variant="ghost">{t("chat.cancel")}</Button>
+                      </DialogClose>
+                      <DialogClose asChild>
+                          <Button
+                              disabled={isCreating || !title.trim()}
+                              onClick={() => void handleCreateChat(title)}
+                          >
+                              {t("chat.create.confirm")}
+                          </Button>
+                      </DialogClose>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
       </SidebarGroupLabel>
         <SidebarGroupContent className="min-h-0 flex-1 overflow-y-auto pr-4">
             <div className="space-y-1">

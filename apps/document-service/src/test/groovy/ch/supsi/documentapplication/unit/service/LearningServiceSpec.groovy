@@ -48,11 +48,11 @@ class LearningServiceSpec extends Specification {
         spaceStorage.read(10L) >> Optional.of(new Space(10L, "alice", "", "", ""))
     }
 
-    def buildLesson(Long id = 1L, double mastery = 0.10d, int attemptsLeft = 5, List<Long> topics = [100L]) {
+    static def buildLesson(Long id = 1L, double mastery = 0.10d, int attemptsLeft = 5, List<Long> topics = [100L]) {
         new Lesson(id, 1L, 0, LessonType.LESSON, topics, 0L, attemptsLeft, mastery)
     }
 
-    def buildPath(Lesson lesson, Lesson prerequisite = null) {
+    static def buildPath(Lesson lesson, Lesson prerequisite = null) {
         def lessons = prerequisite != null ? [prerequisite, lesson] : [lesson]
         def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
         chapter.setLessons(lessons)

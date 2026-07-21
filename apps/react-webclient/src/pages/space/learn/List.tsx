@@ -63,9 +63,14 @@ function SortableItem({ id, value }: SortableItemProps) {
 }
 
 function List({ list, onAnswer }: ListProps) {
-  const [items, setItems] = useState(
-    list.answer.map((value, i) => ({ id: `${i}-${value}`, value })),
-  );
+  const [items, setItems] = useState(() => {
+    const arr = list.answer.map((value, i) => ({ id: `${i}-${value}`, value }));
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  });
 
   const sensors = useSensors(useSensor(PointerSensor));
 

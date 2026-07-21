@@ -279,6 +279,12 @@
     "description": "Great minds take a second. So do we."
   },
   "chat": {
+    "create": {
+      "title": "Create a new chat",
+      "placeholder": "An amazing conversation",
+      "confirm": "Create"
+    },
+    "cancel": "Cancel",
     "new": "New chat",
     "history": "History",
     "empty": {

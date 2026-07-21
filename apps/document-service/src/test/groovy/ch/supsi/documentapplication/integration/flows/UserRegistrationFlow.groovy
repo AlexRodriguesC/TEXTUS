@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.integration.flows
 
 import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO
 import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO
+import ch.supsi.documentapplication.controller.DTO.response.TokenResponseDTO
 import ch.supsi.documentapplication.integration.BaseFlowSpec
 import ch.supsi.documentapplication.model.User
 import org.springframework.http.MediaType
@@ -32,7 +33,7 @@ class UserRegistrationFlow extends BaseFlowSpec implements FlowTestSupport {
 
         then:
         loginResponse.expectStatus().isOk()
-        def loginResponseBody = loginResponse.expectBody(ch.supsi.documentapplication.controller.DTO.response.TokenResponseDTO).returnResult().responseBody
+        def loginResponseBody = loginResponse.expectBody(TokenResponseDTO).returnResult().responseBody
         loginResponseBody
         loginResponseBody.token() != null
         !loginResponseBody.token().isEmpty()

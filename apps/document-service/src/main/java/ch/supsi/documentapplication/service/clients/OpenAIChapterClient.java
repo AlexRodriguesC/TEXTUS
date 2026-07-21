@@ -45,7 +45,8 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
             AiContext aiContext) {
         super(
                 chatClient,
-                new BeanOutputConverter<>(new ParameterizedTypeReference<List<Chapter>>() {}),
+                new BeanOutputConverter<>(new ParameterizedTypeReference<>() {
+                }),
                 retryTemplate,
                 systemPrompt,
                 promptTemplate,

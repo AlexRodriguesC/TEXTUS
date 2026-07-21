@@ -67,24 +67,24 @@ function SidebarSpaceInfo() {
         />
       </SidebarGroupContent>
 
-      <SidebarGroupContent>
-        <SidebarMenu>
-          <SidebarMenuItem key="space_info">
-            <div
-              className={`flex ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
-            >
-              <SidebarMenuButton asChild>
-                {!open && (
-                  <span className="flex items-center h-[1em] leading-none overflow-hidden">
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem key="space_info">
+              <div
+                  className={`flex ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
+              >
+                <SidebarMenuButton asChild>
+                  {!open && (
+                      <span className="flex items-center h-[1em] leading-none overflow-hidden">
                     <Emoji unified={space.icon} size={16} />
                   </span>
-                )}
-              </SidebarMenuButton>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+                  )}
+                </SidebarMenuButton>
+              </div>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
   );
 }
 
