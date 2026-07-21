@@ -296,5 +296,11 @@
       "title": "Eliminare la chat?",
       "description": "Questa conversazione e i suoi messaggi verranno eliminati definitivamente."
     }
+  },
+  "mind-map": {
+    "delete": {
+      "title": "Eliminare mappa mentale?",
+      "description": "Tutti i contenuti verranno eliminati definitivamente. Quest'azione non può essere annullata."
+    }
   }
 }

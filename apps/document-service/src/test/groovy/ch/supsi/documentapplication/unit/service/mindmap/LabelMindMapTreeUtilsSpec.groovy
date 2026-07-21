@@ -37,6 +37,17 @@ class LabelMindMapTreeUtilsSpec extends Specification {
         labelMindMap.root.children*.labelId.containsAll([1L, 2L, 3L])
     }
 
+    def "should attach children to parent node"() {
+        given:
+        def parent = new LabelMindMapNode(0L)
+
+        when:
+        LabelMindMapTreeUtils.attachChildren(parent, [1L, 2L])
+
+        then:
+        parent.children*.labelId == [1L, 2L]
+    }
+
     def "should sanitize duplicates and extras"() {
         given:
         def labelMindMap = new LabelMindMap()

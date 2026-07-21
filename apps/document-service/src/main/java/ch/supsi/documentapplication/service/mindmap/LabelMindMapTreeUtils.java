@@ -42,6 +42,15 @@ public final class LabelMindMapTreeUtils {
         }
     }
 
+    public static void attachChildren(LabelMindMapNode parent, List<Long> childIds) {
+        if (parent == null || childIds == null) {
+            return;
+        }
+        for (Long childId : childIds) {
+            parent.getChildren().add(new LabelMindMapNode(childId));
+        }
+    }
+
     public static void mergeMissingLabels(
             LabelMindMap labelMindMap, Map<Integer, List<Long>> assignmentsByParentIndex) {
         List<LabelMindMapNode> nodes = new ArrayList<>();
@@ -51,10 +60,7 @@ public final class LabelMindMapTreeUtils {
             if (entry.getKey() < 0 || entry.getKey() >= nodes.size()) {
                 continue;
             }
-            LabelMindMapNode parent = nodes.get(entry.getKey());
-            for (Long labelId : entry.getValue()) {
-                parent.getChildren().add(new LabelMindMapNode(labelId));
-            }
+            attachChildren(nodes.get(entry.getKey()), entry.getValue());
         }
     }
 

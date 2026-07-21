@@ -8,6 +8,7 @@ import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import ch.supsi.documentapplication.service.clients.exercise.*;
+import ch.supsi.documentapplication.service.mindmap.IncrementalLabelMindMapBuilder;
 import ch.supsi.documentapplication.service.mindmap.MindMapAssembler;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
 import ch.supsi.documentapplication.service.validator.LabelMindMapValidator;
@@ -155,16 +156,27 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             ResourceLoader resourceLoader,
             AiContext aiContext) {
-        var userPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionUser());
-        String userPromptText = copyToString(userPromptResource);
-
-        PromptTemplate promptTemplate = PromptTemplate.builder()
+        var rootUserPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionRootUser());
+        String rootUserPromptText = copyToString(rootUserPromptResource);
+        PromptTemplate rootPromptTemplate = PromptTemplate.builder()
                 .renderer(templateRenderer)
-                .template(userPromptText)
+                .template(rootUserPromptText)
                 .build();
 
-        var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
-        String systemPromptText = copyToString(systemPromptResource);
+        var rootSystemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionRootSystem());
+        String rootSystemPromptText = copyToString(rootSystemPromptResource);
+
+        var childrenUserPromptResource =
+                resourceLoader.getResource(promptProperties.getMindMapExtractionChildrenUser());
+        String childrenUserPromptText = copyToString(childrenUserPromptResource);
+        PromptTemplate childrenPromptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(childrenUserPromptText)
+                .build();
+
+        var childrenSystemPromptResource =
+                resourceLoader.getResource(promptProperties.getMindMapExtractionChildrenSystem());
+        String childrenSystemPromptText = copyToString(childrenSystemPromptResource);
 
         var feedbackUserPromptResource =
                 resourceLoader.getResource(promptProperties.getMindMapExtractionFeedbackUser());
@@ -182,13 +194,16 @@ public class OpenAIClientsConfiguration {
                 objectMapper,
                 chatClient,
                 retryTemplateWrapper,
-                systemPromptText,
-                promptTemplate,
+                rootSystemPromptText,
+                rootPromptTemplate,
+                childrenSystemPromptText,
+                childrenPromptTemplate,
                 feedbackSystemPromptText,
                 feedbackPromptTemplate,
                 new MindMapAssembler(),
                 new LabelMindMapValidator(),
                 new MindMapValidator(),
+                new IncrementalLabelMindMapBuilder(),
                 aiContext);
     }
 

@@ -310,5 +310,11 @@
       "title": "Delete chat?",
       "description": "This conversation and its messages will be permanently deleted."
     }
+  },
+  "mind-map": {
+    "delete": {
+      "title": "Delete mind map?",
+      "description": "All the contents will be permamently lost. This action cannot be undone."
+    }
   }
 }

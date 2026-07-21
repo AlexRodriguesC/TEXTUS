@@ -15,8 +15,10 @@ public class PromptProperties {
     private String topicExtractionSystem;
     private String topicExtractionUser;
 
-    private String mindMapExtractionSystem;
-    private String mindMapExtractionUser;
+    private String mindMapExtractionRootSystem;
+    private String mindMapExtractionRootUser;
+    private String mindMapExtractionChildrenSystem;
+    private String mindMapExtractionChildrenUser;
 
     private String mindMapExtractionFeedbackSystem;
     private String mindMapExtractionFeedbackUser;
