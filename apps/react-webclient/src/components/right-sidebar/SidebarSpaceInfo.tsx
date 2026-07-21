@@ -2,14 +2,9 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarSeparator,
-  useSidebar,
 } from "@/components/ui/sidebar.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
-import { Emoji } from "emoji-picker-react";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { GraduationCap, Menu, MessagesSquare, Workflow } from "lucide-react";
 import SidebarAction from "@/components/right-sidebar/SidebarAction.tsx";
@@ -18,8 +13,6 @@ import PathConstants from "@/routing/pathConstants.ts";
 
 function SidebarSpaceInfo() {
   const { spaceId } = useSpaceId();
-  const { state, openMobile } = useSidebar();
-  const open = state === "expanded" || openMobile;
   const spaces = useSpaces();
 
   if (!spaceId) {
@@ -66,25 +59,7 @@ function SidebarSpaceInfo() {
           tooltipKey={"sidebar.actions.learn.tooltip"}
         />
       </SidebarGroupContent>
-
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem key="space_info">
-              <div
-                  className={`flex ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
-              >
-                <SidebarMenuButton asChild>
-                  {!open && (
-                      <span className="flex items-center h-[1em] leading-none overflow-hidden">
-                    <Emoji unified={space.icon} size={16} />
-                  </span>
-                  )}
-                </SidebarMenuButton>
-              </div>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+    </SidebarGroup>
   );
 }
 

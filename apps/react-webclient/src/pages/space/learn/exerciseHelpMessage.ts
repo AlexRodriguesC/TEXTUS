@@ -9,10 +9,7 @@ import type {
 import type { TFunction } from "i18next";
 
 type Exercise =
-  | QuestionResponseDTO
-  | ListResponseDTO
-  | GroupResponseDTO
-  | PairResponseDTO;
+  QuestionResponseDTO | ListResponseDTO | GroupResponseDTO | PairResponseDTO;
 
 export function buildExerciseHelpMessage(
   t: TFunction,
@@ -44,7 +41,9 @@ function formatCorrectSolution(exercise: Exercise): string {
         .map(([label, keys]) => `${label}: ${keys.join(", ")}`)
         .join("\n");
     case "PAIR":
-      return exercise.pairs.map((pair) => `${pair.left} → ${pair.right}`).join("\n");
+      return exercise.pairs
+        .map((pair) => `${pair.left} → ${pair.right}`)
+        .join("\n");
   }
 }
 
@@ -59,7 +58,9 @@ function formatUserResponse(userAnswer: unknown, t: TFunction): string {
 
   if (Array.isArray(userAnswer)) {
     if (userAnswer.length > 0 && isLeftRight(userAnswer[0])) {
-      return userAnswer.map((pair) => `${pair.left} → ${pair.right}`).join("\n");
+      return userAnswer
+        .map((pair) => `${pair.left} → ${pair.right}`)
+        .join("\n");
     }
     return userAnswer.join(" → ");
   }

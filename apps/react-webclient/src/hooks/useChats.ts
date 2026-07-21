@@ -19,7 +19,7 @@ function useChats() {
     query: { enabled: spaceId !== undefined },
   });
 
-  const chats = useMemo(() => {
+  const chats: ChatsResponseDTO[] = useMemo(() => {
     if (!data || data.status !== 200 || !isChatsResponse(data.data)) return [];
     return data.data.chats;
   }, [data]);
@@ -29,21 +29,23 @@ function useChats() {
     queryClient.invalidateQueries({ queryKey: getListChatsQueryKey(spaceId) });
   }, [queryClient, spaceId]);
 
-  const { mutateAsync: createChatMutation, isPending: isCreating } = useCreateChat({
-    mutation: {
-      onSuccess: async () => {
-        invalidate();
+  const { mutateAsync: createChatMutation, isPending: isCreating } =
+    useCreateChat({
+      mutation: {
+        onSuccess: async () => {
+          invalidate();
+        },
       },
-    },
-  });
+    });
 
-  const { mutateAsync: deleteChatMutation, isPending: isDeleting } = useDeleteChat({
-    mutation: {
-      onSuccess: async () => {
-        invalidate();
+  const { mutateAsync: deleteChatMutation, isPending: isDeleting } =
+    useDeleteChat({
+      mutation: {
+        onSuccess: async () => {
+          invalidate();
+        },
       },
-    },
-  });
+    });
 
   const createChat = useCallback(
     async (title?: string) => {

@@ -9,7 +9,7 @@ import type {
   GroupResponseDTO,
   ListResponseDTO,
   PairResponseDTO,
-  QuestionResponseDTO,
+  QuestionResponseDTO, TopicResponseDTO,
 } from "@/client/model";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -17,10 +17,7 @@ import { useTranslation } from "react-i18next";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
 type Exercise =
-  | QuestionResponseDTO
-  | ListResponseDTO
-  | GroupResponseDTO
-  | PairResponseDTO;
+  QuestionResponseDTO | ListResponseDTO | GroupResponseDTO | PairResponseDTO;
 
 interface ExerciseHelpButtonProps {
   exercise: Exercise;
@@ -42,7 +39,7 @@ function ExerciseHelpButton({
   const [isNavigating, setIsNavigating] = useState(false);
 
   const topic = useMemo(
-    () => topics.find((item) => item.id === topicId),
+    () => topics.find((item: TopicResponseDTO) => item.id === topicId),
     [topics, topicId],
   );
 
@@ -55,7 +52,10 @@ function ExerciseHelpButton({
       const chat = await createChat(t("exercise.help.title"));
       setSelectedChatId(chat.id);
       setPendingMessage({ chatId: chat.id, message });
-      navigate({ to: PathConstants.SPACE_CHAT, params: { spaceId: strSpaceId } });
+      navigate({
+        to: PathConstants.SPACE_CHAT,
+        params: { spaceId: strSpaceId },
+      });
     } finally {
       setIsNavigating(false);
     }

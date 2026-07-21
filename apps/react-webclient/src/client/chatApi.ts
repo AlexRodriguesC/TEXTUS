@@ -16,7 +16,10 @@ export async function listChats(spaceId: number): Promise<ChatDTO[]> {
   return response.data.chats;
 }
 
-export async function createChat(spaceId: number, title?: string): Promise<ChatDTO> {
+export async function createChat(
+  spaceId: number,
+  title?: string,
+): Promise<ChatDTO> {
   const response = await customInstance<ApiResponse<ChatDTO>>(
     `/api/v1/spaces/${spaceId}/chats`,
     {
@@ -38,16 +41,18 @@ export async function getChatHistory(
   return response.data;
 }
 
-export async function deleteChat(spaceId: number, chatId: string): Promise<void> {
+export async function deleteChat(
+  spaceId: number,
+  chatId: string,
+): Promise<void> {
   await customInstance(`/api/v1/spaces/${spaceId}/chats/${chatId}`, {
     method: "DELETE",
   });
 }
 
 export async function listModels(): Promise<ModelsResponseDTO> {
-  const response = await customInstance<ApiResponse<ModelsResponseDTO>>(
-    "/api/v1/models",
-  );
+  const response =
+    await customInstance<ApiResponse<ModelsResponseDTO>>("/api/v1/models");
   return response.data;
 }
 

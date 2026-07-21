@@ -159,10 +159,7 @@ function SpaceDialogForm({
 
           <DialogFooter className={"flex flex-col md:flex-row gap-2"}>
             <DialogClose className={"order-0"} asChild>
-              <Button
-                  type="button"
-                  onClick={() => onSubmit()}
-              >
+              <Button type="button" onClick={() => onSubmit()}>
                 {submitLabel}
               </Button>
             </DialogClose>

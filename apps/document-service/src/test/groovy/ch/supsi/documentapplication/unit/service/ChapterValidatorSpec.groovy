@@ -54,4 +54,60 @@ class ChapterValidatorSpec extends Specification {
         then:
         noExceptionThrown()
     }
+
+    def "should succeed when chapters contain duplicate label ids but all expected ids are present"() {
+        given:
+        def chapters = [
+                new Chapter(0, "Intro", "desc", [1L, 2L]),
+                new Chapter(1, "Advanced", "desc", [2L, 3L])
+        ]
+        def labels = [new Label(1L, "a"), new Label(2L, "b"), new Label(3L, "c")]
+
+        when:
+        validator.validate(chapters, labels)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "should report duplicate label ids in feedback without marking invalid"() {
+        given:
+        def chapters = [
+                new Chapter(0, "Intro", "desc", [1L, 2L]),
+                new Chapter(1, "Advanced", "desc", [2L, 3L])
+        ]
+        def labels = [new Label(1L, "a"), new Label(2L, "b"), new Label(3L, "c")]
+
+        when:
+        def feedback = validator.extractFeedback(chapters, labels)
+
+        then:
+        feedback.duplicateLabelIds() == [2L]
+        feedback.isValid()
+    }
+
+    def "should succeed when chapters contain extra label ids but all expected ids are present"() {
+        given:
+        def chapter = new Chapter(0, "Intro", "desc", [1L, 2L, 99L])
+        def labels = [new Label(1L, "a"), new Label(2L, "b")]
+
+        when:
+        validator.validate([chapter], labels)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "should report extra label ids in feedback without marking invalid"() {
+        given:
+        def chapter = new Chapter(0, "Intro", "desc", [1L, 2L, 99L])
+        def labels = [new Label(1L, "a"), new Label(2L, "b")]
+
+        when:
+        def feedback = validator.extractFeedback([chapter], labels)
+
+        then:
+        feedback.extraLabelIds() == [99L]
+        feedback.isValid()
+    }
 }

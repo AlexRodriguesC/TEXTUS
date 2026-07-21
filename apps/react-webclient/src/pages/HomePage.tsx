@@ -13,7 +13,7 @@ function HomePage() {
     <div className="flex flex-col min-h-screen min-w-100 justify-center items-center gap-6 md:flex-row md:gap-8">
       <div>
         <div className={"flex place-content-center"}>
-          <ResponsiveLottie src="/animations/home.lottie"/>
+          <ResponsiveLottie src="/animations/home.lottie" />
         </div>
         <div className="flex flex-col items-center gap-4">
           <div className="text-center text-2xl md:text-3xl lg:text-4xl">

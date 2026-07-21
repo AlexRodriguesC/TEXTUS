@@ -9,8 +9,10 @@ import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -96,7 +98,41 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
                     .toList();
         }
 
+        if (chapters != null) {
+            var postFeedback = validator.extractFeedback(chapters, input);
+            if (!postFeedback.duplicateLabelIds().isEmpty()
+                    || !postFeedback.extraLabelIds().isEmpty()) {
+                chapters = sanitizeChapters(chapters, input);
+            }
+        }
+
         validator.validate(chapters, input);
         return withUsages(chapters, usages);
+    }
+
+    private static List<Chapter> sanitizeChapters(List<Chapter> chapters, List<Label> expectedLabels) {
+        Set<Long> expectedIds = expectedLabels.stream().map(Label::id).collect(Collectors.toSet());
+        Set<Long> seen = new HashSet<>();
+        List<Chapter> result = new ArrayList<>();
+        int index = 0;
+        for (Chapter chapter : chapters) {
+            List<Long> sanitized = new ArrayList<>();
+            for (Long labelId : chapter.getLabels()) {
+                if (!expectedIds.contains(labelId)) {
+                    continue;
+                }
+                if (!seen.add(labelId)) {
+                    continue;
+                }
+                sanitized.add(labelId);
+            }
+            if (sanitized.isEmpty()) {
+                continue;
+            }
+            result.add(
+                    new Chapter(index, chapter.getTitle(), chapter.getDescription(), sanitized, chapter.getTopics()));
+            index++;
+        }
+        return result;
     }
 }

@@ -8,7 +8,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import type { PairResponseDTO } from "@/client/model";
+import type { PairExercise, PairResponseDTO } from "@/client/model";
 import type { LeftRight } from "@/client/model";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 import { cn } from "@/lib/utils.ts";
@@ -46,8 +46,8 @@ function DroppableLeft({
         className={cn(
           "flex-1 border border-dashed min-h-14",
           isOver ? "border-primary bg-accent" : "border-border",
-          status === "correct" && "border-primary bg-primary/10",
-          status === "incorrect" && "border-destructive bg-destructive/10",
+          status === "correct" && "border-primary bg-primary/40",
+          status === "incorrect" && "border-destructive bg-destructive/40",
         )}
       >
         {assignedRight && (
@@ -97,7 +97,8 @@ function RightChip({
       disabled={disabled}
       className={cn(
         "border px-3 py-1 text-sm flex items-center justify-center",
-        status === "correct" && "bg-primary text-primary-foreground border-primary",
+        status === "correct" &&
+          "bg-primary text-primary-foreground border-primary",
         status === "incorrect" &&
           "bg-destructive text-destructive-foreground border-destructive",
         status == null && "bg-primary/20",
@@ -112,7 +113,13 @@ function RightChip({
   );
 }
 
-function RightPool({ children, disabled }: { children: React.ReactNode; disabled: boolean }) {
+function RightPool({
+  children,
+  disabled,
+}: {
+  children: React.ReactNode;
+  disabled: boolean;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: "right-pool", disabled });
 
   return (
@@ -129,8 +136,14 @@ function RightPool({ children, disabled }: { children: React.ReactNode; disabled
 }
 
 function Pair({ pair, submitted, onAnswer }: PairProps) {
-  const leftItems = useMemo(() => pair.pairs.map((p) => p.left), [pair.pairs]);
-  const rightItems = useMemo(() => pair.pairs.map((p) => p.right), [pair.pairs]);
+  const leftItems = useMemo(
+    () => pair.pairs.map((p: PairExercise) => p.left),
+    [pair.pairs],
+  );
+  const rightItems = useMemo(
+    () => pair.pairs.map((p: PairExercise) => p.right),
+    [pair.pairs],
+  );
 
   const correctRightByLeft = useMemo(() => {
     const map: Record<string, string> = {};
@@ -146,10 +159,11 @@ function Pair({ pair, submitted, onAnswer }: PairProps) {
     if (!onAnswer) return;
 
     const allAssigned =
-      leftItems.length > 0 && leftItems.every((left) => next[left] !== undefined);
+      leftItems.length > 0 &&
+      leftItems.every((left: string) => next[left] !== undefined);
 
     if (allAssigned) {
-      const answer: LeftRight[] = leftItems.map((left) => ({
+      const answer: LeftRight[] = leftItems.map((left: string) => ({
         left,
         right: next[left],
       }));
@@ -197,7 +211,7 @@ function Pair({ pair, submitted, onAnswer }: PairProps) {
   }
 
   const usedRights = new Set(Object.values(assignments));
-  const remainingRights = rightItems.filter((r) => !usedRights.has(r));
+  const remainingRights = rightItems.filter((r: string) => !usedRights.has(r));
 
   return (
     <div className={"flex flex-col gap-8"}>
@@ -209,7 +223,7 @@ function Pair({ pair, submitted, onAnswer }: PairProps) {
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col gap-3">
-          {leftItems.map((left) => {
+          {leftItems.map((left: string) => {
             const assigned = assignments[left];
             const leftCorrect = assigned === correctRightByLeft[left];
             const status = submitted
@@ -231,7 +245,7 @@ function Pair({ pair, submitted, onAnswer }: PairProps) {
         </div>
 
         <RightPool disabled={submitted}>
-          {remainingRights.map((right) => (
+          {remainingRights.map((right: string) => (
             <RightChip
               key={right}
               id={right}

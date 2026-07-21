@@ -191,7 +191,15 @@
   "mindmap": {
     "button": "Genera mindmap",
     "creation": {
-      "success": "Creazione della mind map programmata con successo"
+      "success": "Creazione della mind map programmata con successo",
+      "error": "Si è verificato un errore durante la creazione della mind map"
+    },
+    "empty": {
+      "title": "Mappe visive degli argomenti",
+      "description": "Una mind map collega i tuoi argomenti così puoi vedere come le idee si relazionano e comprenderle più a fondo. Generane una dalle tue fonti caricate.",
+      "cta": "Genera mind map",
+      "cta-add": "Aggiungi documenti",
+      "cta-regenerate": "Rigenera mind map"
     }
   },
   "sidebar": {

@@ -78,4 +78,110 @@ class OpenAIChapterClientSpec extends Specification {
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
         0 * feedbackPromptTemplate._
     }
+
+    def "should deduplicate label ids and skip feedback loop when only duplicates are present"() {
+        given:
+        def labels = [
+                new Label(1L, "intro"),
+                new Label(2L, "basics"),
+                new Label(3L, "advanced")
+        ]
+        def chaptersWithDuplicates = [
+                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L]),
+                new Chapter(1, "Deep Dive", "Advanced topics overview", [2L, 3L])
+        ]
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
+
+        when:
+        def result = client.getResult(labels)
+
+        then:
+        result.result()*.index == [0, 1]
+        result.result()[0].labels == [1L, 2L]
+        result.result()[1].labels == [3L]
+        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+        0 * feedbackPromptTemplate._
+    }
+
+    def "should drop extra label ids and skip feedback loop when only extras are present"() {
+        given:
+        def labels = [
+                new Label(1L, "intro"),
+                new Label(2L, "basics")
+        ]
+        def chaptersWithExtras = [
+                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L, 99L])
+        ]
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
+
+        when:
+        def result = client.getResult(labels)
+
+        then:
+        result.result()*.index == [0]
+        result.result()[0].labels == [1L, 2L]
+        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+        0 * feedbackPromptTemplate._
+    }
+
+    def "should remove empty chapters and reindex when dropping extra labels"() {
+        given:
+        def labels = [
+                new Label(1L, "intro"),
+                new Label(2L, "basics")
+        ]
+        def chaptersWithExtras = [
+                new Chapter(0, "Extras Only", "Only extra labels here", [99L]),
+                new Chapter(1, "Foundations", "Core concepts overview", [1L, 2L])
+        ]
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
+
+        when:
+        def result = client.getResult(labels)
+
+        then:
+        result.result()*.index == [0]
+        result.result()[0].title == "Foundations"
+        result.result()[0].labels == [1L, 2L]
+        0 * feedbackPromptTemplate._
+    }
+
+    def "should remove empty chapters and reindex when deduplicating label ids"() {
+        given:
+        def labels = [
+                new Label(1L, "intro"),
+                new Label(2L, "basics")
+        ]
+        def chaptersWithDuplicates = [
+                new Chapter(0, "Part One", "First part overview", [1L]),
+                new Chapter(1, "Part Two", "Second part overview", [2L]),
+                new Chapter(2, "Duplicate", "Duplicate label only", [1L])
+        ]
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
+
+        when:
+        def result = client.getResult(labels)
+
+        then:
+        result.result()*.index == [0, 1]
+        result.result()[0].labels == [1L]
+        result.result()[1].labels == [2L]
+        0 * feedbackPromptTemplate._
+    }
 }

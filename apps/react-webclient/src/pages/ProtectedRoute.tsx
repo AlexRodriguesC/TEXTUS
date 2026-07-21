@@ -13,7 +13,7 @@ function ProtectedRoute({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate({ to: PathConstants.LOGIN }).then(() =>
-          successToast(t("general.logout")),
+        successToast(t("general.logout")),
       );
     }
   }, [isAuthenticated, navigate, t]);

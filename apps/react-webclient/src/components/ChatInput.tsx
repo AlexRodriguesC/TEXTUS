@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {ArrowRight} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import {
   persistChatModel,
   readStoredChatModel,
@@ -33,7 +33,10 @@ function ChatInput({
     readStoredChatModel,
   );
 
-  const modelValues = useMemo(() => models.map((entry) => entry.value), [models]);
+  const modelValues = useMemo(
+    () => models.map((entry) => entry.value),
+    [models],
+  );
 
   const model = useMemo(
     () => resolveChatModel(modelValues, preferredModel, defaultModel),

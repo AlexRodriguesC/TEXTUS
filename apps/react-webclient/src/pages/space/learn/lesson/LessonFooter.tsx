@@ -12,6 +12,7 @@ import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetLearningPathQueryKey } from "@/client/generated/paths/paths.ts";
+import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
 
 interface LessonFooterProps {
   onConfirm: () => void;
@@ -19,6 +20,8 @@ interface LessonFooterProps {
   onNext?: () => void;
   confirmationEnabled?: boolean;
   skipEnabled?: boolean;
+  wasCorrect?: boolean | null;
+  answer?: unknown | null;
   submitted: boolean;
 }
 
@@ -28,13 +31,15 @@ function LessonFooter({
   onNext,
   confirmationEnabled = false,
   skipEnabled = true,
+    wasCorrect,
+    answer,
   submitted,
 }: LessonFooterProps) {
   const { t } = useTranslation();
   const { lessonId } = useLessonId();
   const { spaceId, strSpaceId } = useSpaceId();
   const queryClient = useQueryClient();
-  const { lesson, exerciseLoading } = useLesson({ lessonId: lessonId });
+  const { lesson, exerciseLoading, nextExercise } = useLesson({ lessonId: lessonId });
   const { path } = useLearningPath();
 
   const chapterId =
@@ -42,7 +47,8 @@ function LessonFooter({
       .flatMap((chapter) => chapter.lessons)
       .findIndex((item) => item.id === lessonId) ?? 0;
 
-  const flatLessons = path?.chapters.flatMap((chapter) => chapter.lessons) ?? [];
+  const flatLessons =
+    path?.chapters.flatMap((chapter) => chapter.lessons) ?? [];
   const currentIndex = flatLessons.findIndex((l) => l.id === lessonId);
   const nextLesson =
     currentIndex >= 0 && currentIndex < flatLessons.length - 1
@@ -150,8 +156,19 @@ function LessonFooter({
             {t("button.skip")}
           </Button>
         )}
+          {nextExercise && submitted && !wasCorrect && (
+              <ExerciseHelpButton
+                  exercise={nextExercise}
+                  userAnswer={answer}
+                  topicId={nextExercise.topicId}
+              />
+          )}
         {submitted ? (
-          <Button disabled={exerciseLoading} onClick={onNext} className="ml-auto">
+          <Button
+            disabled={exerciseLoading}
+            onClick={onNext}
+            className="ml-auto"
+          >
             {t("button.next")}
           </Button>
         ) : (

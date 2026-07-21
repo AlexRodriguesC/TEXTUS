@@ -1,17 +1,31 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChatContext, type PendingChatMessage } from "@/context/ChatContext.tsx";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ChatContext,
+  type PendingChatMessage,
+} from "@/context/ChatContext.tsx";
 import useChats from "@/hooks/useChats.ts";
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { chats, isLoading, createChat, isCreating } = useChats();
   const [preferredChatId, setPreferredChatId] = useState<string | null>(null);
-  const [pendingMessage, setPendingMessageState] = useState<PendingChatMessage | null>(null);
+  const [pendingMessage, setPendingMessageState] =
+    useState<PendingChatMessage | null>(null);
   const pendingRef = useRef<PendingChatMessage | null>(null);
 
-  const setPendingMessage = useCallback((message: PendingChatMessage | null) => {
-    pendingRef.current = message;
-    setPendingMessageState(message);
-  }, []);
+  const setPendingMessage = useCallback(
+    (message: PendingChatMessage | null) => {
+      pendingRef.current = message;
+      setPendingMessageState(message);
+    },
+    [],
+  );
 
   const consumePendingMessage = useCallback((chatId: string): string | null => {
     const pending = pendingRef.current;

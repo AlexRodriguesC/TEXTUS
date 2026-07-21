@@ -11,7 +11,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { failureToast, successToast } from "@/lib/toasts.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ErrorResponseDTO, LearningPathJobDTO, LearningPathJobDTOStatus } from "@/client/model";
+import type {
+  ErrorResponseDTO,
+  LearningPathJobDTO,
+  LearningPathJobDTOStatus,
+} from "@/client/model";
 import LearningPath from "@/classes/LearningPath.ts";
 import { useMemo } from "react";
 
@@ -39,10 +43,10 @@ function useLearningPath() {
   const { data: learningPathData, isLoading } = useGetLearningPath(spaceId, {
     query: {
       enabled:
-          spaceId !== undefined &&
-          !!jobData &&
-          isLearningPathJobDTO(jobData.data) &&
-          jobData.data.status === "DONE",
+        spaceId !== undefined &&
+        !!jobData &&
+        isLearningPathJobDTO(jobData.data) &&
+        jobData.data.status === "DONE",
     },
   });
 
@@ -55,7 +59,9 @@ function useLearningPath() {
     mutation: {
       onSuccess: () => {
         successToast(t("learning-path.settings.success"));
-        queryClient.invalidateQueries({ queryKey: getGetLearningPathQueryKey(spaceId) });
+        queryClient.invalidateQueries({
+          queryKey: getGetLearningPathQueryKey(spaceId),
+        });
       },
       onError: () => {
         failureToast(t("learning-path.settings.error"));
@@ -63,37 +69,58 @@ function useLearningPath() {
     },
   });
 
-  const { mutate: deleteMutation, isPending: isDeleting } = useDeleteLearningPath({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.resetQueries({ queryKey: getGetLearningPathQueryKey(spaceId) });
-        await queryClient.resetQueries({ queryKey: getGetLearningPathJobQueryKey(spaceId) });
+  const { mutate: deleteMutation, isPending: isDeleting } =
+    useDeleteLearningPath({
+      mutation: {
+        onSuccess: async () => {
+          await queryClient.resetQueries({
+            queryKey: getGetLearningPathQueryKey(spaceId),
+          });
+          await queryClient.resetQueries({
+            queryKey: getGetLearningPathJobQueryKey(spaceId),
+          });
+        },
       },
-    },
-  });
+    });
 
-  const { mutate: generateMutation, isPending: isGenerating } = useExtractLearningPath({
-    mutation: {
-      onSuccess: () => {
-        successToast(t("learning-path.creation.success"));
+  const { mutate: generateMutation, isPending: isGenerating } =
+    useExtractLearningPath({
+      mutation: {
+        onSuccess: () => {
+          successToast(t("learning-path.creation.success"));
+        },
+        onError: () => {
+          failureToast(t("learning-path.creation.error"));
+        },
       },
-      onError: () => {
-        failureToast(t("learning-path.creation.error"));
-      },
-    },
-  });
+    });
 
   const path = useMemo(() => {
     if (spaceId === undefined) return undefined;
 
     const maybePath = learningPathData?.data;
     const base =
-        maybePath && LearningPath.isLearningPathDTO(maybePath)
-            ? LearningPath.from(maybePath)
-            : new LearningPath([], {} as never);
+      maybePath && LearningPath.isLearningPathDTO(maybePath)
+        ? LearningPath.from(maybePath)
+        : new LearningPath([], {} as never);
 
-    return base.withRuntime(spaceId, updateSettingsMutation, deleteMutation, generateMutation, isDeleting, isGenerating);
-  }, [learningPathData, spaceId, updateSettingsMutation, deleteMutation, generateMutation, isDeleting, isGenerating]);
+    return base.withRuntime(
+      spaceId,
+      updateSettingsMutation,
+      deleteMutation,
+      generateMutation,
+      isDeleting,
+      isGenerating,
+    );
+  }, [
+    learningPathData,
+    spaceId,
+    updateSettingsMutation,
+    deleteMutation,
+    generateMutation,
+    isDeleting,
+    isGenerating,
+  ]);
 
   return {
     path,
@@ -104,6 +131,8 @@ function useLearningPath() {
 
 export default useLearningPath;
 
-function isLearningPathJobDTO(data: ErrorResponseDTO | LearningPathJobDTO): data is LearningPathJobDTO {
+function isLearningPathJobDTO(
+  data: ErrorResponseDTO | LearningPathJobDTO,
+): data is LearningPathJobDTO {
   return "status" in data;
 }

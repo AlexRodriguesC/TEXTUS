@@ -88,7 +88,7 @@ function RegistrationPage() {
         <Card className="w-full max-w-sm h-fit">
           <CardHeader>
             <div className={"flex justify-end pt-0"}>
-              <HomeLink/>
+              <HomeLink />
             </div>
             <div>
               <CardTitle>{t("registration.info")}</CardTitle>

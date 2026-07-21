@@ -69,6 +69,6 @@ public class Attempt<T> {
     }
 
     public boolean isAnswerWrong() {
-        return !exercise.isAnswerCorrect(userResponse);
+        return exercise == null || !exercise.isAnswerCorrect(userResponse);
     }
 }

@@ -43,9 +43,9 @@ function Question({ question, submitted, onAnswer }: QuestionProps) {
               className={cn(
                 "border-primary w-full h-auto min-w-0 whitespace-normal wrap-break-word text-wrap py-3 px-3 text-center",
                 {
-                  "bg-primary text-primary-foreground":
+                  "bg-primary/40 text-primary-foreground":
                     submitted && isCorrectOption,
-                  "bg-destructive text-destructive-foreground":
+                  "bg-destructive/40 text-destructive-foreground":
                     submitted && isSelected && !isCorrectOption,
                 },
               )}

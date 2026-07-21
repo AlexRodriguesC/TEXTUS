@@ -24,7 +24,7 @@ export function ErrorCard({
         <CardContent className="flex flex-row items-center place-content-center gap-8 w-full">
           <div className="flex flex-col items-center gap-4 w-full">
             <div className="flex w-full justify-end">
-              <HomeLink/>
+              <HomeLink />
             </div>
             <div className={"flex flex-row gap-2"}>
               <XIcon color="red" />

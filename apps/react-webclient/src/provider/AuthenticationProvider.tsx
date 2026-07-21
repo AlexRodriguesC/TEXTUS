@@ -2,7 +2,7 @@ import { AuthContext, type User } from "@/context/AuthContext.tsx";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import {useQueryClient} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const USERNAME = "USERNAME";
 const TOKEN = "TOKEN";

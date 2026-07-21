@@ -17,7 +17,6 @@ import { getGetNextExerciseQueryKey } from "@/client/generated/lessons/lessons.t
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
-import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
 
 function Lesson() {
   const queryClient = useQueryClient();
@@ -68,6 +67,7 @@ function Lesson() {
     );
     setWasCorrect(result?.correct ?? false);
     setSubmitted(true);
+
   };
 
   const exercise = (() => {
@@ -138,13 +138,6 @@ function Lesson() {
     return (
       <>
         {exercise}
-        {submitted && wasCorrect === false && nextExercise && (
-          <ExerciseHelpButton
-            exercise={nextExercise}
-            userAnswer={answer}
-            topicId={nextExercise.topicId}
-          />
-        )}
       </>
     );
   })();
@@ -166,6 +159,8 @@ function Lesson() {
             onSkip={() => void handleSkip()}
             onNext={handleNext}
             confirmationEnabled={answer !== null && !isAttemptLoading}
+            wasCorrect={wasCorrect}
+            answer={answer}
             skipEnabled={!isAttemptLoading}
           />
         </div>

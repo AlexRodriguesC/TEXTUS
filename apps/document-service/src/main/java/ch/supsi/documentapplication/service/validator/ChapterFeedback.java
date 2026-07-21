@@ -34,7 +34,7 @@ public class ChapterFeedback {
     }
 
     public boolean isValid() {
-        return missingLabelIds.isEmpty() && duplicateLabelIds.isEmpty() && extraLabelIds.isEmpty();
+        return missingLabelIds.isEmpty();
     }
 
     @Override

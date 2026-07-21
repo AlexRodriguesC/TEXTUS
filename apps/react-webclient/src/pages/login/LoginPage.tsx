@@ -111,7 +111,7 @@ function LoginPage() {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <div className={"flex justify-end pt-0"}>
-              <HomeLink/>
+              <HomeLink />
             </div>
             <div>
               <CardTitle>{t("login.info")}</CardTitle>

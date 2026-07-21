@@ -6,15 +6,11 @@ import { X } from "lucide-react";
 
 function GeneratePathButton() {
   const { t } = useTranslation();
-  const { path, status } =
-    useLearningPath();
+  const { path, status } = useLearningPath();
 
   if (status === "NOT_CREATED") {
     return (
-      <Button
-        onClick={() => path?.regenerate()}
-        className={"w-full"}
-      >
+      <Button onClick={() => path?.regenerate()} className={"w-full"}>
         {t("learning-path.empty.cta")}
       </Button>
     );
@@ -35,8 +31,8 @@ function GeneratePathButton() {
     return (
       <Button
         onClick={() => {
-            path?.delete()
-            path?.regenerate()
+          path?.delete();
+          path?.regenerate();
         }}
         className={"w-full"}
       >
@@ -52,8 +48,8 @@ function GeneratePathButton() {
     return (
       <Button
         onClick={() => {
-            path?.delete()
-            path?.regenerate()
+          path?.delete();
+          path?.regenerate();
         }}
         className={"w-full"}
       >

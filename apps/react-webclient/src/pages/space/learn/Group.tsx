@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -16,6 +16,27 @@ interface GroupProps {
   group: GroupResponseDTO;
   submitted: boolean;
   onAnswer?: (answer: Record<string, string[]> | null) => void;
+}
+
+interface KeyItem {
+  id: string;
+  value: string;
+}
+
+function resolveDropLabel(
+  overId: string,
+  assignments: Record<string, string[]>,
+  labels: string[],
+): string | "key-pool" | null {
+  if (overId === "key-pool") return "key-pool";
+  if (overId.startsWith("label-")) {
+    const index = Number(overId.slice("label-".length));
+    return labels[index] ?? null;
+  }
+  for (const label of labels) {
+    if ((assignments[label] ?? []).includes(overId)) return label;
+  }
+  return null;
 }
 
 function AssignedKeyChip({
@@ -48,8 +69,9 @@ function AssignedKeyChip({
       disabled={disabled}
       className={cn(
         "rounded-md px-3 py-1 text-sm",
-        status === "correct" && "bg-primary text-primary-foreground",
-        status === "incorrect" && "bg-destructive text-destructive-foreground",
+        status === "correct" && "bg-primary/40 text-primary-foreground",
+        status === "incorrect" &&
+          "bg-destructive/40 text-destructive-foreground",
         status == null && "bg-secondary",
         !disabled && "cursor-grab touch-none hover:bg-destructive/20",
         isDragging && "opacity-50",
@@ -62,18 +84,23 @@ function AssignedKeyChip({
 
 function DroppableLabel({
   label,
+  index,
   assignedKeys,
   onRemove,
   disabled,
   getKeyStatus,
 }: {
   label: string;
-  assignedKeys: string[];
-  onRemove: (key: string) => void;
+  index: number;
+  assignedKeys: KeyItem[];
+  onRemove: (id: string) => void;
   disabled: boolean;
-  getKeyStatus: (key: string) => "correct" | "incorrect" | null;
+  getKeyStatus: (id: string) => "correct" | "incorrect" | null;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `label-${label}`, disabled });
+  const { setNodeRef, isOver } = useDroppable({
+    id: `label-${index}`,
+    disabled,
+  });
 
   return (
     <div
@@ -84,14 +111,14 @@ function DroppableLabel({
       )}
     >
       <span className="font-medium mr-2">{label}</span>
-      {assignedKeys.map((key) => (
+      {assignedKeys.map((item) => (
         <AssignedKeyChip
-          key={key}
-          id={key}
-          value={key}
-          onRemove={() => onRemove(key)}
+          key={item.id}
+          id={item.id}
+          value={item.value}
+          onRemove={() => onRemove(item.id)}
           disabled={disabled}
-          status={getKeyStatus(key)}
+          status={getKeyStatus(item.id)}
         />
       ))}
     </div>
@@ -125,7 +152,8 @@ function DraggableKey({
       disabled={disabled}
       className={cn(
         "rounded-md border px-3 py-2 text-sm",
-        status === "correct" && "border-primary bg-primary text-primary-foreground",
+        status === "correct" &&
+          "border-primary bg-primary text-primary-foreground",
         status === "incorrect" &&
           "border-destructive bg-destructive text-destructive-foreground",
         status == null && "bg-background",
@@ -138,7 +166,13 @@ function DraggableKey({
   );
 }
 
-function KeyPool({ children, disabled }: { children: React.ReactNode; disabled: boolean }) {
+function KeyPool({
+  children,
+  disabled,
+}: {
+  children: React.ReactNode;
+  disabled: boolean;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: "key-pool", disabled });
 
   return (
@@ -156,22 +190,50 @@ function KeyPool({ children, disabled }: { children: React.ReactNode; disabled: 
 
 function Group({ group, submitted, onAnswer }: GroupProps) {
   const labels = useMemo(() => Object.keys(group.groups ?? {}), [group.groups]);
-  const keys = useMemo(
-    () => Object.values(group.groups ?? {}).flat(),
-    [group.groups],
-  );
+
+  const keyItems = useMemo<KeyItem[]>(() => {
+    const values = Object.values(group.groups ?? {}).flat();
+    return values.map((value, i) => ({ id: `key-${i}`, value }));
+  }, [group.groups]);
+
+  const keyById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of keyItems) map.set(item.id, item.value);
+    return map;
+  }, [keyItems]);
 
   const [assignments, setAssignments] = useState<Record<string, string[]>>({});
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  function removeKey(key: string) {
+  function notify(next: Record<string, string[]>) {
+    if (!onAnswer) return;
+
+    const usedIds = new Set(Object.values(next).flat());
+    const allAssigned =
+      keyItems.length > 0 && keyItems.every((item) => usedIds.has(item.id));
+
+    if (allAssigned) {
+      const answer: Record<string, string[]> = {};
+      for (const label of labels) {
+        answer[label] = (next[label] ?? []).map(
+          (id) => keyById.get(id) as string,
+        );
+      }
+      onAnswer(answer);
+    } else {
+      onAnswer(null);
+    }
+  }
+
+  function removeKey(id: string) {
     if (submitted) return;
     setAssignments((prev) => {
       const next: Record<string, string[]> = {};
       for (const l of Object.keys(prev)) {
-        next[l] = prev[l].filter((k) => k !== key);
+        next[l] = prev[l].filter((existingId) => existingId !== id);
       }
+      notify(next);
       return next;
     });
   }
@@ -181,49 +243,46 @@ function Group({ group, submitted, onAnswer }: GroupProps) {
     const { active, over } = event;
     if (!over) return;
 
-    const key = String(active.id);
+    const id = String(active.id);
+    const overId = String(over.id);
+    const target = resolveDropLabel(overId, assignments, labels);
 
-    if (over.id === "key-pool") {
-      removeKey(key);
+    if (target === "key-pool") {
+      removeKey(id);
       return;
     }
-
-    const label = String(over.id).replace("label-", "");
+    if (target === null) return;
 
     setAssignments((prev) => {
       const next: Record<string, string[]> = {};
       for (const l of Object.keys(prev)) {
-        next[l] = prev[l].filter((k) => k !== key);
+        next[l] = prev[l].filter((existingId) => existingId !== id);
       }
-      next[label] = [...(next[label] ?? []), key];
+      next[target] = [...(next[target] ?? []), id];
+      notify(next);
       return next;
     });
   }
 
-  useEffect(() => {
-    if (!onAnswer) return;
+  const usedIds = new Set(Object.values(assignments).flat());
+  const remainingKeyItems = keyItems.filter((item) => !usedIds.has(item.id));
 
-    const usedKeys = new Set(Object.values(assignments).flat());
-    const allAssigned = keys.length > 0 && keys.every((k) => usedKeys.has(k));
-
-    if (allAssigned) {
-      const answer: Record<string, string[]> = {};
-      for (const label of labels) {
-        answer[label] = assignments[label] ?? [];
-      }
-      onAnswer(answer);
-    } else {
-      onAnswer(null);
-    }
-  }, [assignments, keys, labels, onAnswer]);
-
-  const usedKeys = new Set(Object.values(assignments).flat());
-  const remainingKeys = keys.filter((k) => !usedKeys.has(k));
-
-  function getAssignedKeyStatus(key: string, label: string): "correct" | "incorrect" | null {
+  function getAssignedKeyStatus(
+    id: string,
+    label: string,
+  ): "correct" | "incorrect" | null {
     if (!submitted) return null;
-    const expected = new Set(group.groups[label] ?? []);
-    return expected.has(key) ? "correct" : "incorrect";
+    const assignedIds = assignments[label] ?? [];
+    const remaining = [...(group.groups[label] ?? [])];
+    for (const assignedId of assignedIds) {
+      const value = keyById.get(assignedId) as string;
+      const matchIndex = remaining.indexOf(value);
+      if (assignedId === id) {
+        return matchIndex >= 0 ? "correct" : "incorrect";
+      }
+      if (matchIndex >= 0) remaining.splice(matchIndex, 1);
+    }
+    return null;
   }
 
   return (
@@ -236,27 +295,32 @@ function Group({ group, submitted, onAnswer }: GroupProps) {
         onDragEnd={handleDragEnd}
       >
         <div className="flex flex-col gap-3">
-          {labels.map((label) => {
-            const actual = assignments[label] ?? [];
+          {labels.map((label, i: number) => {
+            const assignedIds = assignments[label] ?? [];
+            const assignedItems = assignedIds.map((id) => ({
+              id,
+              value: keyById.get(id) as string,
+            }));
             return (
               <DroppableLabel
                 key={label}
                 label={label}
-                assignedKeys={actual}
+                index={i}
+                assignedKeys={assignedItems}
                 onRemove={removeKey}
                 disabled={submitted}
-                getKeyStatus={(key) => getAssignedKeyStatus(key, label)}
+                getKeyStatus={(itemId) => getAssignedKeyStatus(itemId, label)}
               />
             );
           })}
         </div>
 
         <KeyPool disabled={submitted}>
-          {remainingKeys.map((key) => (
+          {remainingKeyItems.map((item) => (
             <DraggableKey
-              key={key}
-              id={key}
-              value={key}
+              key={item.id}
+              id={item.id}
+              value={item.value}
               disabled={submitted}
               status={submitted ? "incorrect" : null}
             />

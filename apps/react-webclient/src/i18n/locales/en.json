@@ -203,7 +203,15 @@
   "mindmap": {
     "button": "Generate mindmap",
     "creation": {
-      "success": "Mindmap creation scheduled successfully"
+      "success": "Mindmap creation scheduled successfully",
+      "error": "Something went wrong while scheduling the generation of the mind map"
+    },
+    "empty": {
+      "title": "Visual topic maps",
+      "description": "A mind map connects your topics so you can see how ideas relate and understand them more deeply. Generate one from your uploaded sources.",
+      "cta": "Generate mind map",
+      "cta-add": "Add documents",
+      "cta-regenerate": "Regenerate mind map"
     }
   },
   "sidebar": {

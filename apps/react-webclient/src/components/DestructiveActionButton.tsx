@@ -21,7 +21,7 @@ type DestructiveActionButtonProps = {
 
 function DestructiveActionButton({
   title,
-    description,
+  description,
   onConfirm,
   ...props
 }: DestructiveActionButtonProps & React.ComponentProps<"button">) {

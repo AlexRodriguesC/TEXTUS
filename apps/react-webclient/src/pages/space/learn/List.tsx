@@ -55,9 +55,9 @@ function SortableItem({ id, value, disabled, status }: SortableItemProps) {
       className={cn(
         "flex items-center gap-2 rounded-md border p-3",
         status === "correct" &&
-          "border-primary bg-primary text-primary-foreground",
+          "border-primary bg-primary/40 text-primary-foreground",
         status === "incorrect" &&
-          "border-destructive bg-destructive text-destructive-foreground",
+          "border-destructive bg-destructive/40 text-destructive-foreground",
         status == null && "bg-background",
       )}
     >
