@@ -1,19 +1,16 @@
-import { listModels } from "@/client/chatApi.ts";
-import { useQuery } from "@tanstack/react-query";
-
-export const getModelsQueryKey = () => ["models"] as const;
+import { useGetModels } from "@/client/generated/models/models.ts";
+import { useMemo } from "react";
 
 function useModels() {
-  const { data, isLoading } = useQuery({
-    queryKey: getModelsQueryKey(),
-    queryFn: listModels,
-  });
+  const { data, isLoading } = useGetModels();
 
-  const models =
-    data?.models.map((model) => ({
+  const models = useMemo(() => {
+    if (!data || !("status" in data) || data.status !== 200) return [];
+    return data.data.models.map((model) => ({
       value: model.id,
       label: model.name || model.id,
-    })) ?? [];
+    }));
+  }, [data]);
 
   return {
     models,

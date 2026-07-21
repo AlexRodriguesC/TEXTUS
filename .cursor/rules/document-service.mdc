@@ -1,0 +1,34 @@
+---
+description: Backend guidelines for the Document Service (Spring Boot, apps/document-service)
+globs: apps/document-service/**/*.java, apps/document-service/**/*.groovy, apps/document-service/**/*.sql
+alwaysApply: false
+---
+
+# Document Service Rules
+
+## Layering & DTOs
+- Never expose DTOs at the service layer. Services must accept and return domain objects only.
+- Domain objects propagate up to the controller layer, where they are mapped to the appropriate response DTO (and vice versa for request DTOs).
+- Mapping logic belongs in dedicated mapper classes/methods, not inline in controllers or services.
+
+## Database
+- Prefer PL/pgSQL functions for non-trivial data operations (aggregations, multi-step writes, complex filtering) instead of pushing logic into the Java layer.
+- All schema changes and new functions go exclusively into Flyway migrations under `resources/database` — never modify the schema imperatively at runtime or outside migrations.
+- Each migration must be additive/versioned per Flyway convention; never edit an already-applied migration.
+
+## Controllers & REST Conventions
+- Every controller endpoint must be secured with `@SecurityRequirement(name = "bearerAuth")`.
+- Follow REST conventions strictly: resource paths use plural nouns, no verbs in URLs (e.g. `/documents`, not `/getDocuments`); the action is expressed through the HTTP method (GET/POST/PUT/PATCH/DELETE), not the path.
+- Every controller method must include `io.swagger.v3.oas.annotations` annotations (`@Operation`, `@ApiResponse(s)`, `@Parameter` as applicable) to keep OpenAPI docs accurate.
+
+## Testing
+- Every unit of functionality must have unit tests written in Spock, with method names following the pattern `"should do X when Y"`.
+- Unit tests must mock/stub collaborators and stay isolated from the database and Spring context where possible.
+- The data access layer must have integration tests validating real behavior end-to-end (e.g. create then read returns expected data), run against Testcontainers-managed PostgreSQL with Flyway migrations applied automatically at startup.
+- Integration tests must use a fresh, isolated database state per test class/run to avoid cross-test pollution.
+
+## General
+- Keep controllers thin: validation, security, and DTO mapping only — no business logic.
+- Use constructor injection exclusively; avoid field injection.
+- Wrap external/DB failures in meaningful domain exceptions, mapped to proper HTTP status codes via a centralized `@ControllerAdvice` exception handler.
+- Log at service boundaries with contextual info (document IDs, operation) but never log sensitive payloads.

@@ -2,7 +2,8 @@ import ChatInput from "@/components/ChatInput.tsx";
 import useChatContext from "@/hooks/useChatContext.ts";
 import useChatMessages from "@/hooks/useChatMessages.ts";
 import useChatStream from "@/hooks/useChatStream.ts";
-import useChats, { getChatsQueryKey } from "@/hooks/useChats.ts";
+import { getListChatsQueryKey } from "@/client/generated/chats/chats.ts";
+import useChats from "@/hooks/useChats.ts";
 import useModels from "@/hooks/useModels.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import type { ChatMessageDTO } from "@/types/chat.ts";
@@ -78,7 +79,7 @@ function SpaceChatConversation({
           setStreamingAssistant((current) => current + token);
         });
         await refetch();
-        await queryClient.invalidateQueries({ queryKey: getChatsQueryKey(spaceId) });
+        await queryClient.invalidateQueries({ queryKey: getListChatsQueryKey(spaceId) });
       } finally {
         setDraftMessages([]);
         setStreamingAssistant("");
