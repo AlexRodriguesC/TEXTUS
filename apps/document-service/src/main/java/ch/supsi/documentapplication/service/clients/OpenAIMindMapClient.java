@@ -1,5 +1,7 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.model.AiContext;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
@@ -22,21 +24,26 @@ public class OpenAIMindMapClient extends Client<List<Topic>, MindMap> {
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate,
-            MindMapValidator mindMapValidator) {
-        super(chatClient, new BeanOutputConverter<>(MindMap.class), retryTemplate, systemPrompt, promptTemplate);
+            MindMapValidator mindMapValidator,
+            AiContext aiContext) {
+        super(
+                chatClient,
+                new BeanOutputConverter<>(MindMap.class),
+                retryTemplate,
+                systemPrompt,
+                promptTemplate,
+                aiContext);
         this.mindMapValidator = mindMapValidator;
     }
 
     @Override
-    protected MindMap call(List<Topic> input) {
+    protected ClientResult<MindMap> call(List<Topic> input) {
         Map<String, Object> params = new HashMap<>();
         params.put(TOPICS, input);
-        var prompt = getPrompt(params);
+        var result = invoke(getPrompt(params), MindMap.class);
 
         var expectedChunkIds = input.stream().map(Topic::getId).toList();
-
-        var map = chatClient.prompt(prompt).call().entity(MindMap.class);
-        mindMapValidator.validate(map, expectedChunkIds);
-        return map;
+        mindMapValidator.validate(result.result(), expectedChunkIds);
+        return result;
     }
 }

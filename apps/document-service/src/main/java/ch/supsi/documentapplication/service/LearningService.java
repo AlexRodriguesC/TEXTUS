@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.exception.InvalidInputException;
 import ch.supsi.documentapplication.exception.LessonAttemptsExhaustedException;
 import ch.supsi.documentapplication.exception.LessonPrerequisiteNotSatisfiedException;
 import ch.supsi.documentapplication.model.Attempt;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.Lesson;
@@ -32,6 +33,7 @@ public class LearningService extends Service implements ILearningService {
     private final OpenAIPairClient pairClient;
     private final OpenAIQuestionClient questionClient;
     private final DatabaseTopicStorage databaseTopicStorage;
+    private final IDatabaseAiUsageStorage aiUsageStorage;
 
     @Autowired
     public LearningService(
@@ -42,7 +44,8 @@ public class LearningService extends Service implements ILearningService {
             OpenAIListClient listClient,
             OpenAIPairClient pairClient,
             OpenAIQuestionClient questionClient,
-            DatabaseTopicStorage databaseTopicStorage) {
+            DatabaseTopicStorage databaseTopicStorage,
+            IDatabaseAiUsageStorage aiUsageStorage) {
         super(databaseSpaceStorage);
         this.databasePathStorage = databasePathStorage;
         this.databaseLearningStorage = databaseLearningStorage;
@@ -51,6 +54,7 @@ public class LearningService extends Service implements ILearningService {
         this.pairClient = pairClient;
         this.questionClient = questionClient;
         this.databaseTopicStorage = databaseTopicStorage;
+        this.aiUsageStorage = aiUsageStorage;
     }
 
     @Override
@@ -82,16 +86,21 @@ public class LearningService extends Service implements ILearningService {
         var type = rollExerciseType(settings);
         var topic = findCurrentTopic(space.getId(), lesson);
 
-        BaseExercise<?> exercise =
+        ClientResult<? extends BaseExercise<?>> exerciseResult =
                 switch (type) {
                     case LIST -> listClient.getResult(topic);
                     case GROUP -> groupClient.getResult(topic);
                     case QUESTION -> questionClient.getResult(topic);
                     case PAIR -> pairClient.getResult(topic);
                 };
+        BaseExercise<?> exercise = exerciseResult.result();
         exercise.setIndex(lesson.getExercisesLength());
         exercise.setTopicId(topic.getId());
         exercise = databaseLearningStorage.createExercise(exercise, lesson.getId());
+        Long exerciseId = exercise.getId();
+        exerciseResult
+                .usages()
+                .forEach(usage -> aiUsageStorage.create("exercise", exerciseId, "exercise_generate", usage));
 
         lesson.addExercise(exercise);
         return exercise;

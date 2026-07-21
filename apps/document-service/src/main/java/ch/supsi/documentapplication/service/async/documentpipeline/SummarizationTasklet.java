@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
+import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
@@ -37,6 +38,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IFileSystemDocumentStorage fileSystemDocumentStorage;
     private final OpenAISummarizationClient summarisationClient;
+    private final IDatabaseAiUsageStorage aiUsageStorage;
     private final AppProperties appProperties;
 
     @Autowired
@@ -44,10 +46,12 @@ public class SummarizationTasklet extends ProcessingTasklet {
             IDatabaseDocumentStorage databaseDocumentStorage,
             IFileSystemDocumentStorage fileSystemDocumentStorage,
             OpenAISummarizationClient summarisationClient,
+            IDatabaseAiUsageStorage aiUsageStorage,
             AppProperties appProperties) {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.fileSystemDocumentStorage = fileSystemDocumentStorage;
         this.summarisationClient = summarisationClient;
+        this.aiUsageStorage = aiUsageStorage;
         this.appProperties = appProperties;
     }
 
@@ -176,8 +180,9 @@ public class SummarizationTasklet extends ProcessingTasklet {
     }
 
     private int summarizeChunk(PageChunk chunk, Long databaseDocumentId, UUID fsDocumentId) throws RetryException {
-        Page page = summarisationClient.getResult(chunk.content());
-        databaseDocumentStorage.create(page, spaceId, databaseDocumentId);
+        var result = summarisationClient.getResult(chunk.content());
+        Long pageId = databaseDocumentStorage.create(result.result(), spaceId, databaseDocumentId);
+        result.usages().forEach(usage -> aiUsageStorage.create("page", pageId, "summarize", usage));
         fileSystemDocumentStorage.deleteChunk(fsDocumentId, String.valueOf(chunk.pageNumber()));
         log.info("Processed page for document with documentId: {}, page: {}", databaseDocumentId, chunk.pageNumber());
         return chunk.pageNumber();

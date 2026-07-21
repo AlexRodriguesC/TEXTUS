@@ -1,13 +1,13 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.RetriesFailedException
+import ch.supsi.documentapplication.model.ClientResult
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.Client
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.PromptTemplate
 import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
-import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
@@ -22,7 +22,7 @@ class ClientSpec extends Specification {
 
     ChatClient chatClient = Mock()
     PromptTemplate promptTemplate = Mock()
-    BeanOutputConverter<?> beanOutputConverter = Mock()
+    BeanOutputConverter<String> beanOutputConverter = Mock()
     RetryTemplateWrapper retryTemplate
 
     def setup() {
@@ -34,9 +34,15 @@ class ClientSpec extends Specification {
 
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new Client<String, String>(chatClient, beanOutputConverter, retryTemplate, "", promptTemplate) {
+        client = new Client<String, String>(
+                chatClient,
+                beanOutputConverter,
+                retryTemplate,
+                "",
+                promptTemplate,
+                ClientTestSupport.TEST_AI_CONTEXT) {
             @Override
-            protected String call(String input) {
+            protected ClientResult<String> call(String input) {
                 throw new TransientAiException("abc")
             }
         }

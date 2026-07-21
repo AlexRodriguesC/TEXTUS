@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.RetriesFailedException
+import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
@@ -9,10 +10,8 @@ import org.apache.commons.lang3.tuple.Pair
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
-import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
@@ -40,7 +39,13 @@ class OpenAITopicExtractionClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAITopicExtractionClient(new ObjectMapper(), chatClient, retryTemplate, "", promptTemplate)
+        client = new OpenAITopicExtractionClient(
+                new ObjectMapper(),
+                chatClient,
+                retryTemplate,
+                "",
+                promptTemplate,
+                ClientTestSupport.TEST_AI_CONTEXT)
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
@@ -61,7 +66,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.entity(_ as ParameterizedTypeReference) >> expectedTopics
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedTopics)
 
         when: "getResult is invoked"
         def result = client.getResult(input)
@@ -73,7 +78,8 @@ class OpenAITopicExtractionClientSpec extends Specification {
         }) >> "rendered prompt"
 
         and: "the returned topics match what the chatClient produced"
-        result == expectedTopics
+        result.result() == expectedTopics
+        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
@@ -101,7 +107,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.entity(_ as ParameterizedTypeReference) >> expectedTopics
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedTopics)
 
         when: "getResult is invoked"
         def result = client.getResult(input)
@@ -110,6 +116,6 @@ class OpenAITopicExtractionClientSpec extends Specification {
         1 * promptTemplate.render({ Map params -> params["existing_labels"] == '[]' }) >> "rendered prompt"
 
         and: "the extracted topics are returned"
-        result == expectedTopics
+        result.result() == expectedTopics
     }
 }

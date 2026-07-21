@@ -17,10 +17,8 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     private static final String ID = "id";
     private static final String SPACE_ID = "space_id";
     private static final String DOCUMENT_ID = "document_id";
-    public static final String TOKENS_IN = "tokens_in";
-    public static final String TOKENS_OUT = "tokens_out";
-    public static final String TITLE = "title";
-    public static final String SUMMARY = "summary";
+    private static final String TITLE = "title";
+    private static final String SUMMARY = "summary";
     public static final String KEY = "key";
     public static final String JOB_ID = "job_id";
     public static final String DOCUMENT_NAME = "document_name";
@@ -34,12 +32,9 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public Long create(Page page, Long spaceId, Long documentId) {
         try {
             return jdbcClient
-                    .sql(
-                            "SELECT documents.create_page(:space_id, :document_id, :tokens_in, :tokens_out, :title, :summary)")
+                    .sql("SELECT documents.create_page(:space_id, :document_id, :title, :summary)")
                     .param(SPACE_ID, spaceId)
                     .param(DOCUMENT_ID, documentId)
-                    .param(TOKENS_IN, -1)
-                    .param(TOKENS_OUT, -1)
                     .param(TITLE, page.getTitle())
                     .param(SUMMARY, page.getSummary())
                     .query(Long.class)

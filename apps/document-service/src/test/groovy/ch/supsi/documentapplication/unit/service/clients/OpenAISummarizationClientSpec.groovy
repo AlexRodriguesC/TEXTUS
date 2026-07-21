@@ -1,16 +1,14 @@
 package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.RetriesFailedException
+import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
-import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
-import org.springframework.context.annotation.Bean
-import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
@@ -37,7 +35,12 @@ class OpenAISummarizationClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAISummarizationClient(chatClient, retryTemplate, "", promptTemplate)
+        client = new OpenAISummarizationClient(
+                chatClient,
+                retryTemplate,
+                "",
+                promptTemplate,
+                ClientTestSupport.TEST_AI_CONTEXT)
     }
 
     def "should call chatClient and return the summarized page"() {
@@ -48,13 +51,14 @@ class OpenAISummarizationClientSpec extends Specification {
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.entity(Page.class) >> expectedPage
+        callResponseSpec.responseEntity(Page.class) >> ClientTestSupport.responseEntityFor(expectedPage)
 
         when: "getResult is invoked"
         def result = client.getResult(documentText)
 
         then: "the returned page matches what the chatClient produced"
-        result == expectedPage
+        result.result() == expectedPage
+        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
@@ -87,13 +91,13 @@ class OpenAISummarizationClientSpec extends Specification {
             }
             return callResponseSpec
         }
-        callResponseSpec.entity(Page.class) >> expectedPage
+        callResponseSpec.responseEntity(Page.class) >> ClientTestSupport.responseEntityFor(expectedPage)
 
         when: "getResult is invoked"
         def result = client.getResult(documentText)
 
         then: "the retry succeeds and the page is returned"
-        result == expectedPage
+        result.result() == expectedPage
         attempt == 2
     }
 }

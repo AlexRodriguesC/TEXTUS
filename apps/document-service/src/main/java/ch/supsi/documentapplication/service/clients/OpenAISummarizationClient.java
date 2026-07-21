@@ -1,5 +1,7 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.model.AiContext;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import java.util.HashMap;
@@ -18,15 +20,21 @@ public class OpenAISummarizationClient extends Client<String, Page> {
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
-            PromptTemplate promptTemplate) {
-        super(chatClient, new BeanOutputConverter<>(Page.class), retryTemplate, systemPrompt, promptTemplate);
+            PromptTemplate promptTemplate,
+            AiContext aiContext) {
+        super(
+                chatClient,
+                new BeanOutputConverter<>(Page.class),
+                retryTemplate,
+                systemPrompt,
+                promptTemplate,
+                aiContext);
     }
 
     @Override
-    protected Page call(String input) {
+    protected ClientResult<Page> call(String input) {
         Map<String, Object> params = new HashMap<>();
         params.put(DOCUMENT_TEXT, input);
-        var prompt = getPrompt(params);
-        return chatClient.prompt(prompt).call().entity(Page.class);
+        return invoke(getPrompt(params), Page.class);
     }
 }

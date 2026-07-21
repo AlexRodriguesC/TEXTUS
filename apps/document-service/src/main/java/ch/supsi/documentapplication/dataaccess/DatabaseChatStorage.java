@@ -12,6 +12,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseChatStorage {
 
+    public static final String SPACE_ID = "spaceId";
+    public static final String OWNER = "owner";
+    public static final String TITLE = "title";
+    public static final String CHAT_ID = "chatId";
+
     public DatabaseChatStorage(JdbcClient jdbcClient) {
         super(jdbcClient);
     }
@@ -25,9 +30,9 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                         VALUES (:spaceId, :owner, :title)
                         RETURNING id
                         """)
-                .param("spaceId", spaceId)
-                .param("owner", owner)
-                .param("title", title)
+                .param(SPACE_ID, spaceId)
+                .param(OWNER, owner)
+                .param(TITLE, title)
                 .query(UUID.class)
                 .single();
     }
@@ -42,8 +47,8 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                         WHERE space_id = :spaceId AND owner_id = :owner
                         ORDER BY updated_at DESC
                         """)
-                .param("spaceId", spaceId)
-                .param("owner", owner)
+                .param(SPACE_ID, spaceId)
+                .param(OWNER, owner)
                 .query(this::mapRow)
                 .list();
     }
@@ -57,9 +62,9 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                         FROM documents.chat
                         WHERE id = :chatId AND space_id = :spaceId AND owner_id = :owner
                         """)
-                .param("chatId", chatId)
-                .param("spaceId", spaceId)
-                .param("owner", owner)
+                .param(CHAT_ID, chatId)
+                .param(SPACE_ID, spaceId)
+                .param(OWNER, owner)
                 .query(this::mapRow)
                 .optional();
     }
@@ -73,8 +78,8 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                         SET title = :title, updated_at = NOW()
                         WHERE id = :chatId
                         """)
-                .param("chatId", chatId)
-                .param("title", title)
+                .param(CHAT_ID, chatId)
+                .param(TITLE, title)
                 .update();
     }
 
@@ -87,7 +92,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                         SET updated_at = NOW()
                         WHERE id = :chatId
                         """)
-                .param("chatId", chatId)
+                .param(CHAT_ID, chatId)
                 .update();
     }
 
@@ -95,7 +100,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     public void delete(UUID chatId) {
         jdbcClient
                 .sql("DELETE FROM documents.chat WHERE id = :chatId")
-                .param("chatId", chatId)
+                .param(CHAT_ID, chatId)
                 .update();
     }
 
@@ -104,7 +109,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
                 rs.getObject("id", UUID.class),
                 rs.getLong("space_id"),
                 rs.getString("owner_id"),
-                rs.getString("title"),
+                rs.getString(TITLE),
                 rs.getTimestamp("created_at").toInstant(),
                 rs.getTimestamp("updated_at").toInstant());
     }

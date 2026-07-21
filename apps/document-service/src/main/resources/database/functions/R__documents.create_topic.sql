@@ -1,10 +1,8 @@
 CREATE OR REPLACE FUNCTION documents.create_topic(
-    p_page_id     BIGINT,
-    p_tokens_in   INTEGER,
-    p_tokens_out  INTEGER,
-    p_title       TEXT,
-    p_summary     TEXT,
-    p_labels      TEXT[]
+    p_page_id BIGINT,
+    p_title   TEXT,
+    p_summary TEXT,
+    p_labels  TEXT[]
 )
     RETURNS BIGINT
     LANGUAGE plpgsql
@@ -14,8 +12,8 @@ DECLARE
     v_label_id BIGINT;
     v_label    TEXT;
 BEGIN
-    INSERT INTO documents.topic (page_id, tokens_in, tokens_out, title, summary)
-    VALUES (p_page_id, p_tokens_in, p_tokens_out, p_title, p_summary)
+    INSERT INTO documents.topic (page_id, title, summary)
+    VALUES (p_page_id, p_title, p_summary)
     RETURNING id INTO v_topic_id;
 
     FOREACH v_label IN ARRAY p_labels

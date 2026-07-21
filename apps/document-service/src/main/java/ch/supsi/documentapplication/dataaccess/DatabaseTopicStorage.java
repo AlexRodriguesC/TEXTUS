@@ -18,10 +18,8 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     private static final String ID = "id";
     private static final String SPACE_ID = "space_id";
     private static final String DOCUMENT_ID = "document_id";
-    public static final String TOKENS_IN = "tokens_in";
-    public static final String TOKENS_OUT = "tokens_out";
-    public static final String TITLE = "title";
-    public static final String SUMMARY = "summary";
+    private static final String TITLE = "title";
+    private static final String SUMMARY = "summary";
     public static final String KEY = "key";
     private static final String LABELS = "labels";
     private static final String PAGE_ID = "page_id";
@@ -34,10 +32,8 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     @Override
     public void create(Topic topic, Long pageId) {
         jdbcClient
-                .sql("SELECT documents.create_topic(:page_id, :tokens_in, :tokens_out, :title, :summary, :labels)")
+                .sql("SELECT documents.create_topic(:page_id, :title, :summary, :labels)")
                 .param(PAGE_ID, pageId)
-                .param(TOKENS_IN, -1)
-                .param(TOKENS_OUT, -1)
                 .param(TITLE, topic.getTitle())
                 .param(SUMMARY, topic.getSummary())
                 .param(LABELS, topic.getLabels().toArray(new String[0]))

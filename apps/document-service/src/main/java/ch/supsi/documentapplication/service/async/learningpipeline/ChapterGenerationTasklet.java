@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.service.async.learningpipeline;
 
+import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
@@ -26,14 +28,17 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
     private final IDatabaseTopicStorage databaseTopicStorage;
     private final IDatabasePathStorage databaseLearningStorage;
     private final OpenAIChapterClient openAIChapterClient;
+    private final IDatabaseAiUsageStorage aiUsageStorage;
 
     public ChapterGenerationTasklet(
             IDatabaseTopicStorage databaseTopicStorage,
             IDatabasePathStorage databaseLearningStorage,
-            OpenAIChapterClient chapterClient) {
+            OpenAIChapterClient chapterClient,
+            IDatabaseAiUsageStorage aiUsageStorage) {
         this.databaseTopicStorage = databaseTopicStorage;
         this.databaseLearningStorage = databaseLearningStorage;
         this.openAIChapterClient = chapterClient;
+        this.aiUsageStorage = aiUsageStorage;
     }
 
     @Override
@@ -55,7 +60,10 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                 .mapToObj(i -> new Label((long) i, distinctLabels.get(i)))
                 .toList();
 
-        List<Chapter> chapters = openAIChapterClient.getResult(labels);
+        var chapterResult = openAIChapterClient.getResult(labels);
+        List<Chapter> chapters = chapterResult.result();
+        persistChapterUsage(pathId, chapterResult);
+
         Map<Long, String> labelById = labels.stream().collect(Collectors.toMap(Label::id, Label::name));
 
         List<Set<String>> chapterLabelNames = chapters.stream()
@@ -114,5 +122,14 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
 
         log.debug("Finished chapter generation step for space with spaceId {}", spaceId);
         return RepeatStatus.FINISHED;
+    }
+
+    private void persistChapterUsage(Long pathId, ClientResult<List<Chapter>> result) {
+        var operations = List.of("chapter_generate", "chapter_feedback");
+        for (int i = 0; i < result.usages().size(); i++) {
+            String operation = i < operations.size() ? operations.get(i) : "chapter_generate";
+            aiUsageStorage.create(
+                    "learning_path", pathId, operation, result.usages().get(i));
+        }
     }
 }

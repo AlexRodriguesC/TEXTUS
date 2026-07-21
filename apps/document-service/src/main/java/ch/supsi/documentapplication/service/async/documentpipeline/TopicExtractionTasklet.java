@@ -1,8 +1,10 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
+import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
@@ -32,6 +34,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseTopicStorage databaseTopicStorage;
     private final OpenAITopicExtractionClient topicExtractionClient;
+    private final IDatabaseAiUsageStorage aiUsageStorage;
     private final AppProperties appProperties;
 
     @Autowired
@@ -39,10 +42,12 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
             IDatabaseDocumentStorage databaseDocumentStorage,
             IDatabaseTopicStorage databaseTopicStorage,
             OpenAITopicExtractionClient topicExtractionClient,
+            IDatabaseAiUsageStorage aiUsageStorage,
             AppProperties appProperties) {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.databaseTopicStorage = databaseTopicStorage;
         this.topicExtractionClient = topicExtractionClient;
+        this.aiUsageStorage = aiUsageStorage;
         this.appProperties = appProperties;
     }
 
@@ -63,7 +68,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
                 for (List<Page> batch : partition(documentPages, appProperties.getMaxParallelism())) {
                     List<Topic> snapshot = List.copyOf(existingTopics);
 
-                    List<CompletableFuture<List<Topic>>> futures = batch.stream()
+                    List<CompletableFuture<ClientResult<List<Topic>>>> futures = batch.stream()
                             .filter(page -> databaseTopicStorage
                                     .getByPageId(page.getId())
                                     .isEmpty())
@@ -79,12 +84,18 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
                     for (int i = 0; i < pagesToProcess.size(); i++) {
                         Page page = pagesToProcess.get(i);
-                        List<Topic> topics = futures.get(i).join();
+                        ClientResult<List<Topic>> extractionResult =
+                                futures.get(i).join();
+                        List<Topic> topics = extractionResult.result();
                         existingTopics.addAll(topics);
 
                         for (Topic topic : topics) {
                             databaseTopicStorage.create(topic, page.getId());
                         }
+
+                        extractionResult
+                                .usages()
+                                .forEach(usage -> aiUsageStorage.create("page", page.getId(), "topic_extract", usage));
                     }
                 }
             }

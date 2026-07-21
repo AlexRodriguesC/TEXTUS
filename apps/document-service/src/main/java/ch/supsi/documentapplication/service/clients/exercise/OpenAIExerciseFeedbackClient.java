@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.service.clients.exercise;
 
+import ch.supsi.documentapplication.model.AiContext;
 import ch.supsi.documentapplication.model.Attempt;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Feedback;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.Client;
@@ -22,20 +24,27 @@ public class OpenAIExerciseFeedbackClient extends Client<Attempt<?>, String> {
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
-            PromptTemplate promptTemplate) {
-        super(chatClient, new BeanOutputConverter<>(String.class), retryTemplate, systemPrompt, promptTemplate);
+            PromptTemplate promptTemplate,
+            AiContext aiContext) {
+        super(
+                chatClient,
+                new BeanOutputConverter<>(String.class),
+                retryTemplate,
+                systemPrompt,
+                promptTemplate,
+                aiContext);
     }
 
     @Override
-    protected String call(Attempt<?> attempt) {
+    protected ClientResult<String> call(Attempt<?> attempt) {
         Map<String, Object> params = new HashMap<>();
         params.put(EXERCISE_TYPE, attempt.getExerciseType());
         params.put(EXERCISE, attempt.getExercise());
         params.put(USER_RESPONSE, attempt.getUserResponse());
         params.put(CORRECT_ANSWER, attempt.getAnswer());
         params.put(TOPIC, attempt.getTopic());
-        var prompt = getPrompt(params);
 
-        return chatClient.prompt(prompt).call().entity(Feedback.class).getFeedback();
+        var result = invoke(getPrompt(params), Feedback.class);
+        return new ClientResult<>(result.result().getFeedback(), result.usages());
     }
 }

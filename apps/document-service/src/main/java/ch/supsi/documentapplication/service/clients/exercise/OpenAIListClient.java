@@ -1,5 +1,7 @@
 package ch.supsi.documentapplication.service.clients.exercise;
 
+import ch.supsi.documentapplication.model.AiContext;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.List;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
@@ -18,15 +20,21 @@ public class OpenAIListClient extends Client<Topic, List> {
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
-            PromptTemplate promptTemplate) {
-        super(chatClient, new BeanOutputConverter<>(List.class), retryTemplate, systemPrompt, promptTemplate);
+            PromptTemplate promptTemplate,
+            AiContext aiContext) {
+        super(
+                chatClient,
+                new BeanOutputConverter<>(List.class),
+                retryTemplate,
+                systemPrompt,
+                promptTemplate,
+                aiContext);
     }
 
     @Override
-    protected List call(Topic input) {
+    protected ClientResult<List> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
         params.put(TOPIC, input);
-        var prompt = getPrompt(params);
-        return chatClient.prompt(prompt).call().entity(List.class);
+        return invoke(getPrompt(params), List.class);
     }
 }

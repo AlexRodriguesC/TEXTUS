@@ -1,5 +1,8 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.model.AiContext;
+import ch.supsi.documentapplication.model.AiUsage;
+import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
@@ -38,7 +41,8 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
             PromptTemplate promptTemplate,
             String feedbackSystemPrompt,
             PromptTemplate feedbackPromptTemplate,
-            ChapterValidator validator) {
+            ChapterValidator validator,
+            AiContext aiContext) {
         super(
                 chatClient,
                 new BeanOutputConverter<>(new ParameterizedTypeReference<List<Chapter>>() {}),
@@ -46,17 +50,21 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
                 systemPrompt,
                 promptTemplate,
                 feedbackSystemPrompt,
-                feedbackPromptTemplate);
+                feedbackPromptTemplate,
+                aiContext);
         this.objectMapper = objectMapper;
         this.validator = validator;
     }
 
     @Override
-    protected List<Chapter> call(List<Label> input) {
+    protected ClientResult<List<Chapter>> call(List<Label> input) {
         Map<String, Object> params = new HashMap<>();
         params.put(LABELS, objectMapper.writeValueAsString(input));
         var prompt = getPrompt(params);
-        List<Chapter> chapters = chatClient.prompt(prompt).call().entity(new ParameterizedTypeReference<>() {});
+        var primaryResult = invoke(prompt, new ParameterizedTypeReference<List<Chapter>>() {});
+
+        List<AiUsage> usages = new ArrayList<>(primaryResult.usages());
+        List<Chapter> chapters = primaryResult.result();
 
         var feedback = validator.extractFeedback(chapters, input);
         if (!feedback.isValid() && chapters != null) {
@@ -70,9 +78,10 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
             var feedbackPrompt = getFeedbackPrompt(feedbackParams);
             log.info("Feedback prompt: {}", feedbackPrompt);
 
-            List<ChapterAssignment> assignments =
-                    chatClient.prompt(feedbackPrompt).call().entity(new ParameterizedTypeReference<>() {});
+            var feedbackResult = invoke(feedbackPrompt, new ParameterizedTypeReference<List<ChapterAssignment>>() {});
+            usages.addAll(feedbackResult.usages());
 
+            List<ChapterAssignment> assignments = feedbackResult.result();
             Map<Integer, List<Long>> assignmentByIndex = assignments.stream()
                     .collect(Collectors.toMap(ChapterAssignment::index, ChapterAssignment::labelIds));
 
@@ -89,6 +98,6 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
         }
 
         validator.validate(chapters, input);
-        return chapters;
+        return withUsages(chapters, usages);
     }
 }

@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.model.AiContext;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,8 +21,9 @@ public abstract class FeedbackLoopClient<I, O> extends Client<I, O> {
             String systemPrompt,
             PromptTemplate promptTemplate,
             String feedbackSystemPrompt,
-            PromptTemplate feedbackPromptTemplate) {
-        super(chatClient, converter, retryTemplate, systemPrompt, promptTemplate);
+            PromptTemplate feedbackPromptTemplate,
+            AiContext aiContext) {
+        super(chatClient, converter, retryTemplate, systemPrompt, promptTemplate, aiContext);
         this.feedbackSystemPrompt = feedbackSystemPrompt;
         this.feedbackPromptTemplate = feedbackPromptTemplate;
     }

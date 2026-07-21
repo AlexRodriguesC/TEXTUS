@@ -2,17 +2,16 @@ package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException
 import ch.supsi.documentapplication.exception.RetriesFailedException
+import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.MindMap
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
-import ch.supsi.documentapplication.service.validator.MindMapValidator
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
+import ch.supsi.documentapplication.service.validator.MindMapValidator
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
-import org.springframework.ai.converter.BeanOutputConverter
 import org.springframework.ai.retry.TransientAiException
-import org.springframework.core.retry.RetryException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
@@ -40,7 +39,13 @@ class OpenAIMindMapClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
-        client = new OpenAIMindMapClient(chatClient, retryTemplate, "", promptTemplate, mindMapValidator)
+        client = new OpenAIMindMapClient(
+                chatClient,
+                retryTemplate,
+                "",
+                promptTemplate,
+                mindMapValidator,
+                ClientTestSupport.TEST_AI_CONTEXT)
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
@@ -60,7 +65,7 @@ class OpenAIMindMapClientSpec extends Specification {
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.entity(MindMap.class) >> expectedMindMap
+        callResponseSpec.responseEntity(MindMap.class) >> ClientTestSupport.responseEntityFor(expectedMindMap)
 
         when: "getResult is invoked"
         def result = client.getResult(topics)
@@ -69,7 +74,8 @@ class OpenAIMindMapClientSpec extends Specification {
         1 * mindMapValidator.validate(expectedMindMap, expectedChunkIds)
 
         and: "the returned mind map matches what the chatClient produced"
-        result == expectedMindMap
+        result.result() == expectedMindMap
+        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
     }
 
     def "should retry and eventually throw RetriesFailedException when validations keep failing"() {
@@ -80,7 +86,7 @@ class OpenAIMindMapClientSpec extends Specification {
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.entity(MindMap.class) >> mindMap
+        callResponseSpec.responseEntity(MindMap.class) >> ClientTestSupport.responseEntityFor(mindMap)
         mindMapValidator.validate(mindMap, [1L]) >> { throw new AIOutputMappingFailedException("invalid") }
 
         when: "getResult is invoked"

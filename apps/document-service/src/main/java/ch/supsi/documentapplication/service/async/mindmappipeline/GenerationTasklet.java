@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.service.async.mindmappipeline;
 
 import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.model.*;
 import ch.supsi.documentapplication.model.learn.Topic;
@@ -31,17 +32,20 @@ public class GenerationTasklet extends ProcessingTasklet {
     private final DatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseSpaceStorage databaseSpaceStorage;
     private final OpenAIMindMapClient mindMapClient;
+    private final IDatabaseAiUsageStorage aiUsageStorage;
 
     @Autowired
     public GenerationTasklet(
             IDatabaseSpaceStorage databaseSpaceStorage,
             OpenAIMindMapClient mindMapClient,
             DatabaseDocumentStorage databaseDocumentStorage,
-            DatabaseTopicStorage databaseTopicStorage) {
+            DatabaseTopicStorage databaseTopicStorage,
+            IDatabaseAiUsageStorage aiUsageStorage) {
         this.databaseSpaceStorage = databaseSpaceStorage;
         this.mindMapClient = mindMapClient;
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.databaseTopicStorage = databaseTopicStorage;
+        this.aiUsageStorage = aiUsageStorage;
     }
 
     @Override
@@ -70,9 +74,10 @@ public class GenerationTasklet extends ProcessingTasklet {
             return RepeatStatus.FINISHED;
         }
 
-        MindMap mindMap = mindMapClient.getResult(topics);
+        var mindMapResult = mindMapClient.getResult(topics);
 
-        databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMap);
+        databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMapResult.result());
+        mindMapResult.usages().forEach(usage -> aiUsageStorage.create("mind_map", mapId, "mind_map_generate", usage));
 
         return RepeatStatus.FINISHED;
     }

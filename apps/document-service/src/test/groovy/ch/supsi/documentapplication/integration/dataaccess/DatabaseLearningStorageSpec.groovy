@@ -84,8 +84,8 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
 
         return jdbcClient
                 .sql("""
-                INSERT INTO documents.page (space_id, document_id, tokens_in, tokens_out, title, summary)
-                VALUES (:spaceId, :documentId, -1, -1, 'test title', 'test summary')
+                INSERT INTO documents.page (space_id, document_id, title, summary)
+                VALUES (:spaceId, :documentId, 'test title', 'test summary')
                 RETURNING id
                 """)
                 .param("spaceId", spaceId)
