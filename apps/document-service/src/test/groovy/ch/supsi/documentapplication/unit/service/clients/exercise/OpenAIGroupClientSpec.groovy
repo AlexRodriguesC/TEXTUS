@@ -34,6 +34,8 @@ class OpenAIGroupClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
+        requestSpec.options(_) >> requestSpec
+
         client = new OpenAIGroupClient(
                 chatClient,
                 retryTemplate,

@@ -41,7 +41,7 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
 
         if (lesson.attemptsLeft === 0) {
             return (
-                <div className={cn("flex flex-col gap-2", className)}>
+                <div className={cn("flex flex-col gap-2 w-fit", className)}>
                     <RetryLessonButton lesson={lesson}/>
                     <ReviewTopicsButton onCancel={() => {}} strSpaceId={strSpaceId} chapterId={chapterId}/>
                 </div>
@@ -66,7 +66,7 @@ function PathNodePopover({lessonId, className}: PathNodePopoverProps) {
     })();
 
     return (
-        <div className={"flex flex-col items-center"}>
+        <div className={"flex flex-col items-center w-fit"}>
             {content}
         </div>
     )

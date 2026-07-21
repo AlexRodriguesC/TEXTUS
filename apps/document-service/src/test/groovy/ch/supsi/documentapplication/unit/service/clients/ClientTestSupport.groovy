@@ -10,7 +10,9 @@ import org.springframework.ai.chat.model.Generation
 
 class ClientTestSupport {
 
-    static final AiContext TEST_AI_CONTEXT = new AiContext("test-provider", "test-model")
+    static final List<String> TEST_MODELS = List.of("test-model", "fallback-model-2", "fallback-model-3")
+
+    static final AiContext TEST_AI_CONTEXT = new AiContext("test-provider", "test-model", TEST_MODELS)
 
     static <T> ResponseEntity<ChatResponse, T> responseEntityFor(
             T entity,

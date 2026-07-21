@@ -7,7 +7,9 @@ import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
@@ -15,12 +17,16 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 public abstract class Client<I, O> {
 
     protected static final String FORMAT = "format";
+
+    private static final ThreadLocal<Integer> MODEL_INDEX = new ThreadLocal<>();
 
     protected ChatClient chatClient;
     protected BeanOutputConverter<O> converter;
@@ -53,19 +59,72 @@ public abstract class Client<I, O> {
     }
 
     public ClientResult<O> getResult(I input) throws RetriesFailedException {
-        return retryTemplate.execute(() -> call(input));
+        try {
+            return retryTemplate.execute(() -> call(input));
+        } finally {
+            MODEL_INDEX.remove();
+        }
     }
 
     protected abstract ClientResult<O> call(I input);
 
     protected <T> ClientResult<T> invoke(Prompt prompt, Class<T> type) {
-        var responseEntity = chatClient.prompt(prompt).call().responseEntity(type);
-        return new ClientResult<>(responseEntity.getEntity(), extractUsage(responseEntity.getResponse()));
+        return invokeWithFallback(prompt, callSpec -> callSpec.responseEntity(type));
     }
 
     protected <T> ClientResult<T> invoke(Prompt prompt, ParameterizedTypeReference<T> type) {
-        var responseEntity = chatClient.prompt(prompt).call().responseEntity(type);
-        return new ClientResult<>(responseEntity.getEntity(), extractUsage(responseEntity.getResponse()));
+        return invokeWithFallback(prompt, callSpec -> callSpec.responseEntity(type));
+    }
+
+    private <T> ClientResult<T> invokeWithFallback(Prompt prompt, ResponseExtractor<T> responseExtractor) {
+        List<String> models = aiContext.models();
+        int startIndex = MODEL_INDEX.get() != null ? MODEL_INDEX.get() : 0;
+        RuntimeException lastFailure = null;
+
+        for (int i = startIndex; i < models.size(); i++) {
+            String model = models.get(i);
+            try {
+                var callSpec = chatClient
+                        .prompt(prompt)
+                        .options(OpenAiChatOptions.builder().model(model))
+                        .call();
+                ResponseEntity<ChatResponse, T> responseEntity = responseExtractor.extract(callSpec);
+                if (i > 0) {
+                    log.info(
+                            "{}: succeeded with fallback model '{}' (attempt {}/{})",
+                            getClass().getSimpleName(),
+                            model,
+                            i + 1,
+                            models.size());
+                }
+                MODEL_INDEX.set(i);
+                return new ClientResult<>(responseEntity.getEntity(), extractUsage(responseEntity.getResponse()));
+            } catch (RuntimeException exception) {
+                lastFailure = exception;
+                if (!ModelFallbackClassifier.isFallbackEligible(exception) || i == models.size() - 1) {
+                    if (ModelFallbackClassifier.isFallbackEligible(exception)) {
+                        log.error(
+                                "{}: all {} configured models failed. Last model: '{}'. Last error: {}",
+                                getClass().getSimpleName(),
+                                models.size(),
+                                model,
+                                exception,
+                                exception);
+                    }
+                    throw exception;
+                }
+                log.warn(
+                        "{}: model '{}' failed ({}: {}). Falling back to '{}'.",
+                        getClass().getSimpleName(),
+                        model,
+                        exception.getClass().getSimpleName(),
+                        exception.getMessage(),
+                        models.get(i + 1),
+                        exception);
+            }
+        }
+
+        throw lastFailure;
     }
 
     protected ClientResult<O> withUsages(O result, List<AiUsage> usages) {
@@ -93,5 +152,10 @@ public abstract class Client<I, O> {
 
     private static int toInt(Integer value) {
         return value != null ? value : 0;
+    }
+
+    @FunctionalInterface
+    private interface ResponseExtractor<T> {
+        ResponseEntity<ChatResponse, T> extract(ChatClient.CallResponseSpec callResponseSpec);
     }
 }

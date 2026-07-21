@@ -39,6 +39,8 @@ class OpenAITopicExtractionClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
+        requestSpec.options(_) >> requestSpec
+
         client = new OpenAITopicExtractionClient(
                 new ObjectMapper(),
                 chatClient,

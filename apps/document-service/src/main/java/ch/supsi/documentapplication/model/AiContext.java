@@ -1,3 +1,5 @@
 package ch.supsi.documentapplication.model;
 
-public record AiContext(String provider, String defaultModel) {}
+import java.util.List;
+
+public record AiContext(String provider, String defaultModel, List<String> models) {}

@@ -45,8 +45,7 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
             AiContext aiContext) {
         super(
                 chatClient,
-                new BeanOutputConverter<>(new ParameterizedTypeReference<>() {
-                }),
+                new BeanOutputConverter<>(new ParameterizedTypeReference<>() {}),
                 retryTemplate,
                 systemPrompt,
                 promptTemplate,
@@ -77,7 +76,6 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
             feedbackParams.put(CHAPTERS, objectMapper.writeValueAsString(skeletons));
             feedbackParams.put(MISSING_LABEL_IDS, objectMapper.writeValueAsString(feedback.missingLabelIds()));
             var feedbackPrompt = getFeedbackPrompt(feedbackParams);
-            log.info("Feedback prompt: {}", feedbackPrompt);
 
             var feedbackResult = invoke(feedbackPrompt, new ParameterizedTypeReference<List<ChapterAssignment>>() {});
             usages.addAll(feedbackResult.usages());

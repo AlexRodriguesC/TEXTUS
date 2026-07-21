@@ -1,5 +1,7 @@
 package ch.supsi.documentapplication.configuration.properties;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,4 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AiProperties {
 
     private String provider = "llmgateway";
+
+    private List<String> modelFallbacks = new ArrayList<>();
 }

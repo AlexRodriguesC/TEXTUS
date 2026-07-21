@@ -13,6 +13,7 @@ import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.ai.chat.client.ChatClient;
@@ -34,7 +35,16 @@ public class OpenAIClientsConfiguration {
     @Bean
     public AiContext aiContext(
             AiProperties aiProperties, @Value("${spring.ai.openai.chat.model}") String defaultModel) {
-        return new AiContext(aiProperties.getProvider(), defaultModel);
+        var models = new java.util.ArrayList<String>();
+        models.add(defaultModel);
+        models.addAll(aiProperties.getModelFallbacks());
+
+        if (models.size() < 3) {
+            throw new IllegalStateException("At least 3 models must be configured (primary + 2 fallbacks). "
+                    + "Set spring.ai.openai.chat.model and app.ai.model-fallbacks with at least 2 entries.");
+        }
+
+        return new AiContext(aiProperties.getProvider(), defaultModel, List.copyOf(models));
     }
 
     @Bean
@@ -138,7 +148,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getSummarizationUser(),
                 promptProperties.getSummarizationSystem(),
-                aiContext,
                 (client, systemPrompt, template) ->
                         new OpenAISummarizationClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -158,7 +167,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getTopicExtractionUser(),
                 promptProperties.getTopicExtractionSystem(),
-                aiContext,
                 (client, systemPrompt, template) -> new OpenAITopicExtractionClient(
                         objectMapper, client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -177,7 +185,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getQuestionUser(),
                 promptProperties.getQuestionSystem(),
-                aiContext,
                 (client, systemPrompt, template) ->
                         new OpenAIQuestionClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -196,7 +203,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getListUser(),
                 promptProperties.getListSystem(),
-                aiContext,
                 (client, systemPrompt, template) ->
                         new OpenAIListClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -215,7 +221,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getGroupUser(),
                 promptProperties.getGroupSystem(),
-                aiContext,
                 (client, systemPrompt, template) ->
                         new OpenAIGroupClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -234,7 +239,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getPairUser(),
                 promptProperties.getPairSystem(),
-                aiContext,
                 (client, systemPrompt, template) ->
                         new OpenAIPairClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -253,7 +257,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader,
                 promptProperties.getFeedbackUser(),
                 promptProperties.getFeedbackSystem(),
-                aiContext,
                 (client, systemPrompt, template) -> new OpenAIExerciseFeedbackClient(
                         client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
@@ -264,7 +267,6 @@ public class OpenAIClientsConfiguration {
             ResourceLoader resourceLoader,
             String userPromptPath,
             String systemPromptPath,
-            AiContext aiContext,
             TriFunction<ChatClient, String, PromptTemplate, T> factory) {
 
         var userPromptResource = resourceLoader.getResource(userPromptPath);

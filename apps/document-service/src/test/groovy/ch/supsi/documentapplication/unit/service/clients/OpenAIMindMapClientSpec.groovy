@@ -39,6 +39,8 @@ class OpenAIMindMapClientSpec extends Specification {
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
+        requestSpec.options(_) >> requestSpec
+
         client = new OpenAIMindMapClient(
                 chatClient,
                 retryTemplate,

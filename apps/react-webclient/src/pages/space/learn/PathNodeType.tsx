@@ -30,7 +30,7 @@ function PathNode({ node, offset, disabled }: { node: LessonResponseDTO; offset:
               {getNodeIcon(node.type)}
             </MotionButton>
           </PopoverTrigger>
-          <PopoverContent side="bottom" className="bg-muted/80">
+          <PopoverContent side="bottom" className="bg-muted/80 py-4 px-10 w-fit">
             <PathNodePopover lessonId={node.id}/>
           </PopoverContent>
         </Popover>
