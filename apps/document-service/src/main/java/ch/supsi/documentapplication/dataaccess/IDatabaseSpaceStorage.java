@@ -20,5 +20,7 @@ public interface IDatabaseSpaceStorage {
 
     void createMindMapNodes(Long spaceId, Long mindMapId, MindMap mindMap);
 
+    void deleteMindMap(Long spaceId);
+
     void delete(Long spaceId);
 }

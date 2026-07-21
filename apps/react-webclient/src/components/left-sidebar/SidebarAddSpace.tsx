@@ -51,7 +51,7 @@ function SidebarAddSpace() {
                     )}
                   </SidebarMenuButton>
                   {open && (
-                    <div className={"flex flex-col w-full items-center"}>
+                    <div className={"flex flex-col w-full items-center cursor-pointer"}>
                       <CreateSpace
                         trigger={
                           <Button asChild variant={"default"}>

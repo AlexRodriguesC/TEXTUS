@@ -1,71 +1,113 @@
-import { useTranslation } from "react-i18next";
-import { failureToast, successToast } from "@/lib/toasts";
+import useSpaceId from "@/hooks/useSpaceId.ts";
 import {
+  getGetMindMapJobQueryKey,
+  getGetMindMapQueryKey,
+  useDeleteMindMap,
   useExtractMindMap,
   useGetMindMap,
   useGetMindMapJob,
 } from "@/client/generated/mind-maps/mind-maps.ts";
+import { useTranslation } from "react-i18next";
+import { failureToast, successToast } from "@/lib/toasts.ts";
+import { useQueryClient } from "@tanstack/react-query";
 import type {
   ErrorResponseDTO,
   MindMapJobDTO,
   MindMapJobDTOStatus,
-  MindMapResponseDTO,
-  NodeDTO,
 } from "@/client/model";
+import MindMap from "@/classes/MindMap.ts";
+import { useMemo } from "react";
 
 type MindMapStatus = MindMapJobDTOStatus;
 
-function useMindMap(spaceId: number | undefined) {
+function useMindMap() {
+  const { spaceId } = useSpaceId();
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  const { data: mindMapData } = useGetMindMap(spaceId ?? -1, {
+  const { data: jobData } = useGetMindMapJob(spaceId ?? -1, {
     query: {
-      enabled: spaceId != undefined,
-    },
-  });
-
-  const maybeData = mindMapData?.data;
-  let mindMap: { nodes: NodeDTO[] } = { nodes: [] };
-
-  if (maybeData && isMindMapDTO(maybeData) && maybeData.nodes) {
-    mindMap = { nodes: maybeData.nodes };
-  }
-
-  const extractMindMap = useExtractMindMap({
-    mutation: {
-      onSuccess: () => {
-        successToast(t("mindmap.creation.success"));
-      },
-      onError: () => {
-        failureToast(t("mindmap.creation.error"));
-      },
-    },
-  });
-
-  const { data } = useGetMindMapJob(spaceId ?? -1, {
-    query: {
-      refetchInterval: (query) => {
-        const jobData = query.state.data?.data;
-        if (!jobData || !isMindMapJobDTO(jobData)) return 2000;
-        const done = jobData.status === "DONE";
-        const hasNodes = mindMap.nodes.length > 0;
-        return done || hasNodes ? false : 2000;
-      },
+      enabled: spaceId !== undefined,
       refetchIntervalInBackground: true,
-      enabled: spaceId != undefined,
+      refetchInterval: (query) => {
+        const raw = query.state.data?.data;
+        if (!raw || !isMindMapJobDTO(raw)) return 2000;
+        const done = raw.status === "DONE";
+        const failed = raw.status === "FAILED";
+        return done || failed ? false : 2000;
+      },
     },
   });
 
-  let status: MindMapStatus = "NOT_CREATED";
+  const { data: mindMapData, isLoading } = useGetMindMap(spaceId ?? -1, {
+    query: {
+      enabled:
+        spaceId !== undefined &&
+        !!jobData &&
+        isMindMapJobDTO(jobData.data) &&
+        jobData.data.status === "DONE",
+    },
+  });
 
-  if (data && isMindMapJobDTO(data.data)) {
-    status = data.data.status;
+  let mindMapStatus: MindMapStatus = "NOT_CREATED";
+  if (jobData && isMindMapJobDTO(jobData.data)) {
+    mindMapStatus = jobData.data.status;
   }
+
+  const { mutate: deleteMutation, isPending: isDeleting } = useDeleteMindMap({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.resetQueries({
+          queryKey: getGetMindMapQueryKey(spaceId),
+        });
+        await queryClient.resetQueries({
+          queryKey: getGetMindMapJobQueryKey(spaceId),
+        });
+      },
+    },
+  });
+
+  const { mutate: generateMutation, isPending: isGenerating } =
+    useExtractMindMap({
+      mutation: {
+        onSuccess: () => {
+          successToast(t("mindmap.creation.success"));
+        },
+        onError: () => {
+          failureToast(t("mindmap.creation.error"));
+        },
+      },
+    });
+
+  const mindMap = useMemo(() => {
+    if (spaceId === undefined) return undefined;
+
+    const maybeMindMap = mindMapData?.data;
+    const base =
+      maybeMindMap && MindMap.isMindMapDTO(maybeMindMap)
+        ? MindMap.from(maybeMindMap)
+        : new MindMap([]);
+
+    return base.withRuntime(
+      spaceId,
+      deleteMutation,
+      generateMutation,
+      isDeleting,
+      isGenerating,
+    );
+  }, [
+    mindMapData,
+    spaceId,
+    deleteMutation,
+    generateMutation,
+    isDeleting,
+    isGenerating,
+  ]);
 
   return {
-    extractMindMap,
-    status,
     mindMap,
+    isMindMapLoading: isLoading,
+    status: mindMapStatus,
   };
 }
 
@@ -73,12 +115,6 @@ function isMindMapJobDTO(
   data: ErrorResponseDTO | MindMapJobDTO,
 ): data is MindMapJobDTO {
   return "status" in data;
-}
-
-function isMindMapDTO(
-  data: ErrorResponseDTO | MindMapResponseDTO,
-): data is MindMapResponseDTO {
-  return "nodes" in data;
 }
 
 export default useMindMap;

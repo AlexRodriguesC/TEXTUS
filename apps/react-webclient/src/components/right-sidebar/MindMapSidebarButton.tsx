@@ -1,13 +1,11 @@
-import useSpaceId from "@/hooks/useSpaceId.ts";
 import { SidebarGroupContent } from "@/components/ui/sidebar.tsx";
 import { useTranslation } from "react-i18next";
 import useMindMap from "@/hooks/useMindMap.ts";
 import { Button } from "@/components/ui/button.tsx";
 
 function MindMapSidebarButton() {
-  const { spaceId } = useSpaceId();
   const { t } = useTranslation();
-  const { extractMindMap, status } = useMindMap(spaceId);
+  const { mindMap, status } = useMindMap();
 
   const notGenerated = status == "NOT_CREATED";
   const canRegenerate = status == "DONE" || status == "FAILED";
@@ -16,8 +14,13 @@ function MindMapSidebarButton() {
   return (
     <SidebarGroupContent>
       <Button
-        disabled={!spaceId}
-        onClick={() => extractMindMap.mutate({ spaceId: spaceId! })}
+        disabled={isGenerating}
+        onClick={() => {
+          if (canRegenerate) {
+            mindMap?.delete();
+          }
+          mindMap?.regenerate();
+        }}
       >
         {notGenerated && t("sidebar.mind-map.generate")}
         {isGenerating && t("sidebar.mind-map.generating")}

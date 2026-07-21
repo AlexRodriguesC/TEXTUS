@@ -17,6 +17,7 @@ import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -54,7 +55,7 @@ class MindMapControllerSpec extends Specification {
 
         then:
         1 * spaceService.createMindMap("alice", 1L)
-        result.andExpect(status().isNoContent())
+        result.andExpect(status().isAccepted())
     }
 
     def "should return mind map job status"() {
@@ -71,6 +72,7 @@ class MindMapControllerSpec extends Specification {
     def "should return mind map"() {
         given:
         def mindMap = new MindMap()
+        mindMap.jobId = 42L
         mindMap.root = new MindMapNode(1L)
         spaceService.getMindMap("alice", 1L) >> mindMap
 
@@ -79,5 +81,14 @@ class MindMapControllerSpec extends Specification {
 
         then:
         result.andExpect(status().isOk())
+    }
+
+    def "should delete mind map"() {
+        when:
+        def result = mockMvc.perform(delete("/api/v1/spaces/1/mind-maps").principal(authentication))
+
+        then:
+        1 * spaceService.deleteMindMap("alice", 1L)
+        result.andExpect(status().isNoContent())
     }
 }

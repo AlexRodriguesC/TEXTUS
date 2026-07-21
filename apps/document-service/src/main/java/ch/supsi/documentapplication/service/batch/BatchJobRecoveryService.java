@@ -10,8 +10,10 @@ import org.springframework.batch.core.job.JobInstance;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.JobRestartException;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.boot.batch.autoconfigure.BatchTaskExecutor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -25,14 +27,21 @@ public class BatchJobRecoveryService {
 
     private final JobRepository jobRepository;
     private final JobOperator jobOperator;
+    private final TaskExecutor batchTaskExecutor;
 
-    public BatchJobRecoveryService(JobRepository jobRepository, JobOperator jobOperator) {
+    public BatchJobRecoveryService(
+            JobRepository jobRepository, JobOperator jobOperator, @BatchTaskExecutor TaskExecutor batchTaskExecutor) {
         this.jobRepository = jobRepository;
         this.jobOperator = jobOperator;
+        this.batchTaskExecutor = batchTaskExecutor;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void recoverInterruptedJobsOnStartup() {
+        batchTaskExecutor.execute(this::recoverAllInterruptedJobs);
+    }
+
+    void recoverAllInterruptedJobs() {
         Set<Long> recoveredExecutionIds = new HashSet<>();
 
         for (String jobName : RECOVERABLE_JOB_NAMES) {

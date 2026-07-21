@@ -8,17 +8,31 @@ import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import ch.supsi.documentapplication.service.clients.exercise.*;
+import ch.supsi.documentapplication.service.mindmap.MindMapAssembler;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
+import ch.supsi.documentapplication.service.validator.LabelMindMapValidator;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
+import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
+import io.micrometer.observation.ObservationRegistry;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiChatProperties;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiCommonProperties;
+import org.springframework.ai.model.tool.DefaultToolExecutionEligibilityPredicate;
+import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.setup.OpenAiSetup;
 import org.springframework.ai.template.st.StTemplateRenderer;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,9 +75,35 @@ public class OpenAIClientsConfiguration {
     }
 
     @Bean
+    @Qualifier("longRunningChatClient")
+    ChatClient longRunningChatClient(
+            OpenAiCommonProperties commonProperties,
+            OpenAiChatProperties chatProperties,
+            ToolCallingManager toolCallingManager,
+            ObjectProvider<ObservationRegistry> observationRegistry,
+            ObjectProvider<DefaultToolExecutionEligibilityPredicate> toolExecutionEligibilityPredicate,
+            AiProperties aiProperties) {
+        Duration timeout = aiProperties.getLongRunningRequestTimeout();
+        OpenAIClient openAiClient = createOpenAiClient(commonProperties, timeout);
+        OpenAIClientAsync openAiClientAsync = createOpenAiClientAsync(commonProperties, timeout);
+
+        var chatModel = OpenAiChatModel.builder()
+                .openAiClient(openAiClient)
+                .openAiClientAsync(openAiClientAsync)
+                .options(chatProperties.toOptions())
+                .toolCallingManager(toolCallingManager)
+                .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
+                .toolExecutionEligibilityPredicate(
+                        toolExecutionEligibilityPredicate.getIfUnique(DefaultToolExecutionEligibilityPredicate::new))
+                .build();
+
+        return ChatClient.builder(chatModel).build();
+    }
+
+    @Bean
     public OpenAIChapterClient openAIChapterClient(
             ObjectMapper objectMapper,
-            ChatClient.Builder chatBuilder,
+            @Qualifier("longRunningChatClient") ChatClient chatClient,
             RetryTemplateWrapper retryTemplateWrapper,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
@@ -92,8 +132,6 @@ public class OpenAIClientsConfiguration {
                 resourceLoader.getResource(promptProperties.getChapterExtractionFeedbackSystem());
         String feedbackSystemPromptText = copyToString(feedbackSystemPromptResource);
 
-        ChatClient chatClient = chatBuilder.build();
-
         var chapterValidator = new ChapterValidator();
 
         return new OpenAIChapterClient(
@@ -110,7 +148,8 @@ public class OpenAIClientsConfiguration {
 
     @Bean
     public OpenAIMindMapClient mindMapClient(
-            ChatClient.Builder chatBuilder,
+            ObjectMapper objectMapper,
+            @Qualifier("longRunningChatClient") ChatClient chatClient,
             RetryTemplateWrapper retryTemplateWrapper,
             StTemplateRenderer templateRenderer,
             PromptProperties promptProperties,
@@ -126,12 +165,31 @@ public class OpenAIClientsConfiguration {
 
         var systemPromptResource = resourceLoader.getResource(promptProperties.getMindMapExtractionSystem());
         String systemPromptText = copyToString(systemPromptResource);
-        ChatClient chatClient = chatBuilder.build();
 
-        var mindMapValidator = new MindMapValidator();
+        var feedbackUserPromptResource =
+                resourceLoader.getResource(promptProperties.getMindMapExtractionFeedbackUser());
+        String feedbackUserPromptText = copyToString(feedbackUserPromptResource);
+        PromptTemplate feedbackPromptTemplate = PromptTemplate.builder()
+                .renderer(templateRenderer)
+                .template(feedbackUserPromptText)
+                .build();
+
+        var feedbackSystemPromptResource =
+                resourceLoader.getResource(promptProperties.getMindMapExtractionFeedbackSystem());
+        String feedbackSystemPromptText = copyToString(feedbackSystemPromptResource);
 
         return new OpenAIMindMapClient(
-                chatClient, retryTemplateWrapper, systemPromptText, promptTemplate, mindMapValidator, aiContext);
+                objectMapper,
+                chatClient,
+                retryTemplateWrapper,
+                systemPromptText,
+                promptTemplate,
+                feedbackSystemPromptText,
+                feedbackPromptTemplate,
+                new MindMapAssembler(),
+                new LabelMindMapValidator(),
+                new MindMapValidator(),
+                aiContext);
     }
 
     @Bean
@@ -282,6 +340,41 @@ public class OpenAIClientsConfiguration {
         ChatClient chatClient = chatBuilder.build();
 
         return factory.apply(chatClient, systemPromptText, promptTemplate);
+    }
+
+    private static OpenAIClient createOpenAiClient(OpenAiCommonProperties commonProperties, Duration timeout) {
+        return OpenAiSetup.setupSyncClient(
+                commonProperties.getBaseUrl(),
+                commonProperties.getApiKey(),
+                commonProperties.getCredential(),
+                commonProperties.getMicrosoftDeploymentName(),
+                commonProperties.getMicrosoftFoundryServiceVersion(),
+                commonProperties.getOrganizationId(),
+                commonProperties.isMicrosoftFoundry(),
+                commonProperties.isGitHubModels(),
+                commonProperties.getModel(),
+                timeout,
+                commonProperties.getMaxRetries(),
+                commonProperties.getProxy(),
+                commonProperties.getCustomHeaders());
+    }
+
+    private static OpenAIClientAsync createOpenAiClientAsync(
+            OpenAiCommonProperties commonProperties, Duration timeout) {
+        return OpenAiSetup.setupAsyncClient(
+                commonProperties.getBaseUrl(),
+                commonProperties.getApiKey(),
+                commonProperties.getCredential(),
+                commonProperties.getMicrosoftDeploymentName(),
+                commonProperties.getMicrosoftFoundryServiceVersion(),
+                commonProperties.getOrganizationId(),
+                commonProperties.isMicrosoftFoundry(),
+                commonProperties.isGitHubModels(),
+                commonProperties.getModel(),
+                timeout,
+                commonProperties.getMaxRetries(),
+                commonProperties.getProxy(),
+                commonProperties.getCustomHeaders());
     }
 
     private String copyToString(Resource resource) {

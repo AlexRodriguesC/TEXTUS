@@ -70,7 +70,37 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
         var map = storage.readMindMap(spaceId)
 
         then:
+        map == null
+    }
+
+    def "should return mind map with job id but no nodes when generation is in progress"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long jobId = createBatchJobInstance()
+
+        when:
+        storage.createMindMap(spaceId, jobId)
+        var map = storage.readMindMap(spaceId)
+
+        then:
+        map != null
+        map.jobId == jobId
         map.root == null
-        map.jobId == null
+    }
+
+    def "should delete mind map"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long jobId = createBatchJobInstance()
+        storage.createMindMap(spaceId, jobId)
+
+        when:
+        storage.deleteMindMap(spaceId)
+        var map = storage.readMindMap(spaceId)
+
+        then:
+        map == null
     }
 }

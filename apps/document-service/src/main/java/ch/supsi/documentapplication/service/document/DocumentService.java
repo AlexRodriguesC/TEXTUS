@@ -152,7 +152,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         }
 
         var mindMap = spaceStorage.readMindMap(spaceId);
-        if (!mindMap.isEmpty()) {
+        if (mindMap != null && mindMap.getJobId() != null) {
             throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
         }
 

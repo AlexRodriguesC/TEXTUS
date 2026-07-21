@@ -77,8 +77,16 @@ public class GenerationTasklet extends ProcessingTasklet {
         var mindMapResult = mindMapClient.getResult(topics);
 
         databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMapResult.result());
-        mindMapResult.usages().forEach(usage -> aiUsageStorage.create("mind_map", mapId, "mind_map_generate", usage));
+        persistMindMapUsage(mapId, mindMapResult);
 
         return RepeatStatus.FINISHED;
+    }
+
+    private void persistMindMapUsage(Long mapId, ClientResult<MindMap> result) {
+        var operations = List.of("mind_map_generate", "mind_map_feedback");
+        for (int i = 0; i < result.usages().size(); i++) {
+            String operation = i < operations.size() ? operations.get(i) : "mind_map_generate";
+            aiUsageStorage.create("mind_map", mapId, operation, result.usages().get(i));
+        }
     }
 }

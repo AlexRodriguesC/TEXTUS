@@ -3,19 +3,25 @@ package ch.supsi.documentapplication.unit.service.clients
 import ch.supsi.documentapplication.exception.AIOutputMappingFailedException
 import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.AiUsage
-import ch.supsi.documentapplication.model.MindMap
+import ch.supsi.documentapplication.model.LabelMindMap
+import ch.supsi.documentapplication.model.LabelMindMapNode
+import ch.supsi.documentapplication.model.LabelMindMapAssignment
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
+import ch.supsi.documentapplication.service.mindmap.MindMapAssembler
+import ch.supsi.documentapplication.service.validator.LabelMindMapValidator
 import ch.supsi.documentapplication.service.validator.MindMapValidator
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
 import org.springframework.ai.retry.TransientAiException
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
 import spock.lang.Subject
+import tools.jackson.databind.ObjectMapper
 
 import java.time.Duration
 
@@ -28,8 +34,12 @@ class OpenAIMindMapClientSpec extends Specification {
     ChatClient.ChatClientRequestSpec requestSpec = Mock()
     ChatClient.CallResponseSpec callResponseSpec = Mock()
     RetryTemplateWrapper retryTemplate
-    MindMapValidator mindMapValidator = Mock()
     PromptTemplate promptTemplate = Mock()
+    PromptTemplate feedbackPromptTemplate = Mock()
+    ObjectMapper objectMapper = new ObjectMapper()
+    MindMapAssembler mindMapAssembler = new MindMapAssembler()
+    LabelMindMapValidator labelMindMapValidator = new LabelMindMapValidator()
+    MindMapValidator mindMapValidator = new MindMapValidator()
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
@@ -42,74 +52,141 @@ class OpenAIMindMapClientSpec extends Specification {
         requestSpec.options(_) >> requestSpec
 
         client = new OpenAIMindMapClient(
+                objectMapper,
                 chatClient,
                 retryTemplate,
                 "",
                 promptTemplate,
+                "",
+                feedbackPromptTemplate,
+                mindMapAssembler,
+                labelMindMapValidator,
                 mindMapValidator,
                 ClientTestSupport.TEST_AI_CONTEXT)
     }
 
-    static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
-        return new Topic(id, "a", 1, title, summary, labels)
+    static Topic topic(Long id, List<String> labels) {
+        new Topic(id, "doc.pdf", 1, "Title $id", "Summary $id", labels)
     }
 
-    static String randomStr() {
-        return UUID.randomUUID().toString()
+    static LabelMindMap labelMindMap(Long... labelIds) {
+        def map = new LabelMindMap()
+        map.root = buildNode(labelIds, 0)
+        return map
     }
 
-    def "should call chatClient, validate and return the mind map"() {
-        given: "a list of topics and a rendered prompt"
-        def topics = [topic(1L, randomStr(), randomStr()), topic(2L, randomStr(), randomStr())]
-        def expectedChunkIds = [1L, 2L]
-        def expectedMindMap = new MindMap()
+    private static LabelMindMapNode buildNode(Long[] labelIds, int index) {
+        if (index >= labelIds.length) {
+            return null
+        }
+        def children = []
+        if (index + 1 < labelIds.length) {
+            children << buildNode(labelIds, index + 1)
+        }
+        return new LabelMindMapNode(labelIds[index], children)
+    }
+
+    def "should return assembled mind map when primary output contains all labels"() {
+        given:
+        def topics = [
+                topic(1L, ["biology"]),
+                topic(2L, ["biology", "cell"]),
+                topic(3L, ["cell"])
+        ]
+        def labelMindMap = labelMindMap(0L, 1L)
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(MindMap.class) >> ClientTestSupport.responseEntityFor(expectedMindMap)
+        callResponseSpec.responseEntity(LabelMindMap.class) >> ClientTestSupport.responseEntityFor(labelMindMap)
 
-        when: "getResult is invoked"
+        when:
         def result = client.getResult(topics)
 
-        then: "the validator is called with the mind map and expected chunk ids"
-        1 * mindMapValidator.validate(expectedMindMap, expectedChunkIds)
-
-        and: "the returned mind map matches what the chatClient produced"
-        result.result() == expectedMindMap
+        then:
+        result.result().root.topicId == 1L
+        result.result().allTopicIds == [1L, 2L, 3L] as Set
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+        0 * feedbackPromptTemplate._
+    }
+
+    def "should call feedback loop and merge missing labels"() {
+        given:
+        def topics = [
+                topic(1L, ["biology"]),
+                topic(2L, ["cell"])
+        ]
+        def incomplete = new LabelMindMap()
+        incomplete.root = new LabelMindMapNode(0L)
+
+        promptTemplate.render(_) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >>> [requestSpec, requestSpec]
+        requestSpec.call() >>> [callResponseSpec, callResponseSpec]
+        callResponseSpec.responseEntity(_) >>> [
+                ClientTestSupport.responseEntityFor(incomplete),
+                ClientTestSupport.responseEntityFor([new LabelMindMapAssignment(0, [1L])])
+        ]
+
+        when:
+        def result = client.getResult(topics)
+
+        then:
+        1 * feedbackPromptTemplate.render(_) >> "feedback prompt"
+        result.result().allTopicIds == [1L, 2L] as Set
+        result.usages().size() == 2
+    }
+
+    def "should sanitize duplicate labels without feedback"() {
+        given:
+        def topics = [
+                topic(1L, ["biology"]),
+                topic(2L, ["cell"])
+        ]
+        def duplicateTree = new LabelMindMap()
+        duplicateTree.root = new LabelMindMapNode(0L, [new LabelMindMapNode(0L), new LabelMindMapNode(1L)])
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(LabelMindMap.class) >> ClientTestSupport.responseEntityFor(duplicateTree)
+
+        when:
+        def result = client.getResult(topics)
+
+        then:
+        result.result().allTopicIds == [1L, 2L] as Set
+        0 * feedbackPromptTemplate._
     }
 
     def "should retry and eventually throw RetriesFailedException when validations keep failing"() {
-        given: "a list of topics and a rendered prompt"
-        def topics = [topic(1L, randomStr(), randomStr())]
-        def mindMap = new MindMap()
+        given:
+        def topics = [topic(1L, ["biology"])]
+        def empty = new LabelMindMap()
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(MindMap.class) >> ClientTestSupport.responseEntityFor(mindMap)
-        mindMapValidator.validate(mindMap, [1L]) >> { throw new AIOutputMappingFailedException("invalid") }
+        callResponseSpec.responseEntity(LabelMindMap.class) >> ClientTestSupport.responseEntityFor(empty)
 
-        when: "getResult is invoked"
+        when:
         client.getResult(topics)
 
-        then: "the validation exception propagates"
+        then:
         thrown(RetriesFailedException)
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
-        given: "a list of topics"
-        def topics = [topic(1L, randomStr(), randomStr())]
+        given:
+        def topics = [topic(1L, ["biology"])]
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> { throw new TransientAiException("transient failure") }
 
-        when: "getResult is invoked"
+        when:
         client.getResult(topics)
 
-        then: "a RetriesFailedException wrapping the transient failure is thrown"
+        then:
         thrown(RetriesFailedException)
     }
 }

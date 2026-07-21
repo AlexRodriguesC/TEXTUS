@@ -23,4 +23,6 @@ public interface ISpaceService {
     MindMap getMindMap(String username, @NotNull Long spaceId);
 
     MindMapStatus getMindMapStatus(String username, @NotNull Long spaceId);
+
+    void deleteMindMap(String username, @NotNull Long spaceId);
 }

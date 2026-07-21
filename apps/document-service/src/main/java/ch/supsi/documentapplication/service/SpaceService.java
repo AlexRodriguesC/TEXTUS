@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.service;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.JobFailedToStartException;
+import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
@@ -101,7 +103,7 @@ public class SpaceService extends ch.supsi.documentapplication.service.Service i
     @Override
     public MindMapStatus getMindMapStatus(String username, Long spaceId) {
         var mindMap = getMindMap(username, spaceId);
-        if (mindMap == null || mindMap.isEmpty()) {
+        if (mindMap == null || mindMap.getJobId() == null) {
             return MindMapStatus.NOT_CREATED;
         }
 
@@ -116,5 +118,33 @@ public class SpaceService extends ch.supsi.documentapplication.service.Service i
         return status.isRunning()
                 ? MindMapStatus.GENERATING
                 : status.isUnsuccessful() ? MindMapStatus.FAILED : MindMapStatus.DONE;
+    }
+
+    @Override
+    public void deleteMindMap(String username, Long spaceId) {
+        var mindMap = getMindMapOrThrow(username, spaceId);
+
+        JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, mindMap.getJobId());
+        if (jobExecution != null && jobExecution.isRunning()) {
+            try {
+                jobOperator.stop(jobExecution);
+            } catch (Exception e) {
+                String message = String.format("Failed to stop job %s", mindMap.getJobId());
+                log.error(message, e);
+            }
+            log.info("Stopped job {} for mind map in space with id {}", mindMap.getJobId(), spaceId);
+        }
+
+        spaceStorage.deleteMindMap(spaceId);
+    }
+
+    private MindMap getMindMapOrThrow(String username, Long spaceId) {
+        var mindMap = getMindMap(username, spaceId);
+
+        if (mindMap == null || mindMap.getJobId() == null) {
+            throw NotFoundException.mindMapNotFoundException(spaceId);
+        }
+
+        return mindMap;
     }
 }

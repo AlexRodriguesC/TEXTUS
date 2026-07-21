@@ -39,7 +39,7 @@ function SidebarDocumentInfo({ document }: SidebarDocumentInfoProps) {
   const { t } = useTranslation();
   const { spaceId } = useSpaceId();
   const { deleteDocument, retryDocument, isRetrying } = useDocuments(spaceId);
-  const { status } = useMindMap(spaceId);
+  const { status } = useMindMap();
 
   return (
     <div className={"flex flex-row w-full items-center justify-between"}>

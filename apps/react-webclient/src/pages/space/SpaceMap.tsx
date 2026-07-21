@@ -226,7 +226,7 @@ function SpaceMapFlow({
 
 function SpaceMap() {
   const { spaceId } = useSpaceId();
-  const { mindMap, status } = useMindMap(spaceId);
+  const { mindMap, status, isMindMapLoading } = useMindMap();
 
   const { data } = useGetTopics(spaceId ?? 0, {
     query: {
@@ -245,11 +245,15 @@ function SpaceMap() {
     .filter((id) => id != null)
     .join(",");
 
-  if (status === "GENERATING" && mindMapNodes.length === 0) {
+  if (status !== "NOT_CREATED" && isMindMapLoading) {
     return <LoadingScreen />;
   }
 
-  if (mindMapNodes.length === 0) {
+  if (
+    mindMap === undefined ||
+    status === "NOT_CREATED" ||
+    mindMapNodes.length === 0
+  ) {
     return <SpaceMapEmpty />;
   }
 

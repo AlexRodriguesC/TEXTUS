@@ -76,12 +76,21 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new MindMapRow(
-                        rs.getLong(JOB_ID), rs.getLong(TOPIC_ID), rs.getObject(PARENT_TOPIC_ID, Long.class)))
+                        rs.getLong(JOB_ID),
+                        rs.getObject(TOPIC_ID, Long.class),
+                        rs.getObject(PARENT_TOPIC_ID, Long.class)))
                 .list();
 
-        MindMap mindMap = new MindMap();
-
         if (rows.isEmpty()) {
+            return null;
+        }
+
+        MindMap mindMap = new MindMap();
+        mindMap.setJobId(rows.getFirst().jobId());
+
+        List<MindMapRow> nodeRows =
+                rows.stream().filter(row -> row.topicId() != null).toList();
+        if (nodeRows.isEmpty()) {
             mindMap.setRoot(null);
             return mindMap;
         }
@@ -89,12 +98,11 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         Map<Long, MindMapNode> nodesByChunkId = new HashMap<>();
         MindMapNode root = null;
 
-        for (MindMapRow row : rows) {
-            mindMap.setJobId(row.jobId);
+        for (MindMapRow row : nodeRows) {
             nodesByChunkId.computeIfAbsent(row.topicId(), MindMapNode::new);
         }
 
-        for (MindMapRow row : rows) {
+        for (MindMapRow row : nodeRows) {
             MindMapNode current = nodesByChunkId.get(row.topicId());
 
             if (row.parentTopicId() == null) {
@@ -166,6 +174,15 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         for (MindMapNode child : node.getChildren()) {
             saveMindMapNodeRecursive(mindMapId, child, nodeId);
         }
+    }
+
+    @Override
+    public void deleteMindMap(Long spaceId) {
+        jdbcClient
+                .sql("SELECT documents.delete_mind_map(:space_id)")
+                .param(SPACE_ID, spaceId)
+                .query()
+                .singleValue();
     }
 
     @Override
