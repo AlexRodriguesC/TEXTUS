@@ -63,6 +63,10 @@ class DocumentManagementFlow extends BaseFlowSpec implements FlowTestSupport, In
         then:
         listResponse.expectStatus().isOk()
         listResponse.expectBody(DocumentsResponseDTO)
+                .value { DocumentsResponseDTO body ->
+                    assert body.documents() != null
+                    body.documents().every { it.tasks() != null }
+                }
 
         when: "the user deletes a seeded document"
         Long jobId = createBatchJobInstance()

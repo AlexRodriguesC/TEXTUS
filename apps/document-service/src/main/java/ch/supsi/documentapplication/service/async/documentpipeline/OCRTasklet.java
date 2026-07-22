@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.service.async.documentpipeline;
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
+import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import java.awt.image.BufferedImage;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import lombok.extern.log4j.Log4j2;
 import net.sourceforge.tess4j.ITesseract;
@@ -38,6 +41,7 @@ public class OCRTasklet extends ProcessingTasklet {
 
     private final IFileSystemDocumentStorage documentStorage;
     private final LanguageDetector languageDetector;
+    private final DocumentTaskProgressService documentTaskProgressService;
     private final String tessdataPath;
     private final int maxParallelism;
 
@@ -45,9 +49,11 @@ public class OCRTasklet extends ProcessingTasklet {
     public OCRTasklet(
             IFileSystemDocumentStorage documentStorage,
             LanguageDetector languageDetector,
+            DocumentTaskProgressService documentTaskProgressService,
             AppProperties appProperties) {
         this.documentStorage = documentStorage;
         this.languageDetector = languageDetector;
+        this.documentTaskProgressService = documentTaskProgressService;
         this.tessdataPath = appProperties.getTessdataPath();
         this.maxParallelism = appProperties.getMaxParallelism();
     }
@@ -56,19 +62,26 @@ public class OCRTasklet extends ProcessingTasklet {
             throws Exception {
         log.debug("Executing OCR step for document with documentId {}", documentId);
 
+        Long databaseDocumentId = getDatabaseDocumentId(chunkContext);
         FsDocument fsDocument = documentStorage.read(getDocumentIdAsUUID());
 
         try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
             if (!requiresOcr(pdfDocument)) {
                 log.debug("Document {} does not require OCR, skipping", documentId);
+                documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, 1);
+                documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
                 return RepeatStatus.FINISHED;
             }
 
+            int pageCount = pdfDocument.getNumberOfPages();
+            documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, pageCount);
+
             String tesseractLanguageCode = detectLanguage(pdfDocument);
-            byte[] ocrPdfBytes = performOcr(pdfDocument, tesseractLanguageCode);
+            byte[] ocrPdfBytes = performOcr(pdfDocument, tesseractLanguageCode, databaseDocumentId);
 
             FsDocument newFsDocument = FsDocument.create(fsDocument.getDocumentId(), ocrPdfBytes);
             documentStorage.update(newFsDocument);
+            documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
         }
 
         return RepeatStatus.FINISHED;
@@ -91,10 +104,12 @@ public class OCRTasklet extends ProcessingTasklet {
         return toTesseractCode(language);
     }
 
-    private byte[] performOcr(PDDocument pdfDocument, String tesseractLanguageCode) throws Exception {
+    private byte[] performOcr(PDDocument pdfDocument, String tesseractLanguageCode, Long databaseDocumentId)
+            throws Exception {
         PDFRenderer renderer = new PDFRenderer(pdfDocument);
 
         int threads = maxParallelism;
+        AtomicInteger completedPages = new AtomicInteger(0);
 
         long ocrStart = System.currentTimeMillis();
         List<Future<File>> futures = new ArrayList<>();
@@ -105,7 +120,12 @@ public class OCRTasklet extends ProcessingTasklet {
             for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {
                 final int idx = i;
                 semaphore.acquire();
-                futures.add(executor.submit(() -> ocrPage(idx, renderer, tesseractLanguageCode, semaphore)));
+                futures.add(executor.submit(() -> {
+                    File result = ocrPage(idx, renderer, tesseractLanguageCode, semaphore);
+                    int progress = completedPages.incrementAndGet();
+                    documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.OCR, progress);
+                    return result;
+                }));
             }
 
             executor.shutdown();

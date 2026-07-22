@@ -92,6 +92,26 @@ trait IntegrationFixture {
                 .single()
     }
 
+    void createDocumentTask(
+            Long documentId,
+            String type,
+            int progress = 0,
+            int maxProgress = 1,
+            String variant = "DEFAULT") {
+        jdbcClient
+                .sql("""
+                INSERT INTO documents.document_task (id, document_id, type, progress, max_progress, variant)
+                VALUES (:id, :documentId, :type, :progress, :maxProgress, :variant)
+                """)
+                .param("id", "${documentId}:${type}")
+                .param("documentId", documentId)
+                .param("type", type)
+                .param("progress", progress)
+                .param("maxProgress", maxProgress)
+                .param("variant", variant)
+                .update()
+    }
+
     Long createPage(Long spaceId, Long jobId) {
         Long documentId = createDocument(spaceId, jobId)
         jdbcClient

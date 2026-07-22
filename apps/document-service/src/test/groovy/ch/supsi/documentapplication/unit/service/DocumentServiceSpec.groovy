@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentTaskStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.ApplicationException
@@ -9,8 +10,11 @@ import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.StateConflictException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Document
+import ch.supsi.documentapplication.model.DocumentTask
 import ch.supsi.documentapplication.model.FsDocument
 import ch.supsi.documentapplication.model.Space
+import ch.supsi.documentapplication.model.TaskType
+import ch.supsi.documentapplication.model.TaskVariant
 import ch.supsi.documentapplication.service.batch.BatchJobRecoveryService
 import ch.supsi.documentapplication.service.document.DocumentService
 import org.springframework.batch.core.job.Job
@@ -28,6 +32,7 @@ class DocumentServiceSpec extends Specification {
 
     private final IFileSystemDocumentStorage documentFsStorage = Mock()
     private final IDatabaseDocumentStorage databaseDocumentStorage = Mock()
+    private final IDatabaseDocumentTaskStorage documentTaskStorage = Mock()
     private final IDatabaseSpaceStorage spaceStorage = Mock()
     private final JobOperator jobOperator = Mock()
     private final Job pipelineJob = Mock()
@@ -35,7 +40,7 @@ class DocumentServiceSpec extends Specification {
     private final BatchJobRecoveryService batchJobRecoveryService = Mock()
 
     private final DocumentService service =
-            new DocumentService(documentFsStorage, databaseDocumentStorage, spaceStorage, jobOperator, pipelineJob, jobRepository, batchJobRecoveryService)
+            new DocumentService(documentFsStorage, databaseDocumentStorage, documentTaskStorage, spaceStorage, jobOperator, pipelineJob, jobRepository, batchJobRecoveryService)
 
 
     Space buildSpace(Long id, String owner) {
@@ -102,7 +107,7 @@ class DocumentServiceSpec extends Specification {
     }
 
 
-    def "should return documents for owned space"() {
+    def "should return documents with tasks for owned space"() {
         given:
         String owner = "alice"
         Long spaceId = 10L
@@ -111,6 +116,7 @@ class DocumentServiceSpec extends Specification {
                 new Document("abc", 1, 2),
                 new Document("abc", 2, 3)
         ]
+        def task = new DocumentTask("1:OCR", 1L, TaskType.OCR, 1, 1, TaskVariant.SUCCESS)
 
         when:
         List<Document> result = service.getDocuments(owner, spaceId)
@@ -118,7 +124,11 @@ class DocumentServiceSpec extends Specification {
         then:
         1 * spaceStorage.read(spaceId) >> space
         1 * databaseDocumentStorage.getDocuments(spaceId) >> documents
+        1 * documentTaskStorage.getByDocumentId(1L) >> [task]
+        1 * documentTaskStorage.getByDocumentId(2L) >> []
         result == documents
+        result[0].tasks == [task]
+        result[1].tasks == []
     }
 
     def "should throw not found when space is missing"() {

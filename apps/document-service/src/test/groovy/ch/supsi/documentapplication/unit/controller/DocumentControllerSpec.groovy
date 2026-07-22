@@ -17,8 +17,12 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.web.multipart.MultipartFile
 import spock.lang.Specification
 
+import ch.supsi.documentapplication.controller.DTO.mapper.DocumentTaskMapper
+import ch.supsi.documentapplication.controller.DTO.response.TaskDto
 import ch.supsi.documentapplication.model.Document
-import ch.supsi.documentapplication.model.DocumentStatus
+import ch.supsi.documentapplication.model.DocumentTask
+import ch.supsi.documentapplication.model.TaskType
+import ch.supsi.documentapplication.model.TaskVariant
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -56,6 +60,9 @@ class DocumentControllerSpec extends Specification {
         getMaxDocumentSize() >> 500L * 1024 * 1024
     }
 
+    @SpringBean
+    DocumentTaskMapper documentTaskMapper = new DocumentTaskMapper()
+
     def "should return 202 for valid file upload"() {
         given:
         def file = new MockMultipartFile("document", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "content".bytes)
@@ -86,7 +93,7 @@ class DocumentControllerSpec extends Specification {
         given:
         def maxSize = 500L * 1024 * 1024
         def appProps = Mock(AppProperties) { it.maxDocumentSize >> maxSize }
-        def controller = new DocumentController(appProps, Mock(IDocumentService))
+        def controller = new DocumentController(appProps, Mock(IDocumentService), Mock(DocumentTaskMapper))
         def file = Mock(MultipartFile) {
             isEmpty() >> false
             getSize() >> maxSize
@@ -104,7 +111,7 @@ class DocumentControllerSpec extends Specification {
         given:
         documentService.getDocuments("pippo", 1L) >> {
             def doc = new Document("doc.pdf", 1L, 2L)
-            doc.status = DocumentStatus.DONE
+            doc.tasks = [new DocumentTask("1:OCR", 1L, TaskType.OCR, 1, 1, TaskVariant.SUCCESS)]
             [doc]
         }
 
@@ -114,6 +121,8 @@ class DocumentControllerSpec extends Specification {
         then:
         result.andExpect(status().isOk())
         result.andExpect(jsonPath('$.documents[0].id').value(1))
+        result.andExpect(jsonPath('$.documents[0].tasks[0].type').value("OCR"))
+        result.andExpect(jsonPath('$.documents[0].tasks[0].variant').value("SUCCESS"))
     }
 
     def "should delete document"() {

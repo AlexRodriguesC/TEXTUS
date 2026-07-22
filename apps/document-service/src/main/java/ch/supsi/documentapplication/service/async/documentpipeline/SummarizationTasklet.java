@@ -6,8 +6,10 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.PageChunk;
+import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient;
+import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,11 +36,14 @@ public class SummarizationTasklet extends ProcessingTasklet {
 
     private static final String TOTAL_PROCESSED = "TOTAL_PROCESSED";
     private static final String LAST_PROCESSED_CHUNK_PAGE = "LAST_PROCESSED_CHUNK_PAGE";
+    private static final String SUMMARIZATION_TASK_STARTED = "SUMMARIZATION_TASK_STARTED";
+    private static final String INITIAL_PAGE_COUNT = "INITIAL_PAGE_COUNT";
 
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IFileSystemDocumentStorage fileSystemDocumentStorage;
     private final OpenAISummarizationClient summarisationClient;
     private final IDatabaseAiUsageStorage aiUsageStorage;
+    private final DocumentTaskProgressService documentTaskProgressService;
     private final AppProperties appProperties;
 
     @Autowired
@@ -47,11 +52,13 @@ public class SummarizationTasklet extends ProcessingTasklet {
             IFileSystemDocumentStorage fileSystemDocumentStorage,
             OpenAISummarizationClient summarisationClient,
             IDatabaseAiUsageStorage aiUsageStorage,
+            DocumentTaskProgressService documentTaskProgressService,
             AppProperties appProperties) {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.fileSystemDocumentStorage = fileSystemDocumentStorage;
         this.summarisationClient = summarisationClient;
         this.aiUsageStorage = aiUsageStorage;
+        this.documentTaskProgressService = documentTaskProgressService;
         this.appProperties = appProperties;
     }
 
@@ -69,6 +76,8 @@ public class SummarizationTasklet extends ProcessingTasklet {
 
         log.debug("Executing summarization step for document with documentId {}", databaseDocumentId);
 
+        initializeTaskIfNeeded(stepExecutionContext, databaseDocumentId, fsDocumentId);
+
         int processedThisStep = 0;
         int maxChunksPerStep = appProperties.getMaxChunksPerStep();
         int maxParallelism = appProperties.getMaxParallelism();
@@ -76,6 +85,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
         while (processedThisStep < maxChunksPerStep) {
             if (fileSystemDocumentStorage.readNextChunk(fsDocumentId).isEmpty()) {
                 log.info("No more pages to summarize for document with documentId: {}", databaseDocumentId);
+                documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SUMMARIZATION);
                 return RepeatStatus.FINISHED;
             }
 
@@ -83,6 +93,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
                     stepExecutionContext, fsDocumentId, databaseDocumentId, totalProcessed, lastProcessedChunkPage)) {
                 totalProcessed = stepExecutionContext.getInt(TOTAL_PROCESSED);
                 lastProcessedChunkPage = stepExecutionContext.getInt(LAST_PROCESSED_CHUNK_PAGE);
+                updateSummarizationProgress(stepExecutionContext, databaseDocumentId, totalProcessed);
                 processedThisStep++;
                 continue;
             }
@@ -102,6 +113,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
             totalProcessed += batch.size();
             stepExecutionContext.putInt(TOTAL_PROCESSED, totalProcessed);
             stepExecutionContext.putInt(LAST_PROCESSED_CHUNK_PAGE, lastProcessedChunkPage);
+            updateSummarizationProgress(stepExecutionContext, databaseDocumentId, totalProcessed);
 
             processedThisStep += batch.size();
             log.info(
@@ -111,6 +123,30 @@ public class SummarizationTasklet extends ProcessingTasklet {
         }
 
         return RepeatStatus.CONTINUABLE;
+    }
+
+    private void initializeTaskIfNeeded(
+            ExecutionContext stepExecutionContext, Long databaseDocumentId, UUID fsDocumentId) {
+        if (stepExecutionContext.containsKey(SUMMARIZATION_TASK_STARTED)) {
+            return;
+        }
+
+        int existingPages = databaseDocumentStorage.getPages(databaseDocumentId).size();
+        int remainingChunks = fileSystemDocumentStorage
+                .listChunks(fsDocumentId, Integer.MAX_VALUE)
+                .size();
+        int maxProgress = Math.max(1, existingPages + remainingChunks);
+
+        documentTaskProgressService.startTask(databaseDocumentId, TaskType.SUMMARIZATION, maxProgress);
+        stepExecutionContext.putInt(INITIAL_PAGE_COUNT, existingPages);
+        stepExecutionContext.put(SUMMARIZATION_TASK_STARTED, true);
+    }
+
+    private void updateSummarizationProgress(
+            ExecutionContext stepExecutionContext, Long databaseDocumentId, int totalProcessed) {
+        int initialPages = stepExecutionContext.getInt(INITIAL_PAGE_COUNT);
+        documentTaskProgressService.updateProgress(
+                databaseDocumentId, TaskType.SUMMARIZATION, initialPages + totalProcessed);
     }
 
     private boolean recoverNextChunkIfNeeded(

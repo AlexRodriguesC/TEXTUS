@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.controller;
 
+import ch.supsi.documentapplication.controller.DTO.mapper.DocumentTaskMapper;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentsResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
@@ -29,17 +30,22 @@ public class DocumentController {
 
     private final AppProperties appProperties;
     private final IDocumentService documentService;
+    private final DocumentTaskMapper documentTaskMapper;
 
     @Autowired
-    public DocumentController(AppProperties appProperties, IDocumentService documentService) {
+    public DocumentController(
+            AppProperties appProperties,
+            IDocumentService documentService,
+            DocumentTaskMapper documentTaskMapper) {
         this.appProperties = appProperties;
         this.documentService = documentService;
+        this.documentTaskMapper = documentTaskMapper;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get documents for the specified space", description = """
             Returns all documents associated with the specified space.
-            Each document representation contains the document id and its current processing status.
+            Each document representation contains the document id and its pipeline task progress.
             """)
     @ApiResponses(
             {
@@ -52,9 +58,14 @@ public class DocumentController {
             @Parameter(description = "The ID of the space to retrieve documents for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
             @Parameter(hidden = true) Authentication authentication) {
         String owner = authentication.getName();
-        var statuses = documentService.getDocuments(owner, spaceId);
-        var statusesDto = statuses.stream().map(s -> new DocumentResponseDTO(s.getName(), s.getId(), s.getStatus())).toList();
-        return ResponseEntity.ok(new DocumentsResponseDTO(statusesDto));
+        var documents = documentService.getDocuments(owner, spaceId);
+        var documentsDto = documents.stream()
+                .map(document -> new DocumentResponseDTO(
+                        document.getName(),
+                        document.getId(),
+                        documentTaskMapper.toDtoList(document.getTasks())))
+                .toList();
+        return ResponseEntity.ok(new DocumentsResponseDTO(documentsDto));
     }
 
     @PostMapping("/{documentId}/retry")

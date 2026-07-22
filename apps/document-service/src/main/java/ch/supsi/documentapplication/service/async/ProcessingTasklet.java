@@ -1,6 +1,8 @@
 package ch.supsi.documentapplication.service.async;
 
+import ch.supsi.documentapplication.service.async.documentpipeline.SetupTasklet;
 import java.util.UUID;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,10 @@ public abstract class ProcessingTasklet implements Tasklet {
 
     protected UUID getDocumentIdAsUUID() {
         return UUID.fromString(documentId);
+    }
+
+    protected Long getDatabaseDocumentId(ChunkContext chunkContext) {
+        return (Long) chunkContext.getStepContext().getJobExecutionContext().get(SetupTasklet.DATABASE_DOCUMENT_ID);
     }
 
     @SuppressWarnings("unchecked")

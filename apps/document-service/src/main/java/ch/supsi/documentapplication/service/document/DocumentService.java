@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.service.document;
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentTaskStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.*;
@@ -27,6 +28,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
 
     private final IFileSystemDocumentStorage documentFsStorage;
     private final IDatabaseDocumentStorage databaseDocumentStorage;
+    private final IDatabaseDocumentTaskStorage documentTaskStorage;
     private final JobOperator jobOperator;
     private final Job documentJob;
     private final JobRepository jobRepository;
@@ -36,6 +38,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
     public DocumentService(
             IFileSystemDocumentStorage documentFsStorage,
             IDatabaseDocumentStorage databaseDocumentStorage,
+            IDatabaseDocumentTaskStorage documentTaskStorage,
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
             Job documentJob,
@@ -44,6 +47,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         super(spaceStorage);
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
+        this.documentTaskStorage = documentTaskStorage;
         this.jobOperator = asyncJobOperator;
         this.documentJob = documentJob;
         this.jobRepository = jobRepository;
@@ -88,20 +92,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         var space = getSpaceOrThrow(owner, spaceId);
         var documents = databaseDocumentStorage.getDocuments(space.getId());
 
-        documents.forEach(document -> {
-            var jobId = document.getJobId();
-            var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, jobId);
-            if (jobExecution == null) {
-                document.setStatus(DocumentStatus.FAILED);
-                return;
-            }
-
-            var status = jobExecution.getStatus();
-            var docStatus = status.isRunning()
-                    ? DocumentStatus.PROCESSING
-                    : status.isUnsuccessful() ? DocumentStatus.FAILED : DocumentStatus.DONE;
-            document.setStatus(docStatus);
-        });
+        documents.forEach(document -> document.setTasks(documentTaskStorage.getByDocumentId(document.getId())));
 
         return documents;
     }

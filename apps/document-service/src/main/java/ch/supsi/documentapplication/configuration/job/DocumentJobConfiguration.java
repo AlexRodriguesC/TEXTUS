@@ -50,41 +50,59 @@ public class DocumentJobConfiguration extends JobConfiguration {
     }
 
     @Bean
-    public Step ocr(JobRepository jobRepository, PlatformTransactionManager transactionManager, OCRTasklet ocrTasklet) {
-        return buildTaskletStep(OCRTasklet.class.getSimpleName(), jobRepository, transactionManager, ocrTasklet);
+    public Step ocr(
+            JobRepository jobRepository,
+            PlatformTransactionManager transactionManager,
+            OCRTasklet ocrTasklet,
+            DocumentTaskStepListener documentTaskStepListener) {
+        return buildTaskletStep(
+                OCRTasklet.class.getSimpleName(),
+                jobRepository,
+                transactionManager,
+                ocrTasklet,
+                documentTaskStepListener);
     }
 
     @Bean
     public Step segment(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            SegmentationTasklet segmentationTasklet) {
+            SegmentationTasklet segmentationTasklet,
+            DocumentTaskStepListener documentTaskStepListener) {
         return buildTaskletStep(
-                SegmentationTasklet.class.getSimpleName(), jobRepository, transactionManager, segmentationTasklet);
+                SegmentationTasklet.class.getSimpleName(),
+                jobRepository,
+                transactionManager,
+                segmentationTasklet,
+                documentTaskStepListener);
     }
 
     @Bean
     public Step summarize(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            SummarizationTasklet summarizationTasklet) {
+            SummarizationTasklet summarizationTasklet,
+            DocumentTaskStepListener documentTaskStepListener) {
         return buildTaskletStep(
                 summarizationTasklet.getClass().getSimpleName(),
                 jobRepository,
                 transactionManager,
-                summarizationTasklet);
+                summarizationTasklet,
+                documentTaskStepListener);
     }
 
     @Bean
     public Step extractTopics(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            TopicExtractionTasklet topicExtractionTasklet) {
+            TopicExtractionTasklet topicExtractionTasklet,
+            DocumentTaskStepListener documentTaskStepListener) {
         return buildTaskletStep(
                 topicExtractionTasklet.getClass().getSimpleName(),
                 jobRepository,
                 transactionManager,
-                topicExtractionTasklet);
+                topicExtractionTasklet,
+                documentTaskStepListener);
     }
 
     @Bean

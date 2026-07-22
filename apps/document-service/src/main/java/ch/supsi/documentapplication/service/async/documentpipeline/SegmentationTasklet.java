@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.service.async.documentpipeline;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
+import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,16 +30,21 @@ public class SegmentationTasklet extends ProcessingTasklet {
     private static final int MIN_PAGE_TEXT_LENGTH = 40;
 
     private final IFileSystemDocumentStorage fileSystemDocumentStorage;
+    private final DocumentTaskProgressService documentTaskProgressService;
 
     @Autowired
-    public SegmentationTasklet(IFileSystemDocumentStorage fileSystemDocumentStorage) {
+    public SegmentationTasklet(
+            IFileSystemDocumentStorage fileSystemDocumentStorage,
+            DocumentTaskProgressService documentTaskProgressService) {
         this.fileSystemDocumentStorage = fileSystemDocumentStorage;
+        this.documentTaskProgressService = documentTaskProgressService;
     }
 
     @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
 
+        Long databaseDocumentId = getDatabaseDocumentId(chunkContext);
         FsDocument fsDocument = fileSystemDocumentStorage.read(getDocumentIdAsUUID());
 
         if (fsDocument == null) {
@@ -46,24 +53,25 @@ public class SegmentationTasklet extends ProcessingTasklet {
         }
 
         List<String> contents = extractContents(fsDocument);
+        documentTaskProgressService.startTask(databaseDocumentId, TaskType.SEGMENTATION, contents.size());
 
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
             if (pageText.isBlank() || pageText.length() < MIN_PAGE_TEXT_LENGTH) {
                 log.debug("Skipped empty page {} for document {}", page, documentId);
-                continue;
+            } else {
+                Integer pageNumber = page + 1;
+                if (fileSystemDocumentStorage.chunkExists(getDocumentIdAsUUID(), pageNumber)) {
+                    log.debug("Chunk for page {} already exists for document {}, skipping", pageNumber, documentId);
+                } else {
+                    String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
+                    log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
+                }
             }
-
-            Integer pageNumber = page + 1;
-            if (fileSystemDocumentStorage.chunkExists(getDocumentIdAsUUID(), pageNumber)) {
-                log.debug("Chunk for page {} already exists for document {}, skipping", pageNumber, documentId);
-                continue;
-            }
-
-            String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
-            log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
+            documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.SEGMENTATION, page + 1);
         }
 
+        documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SEGMENTATION);
         return RepeatStatus.FINISHED;
     }
 
