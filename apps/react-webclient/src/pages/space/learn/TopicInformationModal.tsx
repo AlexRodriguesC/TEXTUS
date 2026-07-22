@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
+import TitleSummarySection from "@/components/TitleSummarySection.tsx";
 import { useTranslation } from "react-i18next";
 
 function TopicInformationModal({ topic }: { topic: Topic }) {
@@ -32,17 +32,7 @@ function TopicInformationModal({ topic }: { topic: Topic }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <p className="text-muted-foreground text-xl font-bold uppercase">
-            {t("general.title")}
-          </p>
-          <span>{topic.title}</span>
-          <Separator orientation="horizontal" />
-          <p className="text-muted-foreground text-xl font-bold uppercase">
-            {t("general.summary")}
-          </p>
-          <span>{topic.summary}</span>
-        </div>
+        <TitleSummarySection title={topic.title} summary={topic.summary} />
       </DialogContent>
     </Dialog>
   );

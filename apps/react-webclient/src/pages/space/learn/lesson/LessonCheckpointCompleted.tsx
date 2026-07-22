@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import useLesson from "@/hooks/useLesson.tsx";
 import useLessonId from "@/hooks/useLessonId.ts";
+import LessonOutcomePanel from "@/components/LessonOutcomePanel.tsx";
 
 function LessonCheckpointCompleted() {
   const { t } = useTranslation();
@@ -9,26 +10,19 @@ function LessonCheckpointCompleted() {
   const hadAnyExercises = lesson?.topics.length ?? [].length > 0;
 
   return (
-    <div
-      className={
-        "flex flex-col md:flex-row items-center justify-center gap-6 text-center max-w-md mx-auto py-12"
+    <LessonOutcomePanel
+      className="md:flex-row"
+      title={t("exercise.completed.title")}
+      description={
+        hadAnyExercises
+          ? t("exercise.checkpoint.description.exercises")
+          : t("exercise.checkpoint.description.no-exercises")
       }
     >
       <div className="flex items-center justify-center size-28 aspect-square">
         <img src={"/trophy.webp"} alt={"Party"} />
       </div>
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">
-          {t("exercise.completed.title")}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {hadAnyExercises
-            ? t("exercise.checkpoint.description.exercises")
-            : t("exercise.checkpoint.description.no-exercises")}
-        </p>
-      </div>
-    </div>
+    </LessonOutcomePanel>
   );
 }
 

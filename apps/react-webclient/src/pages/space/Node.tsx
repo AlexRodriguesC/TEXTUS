@@ -5,9 +5,8 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { useTranslation } from "react-i18next";
 import MotionButton from "@/components/MotionButton.tsx";
+import TitleSummarySection from "@/components/TitleSummarySection.tsx";
 
 interface NodeProps {
   completed: boolean;
@@ -17,8 +16,6 @@ interface NodeProps {
 }
 
 function Node({ completed = false, title, summary, children }: NodeProps) {
-  const { t } = useTranslation();
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -26,17 +23,7 @@ function Node({ completed = false, title, summary, children }: NodeProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <div className={"flex flex-col gap-4"}>
-            <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-              {t("general.title")}
-            </p>
-            <>{title}</>
-            <Separator orientation={"horizontal"} />
-            <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-              {t("general.summary")}
-            </p>
-            <>{summary}</>
-          </div>
+          <TitleSummarySection title={title} summary={summary} />
         </DialogHeader>
       </DialogContent>
     </Dialog>

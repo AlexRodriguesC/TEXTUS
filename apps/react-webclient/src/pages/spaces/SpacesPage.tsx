@@ -8,7 +8,7 @@ import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
-import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
+import IllustratedAside from "@/components/IllustratedAside.tsx";
 
 export function SpacesPage() {
   const { t } = useTranslation();
@@ -44,20 +44,19 @@ export function SpacesPage() {
       return (
         <div className="flex flex-col max-h-[60vh] min-h-[60vh] min-w-full overflow-y-auto gap-2">
           <CenteredPage>
-            <div className={"flex flex-col items-center gap-4 md:flex-row"}>
-              <ResponsiveLottie
-                className={"opacity-60"}
-                src={"/animations/not_found.lottie"}
-                loop
-                autoplay
-              />
+            <IllustratedAside
+              className="gap-4"
+              lottieSrc={"/animations/not_found.lottie"}
+              lottieClassName="opacity-60"
+              lottieProps={{ loop: true, autoplay: true }}
+            >
               <div className={"flex flex-col items-center gap-2"}>
                 <p>{t("spaces.not-found")}</p>
                 <Button variant={"outline"} onClick={resetSearch}>
                   {t("spaces.reset-search")}
                 </Button>
               </div>
-            </div>
+            </IllustratedAside>
           </CenteredPage>
         </div>
       );

@@ -7,8 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { useTranslation } from "react-i18next";
+import TitleSummarySection from "@/components/TitleSummarySection.tsx";
 
 interface MapNodeData {
   id: number;
@@ -22,7 +21,6 @@ interface MapNodeData {
 
 function MapNode({ data }: NodeProps) {
   const nodeData = data as MapNodeData;
-  const { t } = useTranslation();
 
   const hideHandle = {
     width: 0,
@@ -55,17 +53,10 @@ function MapNode({ data }: NodeProps) {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <div className={"flex flex-col gap-4"}>
-              <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-                {t("general.title")}
-              </p>
-              <>{nodeData.title}</>
-              <Separator orientation={"horizontal"} />
-              <p className={"text-muted-foreground text-xl font-bold uppercase"}>
-                {t("general.summary")}
-              </p>
-              <>{nodeData.summary}</>
-            </div>
+            <TitleSummarySection
+              title={nodeData.title}
+              summary={nodeData.summary}
+            />
           </DialogHeader>
         </DialogContent>
       </Dialog>
