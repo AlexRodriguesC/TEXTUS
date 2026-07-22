@@ -15,10 +15,16 @@ public class MindMapNodeDeserializer extends JsonDeserializer<MindMapNode> {
     public MindMapNode deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         ObjectMapper mapper = (ObjectMapper) p.getCodec();
         ObjectNode node = mapper.readTree(p);
-        Long topicId = node.has("topicId")
-                ? node.get("topicId").asLong()
-                : node.get("chunkId").asLong();
-        MindMapNode mindMapNode = new MindMapNode(topicId);
+
+        MindMapNode mindMapNode = new MindMapNode();
+        mindMapNode.setType(MindMapNodeType.valueOf(node.get("type").asText()));
+
+        if (node.has("pageId") && !node.get("pageId").isNull()) {
+            mindMapNode.setPageId(node.get("pageId").asLong());
+        }
+        if (node.has("topicId") && !node.get("topicId").isNull()) {
+            mindMapNode.setTopicId(node.get("topicId").asLong());
+        }
 
         if (node.has("children") && node.get("children").isArray()) {
             List<MindMapNode> children = mapper.treeToValue(

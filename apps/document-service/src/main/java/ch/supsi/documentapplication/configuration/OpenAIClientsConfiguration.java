@@ -8,11 +8,11 @@ import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.*;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import ch.supsi.documentapplication.service.clients.exercise.*;
-import ch.supsi.documentapplication.service.mindmap.IncrementalLabelMindMapBuilder;
+import ch.supsi.documentapplication.service.mindmap.IncrementalPageMindMapBuilder;
 import ch.supsi.documentapplication.service.mindmap.MindMapAssembler;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
-import ch.supsi.documentapplication.service.validator.LabelMindMapValidator;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
+import ch.supsi.documentapplication.service.validator.PageMindMapValidator;
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
 import io.micrometer.observation.ObservationRegistry;
@@ -201,9 +201,9 @@ public class OpenAIClientsConfiguration {
                 feedbackSystemPromptText,
                 feedbackPromptTemplate,
                 new MindMapAssembler(),
-                new LabelMindMapValidator(),
+                new PageMindMapValidator(),
                 new MindMapValidator(),
-                new IncrementalLabelMindMapBuilder(),
+                new IncrementalPageMindMapBuilder(),
                 aiContext);
     }
 

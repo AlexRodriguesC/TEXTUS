@@ -11,19 +11,25 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonClassDescription(
-        "A rooted mind map tree built from a set of input topics, organized as a pedagogically coherent broad-to-specific hierarchy.")
+        "A rooted mind map tree built from pages and topics, organized as a pedagogically coherent broad-to-specific hierarchy.")
 public class MindMap {
 
     @JsonIgnore
     private Long jobId;
 
     @JsonPropertyDescription(
-            "The single root node of the tree, representing the topic that best captures the broadest subject among all input topics.")
+            "The single root node of the tree, representing the page that best captures the broadest subject.")
     private MindMapNode root;
 
     public Set<Long> getAllTopicIds() {
         Set<Long> ids = new HashSet<>();
-        collect(root, ids);
+        collectTopics(root, ids);
+        return ids;
+    }
+
+    public Set<Long> getAllPageIds() {
+        Set<Long> ids = new HashSet<>();
+        collectPages(root, ids);
         return ids;
     }
 
@@ -31,11 +37,23 @@ public class MindMap {
         return root == null;
     }
 
-    private void collect(MindMapNode node, Set<Long> ids) {
+    private void collectTopics(MindMapNode node, Set<Long> ids) {
         if (node == null) return;
-        ids.add(node.getTopicId());
+        if (node.getType() == MindMapNodeType.TOPIC) {
+            ids.add(node.getTopicId());
+        }
         for (MindMapNode child : node.getChildren()) {
-            collect(child, ids);
+            collectTopics(child, ids);
+        }
+    }
+
+    private void collectPages(MindMapNode node, Set<Long> ids) {
+        if (node == null) return;
+        if (node.getType() == MindMapNodeType.PAGE) {
+            ids.add(node.getPageId());
+        }
+        for (MindMapNode child : node.getChildren()) {
+            collectPages(child, ids);
         }
     }
 }

@@ -6,14 +6,16 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Page;
+import ch.supsi.documentapplication.model.SpacePage;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -56,60 +58,81 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
             throws RetryException {
         log.debug("Executing topic extraction step for space with spaceId {}", spaceId);
 
-        var documents = databaseDocumentStorage.getDocuments(spaceId);
-        List<Topic> existingTopics = new ArrayList<>();
+        int processedThisStep = 0;
+        int maxPagesPerStep = appProperties.getMaxChunksPerStep();
+        int maxParallelism = appProperties.getMaxParallelism();
 
-        try (ExecutorService executor = Executors.newFixedThreadPool(appProperties.getMaxParallelism()); ) {
-            for (var document : documents) {
-                List<Page> documentPages = databaseDocumentStorage.getPages(document.getId());
-                var documentTopics = databaseTopicStorage.getByDocumentId(document.getId());
-                existingTopics.addAll(documentTopics);
+        List<Page> pendingPages = listPendingPages();
+        if (pendingPages.isEmpty()) {
+            log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
+            return RepeatStatus.FINISHED;
+        }
 
-                for (List<Page> batch : partition(documentPages, appProperties.getMaxParallelism())) {
-                    List<Topic> snapshot = List.copyOf(existingTopics);
+        List<Topic> existingTopics = new ArrayList<>(databaseTopicStorage.getBySpaceId(spaceId));
 
-                    List<CompletableFuture<ClientResult<List<Topic>>>> futures = batch.stream()
-                            .filter(page -> databaseTopicStorage
-                                    .getByPageId(page.getId())
-                                    .isEmpty())
-                            .map(page -> CompletableFuture.supplyAsync(
-                                    () -> topicExtractionClient.getResult(Pair.of(page, snapshot)), executor))
-                            .toList();
+        try (ExecutorService executor = Executors.newFixedThreadPool(maxParallelism)) {
+            while (processedThisStep < maxPagesPerStep && !pendingPages.isEmpty()) {
+                int batchSize =
+                        Math.min(maxParallelism, Math.min(maxPagesPerStep - processedThisStep, pendingPages.size()));
+                List<Page> batch = pendingPages.subList(0, batchSize);
 
-                    List<Page> pagesToProcess = batch.stream()
-                            .filter(page -> databaseTopicStorage
-                                    .getByPageId(page.getId())
-                                    .isEmpty())
-                            .toList();
+                extractBatchInParallel(batch, existingTopics, executor);
 
-                    for (int i = 0; i < pagesToProcess.size(); i++) {
-                        Page page = pagesToProcess.get(i);
-                        ClientResult<List<Topic>> extractionResult =
-                                futures.get(i).join();
-                        List<Topic> topics = extractionResult.result();
-                        existingTopics.addAll(topics);
-
-                        for (Topic topic : topics) {
-                            databaseTopicStorage.create(topic, page.getId());
-                        }
-
-                        extractionResult
-                                .usages()
-                                .forEach(usage -> aiUsageStorage.create("page", page.getId(), "topic_extract", usage));
-                    }
-                }
+                processedThisStep += batch.size();
+                pendingPages = pendingPages.subList(batchSize, pendingPages.size());
+                log.info("Extracted topics for {} pages in space {}", batch.size(), spaceId);
             }
         }
 
-        log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
-        return RepeatStatus.FINISHED;
+        if (listPendingPages().isEmpty()) {
+            log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
+            return RepeatStatus.FINISHED;
+        }
+
+        return RepeatStatus.CONTINUABLE;
     }
 
-    private static <T> List<List<T>> partition(List<T> list, int size) {
-        List<List<T>> partitions = new ArrayList<>();
-        for (int i = 0; i < list.size(); i += size) {
-            partitions.add(list.subList(i, Math.min(i + size, list.size())));
+    private List<Page> listPendingPages() {
+        return databaseDocumentStorage.getPagesBySpaceId(spaceId).stream()
+                .filter(spacePage ->
+                        databaseTopicStorage.getByPageId(spacePage.getId()).isEmpty())
+                .map(this::toPage)
+                .toList();
+    }
+
+    private Page toPage(SpacePage spacePage) {
+        return new Page(spacePage.getId(), spacePage.getTitle(), spacePage.getSummary());
+    }
+
+    private void extractBatchInParallel(List<Page> batch, List<Topic> existingTopics, ExecutorService executor)
+            throws RetryException {
+        List<Topic> snapshot = List.copyOf(existingTopics);
+
+        try {
+            List<Future<ClientResult<List<Topic>>>> futures = new ArrayList<>();
+            for (Page page : batch) {
+                futures.add(executor.submit(() -> topicExtractionClient.getResult(Pair.of(page, snapshot))));
+            }
+
+            for (int i = 0; i < batch.size(); i++) {
+                Page page = batch.get(i);
+                ClientResult<List<Topic>> extractionResult = futures.get(i).get();
+                List<Topic> topics = extractionResult.result();
+                existingTopics.addAll(topics);
+
+                for (Topic topic : topics) {
+                    databaseTopicStorage.create(topic, page.getId());
+                }
+
+                extractionResult
+                        .usages()
+                        .forEach(usage -> aiUsageStorage.create("page", page.getId(), "topic_extract", usage));
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Parallel topic extraction interrupted", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Parallel topic extraction failed", e.getCause());
         }
-        return partitions;
     }
 }

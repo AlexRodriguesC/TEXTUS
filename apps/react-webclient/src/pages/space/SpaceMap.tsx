@@ -1,5 +1,10 @@
 import useMindMap from "@/hooks/useMindMap.ts";
-import type { NodeDTO, TopicResponseDTO } from "@/client/model";
+import type {
+  NodeDTO,
+  NodeDTONodeType,
+  PageResponseDTO,
+  TopicResponseDTO,
+} from "@/client/model";
 import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import {
   Controls,
@@ -14,6 +19,7 @@ import MapNode from "@/pages/space/MapNode.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import dagre from "dagre";
 import { useGetTopics } from "@/client/generated/topics/topics.ts";
+import { useGetPages } from "@/client/generated/pages/pages.ts";
 import SpaceMapEmpty from "@/pages/space/SpaceMapEmpty.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 
@@ -22,47 +28,59 @@ const nodeTypes = { mapNode: MapNode };
 const NODE_WIDTH = 172;
 const NODE_HEIGHT = 36;
 
-function buildChildrenMap(nodes: NodeDTO[]): Map<number, number[]> {
-  const childrenMap = new Map<number, number[]>();
+type NodeKey = string;
+
+function toNodeKey(nodeType?: NodeDTONodeType, entityId?: number): NodeKey | null {
+  if (nodeType == null || entityId == null) return null;
+  return `${nodeType}:${entityId}`;
+}
+
+function buildChildrenMap(nodes: NodeDTO[]): Map<NodeKey, NodeKey[]> {
+  const childrenMap = new Map<NodeKey, NodeKey[]>();
   for (const n of nodes) {
-    if (n.chunkId == null || n.parentChunkId == null) continue;
-    const siblings = childrenMap.get(n.parentChunkId) ?? [];
-    siblings.push(n.chunkId);
-    childrenMap.set(n.parentChunkId, siblings);
+    const childKey = toNodeKey(n.nodeType, n.entityId);
+    const parentKey = toNodeKey(n.parentNodeType, n.parentEntityId);
+    if (childKey == null || parentKey == null) continue;
+    const siblings = childrenMap.get(parentKey) ?? [];
+    siblings.push(childKey);
+    childrenMap.set(parentKey, siblings);
   }
   return childrenMap;
 }
 
 function isNodeVisible(
-  chunkId: number,
-  nodesById: Map<number, NodeDTO>,
-  expandedIds: Set<number>,
+  nodeKey: NodeKey,
+  nodesByKey: Map<NodeKey, NodeDTO>,
+  expandedIds: Set<NodeKey>,
 ): boolean {
-  const node = nodesById.get(chunkId);
+  const node = nodesByKey.get(nodeKey);
   if (!node) return false;
-  if (node.parentChunkId == null) return true;
-  if (!expandedIds.has(node.parentChunkId)) return false;
-  return isNodeVisible(node.parentChunkId, nodesById, expandedIds);
+  const parentKey = toNodeKey(node.parentNodeType, node.parentEntityId);
+  if (parentKey == null) return true;
+  if (!expandedIds.has(parentKey)) return false;
+  return isNodeVisible(parentKey, nodesByKey, expandedIds);
 }
 
 function getVisibleNodes(
   nodes: NodeDTO[],
-  expandedIds: Set<number>,
+  expandedIds: Set<NodeKey>,
 ): NodeDTO[] {
-  const nodesById = new Map<number, NodeDTO>();
+  const nodesByKey = new Map<NodeKey, NodeDTO>();
   for (const n of nodes) {
-    if (n.chunkId != null) nodesById.set(n.chunkId, n);
+    const key = toNodeKey(n.nodeType, n.entityId);
+    if (key != null) nodesByKey.set(key, n);
   }
-  return nodes.filter(
-    (n) => n.chunkId != null && isNodeVisible(n.chunkId, nodesById, expandedIds),
-  );
+  return nodes.filter((n) => {
+    const key = toNodeKey(n.nodeType, n.entityId);
+    return key != null && isNodeVisible(key, nodesByKey, expandedIds);
+  });
 }
 
 function collectDescendantIds(
-  id: number,
-  childrenMap: Map<number, number[]>,
-): number[] {
-  const descendants: number[] = [];
+  id: NodeKey,
+  childrenMap: Map<NodeKey, NodeKey[]>,
+): NodeKey[] {
+  const descendants: NodeKey[] = [];
   const queue = [...(childrenMap.get(id) ?? [])];
   while (queue.length > 0) {
     const childId = queue.shift()!;
@@ -73,10 +91,10 @@ function collectDescendantIds(
 }
 
 function toggleExpanded(
-  id: number,
-  expandedIds: Set<number>,
-  childrenMap: Map<number, number[]>,
-): Set<number> {
+  id: NodeKey,
+  expandedIds: Set<NodeKey>,
+  childrenMap: Map<NodeKey, NodeKey[]>,
+): Set<NodeKey> {
   const next = new Set(expandedIds);
   if (next.has(id)) {
     next.delete(id);
@@ -89,27 +107,53 @@ function toggleExpanded(
   return next;
 }
 
+function resolveNodeContent(
+  node: NodeDTO,
+  topics: TopicResponseDTO[],
+  pages: PageResponseDTO[],
+): { title: string; summary: string; isPage: boolean } {
+  if (node.nodeType === "PAGE") {
+    const page = pages.find((p) => p.id === node.entityId);
+    return {
+      title: page?.title ?? "N/A",
+      summary: page?.summary ?? "N/A",
+      isPage: true,
+    };
+  }
+
+  const topic = topics.find((t) => t.id === node.entityId);
+  return {
+    title: topic?.title ?? "N/A",
+    summary: topic?.summary ?? "N/A",
+    isPage: false,
+  };
+}
+
 function getLayoutedElements(
   nodes: NodeDTO[],
   direction: "TB" | "LR" = "TB",
   topics: TopicResponseDTO[],
-  childrenMap: Map<number, number[]>,
-  expandedIds: Set<number>,
+  pages: PageResponseDTO[],
+  childrenMap: Map<NodeKey, NodeKey[]>,
+  expandedIds: Set<NodeKey>,
 ): { nodes: RFNode[]; edges: RFEdge[] } {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: direction });
   g.setDefaultEdgeLabel(() => ({}));
 
-  const nodeMap = new Map<number, NodeDTO>();
+  const nodeMap = new Map<NodeKey, NodeDTO>();
   for (const n of nodes) {
-    if (n.chunkId == null) continue;
-    nodeMap.set(n.chunkId, n);
-    g.setNode(String(n.chunkId), { width: NODE_WIDTH, height: NODE_HEIGHT });
+    const key = toNodeKey(n.nodeType, n.entityId);
+    if (key == null) continue;
+    nodeMap.set(key, n);
+    g.setNode(key, { width: NODE_WIDTH, height: NODE_HEIGHT });
   }
 
   for (const n of nodes) {
-    if (n.parentChunkId != null && nodeMap.has(n.parentChunkId)) {
-      g.setEdge(String(n.parentChunkId), String(n.chunkId));
+    const childKey = toNodeKey(n.nodeType, n.entityId);
+    const parentKey = toNodeKey(n.parentNodeType, n.parentEntityId);
+    if (childKey != null && parentKey != null && nodeMap.has(parentKey)) {
+      g.setEdge(parentKey, childKey);
     }
   }
 
@@ -119,35 +163,37 @@ function getLayoutedElements(
   const rfEdges: RFEdge[] = [];
 
   for (const n of nodes) {
-    if (n.chunkId == null) continue;
-    const nodeId = String(n.chunkId);
-    const nodeWithPosition = g.node(nodeId);
-    const lbl = topics.find((t) => t.id == n.chunkId);
+    const nodeKey = toNodeKey(n.nodeType, n.entityId);
+    if (nodeKey == null) continue;
+    const nodeWithPosition = g.node(nodeKey);
+    const content = resolveNodeContent(n, topics, pages);
 
     rfNodes.push({
-      id: nodeId,
+      id: nodeKey,
       type: "mapNode",
       position: {
         x: nodeWithPosition.x,
         y: nodeWithPosition.y,
       },
       data: {
-        id: n.chunkId,
-        title: lbl?.title ?? "N/A",
-        summary: lbl?.summary ?? "N/A",
-        label: lbl?.title ?? n.chunkId,
+        id: n.entityId,
+        title: content.title,
+        summary: content.summary,
+        label: content.title,
         completed: false,
-        hasChildren: (childrenMap.get(n.chunkId)?.length ?? 0) > 0,
-        isExpanded: expandedIds.has(n.chunkId),
+        isPage: content.isPage,
+        hasChildren: (childrenMap.get(nodeKey)?.length ?? 0) > 0,
+        isExpanded: expandedIds.has(nodeKey),
       },
       draggable: false,
     });
 
-    if (n.parentChunkId != null && nodeMap.has(n.parentChunkId)) {
+    const parentKey = toNodeKey(n.parentNodeType, n.parentEntityId);
+    if (parentKey != null && nodeMap.has(parentKey)) {
       rfEdges.push({
-        id: `${n.parentChunkId}-${n.chunkId}`,
-        source: String(n.parentChunkId),
-        target: nodeId,
+        id: `${parentKey}-${nodeKey}`,
+        source: parentKey,
+        target: nodeKey,
         selectable: false,
       });
     }
@@ -159,13 +205,15 @@ function getLayoutedElements(
 function SpaceMapFlow({
   mindMapNodes,
   topics,
+  pages,
 }: {
   mindMapNodes: NodeDTO[];
   topics: TopicResponseDTO[];
+  pages: PageResponseDTO[];
 }) {
   const { theme } = useTheme();
   const { fitView } = useReactFlow();
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<NodeKey>>(() => new Set());
 
   const childrenMap = useMemo(
     () => buildChildrenMap(mindMapNodes),
@@ -183,15 +231,16 @@ function SpaceMapFlow({
         visibleNodes,
         "TB",
         topics,
+        pages,
         childrenMap,
         expandedIds,
       ),
-    [visibleNodes, topics, childrenMap, expandedIds],
+    [visibleNodes, topics, pages, childrenMap, expandedIds],
   );
 
   const handleNodeClick = useCallback(
     (_: MouseEvent, node: RFNode) => {
-      const id = Number(node.id);
+      const id = node.id;
       if (!childrenMap.has(id)) return;
       setExpandedIds((prev) => toggleExpanded(id, prev, childrenMap));
       requestAnimationFrame(() => {
@@ -228,21 +277,32 @@ function SpaceMap() {
   const { spaceId } = useSpaceId();
   const { mindMap, status, isMindMapLoading } = useMindMap();
 
-  const { data } = useGetTopics(spaceId ?? 0, {
+  const { data: topicsData } = useGetTopics(spaceId ?? 0, {
+    query: {
+      enabled: spaceId !== undefined,
+    },
+  });
+
+  const { data: pagesData } = useGetPages(spaceId ?? 0, {
     query: {
       enabled: spaceId !== undefined,
     },
   });
 
   let topics: TopicResponseDTO[] = [];
-  if (data && data.data && "topics" in data.data) {
-    topics = data.data.topics;
+  if (topicsData && topicsData.data && "topics" in topicsData.data) {
+    topics = topicsData.data.topics;
+  }
+
+  let pages: PageResponseDTO[] = [];
+  if (pagesData && pagesData.data && "pages" in pagesData.data) {
+    pages = pagesData.data.pages;
   }
 
   const mindMapNodes = mindMap?.nodes ?? [];
   const mindMapKey = mindMapNodes
-    .map((n) => n.chunkId)
-    .filter((id) => id != null)
+    .map((n) => toNodeKey(n.nodeType, n.entityId))
+    .filter((key) => key != null)
     .join(",");
 
   if (status !== "NOT_CREATED" && isMindMapLoading) {
@@ -262,6 +322,7 @@ function SpaceMap() {
       key={mindMapKey}
       mindMapNodes={mindMapNodes}
       topics={topics}
+      pages={pages}
     />
   );
 }

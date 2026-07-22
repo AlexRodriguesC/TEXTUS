@@ -11,10 +11,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonClassDescription("Direct child labels assigned under a single parent node in the hierarchy.")
-public class LabelMindMapChildSelection {
+@JsonClassDescription("Direct child pages assigned under a single parent node in the hierarchy.")
+public class PageMindMapChildSelection {
 
     @JsonPropertyDescription(
-            "labelIds from the remaining label set that are immediate direct children of the parent label. May be empty.")
-    private List<Long> labelIds = new ArrayList<>();
+            "pageIds from the remaining page set that are immediate direct children of the parent page. May be empty.")
+    private List<Long> pageIds = new ArrayList<>();
 }

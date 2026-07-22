@@ -73,7 +73,7 @@ class MindMapControllerSpec extends Specification {
         given:
         def mindMap = new MindMap()
         mindMap.jobId = 42L
-        mindMap.root = new MindMapNode(1L)
+        mindMap.root = MindMapNode.page(1L)
         spaceService.getMindMap("alice", 1L) >> mindMap
 
         when:

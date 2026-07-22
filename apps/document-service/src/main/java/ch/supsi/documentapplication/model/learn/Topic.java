@@ -22,6 +22,7 @@ public class Topic {
 
     @ToString.Exclude
     @Setter
+    @JsonIgnore
     private String sourceFileName;
 
     @ToString.Exclude

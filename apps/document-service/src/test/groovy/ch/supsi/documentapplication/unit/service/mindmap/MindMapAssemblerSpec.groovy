@@ -1,10 +1,10 @@
 package ch.supsi.documentapplication.unit.service.mindmap
 
-import ch.supsi.documentapplication.model.LabelMindMap
-import ch.supsi.documentapplication.model.LabelMindMapNode
-import ch.supsi.documentapplication.model.MindMap
+import ch.supsi.documentapplication.model.MindMapNodeType
+import ch.supsi.documentapplication.model.Page
+import ch.supsi.documentapplication.model.PageMindMap
+import ch.supsi.documentapplication.model.PageMindMapNode
 import ch.supsi.documentapplication.model.learn.Topic
-import ch.supsi.documentapplication.service.async.learningpipeline.Label
 import ch.supsi.documentapplication.service.mindmap.MindMapAssembler
 import spock.lang.Specification
 
@@ -12,60 +12,45 @@ class MindMapAssemblerSpec extends Specification {
 
     MindMapAssembler assembler = new MindMapAssembler()
 
-    static Topic topic(Long id, List<String> labels) {
-        new Topic(id, "doc.pdf", 1, "Title $id", "Summary $id", labels)
+    static Topic topic(Long id, Long pageId) {
+        new Topic(id, "doc.pdf", pageId, "Title $id", "Summary $id", ["label"])
     }
 
-    def "should assemble a topic tree from a label tree"() {
+    def "should assemble a mixed page and topic tree from a page tree"() {
         given:
+        def pages = [
+                new Page(10L, "Intro", "Intro summary"),
+                new Page(20L, "Methods", "Methods summary")
+        ]
         def topics = [
-                topic(1L, ["biology"]),
-                topic(2L, ["biology", "cell"]),
-                topic(3L, ["cell"])
+                topic(1L, 10L),
+                topic(2L, 10L),
+                topic(3L, 20L)
         ]
-        def labels = [
-                new Label(0L, "biology"),
-                new Label(1L, "cell")
-        ]
-        def labelMindMap = new LabelMindMap()
-        labelMindMap.root = new LabelMindMapNode(0L, [new LabelMindMapNode(1L)])
+        def pageMindMap = new PageMindMap()
+        pageMindMap.root = new PageMindMapNode(10L, [new PageMindMapNode(20L)])
 
         when:
-        MindMap result = assembler.assemble(labelMindMap, topics, labels)
+        def result = assembler.assemble(pageMindMap, pages, topics)
 
         then:
-        result.root.topicId == 1L
+        result.root.type == MindMapNodeType.PAGE
+        result.root.pageId == 10L
+        result.root.children*.type == [MindMapNodeType.TOPIC, MindMapNodeType.TOPIC, MindMapNodeType.PAGE]
         result.allTopicIds == [1L, 2L, 3L] as Set
+        result.allPageIds == [10L, 20L] as Set
     }
 
-    def "should throw when topic has no labels"() {
+    def "should build page topic groups from pages and topics"() {
         given:
-        def topics = [new Topic(1L, "doc.pdf", 1, "T", "S", [])]
-        def labels = [new Label(0L, "biology")]
-        def labelMindMap = new LabelMindMap()
-        labelMindMap.root = new LabelMindMapNode(0L)
+        def pages = [new Page(10L, "A", "S"), new Page(20L, "B", "S")]
+        def topics = [topic(1L, 10L), topic(2L, 10L), topic(3L, 20L)]
 
         when:
-        assembler.assemble(labelMindMap, topics, labels)
+        def groups = MindMapAssembler.buildPageTopicGroups(pages, topics)
 
         then:
-        thrown(IllegalStateException)
-    }
-
-    def "should build labels and topic groups from topics"() {
-        given:
-        def topics = [
-                topic(1L, ["a", "b"]),
-                topic(2L, ["b"])
-        ]
-
-        when:
-        def labels = MindMapAssembler.buildLabels(topics)
-        def groups = MindMapAssembler.buildLabelTopicGroups(topics, labels)
-
-        then:
-        labels*.name() == ["a", "b"]
-        groups.find { it.labelId() == 0L }.topicIndices() == [0]
-        groups.find { it.labelId() == 1L }.topicIndices() == [0, 1]
+        groups.find { it.pageId() == 10L }.topicIndices() == [0, 1]
+        groups.find { it.pageId() == 20L }.topicIndices() == [0]
     }
 }

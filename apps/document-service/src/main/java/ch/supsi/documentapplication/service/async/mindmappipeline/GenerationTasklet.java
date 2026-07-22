@@ -10,7 +10,6 @@ import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -56,25 +55,22 @@ public class GenerationTasklet extends ProcessingTasklet {
                 (Long) chunkContext.getStepContext().getJobExecutionContext().get("MAP_ID");
 
         var documents = databaseDocumentStorage.getDocuments(spaceId);
+        List<Page> pages = new ArrayList<>();
         List<Topic> topics = new ArrayList<>();
         for (Document document : documents) {
-            var pages = databaseDocumentStorage.getPages(document.getId());
-            var docTopics = new ArrayList<Topic>();
-            for (Page page : pages) {
-                var pageTopics = databaseTopicStorage.getByPageId(page.getId());
-                docTopics.addAll(pageTopics);
+            var documentPages = databaseDocumentStorage.getPages(document.getId());
+            pages.addAll(documentPages);
+            for (Page page : documentPages) {
+                topics.addAll(databaseTopicStorage.getByPageId(page.getId()));
             }
-            topics.addAll(docTopics);
         }
 
-        topics = topics.stream().distinct().collect(Collectors.toList());
-
-        if (topics.isEmpty()) {
+        if (pages.isEmpty() || topics.isEmpty()) {
             contribution.setExitStatus(ExitStatus.FAILED);
             return RepeatStatus.FINISHED;
         }
 
-        var mindMapResult = mindMapClient.getResult(topics);
+        var mindMapResult = mindMapClient.getResult(new MindMapGenerationInput(pages, topics));
 
         databaseSpaceStorage.createMindMapNodes(spaceId, mapId, mindMapResult.result());
         persistMindMapUsage(mapId, mindMapResult);

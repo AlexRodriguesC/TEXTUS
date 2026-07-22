@@ -15,6 +15,7 @@ interface MapNodeData {
   title: string;
   summary: string;
   completed: boolean;
+  isPage: boolean;
   hasChildren: boolean;
   isExpanded: boolean;
 }
@@ -39,7 +40,9 @@ function MapNode({ data }: NodeProps) {
         ) : (
           <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
         ))}
-      <MotionButton completed={nodeData.completed}>{nodeData.id}</MotionButton>
+      <MotionButton completed={nodeData.completed}>
+        {nodeData.isPage ? "P" : "T"}{nodeData.id}
+      </MotionButton>
       <Dialog>
         <DialogTrigger asChild>
           <button

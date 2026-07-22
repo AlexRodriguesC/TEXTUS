@@ -12,6 +12,10 @@ Step 4 – Generate Summary: Write a factual summary that presents the key infor
 
 Document: <document_text>
 
-When writing string values, never use double quotes (") inside the text.
-Use single quotes or rewrite the sentence to avoid quoting words entirely.
-Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+Output formatting rules (strict):
+- Every string value in the output MUST be wrapped in double quotes (").
+- Never leave a string value unquoted, even if it contains only a single word or number-like text (e.g. write "42" not 42, write "+3" not +3).
+- When writing the content of a string value, never use double quotes (") inside the text itself.
+- Use single quotes or rewrite the sentence to avoid quoting words entirely.
+  Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
+- Any mathematical expression, symbol, or number with a sign (e.g. +5, -3, x^2) that appears as part of a string value must remain inside the surrounding double quotes as plain text, never as a bare token outside quotes.

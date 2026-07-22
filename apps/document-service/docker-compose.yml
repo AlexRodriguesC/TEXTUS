@@ -7,7 +7,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data # textus_demo_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U appuser -d documents"]
       interval: 5s
@@ -34,5 +34,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  pgdata: #textus_demo_db
+   # external: true
   springdata:

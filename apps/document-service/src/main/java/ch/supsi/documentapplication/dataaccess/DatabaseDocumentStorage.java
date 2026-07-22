@@ -90,6 +90,16 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     }
 
     @Override
+    public List<SpacePage> getPagesBySpaceId(Long spaceId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_pages_by_space(:space_id)")
+                .param(SPACE_ID, spaceId)
+                .query((rs, rowNum) -> new SpacePage(
+                        rs.getLong(ID), rs.getLong(DOCUMENT_ID), rs.getString("title"), rs.getString("summary")))
+                .list();
+    }
+
+    @Override
     public void deleteDocument(Long spaceId, Long documentId) {
         jdbcClient
                 .sql("SELECT * FROM documents.delete_document(:space_id, :document_id)")

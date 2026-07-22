@@ -9,10 +9,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonClassDescription("The selected root label for a label-based mind map hierarchy.")
-public class LabelMindMapRootSelection {
+@JsonClassDescription("The selected root page for a page-based mind map hierarchy.")
+public class PageMindMapRootSelection {
 
     @JsonPropertyDescription(
-            "The labelId of the input label that best represents the broadest subject among all provided labels.")
-    private Long labelId;
+            "The pageId of the input page that best represents the broadest subject among all provided pages.")
+    private Long pageId;
 }

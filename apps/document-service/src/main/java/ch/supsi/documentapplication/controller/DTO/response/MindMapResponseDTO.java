@@ -2,6 +2,8 @@ package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapNode;
+import ch.supsi.documentapplication.model.MindMapNodeType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -17,29 +19,47 @@ public class MindMapResponseDTO {
 
     private List<NodeDTO> nodes;
 
+    public enum NodeType {
+        PAGE,
+        TOPIC
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class NodeDTO {
-        private Long chunkId;
-        private Long parentChunkId;
+        @Schema(description = "Whether this node represents a page or a topic")
+        private NodeType nodeType;
+
+        @Schema(description = "The page id or topic id depending on nodeType")
+        private Long entityId;
+
+        @Schema(description = "The node type of the parent, null for the root node")
+        private NodeType parentNodeType;
+
+        @Schema(description = "The page id or topic id of the parent, null for the root node")
+        private Long parentEntityId;
     }
 
     public static MindMapResponseDTO from(MindMap mindMap) {
         List<NodeDTO> nodes = new ArrayList<>();
 
         if (mindMap != null && mindMap.getRoot() != null) {
-            flatten(mindMap.getRoot(), null, nodes);
+            flatten(mindMap.getRoot(), null, null, nodes);
         }
 
         return MindMapResponseDTO.builder().nodes(nodes).build();
     }
 
-    private static void flatten(MindMapNode node, Long parentChunkId, List<NodeDTO> nodes) {
+    private static void flatten(
+            MindMapNode node, NodeType parentNodeType, Long parentEntityId, List<NodeDTO> nodes) {
+        NodeType nodeType = toDtoType(node.getType());
         nodes.add(NodeDTO.builder()
-                .chunkId(node.getTopicId())
-                .parentChunkId(parentChunkId)
+                .nodeType(nodeType)
+                .entityId(node.getEntityId())
+                .parentNodeType(parentNodeType)
+                .parentEntityId(parentEntityId)
                 .build());
 
         if (node.getChildren() == null) {
@@ -47,7 +67,11 @@ public class MindMapResponseDTO {
         }
 
         for (MindMapNode child : node.getChildren()) {
-            flatten(child, node.getTopicId(), nodes);
+            flatten(child, nodeType, node.getEntityId(), nodes);
         }
+    }
+
+    private static NodeType toDtoType(MindMapNodeType type) {
+        return type == MindMapNodeType.PAGE ? NodeType.PAGE : NodeType.TOPIC;
     }
 }

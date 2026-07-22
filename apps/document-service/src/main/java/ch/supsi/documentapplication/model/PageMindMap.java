@@ -14,40 +14,40 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonClassDescription(
-        "A rooted label hierarchy tree built from distinct input labels, organized as a pedagogically coherent broad-to-specific hierarchy.")
-public class LabelMindMap {
+        "A rooted page hierarchy tree built from input pages, organized as a pedagogically coherent broad-to-specific hierarchy.")
+public class PageMindMap {
 
     @JsonPropertyDescription(
-            "The single root node of the tree, representing the label that best captures the broadest subject among all input labels.")
-    private LabelMindMapNode root;
+            "The single root node of the tree, representing the page that best captures the broadest subject among all input pages.")
+    private PageMindMapNode root;
 
-    public Set<Long> getAllLabelIds() {
+    public Set<Long> getAllPageIds() {
         Set<Long> ids = new HashSet<>();
         collect(root, ids);
         return ids;
     }
 
-    public List<LabelMindMapNode> getAllNodes() {
-        List<LabelMindMapNode> nodes = new ArrayList<>();
+    public List<PageMindMapNode> getAllNodes() {
+        List<PageMindMapNode> nodes = new ArrayList<>();
         collectNodes(root, nodes);
         return nodes;
     }
 
-    private void collect(LabelMindMapNode node, Set<Long> ids) {
+    private void collect(PageMindMapNode node, Set<Long> ids) {
         if (node == null) return;
-        ids.add(node.getLabelId());
+        ids.add(node.getPageId());
         if (node.getChildren() != null) {
-            for (LabelMindMapNode child : node.getChildren()) {
+            for (PageMindMapNode child : node.getChildren()) {
                 collect(child, ids);
             }
         }
     }
 
-    private void collectNodes(LabelMindMapNode node, List<LabelMindMapNode> nodes) {
+    private void collectNodes(PageMindMapNode node, List<PageMindMapNode> nodes) {
         if (node == null) return;
         nodes.add(node);
         if (node.getChildren() != null) {
-            for (LabelMindMapNode child : node.getChildren()) {
+            for (PageMindMapNode child : node.getChildren()) {
                 collectNodes(child, nodes);
             }
         }

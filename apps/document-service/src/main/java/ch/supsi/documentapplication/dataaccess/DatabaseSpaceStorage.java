@@ -23,9 +23,13 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     private static final String SPACE_ID = "space_id";
     public static final String MIND_MAP_ID = "mind_map_id";
     public static final String PARENT_ID = "parent_id";
-    public static final String PARENT_TOPIC_ID = "parent_topic_id";
     public static final String OWNER = "owner";
     private static final String TOPIC_ID = "topic_id";
+    private static final String PAGE_ID = "page_id";
+    private static final String NODE_TYPE = "node_type";
+    private static final String PARENT_PAGE_ID = "parent_page_id";
+    private static final String PARENT_TOPIC_ID = "parent_topic_id";
+    private static final String PARENT_NODE_TYPE = "parent_node_type";
     public static final String JOB_ID = "job_id";
 
     public DatabaseSpaceStorage(JdbcClient jdbcClient) {
@@ -77,8 +81,12 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new MindMapRow(
                         rs.getLong(JOB_ID),
+                        rs.getString(NODE_TYPE),
+                        rs.getObject(PAGE_ID, Long.class),
                         rs.getObject(TOPIC_ID, Long.class),
-                        rs.getObject(PARENT_TOPIC_ID, Long.class)))
+                        rs.getObject(PARENT_PAGE_ID, Long.class),
+                        rs.getObject(PARENT_TOPIC_ID, Long.class),
+                        rs.getObject(PARENT_NODE_TYPE, String.class)))
                 .list();
 
         if (rows.isEmpty()) {
@@ -89,26 +97,29 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         mindMap.setJobId(rows.getFirst().jobId());
 
         List<MindMapRow> nodeRows =
-                rows.stream().filter(row -> row.topicId() != null).toList();
+                rows.stream().filter(row -> row.nodeType() != null).toList();
         if (nodeRows.isEmpty()) {
             mindMap.setRoot(null);
             return mindMap;
         }
 
-        Map<Long, MindMapNode> nodesByChunkId = new HashMap<>();
+        Map<NodeKey, MindMapNode> nodesByKey = new HashMap<>();
         MindMapNode root = null;
 
         for (MindMapRow row : nodeRows) {
-            nodesByChunkId.computeIfAbsent(row.topicId(), MindMapNode::new);
+            NodeKey key = toKey(row.nodeType(), row.pageId(), row.topicId());
+            nodesByKey.computeIfAbsent(key, k -> toNode(row.nodeType(), row.pageId(), row.topicId()));
         }
 
         for (MindMapRow row : nodeRows) {
-            MindMapNode current = nodesByChunkId.get(row.topicId());
+            NodeKey key = toKey(row.nodeType(), row.pageId(), row.topicId());
+            MindMapNode current = nodesByKey.get(key);
 
-            if (row.parentTopicId() == null) {
+            if (row.parentNodeType() == null) {
                 root = current;
             } else {
-                MindMapNode parent = nodesByChunkId.get(row.parentTopicId());
+                NodeKey parentKey = toKey(row.parentNodeType(), row.parentPageId(), row.parentTopicId());
+                MindMapNode parent = nodesByKey.get(parentKey);
                 parent.getChildren().add(current);
             }
         }
@@ -117,7 +128,28 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         return mindMap;
     }
 
-    private record MindMapRow(Long jobId, Long topicId, Long parentTopicId) {}
+    private record MindMapRow(
+            Long jobId,
+            String nodeType,
+            Long pageId,
+            Long topicId,
+            Long parentPageId,
+            Long parentTopicId,
+            String parentNodeType) {}
+
+    private record NodeKey(MindMapNodeType type, Long entityId) {}
+
+    private NodeKey toKey(String nodeType, Long pageId, Long topicId) {
+        MindMapNodeType type = MindMapNodeType.valueOf(nodeType);
+        Long entityId = type == MindMapNodeType.PAGE ? pageId : topicId;
+        return new NodeKey(type, entityId);
+    }
+
+    private MindMapNode toNode(String nodeType, Long pageId, Long topicId) {
+        return MindMapNodeType.valueOf(nodeType) == MindMapNodeType.PAGE
+                ? MindMapNode.page(pageId)
+                : MindMapNode.topic(topicId);
+    }
 
     @Override
     public List<Space> readAll(String owner) {
@@ -161,8 +193,11 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
 
         try {
             nodeId = jdbcClient
-                    .sql("SELECT documents.create_mind_map_node(:mind_map_id, :topic_id, :parent_id)")
+                    .sql(
+                            "SELECT documents.create_mind_map_node(:mind_map_id, :node_type, :page_id, :topic_id, :parent_id)")
                     .param(MIND_MAP_ID, mindMapId)
+                    .param(NODE_TYPE, node.getType().name())
+                    .param(PAGE_ID, node.getPageId())
                     .param(TOPIC_ID, node.getTopicId())
                     .param(PARENT_ID, parentNodeId)
                     .query(Long.class)
