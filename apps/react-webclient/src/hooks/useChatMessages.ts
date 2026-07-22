@@ -1,6 +1,8 @@
 import { getChatHistory } from "@/client/chatApi.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { useQuery } from "@tanstack/react-query";
+import ChatMessage from "@/classes/ChatMessage.ts";
+import { mapChatMessageFromCustom } from "@/hooks/dtoMappers.ts";
 
 export const getChatMessagesQueryKey = (
   spaceId: number,
@@ -12,12 +14,17 @@ function useChatMessages(chatId: string | null) {
 
   const query = useQuery({
     queryKey: getChatMessagesQueryKey(spaceId, chatId),
-    queryFn: () => getChatHistory(spaceId, chatId!),
-    enabled: chatId != null,
+    queryFn: async () => {
+      const response = await getChatHistory(spaceId, chatId!);
+      return response.messages.map(mapChatMessageFromCustom);
+    },
+    enabled: chatId != null && spaceId !== undefined,
   });
 
+  const messages: ChatMessage[] = query.data ?? [];
+
   return {
-    messages: query.data?.messages ?? [],
+    messages,
     isLoading: query.isLoading,
     refetch: query.refetch,
   };

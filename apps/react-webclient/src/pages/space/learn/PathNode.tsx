@@ -1,6 +1,7 @@
 import MotionButton from "@/components/MotionButton.tsx";
 import * as React from "react";
-import type { LessonResponseDTO } from "@/client/model";
+import type Lesson from "@/classes/Lesson.ts";
+import LessonType from "@/classes/LessonType.ts";
 import {
   Popover,
   PopoverContent,
@@ -13,7 +14,7 @@ function PathNode({
   offset,
   disabled,
 }: {
-  node: LessonResponseDTO;
+  node: Lesson;
   offset: number;
   disabled?: boolean;
 }) {
@@ -55,13 +56,13 @@ function PathNode({
 
 export default PathNode;
 
-function getNodeIcon(type: LessonResponseDTO["type"]): React.ReactNode {
+function getNodeIcon(type: Lesson["type"]): React.ReactNode {
   switch (type) {
-    case "CHECKPOINT":
+    case LessonType.CHECKPOINT:
       return (
         <img className="w-fit h-fit" src="/checkpoint.webp" alt="trophy" />
       );
-    case "LESSON":
+    case LessonType.LESSON:
       return <img src="/lesson.webp" alt="star" />;
   }
 }

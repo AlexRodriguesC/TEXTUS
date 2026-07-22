@@ -1,16 +1,39 @@
 import { customInstance } from "@/client/mutator.ts";
-import type {
-  ChatDTO,
-  ChatHistoryResponseDTO,
-  ChatsResponseDTO,
-  ModelsResponseDTO,
-  SendMessageRequest,
-} from "@/types/chat.ts";
 
 type ApiResponse<T> = { data: T; status: number; headers: unknown };
 
-export async function listChats(spaceId: number): Promise<ChatDTO[]> {
-  const response = await customInstance<ApiResponse<ChatsResponseDTO>>(
+type ChatTransport = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ChatsTransport = {
+  chats: ChatTransport[];
+};
+
+type ChatMessageTransport = {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string;
+};
+
+type ChatHistoryTransport = {
+  messages: ChatMessageTransport[];
+};
+
+type ModelsTransport = {
+  models: { id: string; name: string }[];
+};
+
+type SendMessageTransport = {
+  message: string;
+  model?: string;
+};
+
+export async function listChats(spaceId: number): Promise<ChatTransport[]> {
+  const response = await customInstance<ApiResponse<ChatsTransport>>(
     `/api/v1/spaces/${spaceId}/chats`,
   );
   return response.data.chats;
@@ -19,8 +42,8 @@ export async function listChats(spaceId: number): Promise<ChatDTO[]> {
 export async function createChat(
   spaceId: number,
   title?: string,
-): Promise<ChatDTO> {
-  const response = await customInstance<ApiResponse<ChatDTO>>(
+): Promise<ChatTransport> {
+  const response = await customInstance<ApiResponse<ChatTransport>>(
     `/api/v1/spaces/${spaceId}/chats`,
     {
       method: "POST",
@@ -34,8 +57,8 @@ export async function createChat(
 export async function getChatHistory(
   spaceId: number,
   chatId: string,
-): Promise<ChatHistoryResponseDTO> {
-  const response = await customInstance<ApiResponse<ChatHistoryResponseDTO>>(
+): Promise<ChatHistoryTransport> {
+  const response = await customInstance<ApiResponse<ChatHistoryTransport>>(
     `/api/v1/spaces/${spaceId}/chats/${chatId}`,
   );
   return response.data;
@@ -50,16 +73,16 @@ export async function deleteChat(
   });
 }
 
-export async function listModels(): Promise<ModelsResponseDTO> {
+export async function listModels(): Promise<ModelsTransport> {
   const response =
-    await customInstance<ApiResponse<ModelsResponseDTO>>("/api/v1/models");
+    await customInstance<ApiResponse<ModelsTransport>>("/api/v1/models");
   return response.data;
 }
 
 export async function streamChatMessage(
   spaceId: number,
   chatId: string,
-  request: SendMessageRequest,
+  request: SendMessageTransport,
   onToken: (token: string) => void,
   signal?: AbortSignal,
 ): Promise<void> {

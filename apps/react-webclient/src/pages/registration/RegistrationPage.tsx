@@ -14,27 +14,18 @@ import { Eye, EyeClosed } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  type registerResponse,
-  type registerResponseSuccess,
-  useRegister,
-} from "@/client/generated/authentication/authentication.ts";
+import useRegisterMutation from "@/hooks/useRegisterMutation.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
-import type { ApiError } from "@/client/mutator.ts";
 import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.tsx";
 import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import HomeLink from "@/components/HomeLink.tsx";
 
-function hasToken(resp: registerResponse): resp is registerResponseSuccess {
-  return "data" in resp && "token" in resp.data;
-}
-
 function RegistrationPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mutate } = useRegister<ApiError>();
+  const { register: registerMutation } = useRegisterMutation();
   const { login } = useAuth();
 
   const [isPasswordShown, setIsPasswordShown] = React.useState(false);
@@ -43,26 +34,18 @@ function RegistrationPage() {
   const [error, setError] = useState<number | undefined>(undefined);
 
   const register = () => {
-    mutate(
-      { data: { username, password } },
-      {
-        onSuccess: (resp) => {
-          if (!hasToken(resp)) {
-            console.error("no token in registration response");
-            return;
-          }
+    registerMutation(username, password, {
+      onSuccess: (token) => {
+        login({ username, token });
 
-          login({ username, token: resp.data.token });
-
-          navigate({ to: PathConstants.HOME }).then(() => {
-            successToast(t("registration.success"));
-          });
-        },
-        onError: (err) => {
-          setError(err.status);
-        },
+        navigate({ to: PathConstants.HOME }).then(() => {
+          successToast(t("registration.success"));
+        });
       },
-    );
+      onError: (status) => {
+        setError(status);
+      },
+    });
   };
 
   const handleSubmit = (e: SubmitEvent) => {

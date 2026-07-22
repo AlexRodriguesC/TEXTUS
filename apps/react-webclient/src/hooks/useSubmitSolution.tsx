@@ -1,13 +1,29 @@
-import type {
-  AttemptRequestDTO,
-  AttemptRequestDTOExerciseType,
-  AttemptResponseDTO,
-} from "@/client/model";
+import type { AttemptRequestDTO } from "@/client/model";
+import { AttemptRequestDTOExerciseType } from "@/client/model";
 import {
   getGetLessonQueryKey,
   useSubmitAttempt,
 } from "@/client/generated/lessons/lessons.ts";
 import { useQueryClient } from "@tanstack/react-query";
+import Attempt from "@/classes/Attempt.ts";
+import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
+import { mapAttempt } from "@/hooks/dtoMappers.ts";
+
+function toAttemptExerciseType(
+  type: ExerciseTypeType,
+): AttemptRequestDTOExerciseType {
+  switch (type) {
+    case ExerciseType.LIST:
+      return AttemptRequestDTOExerciseType.LIST;
+    case ExerciseType.GROUP:
+      return AttemptRequestDTOExerciseType.GROUP;
+    case ExerciseType.QUESTION:
+      return AttemptRequestDTOExerciseType.QUESTION;
+    case ExerciseType.PAIR:
+      return AttemptRequestDTOExerciseType.PAIR;
+  }
+}
 
 function useSubmitSolution({
   spaceId,
@@ -30,21 +46,21 @@ function useSubmitSolution({
 
   const submitSolution = async (
     exerciseId: number,
-    exerciseType: AttemptRequestDTOExerciseType,
+    exerciseType: ExerciseTypeType,
     response: unknown,
-  ): Promise<AttemptResponseDTO | undefined> => {
+  ): Promise<Attempt | undefined> => {
     if (!spaceId || !lessonId) return undefined;
 
     const payload: AttemptRequestDTO = {
       attemptId: crypto.randomUUID(),
       exerciseId,
-      exerciseType,
+      exerciseType: toAttemptExerciseType(exerciseType),
       response,
     };
 
     const result = await mutateAsync({ spaceId, lessonId, data: payload });
     if (result.status === 201) {
-      return result.data;
+      return mapAttempt(result.data);
     }
     return undefined;
   };

@@ -10,8 +10,6 @@ import useLearningPath from "@/hooks/useLearningPath.ts";
 import PathConstants from "@/routing/pathConstants.ts";
 import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
-import { useQueryClient } from "@tanstack/react-query";
-import { getGetLearningPathQueryKey } from "@/client/generated/paths/paths.ts";
 import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
 
 interface LessonFooterProps {
@@ -38,8 +36,8 @@ function LessonFooter({
   const { t } = useTranslation();
   const { lessonId } = useLessonId();
   const { spaceId, strSpaceId } = useSpaceId();
-  const queryClient = useQueryClient();
-  const { lesson, exerciseLoading, nextExercise } = useLesson({ lessonId: lessonId });
+  const { lesson, exerciseLoading, nextExercise, deleteExercises, isDeletingExercises, invalidateLearningPath } =
+    useLesson({ lessonId: lessonId });
   const { path } = useLearningPath();
 
   const chapterId =
@@ -87,11 +85,7 @@ function LessonFooter({
           >
             <Button
               className={"flex flex-row items-center"}
-              onClick={() =>
-                queryClient.invalidateQueries({
-                  queryKey: getGetLearningPathQueryKey(spaceId),
-                })
-              }
+              onClick={() => invalidateLearningPath()}
             >
               <ArrowRight size={16} />
               {t("button.next")}
@@ -140,7 +134,10 @@ function LessonFooter({
             chapterId={chapterId}
             onCancel={() => undefined}
           />
-          <RetryLessonButton lesson={lesson} />
+          <RetryLessonButton
+            onRetry={() => void deleteExercises()}
+            isDeleting={isDeletingExercises}
+          />
         </>
       );
     }

@@ -1,6 +1,8 @@
 import { useGetTopics } from "@/client/generated/topics/topics.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import type { ErrorResponseDTO, TopicsResponseDTO } from "@/client/model";
+import Topic from "@/classes/Topic.ts";
+import { mapTopic } from "@/hooks/dtoMappers.ts";
 
 function useTopics() {
   const { spaceId } = useSpaceId();
@@ -11,10 +13,10 @@ function useTopics() {
     },
   });
 
-  let topics: TopicsResponseDTO["topics"] = [];
+  let topics: Topic[] = [];
 
   if (topicsData?.data && isTopicsResponse(topicsData.data)) {
-    topics = topicsData.data.topics;
+    topics = topicsData.data.topics.map(mapTopic);
   }
 
   return {

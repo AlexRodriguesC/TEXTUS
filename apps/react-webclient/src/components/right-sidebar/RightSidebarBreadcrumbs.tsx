@@ -8,12 +8,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useTranslation } from "react-i18next";
 import { Emoji } from "emoji-picker-react";
-import type { ISpace } from "@/hooks/useSpaces.ts";
+import type Space from "@/classes/Space.ts";
 import { Link, useMatches } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 
 interface RightSidebarBreadcrumbsProps {
-  space: ISpace;
+  space: Space;
 }
 
 const viewLabelKeys: Record<string, string> = {

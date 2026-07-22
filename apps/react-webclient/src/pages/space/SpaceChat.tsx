@@ -2,12 +2,11 @@ import ChatInput from "@/components/ChatInput.tsx";
 import useChatContext from "@/hooks/useChatContext.ts";
 import useChatMessages from "@/hooks/useChatMessages.ts";
 import useChatStream from "@/hooks/useChatStream.ts";
-import { getListChatsQueryKey } from "@/client/generated/chats/chats.ts";
 import useChats from "@/hooks/useChats.ts";
 import useModels from "@/hooks/useModels.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-import type { ChatMessageDTO } from "@/types/chat.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import type ChatMessage from "@/classes/ChatMessage.ts";
+import ChatMessageClass from "@/classes/ChatMessage.ts";
 import {ArrowDown, ArrowUp, Loader2} from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +15,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {Button} from "@/components/ui/button.tsx";
 
-type DisplayMessage = ChatMessageDTO & { id: string };
+type DisplayMessage = ChatMessage & { id: string };
 
 type SpaceChatConversationProps = {
   chatId: string;
@@ -26,10 +25,11 @@ type SpaceChatConversationProps = {
   sendMessage: ReturnType<typeof useChatStream>["sendMessage"];
   isStreaming: boolean;
   spaceId: number;
+  invalidateChats: () => void;
 };
 
 function historyIncludesUserMessage(
-  messages: ChatMessageDTO[],
+  messages: ChatMessage[],
   content: string,
 ): boolean {
   return messages.some(
@@ -45,6 +45,7 @@ function SpaceChatConversation({
   sendMessage,
   isStreaming,
   spaceId,
+  invalidateChats,
 }: SpaceChatConversationProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -112,12 +113,10 @@ function SpaceChatConversation({
 
       submittingRef.current = true;
 
-      const userMessage: DisplayMessage = {
-        id: `draft-user-${Date.now()}`,
-        role: "user",
-        content: message,
-        timestamp: new Date().toISOString(),
-      };
+      const userMessage: DisplayMessage = Object.assign(
+        new ChatMessageClass("user", message, new Date().toISOString()),
+        { id: `draft-user-${Date.now()}` },
+      );
 
       setDraftMessages((current) => [...current, userMessage]);
       setStreamingAssistant("");
@@ -127,11 +126,9 @@ function SpaceChatConversation({
           setStreamingAssistant((current) => current + token);
         });
         const result = await refetch();
-        await queryClient.invalidateQueries({
-          queryKey: getListChatsQueryKey(spaceId),
-        });
+        invalidateChats();
 
-        const refreshedMessages = result.data?.messages ?? [];
+        const refreshedMessages = result.data ?? [];
         if (historyIncludesUserMessage(refreshedMessages, message)) {
           setDraftMessages([]);
           setStreamingAssistant("");
@@ -140,7 +137,7 @@ function SpaceChatConversation({
         submittingRef.current = false;
       }
     },
-    [chatId, isStreaming, queryClient, refetch, sendMessage, spaceId],
+    [chatId, isStreaming, invalidateChats, refetch, sendMessage],
   );
 
   useLayoutEffect(() => {
@@ -233,7 +230,7 @@ function SpaceChatConversation({
 function SpaceChat() {
   const { t } = useTranslation();
   const { spaceId } = useSpaceId();
-  const { chats, isLoading: isChatsLoading } = useChats();
+  const { chats, isLoading: isChatsLoading, invalidateChats } = useChats();
   const { models, defaultModel, isLoading: isModelsLoading } = useModels();
   const { sendMessage, isStreaming } = useChatStream();
   const { selectedChatId } = useChatContext();
@@ -259,6 +256,7 @@ function SpaceChat() {
               sendMessage={sendMessage}
               isStreaming={isStreaming}
               spaceId={spaceId}
+              invalidateChats={invalidateChats}
             />
           ) : (
             <>

@@ -1,15 +1,17 @@
 import { SidebarGroupContent } from "@/components/ui/sidebar.tsx";
 import { useTranslation } from "react-i18next";
 import useMindMap from "@/hooks/useMindMap.ts";
+import MindMapJobStatus from "@/classes/MindMapJobStatus.ts";
 import { Button } from "@/components/ui/button.tsx";
 
 function MindMapSidebarButton() {
   const { t } = useTranslation();
-  const { mindMap, status } = useMindMap();
+  const { status, regenerateMindMap, deleteMindMap } = useMindMap();
 
-  const notGenerated = status == "NOT_CREATED";
-  const canRegenerate = status == "DONE" || status == "FAILED";
-  const isGenerating = status == "GENERATING";
+  const notGenerated = status == MindMapJobStatus.NOT_CREATED;
+  const canRegenerate =
+    status == MindMapJobStatus.DONE || status == MindMapJobStatus.FAILED;
+  const isGenerating = status == MindMapJobStatus.GENERATING;
 
   return (
     <SidebarGroupContent>
@@ -17,9 +19,9 @@ function MindMapSidebarButton() {
         disabled={isGenerating}
         onClick={() => {
           if (canRegenerate) {
-            mindMap?.delete();
+            deleteMindMap();
           }
-          mindMap?.regenerate();
+          regenerateMindMap();
         }}
       >
         {notGenerated && t("sidebar.mind-map.generate")}

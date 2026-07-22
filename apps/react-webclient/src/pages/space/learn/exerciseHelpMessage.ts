@@ -1,21 +1,14 @@
-import type {
-  GroupResponseDTO,
-  LeftRight,
-  ListResponseDTO,
-  PairResponseDTO,
-  QuestionResponseDTO,
-  TopicResponseDTO,
-} from "@/client/model";
+import type Topic from "@/classes/Topic.ts";
+import type { Exercise } from "@/classes/Exercise.ts";
+import type LeftRight from "@/classes/LeftRight.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
 import type { TFunction } from "i18next";
-
-type Exercise =
-  QuestionResponseDTO | ListResponseDTO | GroupResponseDTO | PairResponseDTO;
 
 export function buildExerciseHelpMessage(
   t: TFunction,
   exercise: Exercise,
   userAnswer: unknown,
-  topic: TopicResponseDTO | undefined,
+  topic: Topic | undefined,
 ): string {
   const topicSection = topic
     ? `${topic.title}\n${topic.summary}\n${topic.labels.join(", ")}`
@@ -32,15 +25,15 @@ export function buildExerciseHelpMessage(
 
 function formatCorrectSolution(exercise: Exercise): string {
   switch (exercise.type) {
-    case "QUESTION":
+    case ExerciseType.QUESTION:
       return exercise.answer;
-    case "LIST":
+    case ExerciseType.LIST:
       return exercise.answer.join(" → ");
-    case "GROUP":
+    case ExerciseType.GROUP:
       return Object.entries(exercise.groups)
         .map(([label, keys]) => `${label}: ${keys.join(", ")}`)
         .join("\n");
-    case "PAIR":
+    case ExerciseType.PAIR:
       return exercise.pairs
         .map((pair) => `${pair.left} → ${pair.right}`)
         .join("\n");

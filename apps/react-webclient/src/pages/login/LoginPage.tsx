@@ -13,26 +13,17 @@ import { Eye, EyeClosed } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
-import {
-  type loginResponse,
-  type loginResponseSuccess,
-  useLogin,
-} from "@/client/generated/authentication/authentication.ts";
+import useLoginMutation from "@/hooks/useLoginMutation.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
-import { successToast } from "@/lib/toasts.ts";
-import type { ApiError } from "@/client/mutator.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import { ErrorCard } from "@/components/ErrorCard.tsx";
 import HomeLink from "@/components/HomeLink.tsx";
-
-function isSuccessResponse(resp: loginResponse): resp is loginResponseSuccess {
-  return "data" in resp && "token" in resp.data;
-}
+import { successToast } from "@/lib/toasts.ts";
 
 function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mutate } = useLogin<ApiError>();
+  const { login: loginMutation } = useLoginMutation();
   const { login } = useAuth();
 
   const [isPasswordShown, setIsPasswordShown] = React.useState(false);
@@ -41,23 +32,17 @@ function LoginPage() {
   const [error, setError] = React.useState<number | undefined>(undefined);
 
   const handleLogin = () => {
-    mutate(
-      { data: { username: username, password: password } },
-      {
-        onSuccess: (resp) => {
-          if (!isSuccessResponse(resp)) {
-            return;
-          }
-          login({ username, token: resp.data.token });
-          navigate({ to: PathConstants.HOME }).then(() => {
-            successToast(t("login.success"));
-          });
-        },
-        onError: (resp) => {
-          setError(resp.status);
-        },
+    loginMutation(username, password, {
+      onSuccess: (token) => {
+        login({ username, token });
+        navigate({ to: PathConstants.HOME }).then(() => {
+          successToast(t("login.success"));
+        });
       },
-    );
+      onError: (status) => {
+        setError(status);
+      },
+    });
   };
 
   const reset = () => {

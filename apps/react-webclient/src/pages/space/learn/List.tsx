@@ -15,12 +15,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
-import type { ListResponseDTO } from "@/client/model";
+import type ListExercise from "@/classes/ListExercise.ts";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface ListProps {
-  list: ListResponseDTO;
+  list: ListExercise;
   submitted: boolean;
   onAnswer?: (answer: string[] | null) => void;
 }

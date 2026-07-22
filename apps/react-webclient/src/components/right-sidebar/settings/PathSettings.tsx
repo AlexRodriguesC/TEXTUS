@@ -12,14 +12,14 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import useLearningPath from "@/hooks/useLearningPath.ts";
 import type LearningPath from "@/classes/LearningPath.ts";
-import type { LearningPathSettings } from "@/classes/LearningPath.ts";
+import type PathSettingsClass from "@/classes/PathSettings.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 const DISPLAY_NAMES = ["question", "list", "group", "pair"] as const;
 type DisplayName = (typeof DISPLAY_NAMES)[number];
 
-const DISPLAY_TO_KEY: Record<DisplayName, keyof LearningPathSettings> = {
+const DISPLAY_TO_KEY: Record<DisplayName, keyof PathSettingsClass> = {
   question: "questionPercentage",
   list: "listPercentage",
   group: "groupPercentage",
@@ -27,7 +27,7 @@ const DISPLAY_TO_KEY: Record<DisplayName, keyof LearningPathSettings> = {
 };
 
 function PathSettings() {
-  const { path, isPathLoading } = useLearningPath();
+  const { path, isPathLoading, updateSettings } = useLearningPath();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const showSkeleton = isPathLoading || !path;
@@ -44,6 +44,7 @@ function PathSettings() {
           <PathSettingsContent
             path={path}
             onClose={() => setDialogOpen(false)}
+            updateSettings={updateSettings}
           />
         )}
       </DialogContent>
@@ -54,19 +55,21 @@ function PathSettings() {
 function PathSettingsContent({
   path,
   onClose,
+  updateSettings,
 }: {
   path: LearningPath;
   onClose: () => void;
+  updateSettings: (settings: PathSettingsClass) => void;
 }) {
   const { t } = useTranslation();
-  const [percentages, setPercentages] = useState<LearningPathSettings>(
+  const [percentages, setPercentages] = useState<PathSettingsClass>(
     path.settings,
   );
 
   const handleSliderChange = (type: DisplayName, newValue: number) => {
     const key = DISPLAY_TO_KEY[type];
     setPercentages((prev) => {
-      const othersTotal = (Object.keys(prev) as (keyof LearningPathSettings)[])
+      const othersTotal = (Object.keys(prev) as (keyof PathSettingsClass)[])
         .filter((k) => k !== key)
         .reduce((sum, k) => sum + (prev[k] ?? 0), 0);
       const newTotal = othersTotal + newValue;
@@ -79,7 +82,7 @@ function PathSettingsContent({
   };
 
   const handleApply = () => {
-    path.updateSettings(percentages);
+    updateSettings(percentages);
     onClose();
   };
 

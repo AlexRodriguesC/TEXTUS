@@ -12,19 +12,18 @@ import Pair from "@/pages/space/learn/Pair.tsx";
 import useSubmitSolution from "@/hooks/useSubmitSolution.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import AttemptsExhausted from "@/pages/space/learn/lesson/AttemptsExhausted.tsx";
-import { useQueryClient } from "@tanstack/react-query";
-import { getGetNextExerciseQueryKey } from "@/client/generated/lessons/lessons.ts";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
+import ExerciseType from "@/classes/ExerciseType.ts";
 
 function Lesson() {
-  const queryClient = useQueryClient();
   const { lessonId } = useLessonId();
   const { spaceId } = useSpaceId();
-  const { isLoading, nextExercise, exerciseLoading, lesson } = useLesson({
-    lessonId: lessonId,
-  });
+  const { isLoading, nextExercise, exerciseLoading, lesson, resetNextExercise } =
+    useLesson({
+      lessonId: lessonId,
+    });
   const [answer, setAnswer] = useState<unknown | null>(null);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
@@ -38,13 +37,11 @@ function Lesson() {
   }
 
   const handleNext = () => {
-    queryClient
-      .resetQueries({ queryKey: getGetNextExerciseQueryKey(spaceId, lessonId) })
-      .then(() => {
-        setAnswer(null);
-        setSubmitted(false);
-        setWasCorrect(null);
-      });
+    resetNextExercise()?.then(() => {
+      setAnswer(null);
+      setSubmitted(false);
+      setWasCorrect(null);
+    });
   };
 
   const handleSkip = async () => {
@@ -75,7 +72,7 @@ function Lesson() {
       return <LoadingScreen />;
     }
 
-    if (nextExercise.type === "LIST") {
+    if (nextExercise.type === ExerciseType.LIST) {
       return (
         <List
           key={nextExercise.id}
@@ -85,7 +82,7 @@ function Lesson() {
         />
       );
     }
-    if (nextExercise.type === "QUESTION") {
+    if (nextExercise.type === ExerciseType.QUESTION) {
       return (
         <Question
           key={nextExercise.id}
@@ -95,7 +92,7 @@ function Lesson() {
         />
       );
     }
-    if (nextExercise.type === "GROUP") {
+    if (nextExercise.type === ExerciseType.GROUP) {
       return (
         <Group
           key={nextExercise.id}
@@ -105,7 +102,7 @@ function Lesson() {
         />
       );
     }
-    if (nextExercise.type === "PAIR") {
+    if (nextExercise.type === ExerciseType.PAIR) {
       return (
         <Pair
           key={nextExercise.id}

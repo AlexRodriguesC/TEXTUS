@@ -1,10 +1,13 @@
 import useMindMap from "@/hooks/useMindMap.ts";
-import type {
-  NodeDTO,
-  NodeDTONodeType,
-  PageResponseDTO,
-  TopicResponseDTO,
-} from "@/client/model";
+import type Node from "@/classes/Node.ts";
+import type { NodeTypeType } from "@/classes/NodeType.ts";
+import NodeType from "@/classes/NodeType.ts";
+import type Topic from "@/classes/Topic.ts";
+import type Page from "@/classes/Page.ts";
+import useTopics from "@/hooks/useTopics.tsx";
+import usePages from "@/hooks/usePages.ts";
+import SpaceMapEmpty from "@/pages/space/SpaceMapEmpty.tsx";
+import LoadingScreen from "@/components/LoadingScreen.tsx";
 import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import {
   Controls,
@@ -16,12 +19,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useTheme } from "@/hooks/useTheme.ts";
 import MapNode from "@/pages/space/MapNode.tsx";
-import useSpaceId from "@/hooks/useSpaceId.ts";
 import dagre from "dagre";
-import { useGetTopics } from "@/client/generated/topics/topics.ts";
-import { useGetPages } from "@/client/generated/pages/pages.ts";
-import SpaceMapEmpty from "@/pages/space/SpaceMapEmpty.tsx";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
 
 const nodeTypes = { mapNode: MapNode };
 
@@ -30,12 +28,12 @@ const NODE_HEIGHT = 36;
 
 type NodeKey = string;
 
-function toNodeKey(nodeType?: NodeDTONodeType, entityId?: number): NodeKey | null {
+function toNodeKey(nodeType?: NodeTypeType, entityId?: number): NodeKey | null {
   if (nodeType == null || entityId == null) return null;
   return `${nodeType}:${entityId}`;
 }
 
-function buildChildrenMap(nodes: NodeDTO[]): Map<NodeKey, NodeKey[]> {
+function buildChildrenMap(nodes: Node[]): Map<NodeKey, NodeKey[]> {
   const childrenMap = new Map<NodeKey, NodeKey[]>();
   for (const n of nodes) {
     const childKey = toNodeKey(n.nodeType, n.entityId);
@@ -50,7 +48,7 @@ function buildChildrenMap(nodes: NodeDTO[]): Map<NodeKey, NodeKey[]> {
 
 function isNodeVisible(
   nodeKey: NodeKey,
-  nodesByKey: Map<NodeKey, NodeDTO>,
+  nodesByKey: Map<NodeKey, Node>,
   expandedIds: Set<NodeKey>,
 ): boolean {
   const node = nodesByKey.get(nodeKey);
@@ -62,10 +60,10 @@ function isNodeVisible(
 }
 
 function getVisibleNodes(
-  nodes: NodeDTO[],
+  nodes: Node[],
   expandedIds: Set<NodeKey>,
-): NodeDTO[] {
-  const nodesByKey = new Map<NodeKey, NodeDTO>();
+): Node[] {
+  const nodesByKey = new Map<NodeKey, Node>();
   for (const n of nodes) {
     const key = toNodeKey(n.nodeType, n.entityId);
     if (key != null) nodesByKey.set(key, n);
@@ -108,11 +106,11 @@ function toggleExpanded(
 }
 
 function resolveNodeContent(
-  node: NodeDTO,
-  topics: TopicResponseDTO[],
-  pages: PageResponseDTO[],
+  node: Node,
+  topics: Topic[],
+  pages: Page[],
 ): { title: string; summary: string; isPage: boolean } {
-  if (node.nodeType === "PAGE") {
+  if (node.nodeType === NodeType.PAGE) {
     const page = pages.find((p) => p.id === node.entityId);
     return {
       title: page?.title ?? "N/A",
@@ -130,10 +128,10 @@ function resolveNodeContent(
 }
 
 function getLayoutedElements(
-  nodes: NodeDTO[],
+  nodes: Node[],
   direction: "TB" | "LR" = "TB",
-  topics: TopicResponseDTO[],
-  pages: PageResponseDTO[],
+  topics: Topic[],
+  pages: Page[],
   childrenMap: Map<NodeKey, NodeKey[]>,
   expandedIds: Set<NodeKey>,
 ): { nodes: RFNode[]; edges: RFEdge[] } {
@@ -141,7 +139,7 @@ function getLayoutedElements(
   g.setGraph({ rankdir: direction });
   g.setDefaultEdgeLabel(() => ({}));
 
-  const nodeMap = new Map<NodeKey, NodeDTO>();
+  const nodeMap = new Map<NodeKey, Node>();
   for (const n of nodes) {
     const key = toNodeKey(n.nodeType, n.entityId);
     if (key == null) continue;
@@ -207,9 +205,9 @@ function SpaceMapFlow({
   topics,
   pages,
 }: {
-  mindMapNodes: NodeDTO[];
-  topics: TopicResponseDTO[];
-  pages: PageResponseDTO[];
+  mindMapNodes: Node[];
+  topics: Topic[];
+  pages: Page[];
 }) {
   const { theme } = useTheme();
   const { fitView } = useReactFlow();
@@ -274,30 +272,9 @@ function SpaceMapFlow({
 }
 
 function SpaceMap() {
-  const { spaceId } = useSpaceId();
   const { mindMap, status, isMindMapLoading } = useMindMap();
-
-  const { data: topicsData } = useGetTopics(spaceId ?? 0, {
-    query: {
-      enabled: spaceId !== undefined,
-    },
-  });
-
-  const { data: pagesData } = useGetPages(spaceId ?? 0, {
-    query: {
-      enabled: spaceId !== undefined,
-    },
-  });
-
-  let topics: TopicResponseDTO[] = [];
-  if (topicsData && topicsData.data && "topics" in topicsData.data) {
-    topics = topicsData.data.topics;
-  }
-
-  let pages: PageResponseDTO[] = [];
-  if (pagesData && pagesData.data && "pages" in pagesData.data) {
-    pages = pagesData.data.pages;
-  }
+  const { topics } = useTopics();
+  const { pages } = usePages();
 
   const mindMapNodes = mindMap?.nodes ?? [];
   const mindMapKey = mindMapNodes

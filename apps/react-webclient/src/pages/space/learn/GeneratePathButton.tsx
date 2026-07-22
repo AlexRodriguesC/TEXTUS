@@ -1,4 +1,5 @@
 import useLearningPath from "@/hooks/useLearningPath.ts";
+import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -6,17 +7,17 @@ import { X } from "lucide-react";
 
 function GeneratePathButton() {
   const { t } = useTranslation();
-  const { path, status } = useLearningPath();
+  const { status, regeneratePath, deletePath } = useLearningPath();
 
-  if (status === "NOT_CREATED") {
+  if (status === LearningPathJobStatus.NOT_CREATED) {
     return (
-      <Button onClick={() => path?.regenerate()} className={"w-full"}>
+      <Button onClick={() => regeneratePath()} className={"w-full"}>
         {t("learning-path.empty.cta")}
       </Button>
     );
   }
 
-  if (status === "GENERATING") {
+  if (status === LearningPathJobStatus.GENERATING) {
     return (
       <Button disabled={true} className={"w-full"}>
         <div className={"flex items-center justify-between gap-2"}>
@@ -27,12 +28,12 @@ function GeneratePathButton() {
     );
   }
 
-  if (status === "FAILED") {
+  if (status === LearningPathJobStatus.FAILED) {
     return (
       <Button
         onClick={() => {
-          path?.delete();
-          path?.regenerate();
+          deletePath();
+          regeneratePath();
         }}
         className={"w-full"}
       >
@@ -44,12 +45,12 @@ function GeneratePathButton() {
     );
   }
 
-  if (status === "DONE") {
+  if (status === LearningPathJobStatus.DONE) {
     return (
       <Button
         onClick={() => {
-          path?.delete();
-          path?.regenerate();
+          deletePath();
+          regeneratePath();
         }}
         className={"w-full"}
       >

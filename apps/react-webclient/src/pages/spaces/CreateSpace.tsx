@@ -1,15 +1,10 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import {
-  type createSpaceResponse,
-  getReadSpacesQueryKey,
-  useCreateSpace,
-} from "@/client/generated/spaces/spaces.ts";
-import { failureToastAction, successToast } from "@/lib/toasts.ts";
+import { failureToastAction } from "@/lib/toasts.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
+import useCreateSpaceMutation from "@/hooks/useCreateSpaceMutation.ts";
 
 type CreateSpaceProps = {
   trigger: React.ReactNode;
@@ -18,7 +13,6 @@ type CreateSpaceProps = {
 
 function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const defaultName = t("spaces.add.defaultName");
   const [name, setName] = useState(defaultName);
   const defaultDescription = t("spaces.add.defaultDescription");
@@ -26,30 +20,37 @@ function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
   const defaultIcon = "1f929";
   const [icon, setIcon] = useState<string>(defaultIcon);
 
-  const createSpace = useCreateSpace({
-    mutation: {
-      onSuccess: async (resp: createSpaceResponse) => {
-        await queryClient.invalidateQueries({
-          queryKey: getReadSpacesQueryKey(),
-        });
-        successToast(t("spaces.add.success"));
-        setIcon(defaultIcon);
-        setName(defaultName);
-        setDescription(defaultDescription);
-        onSuccess?.(resp.data.id);
-      },
-      onError: async () => {
-        failureToastAction(
-          t("spaces.add.error"),
-          <Button onClick={submitCreate}>{t("button.retry")}</Button>,
-        );
-      },
-    },
-  });
+  const { createSpace } = useCreateSpaceMutation();
 
   const submitCreate = useCallback(() => {
-    createSpace.mutate({ data: { icon, name, description } });
-  }, [createSpace, name, description, icon]);
+    createSpace(
+      { icon, name, description },
+      {
+        onSuccess: (spaceId) => {
+          setIcon(defaultIcon);
+          setName(defaultName);
+          setDescription(defaultDescription);
+          onSuccess?.(spaceId);
+        },
+        onError: () => {
+          failureToastAction(
+            t("spaces.add.error"),
+            <Button onClick={submitCreate}>{t("button.retry")}</Button>,
+          );
+        },
+      },
+    );
+  }, [
+    createSpace,
+    name,
+    description,
+    icon,
+    defaultIcon,
+    defaultName,
+    defaultDescription,
+    onSuccess,
+    t,
+  ]);
 
   return (
     <SpaceDialogForm

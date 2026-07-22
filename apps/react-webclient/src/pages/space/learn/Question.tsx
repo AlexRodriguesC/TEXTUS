@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button.tsx";
-import type { QuestionResponseDTO } from "@/client/model";
+import type QuestionExercise from "@/classes/Question.ts";
 import { useMemo, useState } from "react";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 import { cn } from "@/lib/utils.ts";
 
 interface QuestionProps {
-  question: QuestionResponseDTO;
+  question: QuestionExercise;
   submitted: boolean;
   onAnswer?: (answer: string | null) => void;
 }

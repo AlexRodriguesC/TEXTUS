@@ -8,14 +8,14 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import type { PairExercise, PairResponseDTO } from "@/client/model";
-import type { LeftRight } from "@/client/model";
+import type PairExercise from "@/classes/PairExercise.ts";
+import type LeftRight from "@/classes/LeftRight.ts";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 import { cn } from "@/lib/utils.ts";
 import * as React from "react";
 
 interface PairProps {
-  pair: PairResponseDTO;
+  pair: PairExercise;
   submitted: boolean;
   onAnswer?: (answer: LeftRight[] | null) => void;
 }
@@ -137,11 +137,11 @@ function RightPool({
 
 function Pair({ pair, submitted, onAnswer }: PairProps) {
   const leftItems = useMemo(
-    () => pair.pairs.map((p: PairExercise) => p.left),
+    () => pair.pairs.map((p: LeftRight) => p.left),
     [pair.pairs],
   );
   const rightItems = useMemo(
-    () => pair.pairs.map((p: PairExercise) => p.right),
+    () => pair.pairs.map((p: LeftRight) => p.right),
     [pair.pairs],
   );
 

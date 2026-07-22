@@ -8,6 +8,8 @@ import type { ChatsResponseDTO, ErrorResponseDTO } from "@/client/model";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import Chat from "@/classes/Chat.ts";
+import { mapChat } from "@/hooks/dtoMappers.ts";
 
 const ignored = -1;
 
@@ -19,9 +21,9 @@ function useChats() {
     query: { enabled: spaceId !== undefined },
   });
 
-  const chats: ChatsResponseDTO[] = useMemo(() => {
+  const chats: Chat[] = useMemo(() => {
     if (!data || data.status !== 200 || !isChatsResponse(data.data)) return [];
-    return data.data.chats;
+    return data.data.chats.map(mapChat);
   }, [data]);
 
   const invalidate = useCallback(() => {
@@ -59,7 +61,7 @@ function useChats() {
       if (result.status !== 201) {
         throw new Error("Failed to create chat");
       }
-      return result.data;
+      return mapChat(result.data);
     },
     [createChatMutation, spaceId],
   );
@@ -82,6 +84,7 @@ function useChats() {
     deleteChat,
     isDeleting,
     invalidate,
+    invalidateChats: invalidate,
   };
 }
 

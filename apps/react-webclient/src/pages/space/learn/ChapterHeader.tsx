@@ -7,7 +7,7 @@ import useSpaceId from "@/hooks/useSpaceId.ts";
 import { cn } from "@/lib/utils.ts";
 import { useTheme } from "@/hooks/useTheme.ts";
 import type Lesson from "@/classes/Lesson.ts";
-import type {Chapter} from "@/classes/LearningPath.ts";
+import type Chapter from "@/classes/Chapter.ts";
 
 interface ChapterHeaderProps {
   chapter: Chapter;

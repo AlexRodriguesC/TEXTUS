@@ -9,11 +9,11 @@ import {
 } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
-import type { GroupResponseDTO } from "@/client/model";
+import type GroupExercise from "@/classes/GroupExercise.ts";
 import { cn } from "@/lib/utils.ts";
 
 interface GroupProps {
-  group: GroupResponseDTO;
+  group: GroupExercise;
   submitted: boolean;
   onAnswer?: (answer: Record<string, string[]> | null) => void;
 }

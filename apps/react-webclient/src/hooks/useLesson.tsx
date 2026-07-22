@@ -8,8 +8,10 @@ import {
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetLearningPathQueryKey } from "@/client/generated/paths/paths.ts";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Lesson from "@/classes/Lesson.ts";
+import type { Exercise } from "@/classes/Exercise.ts";
+import { isExerciseDto, mapExercise, mapLesson } from "@/hooks/dtoMappers.ts";
 
 const ignored = -1;
 
@@ -25,7 +27,7 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
     },
   );
 
-  const { mutateAsync: deleteExercisesMutation, isPending } =
+  const { mutateAsync: deleteExercisesMutation, isPending: isDeletingExercises } =
     useDeleteExercises({
       mutation: {
         onMutate: async () => {
@@ -64,12 +66,8 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
       spaceId === undefined
     )
       return undefined;
-    return Lesson.from(data.data).withRuntime(
-      spaceId,
-      deleteExercisesMutation,
-      isPending,
-    );
-  }, [data, spaceId, deleteExercisesMutation, isPending]);
+    return mapLesson(data.data);
+  }, [data, spaceId]);
 
   const { data: nextExerciseData, isLoading: exerciseLoading } =
     useGetNextExercise(spaceId ?? ignored, lessonId ?? ignored, {
@@ -83,14 +81,50 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
       },
     });
 
-  const nextExercise =
-    nextExerciseData &&
-    "status" in nextExerciseData &&
-    nextExerciseData.status === 200
-      ? nextExerciseData.data
-      : undefined;
+  const nextExercise: Exercise | undefined = useMemo(() => {
+    if (
+      !nextExerciseData ||
+      !("status" in nextExerciseData) ||
+      nextExerciseData.status !== 200
+    ) {
+      return undefined;
+    }
+    const raw = nextExerciseData.data;
+    if (!isExerciseDto(raw)) return undefined;
+    return mapExercise(raw);
+  }, [nextExerciseData]);
 
-  return { lesson, isLoading, nextExercise, exerciseLoading };
+  const deleteExercises = useCallback(() => {
+    if (spaceId === undefined || lessonId === undefined) {
+      throw new Error("spaceId and lessonId are required to delete exercises");
+    }
+    return deleteExercisesMutation({ spaceId, lessonId });
+  }, [deleteExercisesMutation, spaceId, lessonId]);
+
+  const resetNextExercise = useCallback(() => {
+    if (spaceId === undefined || lessonId === undefined) return;
+    return queryClient.resetQueries({
+      queryKey: getGetNextExerciseQueryKey(spaceId, lessonId),
+    });
+  }, [queryClient, spaceId, lessonId]);
+
+  const invalidateLearningPath = useCallback(() => {
+    if (spaceId === undefined) return;
+    return queryClient.invalidateQueries({
+      queryKey: getGetLearningPathQueryKey(spaceId),
+    });
+  }, [queryClient, spaceId]);
+
+  return {
+    lesson,
+    isLoading,
+    nextExercise,
+    exerciseLoading,
+    deleteExercises,
+    isDeletingExercises,
+    resetNextExercise,
+    invalidateLearningPath,
+  };
 }
 
 export default useLesson;

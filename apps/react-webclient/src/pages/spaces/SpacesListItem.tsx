@@ -2,49 +2,35 @@ import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  getReadSpacesQueryKey,
-  useDeleteSpace,
-} from "@/client/generated/spaces/spaces.ts";
-import { failureToastAction, successToast } from "@/lib/toasts.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { failureToastAction } from "@/lib/toasts.ts";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
 import EditSpace from "@/pages/spaces/EditSpace.tsx";
 import { Emoji } from "emoji-picker-react";
+import useDeleteSpaceMutation from "@/hooks/useDeleteSpaceMutation.ts";
+import type Space from "@/classes/Space.ts";
 
-type SpacesListItem = {
-  spaceId: number;
-  icon: string;
-  name: string;
-  description: string;
-};
-
-function SpacesListItem({ spaceId, icon, name, description }: SpacesListItem) {
+function SpacesListItem({
+  spaceId,
+  icon,
+  name,
+  description,
+}: Space) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+
+  const { deleteSpace } = useDeleteSpaceMutation();
 
   const submitDelete = useCallback(() => {
-    deleteSpace.mutate({ spaceId });
-  }, []);
-
-  const deleteSpace = useDeleteSpace({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: getReadSpacesQueryKey(),
-        });
-        successToast(t("spaces.delete.success"));
-      },
-      onError: async () => {
+    deleteSpace(spaceId, {
+      onError: () => {
         failureToastAction(
           t("spaces.delete.error"),
           <Button onClick={submitDelete}>{t("button.retry")}</Button>,
         );
       },
-    },
-  });
+    });
+  }, [deleteSpace, spaceId, t]);
 
   return (
     <div

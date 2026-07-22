@@ -5,10 +5,9 @@ import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import { useEffect, useRef, useState } from "react";
 import { Separator } from "@/components/ui/separator.tsx";
 import useLearningPath from "@/hooks/useLearningPath.ts";
-import {
-  type ChapterResponseDTO,
-  type LessonResponseDTO,
-} from "@/client/model";
+import type Chapter from "@/classes/Chapter.ts";
+import type Lesson from "@/classes/Lesson.ts";
+import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import PathNode from "@/pages/space/learn/PathNode.tsx";
 import { cn } from "@/lib/utils.ts";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
@@ -20,10 +19,10 @@ import { ArrowUp } from "lucide-react";
 const OFFSETS = [0, 60, 0, -60];
 
 function getPrerequisiteLesson(
-  chapters: ChapterResponseDTO[],
+  chapters: Chapter[],
   chapterIndex: number,
-  lesson: LessonResponseDTO,
-): LessonResponseDTO | null {
+  lesson: Lesson,
+): Lesson | null {
   if (lesson.index > 0) {
     const chapter = chapters.find((c) => c.index === chapterIndex);
     return chapter?.lessons.find((l) => l.index === lesson.index - 1) ?? null;
@@ -36,8 +35,8 @@ function ChapterPath({
   chapter,
   chapters,
 }: {
-  chapter: ChapterResponseDTO;
-  chapters: ChapterResponseDTO[];
+  chapter: Chapter;
+  chapters: Chapter[];
 }) {
   return (
     <div
@@ -45,7 +44,7 @@ function ChapterPath({
       data-chapter-index={chapter.index}
     >
       <div className="flex flex-col items-center gap-6 pt-4">
-        {chapter.lessons.map((lesson: LessonResponseDTO, i: number) => {
+        {chapter.lessons.map((lesson: Lesson, i: number) => {
           const prerequisite = getPrerequisiteLesson(
             chapters,
             chapter.index,
@@ -70,9 +69,7 @@ function ChapterPath({
 function SpaceLearn() {
   const { path, status, isPathLoading } = useLearningPath();
   const { t } = useTranslation();
-  const [activeChapter, setActiveChapter] = useState<ChapterResponseDTO | null>(
-    null,
-  );
+  const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -81,7 +78,7 @@ function SpaceLearn() {
 
   useEffect(() => {
     if (path?.chapters.length) {
-      setActiveChapter((prev: ChapterResponseDTO | null) => prev ?? path.chapters[0]);
+      setActiveChapter((prev: Chapter | null) => prev ?? path.chapters[0]);
     }
   }, [path]);
 
@@ -145,13 +142,13 @@ function SpaceLearn() {
     return () => observer.disconnect();
   }, [path, headerHeight]);
 
-  if (status !== "NOT_CREATED" && isPathLoading) {
+  if (status !== LearningPathJobStatus.NOT_CREATED && isPathLoading) {
     return <LoadingScreen />;
   }
 
   if (
     path === undefined ||
-    status === "NOT_CREATED" ||
+    status === LearningPathJobStatus.NOT_CREATED ||
     path.chapters.length === 0
   ) {
     return <SpaceLearnEmpty />;

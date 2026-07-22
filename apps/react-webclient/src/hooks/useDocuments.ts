@@ -5,6 +5,7 @@ import {
 } from "@/client/generated/documents/documents.ts";
 import type { DocumentsResponseDTO, ErrorResponseDTO } from "@/client/model";
 import Document from "@/classes/Document.ts";
+import { mapDocument } from "@/hooks/dtoMappers.ts";
 import { customInstance } from "@/client/mutator.ts";
 import { isDone, isFailed } from "@/lib/documentTaskUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.ts";
@@ -24,7 +25,7 @@ function useDocuments(spaceId: number | undefined) {
       refetchInterval: (query) => {
         const queryData = query.state.data?.data;
         if (!queryData || !isDocumentsResponseDTO(queryData)) return 2000;
-        const documents = queryData.documents.map(Document.from);
+        const documents = queryData.documents.map(mapDocument);
         const allSettled =
           documents.length > 0 &&
           documents.every(
@@ -81,7 +82,7 @@ function useDocuments(spaceId: number | undefined) {
     documentStatuses.data &&
     isDocumentsResponseDTO(documentStatuses.data)
   ) {
-    documents = documentStatuses.data.documents.map(Document.from);
+    documents = documentStatuses.data.documents.map(mapDocument);
   }
 
   return {

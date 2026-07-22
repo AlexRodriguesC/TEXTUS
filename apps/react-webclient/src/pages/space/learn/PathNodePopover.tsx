@@ -16,7 +16,9 @@ interface PathNodePopoverProps {
 }
 
 function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
-  const { lesson, isLoading } = useLesson({ lessonId: lessonId });
+  const { lesson, isLoading, deleteExercises, isDeletingExercises } = useLesson({
+    lessonId: lessonId,
+  });
   const { t } = useTranslation();
   const { strSpaceId } = useSpaceId();
   const { path } = useLearningPath();
@@ -47,7 +49,10 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
     if (lesson.attemptsLeft === 0) {
         return (
             <div className={cn("flex flex-col gap-2 w-fit", className)}>
-                <RetryLessonButton lesson={lesson} />
+                <RetryLessonButton
+                  onRetry={() => void deleteExercises()}
+                  isDeleting={isDeletingExercises}
+                />
                 <ReviewTopicsButton
                     onCancel={() => {}}
                     strSpaceId={strSpaceId}

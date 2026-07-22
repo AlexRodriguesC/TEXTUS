@@ -5,19 +5,11 @@ import useSpaceId from "@/hooks/useSpaceId.ts";
 import useTopics from "@/hooks/useTopics.tsx";
 import { buildExerciseHelpMessage } from "@/pages/space/learn/exerciseHelpMessage.ts";
 import PathConstants from "@/routing/pathConstants.ts";
-import type {
-  GroupResponseDTO,
-  ListResponseDTO,
-  PairResponseDTO,
-  QuestionResponseDTO, TopicResponseDTO,
-} from "@/client/model";
+import type { Exercise } from "@/classes/Exercise.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Spinner } from "@/components/ui/spinner.tsx";
-
-type Exercise =
-  QuestionResponseDTO | ListResponseDTO | GroupResponseDTO | PairResponseDTO;
 
 interface ExerciseHelpButtonProps {
   exercise: Exercise;
@@ -39,7 +31,7 @@ function ExerciseHelpButton({
   const [isNavigating, setIsNavigating] = useState(false);
 
   const topic = useMemo(
-    () => topics.find((item: TopicResponseDTO) => item.id === topicId),
+    () => topics.find((item) => item.id === topicId),
     [topics, topicId],
   );
 
@@ -62,16 +54,14 @@ function ExerciseHelpButton({
   };
 
   return (
-    <div className="flex justify-center pt-4">
-      <Button
-        variant="outline"
-        disabled={isCreating || isNavigating}
-        onClick={() => void handleClick()}
-      >
-        {(isCreating || isNavigating) && <Spinner className="h-4 w-4 mr-2" />}
-        {t("exercise.help.button")}
-      </Button>
-    </div>
+    <Button
+      variant="outline"
+      disabled={isCreating || isNavigating}
+      onClick={() => void handleClick()}
+    >
+      {(isCreating || isNavigating) && <Spinner />}
+      {t("exercise.help.button")}
+    </Button>
   );
 }
 

@@ -1,4 +1,4 @@
-import type { TopicResponseDTO } from "@/client/model";
+import type Topic from "@/classes/Topic.ts";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useTranslation } from "react-i18next";
 
-function TopicInformationModal({ topic }: { topic: TopicResponseDTO }) {
+function TopicInformationModal({ topic }: { topic: Topic }) {
   const { t } = useTranslation();
 
   return (

@@ -1,12 +1,7 @@
 import { useReadSpaces } from "@/client/generated/spaces/spaces.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
-
-export interface ISpace {
-  spaceId: number;
-  icon: string;
-  name: string;
-  description: string;
-}
+import Space from "@/classes/Space.ts";
+import { mapSpace } from "@/hooks/dtoMappers.ts";
 
 function useSpaces() {
   const { isAuthenticated } = useAuth();
@@ -15,10 +10,10 @@ function useSpaces() {
       enabled: isAuthenticated,
     },
   });
-  let spaces: ISpace[] = [];
+  let spaces: Space[] = [];
 
   if (data && data.data) {
-    spaces = data.data;
+    spaces = data.data.map(mapSpace);
   }
 
   return { spaces, isLoading };

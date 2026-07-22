@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import type { Chapter } from "@/hooks/useLearningPath.ts";
+import type Chapter from "@/classes/Chapter.ts";
 import { useTranslation } from "react-i18next";
 
 interface ChapterGuideBreadcrumbsProps {

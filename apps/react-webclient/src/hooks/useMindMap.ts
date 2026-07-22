@@ -16,9 +16,15 @@ import type {
   MindMapJobDTOStatus,
 } from "@/client/model";
 import MindMap from "@/classes/MindMap.ts";
-import { useMemo } from "react";
+import MindMapJobStatus, {
+  type MindMapJobStatusType,
+} from "@/classes/MindMapJobStatus.ts";
+import { isMindMapDto, mapMindMap } from "@/hooks/dtoMappers.ts";
+import { useCallback, useMemo } from "react";
 
-type MindMapStatus = MindMapJobDTOStatus;
+function mapJobStatus(status: MindMapJobDTOStatus): MindMapJobStatusType {
+  return status as MindMapJobStatusType;
+}
 
 function useMindMap() {
   const { spaceId } = useSpaceId();
@@ -32,8 +38,8 @@ function useMindMap() {
       refetchInterval: (query) => {
         const raw = query.state.data?.data;
         if (!raw || !isMindMapJobDTO(raw)) return 2000;
-        const done = raw.status === "DONE";
-        const failed = raw.status === "FAILED";
+        const done = raw.status === MindMapJobStatus.DONE;
+        const failed = raw.status === MindMapJobStatus.FAILED;
         return done || failed ? false : 2000;
       },
     },
@@ -45,13 +51,13 @@ function useMindMap() {
         spaceId !== undefined &&
         !!jobData &&
         isMindMapJobDTO(jobData.data) &&
-        jobData.data.status === "DONE",
+        jobData.data.status === MindMapJobStatus.DONE,
     },
   });
 
-  let mindMapStatus: MindMapStatus = "NOT_CREATED";
+  let mindMapStatus: MindMapJobStatusType = MindMapJobStatus.NOT_CREATED;
   if (jobData && isMindMapJobDTO(jobData.data)) {
-    mindMapStatus = jobData.data.status;
+    mindMapStatus = mapJobStatus(jobData.data.status);
   }
 
   const { mutate: deleteMutation, isPending: isDeleting } = useDeleteMindMap({
@@ -80,34 +86,31 @@ function useMindMap() {
     });
 
   const mindMap = useMemo(() => {
-    if (spaceId === undefined) return undefined;
-
     const maybeMindMap = mindMapData?.data;
-    const base =
-      maybeMindMap && MindMap.isMindMapDTO(maybeMindMap)
-        ? MindMap.from(maybeMindMap)
-        : new MindMap([]);
+    if (maybeMindMap && isMindMapDto(maybeMindMap)) {
+      return mapMindMap(maybeMindMap);
+    }
+    return new MindMap([]);
+  }, [mindMapData]);
 
-    return base.withRuntime(
-      spaceId,
-      deleteMutation,
-      generateMutation,
-      isDeleting,
-      isGenerating,
-    );
-  }, [
-    mindMapData,
-    spaceId,
-    deleteMutation,
-    generateMutation,
-    isDeleting,
-    isGenerating,
-  ]);
+  const deleteMindMap = useCallback(() => {
+    if (spaceId === undefined) return;
+    deleteMutation({ spaceId });
+  }, [spaceId, deleteMutation]);
+
+  const regenerateMindMap = useCallback(() => {
+    if (spaceId === undefined) return;
+    generateMutation({ spaceId });
+  }, [spaceId, generateMutation]);
 
   return {
     mindMap,
     isMindMapLoading: isLoading,
     status: mindMapStatus,
+    deleteMindMap,
+    regenerateMindMap,
+    isDeleting,
+    isGenerating,
   };
 }
 

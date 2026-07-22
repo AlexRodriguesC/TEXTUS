@@ -1,14 +1,10 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  getReadSpacesQueryKey,
-  useUpdateSpace,
-} from "@/client/generated/spaces/spaces.ts";
-import { failureToastAction, successToast } from "@/lib/toasts.ts";
+import { failureToastAction } from "@/lib/toasts.ts";
 import { Button } from "@base-ui/react";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
+import useUpdateSpaceMutation from "@/hooks/useUpdateSpaceMutation.ts";
 
 type EditSpaceProps = {
   spaceId: number;
@@ -26,31 +22,25 @@ function EditSpace({
   trigger,
 }: EditSpaceProps) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [icon, setIcon] = useState(initialIcon);
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
 
-  const updateSpace = useUpdateSpace({
-    mutation: {
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: getReadSpacesQueryKey(),
-        });
-        successToast(t("spaces.update.success"));
-      },
-      onError: async () => {
-        failureToastAction(
-          t("spaces.update.error"),
-          <Button onClick={submitUpdate}>{t("button.retry")}</Button>,
-        );
-      },
-    },
-  });
+  const { updateSpace } = useUpdateSpaceMutation();
 
   const submitUpdate = useCallback(() => {
-    updateSpace.mutate({ spaceId: spaceId, data: { icon, name, description } });
-  }, [updateSpace, spaceId, icon, name, description]);
+    updateSpace(
+      { spaceId, icon, name, description },
+      {
+        onError: () => {
+          failureToastAction(
+            t("spaces.update.error"),
+            <Button onClick={submitUpdate}>{t("button.retry")}</Button>,
+          );
+        },
+      },
+    );
+  }, [updateSpace, spaceId, icon, name, description, t]);
 
   return (
     <SpaceDialogForm

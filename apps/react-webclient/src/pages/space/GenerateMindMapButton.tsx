@@ -1,4 +1,5 @@
 import useMindMap from "@/hooks/useMindMap.ts";
+import MindMapJobStatus from "@/classes/MindMapJobStatus.ts";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
@@ -6,17 +7,17 @@ import { X } from "lucide-react";
 
 function GenerateMindMapButton() {
   const { t } = useTranslation();
-  const { mindMap, status } = useMindMap();
+  const { status, regenerateMindMap, deleteMindMap } = useMindMap();
 
-  if (status === "NOT_CREATED") {
+  if (status === MindMapJobStatus.NOT_CREATED) {
     return (
-      <Button onClick={() => mindMap?.regenerate()} className={"w-full"}>
+      <Button onClick={() => regenerateMindMap()} className={"w-full"}>
         {t("mindmap.empty.cta")}
       </Button>
     );
   }
 
-  if (status === "GENERATING") {
+  if (status === MindMapJobStatus.GENERATING) {
     return (
       <Button disabled={true} className={"w-full"}>
         <div className={"flex items-center justify-between gap-2"}>
@@ -27,12 +28,12 @@ function GenerateMindMapButton() {
     );
   }
 
-  if (status === "FAILED") {
+  if (status === MindMapJobStatus.FAILED) {
     return (
       <Button
         onClick={() => {
-          mindMap?.delete();
-          mindMap?.regenerate();
+          deleteMindMap();
+          regenerateMindMap();
         }}
         className={"w-full"}
       >
@@ -44,12 +45,12 @@ function GenerateMindMapButton() {
     );
   }
 
-  if (status === "DONE") {
+  if (status === MindMapJobStatus.DONE) {
     return (
       <Button
         onClick={() => {
-          mindMap?.delete();
-          mindMap?.regenerate();
+          deleteMindMap();
+          regenerateMindMap();
         }}
         className={"w-full"}
       >
