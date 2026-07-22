@@ -3,6 +3,10 @@
     "disclaimer": "TEXTUS can be inaccurate; please double-check its responses"
   },
   "notfound": "Looks like there's nothing here. Lost your way?",
+  "errorBoundary": {
+    "message": "Oops! Something unexpected happened. Don't worry, you can head back home and try again.",
+    "cause": "Cause"
+  },
   "tutorial": {
     "show": "Click to show the tutorial. It will be shown on spaces that have no documents in them."
   },

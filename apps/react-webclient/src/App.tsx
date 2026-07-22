@@ -11,8 +11,9 @@ import SidebarOpenProvider from "@/provider/SidebarOpenProvider.tsx";
 import TutorialContextProvider from "@/provider/TutorialContextProvider.tsx";
 import RightSidebarOpenProvider from "@/provider/RightSidebarOpenProvider.tsx";
 import AuthenticationProvider from "@/provider/AuthenticationProvider.tsx";
+import ErrorFallback from "@/components/ErrorFallback.tsx";
 
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, defaultErrorComponent: ErrorFallback });
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,17 +39,17 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientContext value={queryClient}>
-      <AuthenticationProvider>
-        <SidebarOpenProvider>
-          <RightSidebarOpenProvider>
-            <TutorialContextProvider>
-              <RouterProvider router={router} />
-            </TutorialContextProvider>
-          </RightSidebarOpenProvider>
-        </SidebarOpenProvider>
-      </AuthenticationProvider>
-    </QueryClientContext>
+      <QueryClientContext value={queryClient}>
+        <AuthenticationProvider>
+          <SidebarOpenProvider>
+            <RightSidebarOpenProvider>
+              <TutorialContextProvider>
+                <RouterProvider router={router} />
+              </TutorialContextProvider>
+            </RightSidebarOpenProvider>
+          </SidebarOpenProvider>
+        </AuthenticationProvider>
+      </QueryClientContext>
   );
 }
 

@@ -3,6 +3,10 @@
     "disclaimer": "TEXTUS può essere impreciso; si prega di ricontrollare le sue risposte."
   },
   "notfound": "Sembra che non ci sia niente qui. Ti sei perso?",
+  "errorBoundary": {
+    "message": "Ops! È successo qualcosa di inaspettato. Non preoccuparti, puoi tornare alla home e riprovare.",
+    "cause": "Causa"
+  },
   "tutorial": {
     "show": "Clicca per mostrare il tutorial. Verrà mostrato negli spazi che non contengono documenti."
   },
