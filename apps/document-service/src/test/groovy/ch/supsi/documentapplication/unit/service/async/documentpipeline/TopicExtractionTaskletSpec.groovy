@@ -58,7 +58,7 @@ class TopicExtractionTaskletSpec extends Specification {
         _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
         1 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> []
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
-        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
+        2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
         status == RepeatStatus.FINISHED
     }
@@ -77,7 +77,7 @@ class TopicExtractionTaskletSpec extends Specification {
         1 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
         2 * databaseTopicStorage.getByPageId(_) >> [existingTopic]
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
-        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
+        2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
         status == RepeatStatus.FINISHED
     }

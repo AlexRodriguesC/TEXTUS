@@ -81,6 +81,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         List<Page> pendingPages = listPendingPages();
         if (pendingPages.isEmpty()) {
             log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
+            documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC);
             return RepeatStatus.FINISHED;
         }
 
@@ -106,6 +107,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
         if (listPendingPages().isEmpty()) {
             log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
+            documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC);
             return RepeatStatus.FINISHED;
         }
 

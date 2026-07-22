@@ -33,8 +33,8 @@ public class DocumentJobConfiguration extends JobConfiguration {
             Step cleanup) {
         return new JobBuilder(JOB_NAME, jobRepository)
                 .start(docSetup)
-                .next(ocr)
                 .next(segment)
+                .next(ocr)
                 .next(summarize)
                 .next(extractTopics)
                 .next(cleanup)

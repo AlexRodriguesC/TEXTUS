@@ -3,23 +3,17 @@ import {
   useDeleteDocument,
   useGetDocuments,
 } from "@/client/generated/documents/documents.ts";
-import type {
-  DocumentResponseDTOStatus,
-  DocumentsResponseDTO,
-  ErrorResponseDTO,
-} from "@/client/model";
+import type { DocumentsResponseDTO, ErrorResponseDTO } from "@/client/model";
+import Document from "@/classes/Document.ts";
 import { customInstance } from "@/client/mutator.ts";
+import { isDone, isFailed } from "@/lib/documentTaskUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.ts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-export interface Document {
-  name: string;
-  id: number;
-  status: DocumentStatus;
-}
-
-export type DocumentStatus = DocumentResponseDTOStatus;
+export { isDone, isFailed, isInProgress } from "@/lib/documentTaskUtils.ts";
+export { default as Document } from "@/classes/Document.ts";
+export { default as Task } from "@/classes/Task.ts";
 
 function useDocuments(spaceId: number | undefined) {
   const queryClient = useQueryClient();
@@ -29,12 +23,12 @@ function useDocuments(spaceId: number | undefined) {
     query: {
       refetchInterval: (query) => {
         const queryData = query.state.data?.data;
-        if (!queryData || !isDocumentResponseDTO(queryData)) return 2000;
-        const documents = queryData.documents;
+        if (!queryData || !isDocumentsResponseDTO(queryData)) return 2000;
+        const documents = queryData.documents.map(Document.from);
         const allSettled =
           documents.length > 0 &&
           documents.every(
-            (doc) => doc.status === "DONE" || doc.status === "FAILED",
+            (doc) => isDone(doc.tasks) || isFailed(doc.tasks),
           );
         return allSettled ? false : 2000;
       },
@@ -85,9 +79,9 @@ function useDocuments(spaceId: number | undefined) {
   if (
     documentStatuses &&
     documentStatuses.data &&
-    isDocumentResponseDTO(documentStatuses.data)
+    isDocumentsResponseDTO(documentStatuses.data)
   ) {
-    documents = documentStatuses.data.documents;
+    documents = documentStatuses.data.documents.map(Document.from);
   }
 
   return {
@@ -98,7 +92,7 @@ function useDocuments(spaceId: number | undefined) {
   };
 }
 
-function isDocumentResponseDTO(
+function isDocumentsResponseDTO(
   data: DocumentsResponseDTO | ErrorResponseDTO,
 ): data is DocumentsResponseDTO {
   return "documents" in data;

@@ -1,35 +1,36 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
+import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.needsOcr;
+import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.normalizePageText;
+
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.model.PageChunk;
 import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.imageio.ImageIO;
 import lombok.extern.log4j.Log4j2;
-import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -39,173 +40,173 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class OCRTasklet extends ProcessingTasklet {
 
+    private static final String OCR_TASK_STARTED = "OCR_TASK_STARTED";
+    private static final String OCR_PROGRESS = "OCR_PROGRESS";
+
     private final IFileSystemDocumentStorage documentStorage;
     private final LanguageDetector languageDetector;
     private final DocumentTaskProgressService documentTaskProgressService;
-    private final String tessdataPath;
-    private final int maxParallelism;
+    private final OcrPageProcessor ocrPageProcessor;
+    private final AppProperties appProperties;
 
     @Autowired
     public OCRTasklet(
             IFileSystemDocumentStorage documentStorage,
             LanguageDetector languageDetector,
             DocumentTaskProgressService documentTaskProgressService,
+            OcrPageProcessor ocrPageProcessor,
             AppProperties appProperties) {
         this.documentStorage = documentStorage;
         this.languageDetector = languageDetector;
         this.documentTaskProgressService = documentTaskProgressService;
-        this.tessdataPath = appProperties.getTessdataPath();
-        this.maxParallelism = appProperties.getMaxParallelism();
+        this.ocrPageProcessor = ocrPageProcessor;
+        this.appProperties = appProperties;
     }
 
+    @Override
     public @Nullable RepeatStatus execute(@NotNull StepContribution contribution, @NotNull ChunkContext chunkContext)
             throws Exception {
         log.debug("Executing OCR step for document with documentId {}", documentId);
 
         Long databaseDocumentId = getDatabaseDocumentId(chunkContext);
-        FsDocument fsDocument = documentStorage.read(getDocumentIdAsUUID());
+        UUID fsDocumentId = getDocumentIdAsUUID();
+        ExecutionContext stepExecutionContext =
+                chunkContext.getStepContext().getStepExecution().getExecutionContext();
 
-        try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
-            if (!requiresOcr(pdfDocument)) {
-                log.debug("Document {} does not require OCR, skipping", documentId);
-                documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, 1);
-                documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
-                return RepeatStatus.FINISHED;
-            }
+        List<Integer> pagesNeedingOcr = listPagesNeedingOcr(fsDocumentId);
+        initializeTaskIfNeeded(stepExecutionContext, databaseDocumentId, pagesNeedingOcr.size());
 
-            int pageCount = pdfDocument.getNumberOfPages();
-            documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, pageCount);
-
-            String tesseractLanguageCode = detectLanguage(pdfDocument);
-            byte[] ocrPdfBytes = performOcr(pdfDocument, tesseractLanguageCode, databaseDocumentId);
-
-            FsDocument newFsDocument = FsDocument.create(fsDocument.getDocumentId(), ocrPdfBytes);
-            documentStorage.update(newFsDocument);
+        if (pagesNeedingOcr.isEmpty()) {
+            log.debug("Document {} does not require OCR, skipping", documentId);
             documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
+            return RepeatStatus.FINISHED;
         }
 
-        return RepeatStatus.FINISHED;
+        FsDocument fsDocument = documentStorage.read(fsDocumentId);
+        int processedThisStep = 0;
+        int maxChunksPerStep = appProperties.getMaxChunksPerStep();
+        int maxParallelism = appProperties.getMaxParallelism();
+        int batchLimit = Math.min(maxChunksPerStep, pagesNeedingOcr.size());
+        List<Integer> batch = pagesNeedingOcr.subList(0, batchLimit);
+
+        try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
+            PDFRenderer renderer = new PDFRenderer(pdfDocument);
+            String tesseractLanguageCode = detectLanguage(fsDocumentId);
+            AtomicInteger progress = new AtomicInteger(stepExecutionContext.getInt(OCR_PROGRESS));
+
+            ocrBatchInParallel(
+                    batch,
+                    renderer,
+                    tesseractLanguageCode,
+                    fsDocumentId,
+                    databaseDocumentId,
+                    stepExecutionContext,
+                    progress,
+                    maxParallelism);
+
+            processedThisStep = batch.size();
+            log.info("OCR processed {} pages for document {}", processedThisStep, documentId);
+        }
+
+        List<Integer> remainingPages = listPagesNeedingOcr(fsDocumentId);
+        if (remainingPages.isEmpty()) {
+            documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
+            return RepeatStatus.FINISHED;
+        }
+
+        return RepeatStatus.CONTINUABLE;
     }
 
-    private boolean requiresOcr(PDDocument pdfDocument) throws IOException {
-        PDFTextStripper stripper = new PDFTextStripper();
-        stripper.setStartPage(1);
-        stripper.setEndPage(Math.min(5, pdfDocument.getNumberOfPages()));
-        String sampleText = stripper.getText(pdfDocument);
-        return sampleText.trim().length() < 200;
+    private void initializeTaskIfNeeded(
+            ExecutionContext stepExecutionContext, Long databaseDocumentId, int pagesNeedingOcrCount) {
+        if (stepExecutionContext.containsKey(OCR_TASK_STARTED)) {
+            return;
+        }
+
+        int maxProgress = Math.max(1, pagesNeedingOcrCount);
+        documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, maxProgress);
+        stepExecutionContext.put(OCR_TASK_STARTED, true);
+        stepExecutionContext.putInt(OCR_PROGRESS, 0);
+
+        if (pagesNeedingOcrCount == 0) {
+            documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
+        }
     }
 
-    private String detectLanguage(PDDocument pdfDocument) throws IOException {
-        PDFTextStripper stripper = new PDFTextStripper();
-        stripper.setStartPage(1);
-        stripper.setEndPage(Math.min(5, pdfDocument.getNumberOfPages()));
-        String sampleText = stripper.getText(pdfDocument);
+    private List<Integer> listPagesNeedingOcr(UUID fsDocumentId) {
+        return documentStorage.listChunks(fsDocumentId, Integer.MAX_VALUE).stream()
+                .filter(chunk -> needsOcr(chunk.content()))
+                .map(PageChunk::pageNumber)
+                .sorted()
+                .toList();
+    }
+
+    private String detectLanguage(UUID fsDocumentId) {
+        String sampleText = documentStorage.listChunks(fsDocumentId, Integer.MAX_VALUE).stream()
+                .map(PageChunk::content)
+                .filter(content -> !needsOcr(content))
+                .findFirst()
+                .orElse("");
+
+        if (sampleText.isBlank()) {
+            return "eng";
+        }
+
         Language language = languageDetector.detectLanguageOf(sampleText);
         return toTesseractCode(language);
     }
 
-    private byte[] performOcr(PDDocument pdfDocument, String tesseractLanguageCode, Long databaseDocumentId)
+    private void ocrBatchInParallel(
+            List<Integer> batch,
+            PDFRenderer renderer,
+            String tesseractLanguageCode,
+            UUID fsDocumentId,
+            Long databaseDocumentId,
+            ExecutionContext stepExecutionContext,
+            AtomicInteger progress,
+            int maxParallelism)
             throws Exception {
-        PDFRenderer renderer = new PDFRenderer(pdfDocument);
+        int poolSize = Math.min(maxParallelism, batch.size());
 
-        int threads = maxParallelism;
-        AtomicInteger completedPages = new AtomicInteger(0);
+        try (ExecutorService executor = Executors.newFixedThreadPool(poolSize)) {
+            List<Future<Void>> futures = new ArrayList<>();
 
-        long ocrStart = System.currentTimeMillis();
-        List<Future<File>> futures = new ArrayList<>();
-
-        try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
-            Semaphore semaphore = new Semaphore(threads);
-
-            for (int i = 0; i < pdfDocument.getNumberOfPages(); i++) {
-                final int idx = i;
-                semaphore.acquire();
+            for (Integer pageNumber : batch) {
                 futures.add(executor.submit(() -> {
-                    File result = ocrPage(idx, renderer, tesseractLanguageCode, semaphore);
-                    int progress = completedPages.incrementAndGet();
-                    documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.OCR, progress);
-                    return result;
+                    ocrAndOverwriteChunk(pageNumber, renderer, tesseractLanguageCode, fsDocumentId);
+                    int updatedProgress = progress.incrementAndGet();
+                    stepExecutionContext.putInt(OCR_PROGRESS, updatedProgress);
+                    documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.OCR, updatedProgress);
+                    return null;
                 }));
             }
 
-            executor.shutdown();
-            boolean terminated = executor.awaitTermination(1L, TimeUnit.HOURS);
-            if (!terminated) {
-                log.error("OCR executor did not terminate gracefully within timeout");
+            for (Future<Void> future : futures) {
+                future.get();
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Parallel OCR interrupted", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Parallel OCR failed", e.getCause());
         }
-
-        long ocrDuration = System.currentTimeMillis() - ocrStart;
-        log.info(
-                "OCR completed in {}ms ({}s) ({} pages, {} threads)",
-                ocrDuration,
-                ocrDuration / 1000.0,
-                pdfDocument.getNumberOfPages(),
-                threads);
-
-        List<File> pagePdfs = collectResults(futures);
-        return mergePages(pagePdfs);
     }
 
-    private File ocrPage(int idx, PDFRenderer renderer, String tesseractLanguageCode, Semaphore semaphore)
-            throws Exception {
+    private void ocrAndOverwriteChunk(
+            int pageNumber, PDFRenderer renderer, String tesseractLanguageCode, UUID fsDocumentId) throws Exception {
+        BufferedImage image;
+        synchronized (this) {
+            image = renderer.renderImageWithDPI(pageNumber - 1, 300);
+        }
+
         try {
-            BufferedImage image;
-            synchronized (this) {
-                image = renderer.renderImageWithDPI(idx, 300);
-            }
-
-            File tmpImage = File.createTempFile("page_" + idx, ".png");
-            ImageIO.write(image, "png", tmpImage);
-            image.flush();
-
-            Tesseract tesseract = new Tesseract();
-            tesseract.setLanguage(tesseractLanguageCode);
-            tesseract.setDatapath(tessdataPath);
-
-            File tmpPdf = File.createTempFile("ocr_page_" + idx, "");
-            tesseract.createDocuments(
-                    tmpImage.getAbsolutePath(), tmpPdf.getAbsolutePath(), List.of(ITesseract.RenderedFormat.PDF));
-            tmpImage.delete();
-
-            return new File(tmpPdf.getAbsolutePath() + ".pdf");
+            String rawText = ocrPageProcessor.extractText(image, tesseractLanguageCode);
+            String pageText = normalizePageText(rawText);
+            documentStorage.createChunk(pageNumber, pageText, fsDocumentId);
+            log.debug("OCR overwrote chunk for page {} of document {}", pageNumber, documentId);
         } finally {
-            semaphore.release();
+            image.flush();
         }
-    }
-
-    private List<File> collectResults(List<Future<File>> futures) {
-        return futures.stream()
-                .map(f -> {
-                    try {
-                        return f.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new RuntimeException("Failed to retrieve OCR result for page", e);
-                    }
-                })
-                .toList();
-    }
-
-    private byte[] mergePages(List<File> pages) {
-        PDFMergerUtility merger = new PDFMergerUtility();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        merger.setDestinationStream(out);
-
-        for (File pagePdf : pages) {
-            try {
-                merger.addSource(pagePdf);
-            } catch (IOException e) {
-                log.warn("File {} not found while trying to merge PDFs", pagePdf.getName());
-            }
-        }
-
-        try {
-            merger.mergeDocuments(null);
-        } catch (IOException e) {
-            log.error("Failed to write the merged document");
-        }
-
-        return out.toByteArray();
     }
 
     // Subset of the supported tesseract languages. The full list can be found here:
@@ -224,7 +225,7 @@ public class OCRTasklet extends ProcessingTasklet {
             case JAPANESE -> "jpn";
             case KOREAN -> "kor";
             case ARABIC -> "ara";
-            default -> "eng"; // Fallback
+            default -> "eng";
         };
     }
 }

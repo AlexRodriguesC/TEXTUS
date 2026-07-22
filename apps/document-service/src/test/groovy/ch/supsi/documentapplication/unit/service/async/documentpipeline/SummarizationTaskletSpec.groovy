@@ -59,4 +59,22 @@ class SummarizationTaskletSpec extends Specification {
         1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SUMMARIZATION)
         status == RepeatStatus.FINISHED
     }
+
+    def "should initialize progress from persisted pages and remaining chunks"() {
+        given:
+        def chunkContext = TaskletTestSupport.chunkContext(
+                [(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId])
+        def existingPage = new ch.supsi.documentapplication.model.Page(1L, "title", "summary")
+        def pendingChunk = new ch.supsi.documentapplication.model.PageChunk(2, "chunk content")
+
+        when:
+        summarizationTasklet.execute(stepContribution, chunkContext)
+
+        then:
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> [existingPage]
+        1 * fileSystemDocumentStorage.listChunks(documentId, Integer.MAX_VALUE) >> [pendingChunk]
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.SUMMARIZATION, 2)
+        _ * fileSystemDocumentStorage.readNextChunk(documentId) >> Optional.empty()
+        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SUMMARIZATION)
+    }
 }

@@ -1,5 +1,7 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
+import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.normalizePageText;
+
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
@@ -26,8 +28,6 @@ import org.springframework.stereotype.Component;
 @Component
 @StepScope
 public class SegmentationTasklet extends ProcessingTasklet {
-
-    private static final int MIN_PAGE_TEXT_LENGTH = 40;
 
     private final IFileSystemDocumentStorage fileSystemDocumentStorage;
     private final DocumentTaskProgressService documentTaskProgressService;
@@ -57,16 +57,12 @@ public class SegmentationTasklet extends ProcessingTasklet {
 
         for (int page = 0; page < contents.size(); page++) {
             String pageText = contents.get(page);
-            if (pageText.isBlank() || pageText.length() < MIN_PAGE_TEXT_LENGTH) {
-                log.debug("Skipped empty page {} for document {}", page, documentId);
+            Integer pageNumber = page + 1;
+            if (fileSystemDocumentStorage.chunkExists(getDocumentIdAsUUID(), pageNumber)) {
+                log.debug("Chunk for page {} already exists for document {}, skipping", pageNumber, documentId);
             } else {
-                Integer pageNumber = page + 1;
-                if (fileSystemDocumentStorage.chunkExists(getDocumentIdAsUUID(), pageNumber)) {
-                    log.debug("Chunk for page {} already exists for document {}, skipping", pageNumber, documentId);
-                } else {
-                    String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
-                    log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
-                }
+                String pageId = fileSystemDocumentStorage.createChunk(pageNumber, pageText, getDocumentIdAsUUID());
+                log.debug("Created page {} for document {}, page {}", pageId, documentId, page);
             }
             documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.SEGMENTATION, page + 1);
         }
@@ -87,23 +83,9 @@ public class SegmentationTasklet extends ProcessingTasklet {
                 stripper.setEndPage(page);
 
                 String rawPageText = stripper.getText(pdfDocument);
-
-                String pageText = normalizePageText(rawPageText);
-
-                contents.add(pageText);
+                contents.add(normalizePageText(rawPageText));
             }
         }
         return contents;
-    }
-
-    private String normalizePageText(String text) {
-        if (text == null) {
-            return "";
-        }
-
-        return text.replace("\r", "")
-                .replaceAll("[ \\t]+", " ")
-                .replaceAll("\\n{3,}", "\n\n")
-                .trim();
     }
 }

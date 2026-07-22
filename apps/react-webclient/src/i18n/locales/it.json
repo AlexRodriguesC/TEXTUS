@@ -186,6 +186,12 @@
       "action": "Riprova elaborazione",
       "success": "Elaborazione del documento riavviata.",
       "error": "Impossibile riavviare l'elaborazione del documento."
+    },
+    "tasks": {
+      "OCR": "OCR",
+      "SEGMENTATION": "Segmentazione",
+      "SUMMARIZATION": "Sintesi",
+      "TOPIC": "Estrazione argomenti"
     }
   },
   "mindmap": {

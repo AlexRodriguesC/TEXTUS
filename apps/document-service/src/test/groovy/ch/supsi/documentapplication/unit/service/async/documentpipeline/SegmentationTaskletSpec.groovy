@@ -34,7 +34,7 @@ class SegmentationTaskletSpec extends Specification {
 
     def "should extract page text and create chunk when document exists"() {
         given:
-        def pdfBytes = minimalPdfBytes()
+        def pdfBytes = sufficientTextPdfBytes()
         def fsDocument = FsDocument.create(documentId, pdfBytes)
         def chunkContext = TaskletTestSupport.chunkContext(
                 [(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId])
@@ -52,14 +52,42 @@ class SegmentationTaskletSpec extends Specification {
         status == RepeatStatus.FINISHED
     }
 
-    private static byte[] minimalPdfBytes() {
+    def "should create chunk for short-text page instead of skipping it"() {
+        given:
+        def pdfBytes = shortTextPdfBytes()
+        def fsDocument = FsDocument.create(documentId, pdfBytes)
+        def chunkContext = TaskletTestSupport.chunkContext(
+                [(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId])
+
+        when:
+        RepeatStatus status = segmentationTasklet.execute(stepContribution, chunkContext)
+
+        then:
+        1 * fileSystemDocumentStorage.read(documentId) >> fsDocument
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.SEGMENTATION, 1)
+        1 * fileSystemDocumentStorage.chunkExists(documentId, 1) >> false
+        1 * fileSystemDocumentStorage.createChunk(1, "hi", documentId) >> "page-1"
+        1 * documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.SEGMENTATION, 1)
+        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SEGMENTATION)
+        status == RepeatStatus.FINISHED
+    }
+
+    private static byte[] sufficientTextPdfBytes() {
+        textPdfBytes("This page contains enough text for segmentation to keep it.")
+    }
+
+    private static byte[] shortTextPdfBytes() {
+        textPdfBytes("hi")
+    }
+
+    private static byte[] textPdfBytes(String text) {
         def document = new PDDocument()
         document.addPage(new PDPage())
         def content = new PDPageContentStream(document, document.getPage(0))
         content.beginText()
         content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12)
         content.newLineAtOffset(100, 700)
-        content.showText("This page contains enough text for segmentation to keep it.")
+        content.showText(text)
         content.endText()
         content.close()
         def output = new ByteArrayOutputStream()

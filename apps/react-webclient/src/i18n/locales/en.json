@@ -198,6 +198,12 @@
       "action": "Retry processing",
       "success": "Document processing restarted.",
       "error": "Failed to restart document processing."
+    },
+    "tasks": {
+      "OCR": "OCR",
+      "SEGMENTATION": "Segmentation",
+      "SUMMARIZATION": "Summarization",
+      "TOPIC": "Topic extraction"
     }
   },
   "mindmap": {

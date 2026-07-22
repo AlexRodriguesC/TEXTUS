@@ -100,26 +100,26 @@ function TaskProgress({ task, variant }: TaskProgressProps) {
   const Icon = isComplete ? CheckCircle2 : task.icon;
 
   return (
-    <div className="flex items-center gap-3">
-      <Icon
-        className={cn(
-          "size-4.5 shrink-0",
-          isComplete && "text-green-500",
-          effectiveVariant === "error" && "text-destructive",
-        )}
-      />
-      <span className="min-w-0 truncate text-sm">{task.label}</span>
-      <Progress
-        value={percentage}
-        className={cn(
-          "flex-1 **:data-[slot=progress-track]:h-2 **:data-[slot=progress-indicator]:duration-500 **:data-[slot=progress-indicator]:ease-out",
-          INDICATOR_VARIANT_CLASSES[effectiveVariant],
-        )}
-      />
-      <span className="w-10 shrink-0 text-right text-sm tabular-nums text-muted-foreground">
-        {displayPercent}%
-      </span>
-    </div>
+      <div className="flex items-center gap-3">
+        <Icon
+            className={cn(
+                "size-4.5 shrink-0",
+                isComplete && "text-green-500",
+                effectiveVariant === "error" && "text-destructive",
+            )}
+        />
+        <span className="w-32 shrink-0 truncate text-sm">{task.label}</span>
+        <Progress
+            value={percentage}
+            className={cn(
+                "w-32 shrink-0 **:data-[slot=progress-track]:h-2 **:data-[slot=progress-indicator]:duration-500 **:data-[slot=progress-indicator]:ease-out",
+                INDICATOR_VARIANT_CLASSES[effectiveVariant],
+            )}
+        />
+        <span className="w-10 shrink-0 text-right text-sm tabular-nums text-muted-foreground">
+      {displayPercent}%
+    </span>
+      </div>
   );
 }
 
