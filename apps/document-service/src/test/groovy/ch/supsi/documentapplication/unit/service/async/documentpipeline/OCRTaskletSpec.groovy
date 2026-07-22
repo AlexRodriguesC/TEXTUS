@@ -131,6 +131,7 @@ class OCRTaskletSpec extends Specification {
         def stepExecutionContext = new ExecutionContext()
         stepExecutionContext.put("OCR_TASK_STARTED", true)
         stepExecutionContext.putInt("OCR_PROGRESS", 1)
+        stepExecutionContext.putInt("LAST_OCR_ATTEMPTED_PAGE", 1)
         def chunkContext = TaskletTestSupport.chunkContext(
                 [(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId],
                 stepExecutionContext)
@@ -149,6 +150,30 @@ class OCRTaskletSpec extends Specification {
             "2"
         }
         1 * documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.OCR, 2)
+        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR)
+        status == RepeatStatus.FINISHED
+    }
+
+    def "should finish OCR when result text is still below threshold"() {
+        given:
+        def chunks = mutableChunks(new PageChunk(1, "short"))
+        def pdfBytes = multiPagePdfBytes(1)
+        def chunkContext = chunkContextWithFreshStepContext(databaseDocumentId)
+        def stillShortOcrText = "tiny ocr"
+
+        when:
+        RepeatStatus status = ocrTasklet.execute(stepContribution, chunkContext)
+
+        then:
+        1 * documentStorage.read(documentId) >> FsDocument.create(documentId, pdfBytes)
+        _ * documentStorage.listChunks(documentId, Integer.MAX_VALUE) >> { chunksSnapshot(chunks) }
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, 1)
+        1 * ocrPageProcessor.extractText(_, "eng") >> stillShortOcrText
+        1 * documentStorage.createChunk(1, stillShortOcrText, documentId) >> { int page, String text, UUID docId ->
+            overwriteChunk(chunks, page, text)
+            "1"
+        }
+        1 * documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.OCR, 1)
         1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR)
         status == RepeatStatus.FINISHED
     }

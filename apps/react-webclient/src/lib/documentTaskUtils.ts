@@ -3,8 +3,8 @@ import TaskType, { type TaskTypeType } from "@/classes/TaskType.ts";
 import TaskVariant from "@/classes/TaskVariant.ts";
 
 export const PIPELINE_TASK_TYPES: TaskTypeType[] = [
-  TaskType.OCR,
   TaskType.SEGMENTATION,
+  TaskType.OCR,
   TaskType.SUMMARIZATION,
   TaskType.TOPIC,
 ];

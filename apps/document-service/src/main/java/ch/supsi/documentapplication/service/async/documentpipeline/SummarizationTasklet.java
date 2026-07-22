@@ -216,6 +216,13 @@ public class SummarizationTasklet extends ProcessingTasklet {
     }
 
     private int summarizeChunk(PageChunk chunk, Long databaseDocumentId, UUID fsDocumentId) throws RetryException {
+        if (chunk.content().isBlank()) {
+            log.info(
+                    "Skipping empty page for document with documentId: {}, page: {}",
+                    databaseDocumentId,
+                    chunk.pageNumber());
+            return chunk.pageNumber();
+        }
         var result = summarisationClient.getResult(chunk.content());
         Long pageId = databaseDocumentStorage.create(result.result(), spaceId, databaseDocumentId);
         result.usages().forEach(usage -> aiUsageStorage.create("page", pageId, "summarize", usage));

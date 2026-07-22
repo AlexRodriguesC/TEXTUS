@@ -1,7 +1,7 @@
 import { MeshGradientBackground } from "@/components/ui/mesh-gradient.tsx";
 import { useTheme } from "@/hooks/useTheme.ts";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
-import { AppSidebar } from "@/components/left-sidebar/Sidebar.tsx";
+import { AppSidebar } from "@/components/left-sidebar/AppSidebar.tsx";
 import { type PropsWithChildren, useRef } from "react";
 import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
 import { RightSidebar } from "@/components/right-sidebar/RightSidebar.tsx";

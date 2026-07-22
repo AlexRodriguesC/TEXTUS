@@ -1,8 +1,5 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
-import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.needsOcr;
-import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.normalizePageText;
-
 import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.FsDocument;
@@ -40,8 +37,10 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class OCRTasklet extends ProcessingTasklet {
 
+    public static final int MIN_PAGE_TEXT_LENGTH = 40;
     private static final String OCR_TASK_STARTED = "OCR_TASK_STARTED";
     private static final String OCR_PROGRESS = "OCR_PROGRESS";
+    private static final String LAST_OCR_ATTEMPTED_PAGE = "LAST_OCR_ATTEMPTED_PAGE";
 
     private final IFileSystemDocumentStorage documentStorage;
     private final LanguageDetector languageDetector;
@@ -73,7 +72,8 @@ public class OCRTasklet extends ProcessingTasklet {
         ExecutionContext stepExecutionContext =
                 chunkContext.getStepContext().getStepExecution().getExecutionContext();
 
-        List<Integer> pagesNeedingOcr = listPagesNeedingOcr(fsDocumentId);
+        int lastAttemptedPage = getValue(stepExecutionContext, LAST_OCR_ATTEMPTED_PAGE, 0, Integer.class);
+        List<Integer> pagesNeedingOcr = listPagesNeedingOcr(fsDocumentId, lastAttemptedPage);
         initializeTaskIfNeeded(stepExecutionContext, databaseDocumentId, pagesNeedingOcr.size());
 
         if (pagesNeedingOcr.isEmpty()) {
@@ -83,7 +83,6 @@ public class OCRTasklet extends ProcessingTasklet {
         }
 
         FsDocument fsDocument = documentStorage.read(fsDocumentId);
-        int processedThisStep = 0;
         int maxChunksPerStep = appProperties.getMaxChunksPerStep();
         int maxParallelism = appProperties.getMaxParallelism();
         int batchLimit = Math.min(maxChunksPerStep, pagesNeedingOcr.size());
@@ -104,11 +103,13 @@ public class OCRTasklet extends ProcessingTasklet {
                     progress,
                     maxParallelism);
 
-            processedThisStep = batch.size();
-            log.info("OCR processed {} pages for document {}", processedThisStep, documentId);
+            log.info("OCR processed {} pages for document {}", batch.size(), documentId);
         }
 
-        List<Integer> remainingPages = listPagesNeedingOcr(fsDocumentId);
+        int lastProcessedPage = batch.stream().max(Integer::compareTo).orElse(lastAttemptedPage);
+        stepExecutionContext.putInt(LAST_OCR_ATTEMPTED_PAGE, lastProcessedPage);
+
+        List<Integer> remainingPages = listPagesNeedingOcr(fsDocumentId, lastProcessedPage);
         if (remainingPages.isEmpty()) {
             documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
             return RepeatStatus.FINISHED;
@@ -127,14 +128,16 @@ public class OCRTasklet extends ProcessingTasklet {
         documentTaskProgressService.startTask(databaseDocumentId, TaskType.OCR, maxProgress);
         stepExecutionContext.put(OCR_TASK_STARTED, true);
         stepExecutionContext.putInt(OCR_PROGRESS, 0);
+        stepExecutionContext.putInt(LAST_OCR_ATTEMPTED_PAGE, 0);
 
         if (pagesNeedingOcrCount == 0) {
             documentTaskProgressService.completeTask(databaseDocumentId, TaskType.OCR);
         }
     }
 
-    private List<Integer> listPagesNeedingOcr(UUID fsDocumentId) {
+    private List<Integer> listPagesNeedingOcr(UUID fsDocumentId, int minPageExclusive) {
         return documentStorage.listChunks(fsDocumentId, Integer.MAX_VALUE).stream()
+                .filter(chunk -> chunk.pageNumber() > minPageExclusive)
                 .filter(chunk -> needsOcr(chunk.content()))
                 .map(PageChunk::pageNumber)
                 .sorted()
@@ -207,6 +210,24 @@ public class OCRTasklet extends ProcessingTasklet {
         } finally {
             image.flush();
         }
+    }
+
+    public boolean needsOcr(String text) {
+        if (text == null) {
+            return true;
+        }
+        return text.trim().length() < MIN_PAGE_TEXT_LENGTH;
+    }
+
+    public String normalizePageText(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        return text.replace("\r", "")
+                .replaceAll("[ \\t]+", " ")
+                .replaceAll("\\n{3,}", "\n\n")
+                .trim();
     }
 
     // Subset of the supported tesseract languages. The full list can be found here:

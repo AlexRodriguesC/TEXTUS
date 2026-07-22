@@ -86,11 +86,18 @@ public class BatchJobRecoveryService {
                             execution.getId());
                     recoverAndRestart(execution);
                 } catch (Exception e) {
-                    log.error(
-                            "Failed to recover {} execution {} after application restart",
-                            jobName,
-                            execution.getId(),
-                            e);
+                    try {
+                        if (execution.isRunning()) {
+                            jobOperator.stop(execution);
+                        }
+                        log.error("Stopped {} execution {} after application restart", jobName, execution.getId(), e);
+                    } catch (Exception e2) {
+                        log.error(
+                                "Failed to recover {} execution {} after application restart",
+                                jobName,
+                                execution.getId(),
+                                e2);
+                    }
                 }
             }
 

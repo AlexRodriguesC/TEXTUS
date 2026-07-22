@@ -9,7 +9,7 @@ import {
   type ChapterResponseDTO,
   type LessonResponseDTO,
 } from "@/client/model";
-import PathNode from "@/pages/space/learn/PathNodeType.tsx";
+import PathNode from "@/pages/space/learn/PathNode.tsx";
 import { cn } from "@/lib/utils.ts";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
 import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";

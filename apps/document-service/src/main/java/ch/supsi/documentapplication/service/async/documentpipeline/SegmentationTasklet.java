@@ -1,7 +1,5 @@
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
-import static ch.supsi.documentapplication.service.async.documentpipeline.PageTextThresholds.normalizePageText;
-
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.exception.FileSystemException;
 import ch.supsi.documentapplication.model.FsDocument;
@@ -83,7 +81,7 @@ public class SegmentationTasklet extends ProcessingTasklet {
                 stripper.setEndPage(page);
 
                 String rawPageText = stripper.getText(pdfDocument);
-                contents.add(normalizePageText(rawPageText));
+                contents.add(rawPageText);
             }
         }
         return contents;

@@ -49,7 +49,7 @@ function DocumentRowStatus({
                 <PopoverTrigger asChild>
                   <span className="min-w-0 truncate cursor-pointer">{displayName}</span>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 max-h-80 overflow-auto">
+                <PopoverContent className="w-96 max-h-80 overflow-auto bg-muted/80">
                   <ResourceProcessingStatus tasks={toDisplayTasks(tasks, t)} />
                 </PopoverContent>
               </Popover>
