@@ -16,7 +16,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 @RestController
@@ -171,12 +175,40 @@ public class ChatController {
                                 mediaType = MediaType.APPLICATION_JSON_VALUE,
                                 schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    public Flux<String> sendMessage(
+    public SseEmitter sendMessage(
             @PathVariable Long spaceId,
             @PathVariable UUID chatId,
             @Valid @RequestBody SendMessageRequestDTO request,
-            @Parameter(hidden = true) Authentication authentication) {
+            @Parameter(hidden = true) Authentication authentication,
+            HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache, no-transform");
+        response.setHeader("Connection", "keep-alive");
+
         String username = authentication.getName();
-        return chatService.streamMessage(username, spaceId, chatId, request.message(), request.model());
+        Flux<String> flux = chatService.streamMessage(username, spaceId, chatId, request.message(), request.model());
+
+        SseEmitter emitter = new SseEmitter(0L);
+        Disposable subscription = flux.subscribe(
+                chunk -> {
+                    try {
+                        emitter.send(SseEmitter.event().data(chunk));
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                    }
+                },
+                emitter::completeWithError,
+                emitter::complete);
+
+        emitter.onCompletion(subscription::dispose);
+        emitter.onTimeout(() -> {
+            subscription.dispose();
+            emitter.complete();
+        });
+        emitter.onError(error -> {
+            subscription.dispose();
+            emitter.completeWithError(error);
+        });
+
+        return emitter;
     }
 }

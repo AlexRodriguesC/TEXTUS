@@ -7,6 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.JobInstance;
+import org.springframework.batch.core.launch.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.JobRestartException;
 import org.springframework.batch.core.repository.JobRepository;
@@ -49,8 +50,13 @@ public class BatchJobRecoveryService {
         }
     }
 
+    /**
+     * Recovers a stuck execution if possible. UNKNOWN executions cannot be
+     * recovered/restarted (their state cannot be reliably determined), so callers
+     * must handle that case separately via {@link #abandonUnrecoverable(JobExecution)}.
+     */
     public JobExecution recoverIfNeeded(JobExecution jobExecution) {
-        if (isInterrupted(jobExecution.getStatus())) {
+        if (isRecoverable(jobExecution.getStatus())) {
             return jobOperator.recover(jobExecution);
         }
 
@@ -60,6 +66,10 @@ public class BatchJobRecoveryService {
     public JobExecution recoverAndRestart(JobExecution jobExecution) throws JobRestartException {
         JobExecution recovered = recoverIfNeeded(jobExecution);
         return jobOperator.restart(recovered);
+    }
+
+    public JobExecution abandonUnrecoverable(JobExecution jobExecution) throws JobExecutionAlreadyRunningException {
+        return jobOperator.abandon(jobExecution);
     }
 
     private void recoverInterruptedJobs(String jobName, Set<Long> recoveredExecutionIds) {
@@ -79,30 +89,71 @@ public class BatchJobRecoveryService {
                     continue;
                 }
 
-                try {
-                    log.warn(
-                            "Recovering interrupted {} execution {} after application restart",
-                            jobName,
-                            execution.getId());
-                    recoverAndRestart(execution);
-                } catch (Exception e) {
-                    try {
-                        if (execution.isRunning()) {
-                            jobOperator.stop(execution);
-                        }
-                        log.error("Stopped {} execution {} after application restart", jobName, execution.getId(), e);
-                    } catch (Exception e2) {
-                        log.error(
-                                "Failed to recover {} execution {} after application restart",
-                                jobName,
-                                execution.getId(),
-                                e2);
-                    }
-                }
+                handleInterruptedExecution(jobName, execution);
             }
 
             page++;
         } while (instances.size() == JOB_INSTANCE_PAGE_SIZE);
+    }
+
+    private void handleInterruptedExecution(String jobName, JobExecution execution) {
+        BatchStatus status = execution.getStatus();
+
+        if (status == BatchStatus.UNKNOWN) {
+            // UNKNOWN executions have an indeterminate final state and cannot be
+            // safely recovered or restarted by the framework; mark them ABANDONED.
+            try {
+                abandonUnrecoverable(execution);
+                log.warn(
+                        "Abandoned {} execution {} with UNKNOWN status after application restart (not restartable)",
+                        jobName,
+                        execution.getId());
+            } catch (Exception e) {
+                log.error(
+                        "Failed to abandon {} execution {} with UNKNOWN status after application restart",
+                        jobName,
+                        execution.getId(),
+                        e);
+            }
+            return;
+        }
+
+        try {
+            log.warn("Recovering interrupted {} execution {} after application restart", jobName, execution.getId());
+            recoverAndRestart(execution);
+        } catch (Exception e) {
+            try {
+                if (execution.isRunning()) {
+                    jobOperator.stop(execution);
+                }
+                log.error("Stopped {} execution {} after application restart", jobName, execution.getId(), e);
+            } catch (Exception e2) {
+                try {
+                    abandonUnrecoverable(execution);
+                    log.error(
+                            "Abandoned {} execution {} after application restart (could not stop or restart)",
+                            jobName,
+                            execution.getId(),
+                            e2);
+                } catch (Exception e3) {
+                    log.error(
+                            "Failed to recover, stop, or abandon {} execution {} after application restart",
+                            jobName,
+                            execution.getId(),
+                            e3);
+                }
+            }
+        }
+    }
+
+    /**
+     * Statuses eligible for {@link org.springframework.batch.core.launch.JobOperator#recover}.
+     * Per its contract, recover() is meant for executions stuck in STARTED (or, by
+     * extension, STOPPING) due to an abrupt shutdown — not for UNKNOWN, which is
+     * handled separately by abandonment.
+     */
+    private static boolean isRecoverable(BatchStatus status) {
+        return status == BatchStatus.STARTED || status == BatchStatus.STOPPING;
     }
 
     private static boolean isInterrupted(BatchStatus status) {

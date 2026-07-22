@@ -6,17 +6,33 @@ import ch.supsi.documentapplication.model.Provider;
 import ch.supsi.documentapplication.model.RawModel;
 
 import java.util.List;
+import java.util.Set;
 
 public class ModelMapper {
 
+    private static final Set<String> CURATED_MODEL_IDS = Set.of(
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "gpt-5-nano",
+            "qwen-flash",
+            "gpt-oss-120b",
+            "claude-haiku-4-5",
+            "claude-haiku-4-5-free"
+    );
+
     public ModelsResponseDTO toDTO(List<RawModel> rawModels) {
         List<ModelResponseDTO> models = rawModels.stream()
+                .filter(this::isCurated)
                 .filter(this::isTextOnly)
                 .filter(m -> m.contextLength() > 0)
                 .filter(m -> m.stability() == null || !m.stability().equals("unstable"))
                 .map(this::toModelResponseDTO)
                 .toList();
         return new ModelsResponseDTO(models);
+    }
+
+    private boolean isCurated(RawModel model) {
+        return CURATED_MODEL_IDS.contains(model.id());
     }
 
     private boolean isTextOnly(RawModel model) {

@@ -122,20 +122,28 @@ export async function streamChatMessage(
     }
 
     buffer += decoder.decode(value, { stream: true });
-    buffer = processSseBuffer(buffer, onToken);
+    buffer = await processSseBuffer(buffer, onToken);
   }
 
-  processSseBuffer(buffer, onToken, true);
+  await processSseBuffer(buffer, onToken, true);
 }
 
-function processSseBuffer(
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
+async function processSseBuffer(
   buffer: string,
   onToken: (token: string) => void,
   flush = false,
-): string {
-  const events = buffer.split("\n\n");
+): Promise<string> {
+  const normalized = buffer.replace(/\r\n/g, "\n");
+  const events = normalized.split("\n\n");
   const remainder = flush ? "" : (events.pop() ?? "");
 
+  const tokens: string[] = [];
   for (const event of events) {
     const dataLines = event
       .split("\n")
@@ -143,12 +151,19 @@ function processSseBuffer(
       .map((line) => line.slice(5).trimStart());
 
     if (dataLines.length > 0) {
-      onToken(dataLines.join("\n"));
+      tokens.push(dataLines.join("\n"));
       continue;
     }
 
     if (event.trim()) {
-      onToken(event);
+      tokens.push(event);
+    }
+  }
+
+  for (let index = 0; index < tokens.length; index++) {
+    onToken(tokens[index]);
+    if (index < tokens.length - 1) {
+      await nextFrame();
     }
   }
 
