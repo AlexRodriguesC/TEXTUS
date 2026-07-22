@@ -1,11 +1,28 @@
-# Test your FastAPI endpoints
+### Health check
+GET http://localhost:8000/health
 
-GET http://127.0.0.1:8000/
-Accept: application/json
+### List available metrics
+GET http://localhost:8000/api/v1/metrics
 
-###
+### Create evaluation
+POST http://localhost:8000/api/v1/evaluations
+Content-Type: application/json
 
-GET http://127.0.0.1:8000/hello/User
-Accept: application/json
+{
+  "content_type": "summary",
+  "input": "The quick brown fox jumps over the lazy dog.",
+  "actual_output": "A fox jumped over a dog.",
+  "expected_output": "A quick fox jumped over a lazy dog.",
+  "metrics": [
+    {
+      "name": "summarization",
+      "threshold": 0.5
+    }
+  ]
+}
 
-###
+### Get evaluation by ID
+GET http://localhost:8000/api/v1/evaluations/{{evaluation_id}}
+
+### List evaluations
+GET http://localhost:8000/api/v1/evaluations?content_type=summary&limit=20&offset=0
