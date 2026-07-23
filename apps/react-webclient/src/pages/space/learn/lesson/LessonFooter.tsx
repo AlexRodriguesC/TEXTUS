@@ -6,7 +6,7 @@ import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLesson from "@/hooks/useLesson.tsx";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import PathConstants from "@/routing/pathConstants.ts";
 import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
@@ -35,7 +35,7 @@ function LessonFooter({
 }: LessonFooterProps) {
   const { t } = useTranslation();
   const { lessonId } = useLessonId();
-  const { spaceId, strSpaceId } = useSpaceId();
+  const { strSpaceId } = useSpaceId();
   const { lesson, exerciseLoading, nextExercise, deleteExercises, isDeletingExercises, invalidateLearningPath } =
     useLesson({ lessonId: lessonId });
   const { path } = useLearningPath();

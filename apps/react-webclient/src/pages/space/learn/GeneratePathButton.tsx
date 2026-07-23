@@ -1,4 +1,4 @@
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";

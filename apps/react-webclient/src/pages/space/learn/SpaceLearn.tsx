@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
 import { useEffect, useRef, useState } from "react";
 import { Separator } from "@/components/ui/separator.tsx";
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import type Chapter from "@/classes/Chapter.ts";
 import type Lesson from "@/classes/Lesson.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";

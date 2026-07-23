@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import type LearningPath from "@/classes/LearningPath.ts";
 import type PathSettingsClass from "@/classes/PathSettings.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";

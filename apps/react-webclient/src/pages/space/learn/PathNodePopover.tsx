@@ -6,7 +6,7 @@ import LessonAttemptsIndicator from "@/components/LessonAttemptsIndicator.tsx";
 import { cn } from "@/lib/utils.ts";
 import { useTranslation } from "react-i18next";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 

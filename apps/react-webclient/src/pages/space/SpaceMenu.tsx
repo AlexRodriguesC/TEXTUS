@@ -1,4 +1,3 @@
-import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import DocumentStatusList from "@/pages/space/DocumentStatusList.tsx";
 import UploadZone from "@/components/UploadZone.tsx";
@@ -10,6 +9,7 @@ import PathConstants from "@/routing/pathConstants.ts";
 import EmptySpace from "@/pages/space/EmptySpace.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { useTranslation } from "react-i18next";
+import IllustratedAside from "@/components/IllustratedAside.tsx";
 
 function SpaceMenu() {
   const { spaceId } = useSpaceId();
@@ -38,7 +38,7 @@ function SpaceMenu() {
 
   return (
     <CenteredPage>
-      <div className={"max-w-[80%] place-content-center"}>
+      <div className={"place-content-center"}>
         <div className={"flex w-full justify-end"}>
           <span className="flex items-center h-[2em] leading-none overflow-hidden cursor-pointer">
             {!tutorialEnabled && (
@@ -50,9 +50,7 @@ function SpaceMenu() {
             )}
           </span>
         </div>
-        <div className="flex flex-col md:flex-row w-full gap-6 items-center place-content-center">
-          <ResponsiveLottie src={"/animations/menu.lottie"} />
-
+        <IllustratedAside className={"w-full min-w-[90%]"} lottieSrc={"/animations/menu.lottie"}>
           <div className="flex flex-col gap-4">
             <UploadZone />
 
@@ -60,7 +58,7 @@ function SpaceMenu() {
               <DocumentStatusList />
             </div>
           </div>
-        </div>
+        </IllustratedAside>
       </div>
     </CenteredPage>
   );

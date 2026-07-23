@@ -5,7 +5,7 @@ import PathConstants from "@/routing/pathConstants.ts";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useTranslation } from "react-i18next";
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import useMindMap from "@/hooks/useMindMap.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import MindMapJobStatus from "@/classes/MindMapJobStatus.ts";

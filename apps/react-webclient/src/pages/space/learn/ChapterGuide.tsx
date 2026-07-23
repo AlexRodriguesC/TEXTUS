@@ -1,4 +1,4 @@
-import useLearningPath from "@/hooks/useLearningPath.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import useTopics from "@/hooks/useTopics.tsx";
 import { useEffect, useMemo } from "react";
 import useChapterId from "@/hooks/useChapterId.ts";
