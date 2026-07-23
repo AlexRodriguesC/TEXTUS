@@ -25,10 +25,7 @@ export function isDone(tasks: Task[]): boolean {
 }
 
 export function isInProgress(tasks: Task[]): boolean {
-  if (isFailed(tasks) || isDone(tasks)) {
-    return false;
-  }
-  return true;
+  return !(isFailed(tasks) || isDone(tasks));
 }
 
 export function shouldPollDocuments(

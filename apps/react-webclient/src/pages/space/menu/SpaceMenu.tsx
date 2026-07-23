@@ -25,7 +25,7 @@ function SpaceMenu() {
   if (tutorialEnabled) {
     return (
       <CenteredPage>
-        <div className={"min-w-[75%] md:min-w-[50%] lg:min-w-[50%]"}>
+        <div className={"min-w-[90%] md:min-w-[50%] lg:min-w-[50%]"}>
           <EmptySpace
             onCompleted={() => {
               disableTutorial();

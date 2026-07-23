@@ -21,7 +21,7 @@ class ModelMapperSpec extends Specification {
         Pricing pricing = pricing("0.01", "0.02")
         Provider provider = new Provider("provider-1", "", null, "stable")
         RawModel rawModel = new RawModel(
-                "model-10", "Model Ten", "desc",
+                "gpt-4.1-mini", "Model Ten", "desc",
                 architecture, [provider], pricing, 4096, false, false, false, "stable"
         )
 
@@ -31,7 +31,7 @@ class ModelMapperSpec extends Specification {
         then:
         result.models().size() == 1
         ModelResponseDTO dto = result.models().first()
-        dto.id() == "model-10"
+        dto.id() == "gpt-4.1-mini"
         dto.name() == "Model Ten"
         dto.description() == "desc"
         dto.promptPrice() == "0.01"
@@ -47,7 +47,7 @@ class ModelMapperSpec extends Specification {
         Pricing pricing = pricing("0.01", "0.02")
         Provider provider = new Provider("provider-1", "ab", null, "beta")
         RawModel rawModel = new RawModel(
-                "model-10", "Model Ten", "desc",
+                "gpt-4.1-mini", "Model Ten", "desc",
                 architecture, [provider], pricing, 1024, false, false, false, null
         )
 
@@ -63,7 +63,7 @@ class ModelMapperSpec extends Specification {
         Architecture architecture = architecture(["text"], ["text"])
         Pricing pricing = pricing("0.01", "0.02")
         RawModel rawModel = new RawModel(
-                "model-10", "Model Ten", "desc",
+                "gpt-4.1-mini", "Model Ten", "desc",
                 architecture, [], pricing, 1024, false, false, false, null
         )
 
@@ -79,7 +79,7 @@ class ModelMapperSpec extends Specification {
         Architecture architecture = architecture(["text"], ["text"])
         Pricing pricing = pricing("0.01", "0.02")
         RawModel rawModel = new RawModel(
-                "model-10", "Model Ten", "desc",
+                "gpt-4.1-mini", "Model Ten", "desc",
                 architecture, [], pricing, 1024, false, false, false, "StAbLe"
         )
 
@@ -88,6 +88,22 @@ class ModelMapperSpec extends Specification {
 
         then:
         result.models().first().stability() == "stable"
+    }
+
+    def "should filter out model not in curated list"() {
+        given:
+        Architecture architecture = architecture(["text"], ["text"])
+        Pricing pricing = pricing("0.01", "0.02")
+        RawModel rawModel = new RawModel(
+                "model-10", "Model Ten", "desc",
+                architecture, [], pricing, 1024, false, false, false, "stable"
+        )
+
+        when:
+        ModelsResponseDTO result = mapper.toDTO([rawModel])
+
+        then:
+        result.models().isEmpty()
     }
 
     def "should filter out model with null architecture"() {
@@ -193,11 +209,11 @@ class ModelMapperSpec extends Specification {
         result.models().isEmpty()
     }
 
-    Architecture architecture(def input = [], def output = [], String tokenizer = "gpt") {
+    static Architecture architecture(def input = [], def output = [], String tokenizer = "gpt") {
         return new Architecture(input, output, tokenizer)
     }
 
-    Pricing pricing(String prompt = "0", String completion = "1", String request = "3") {
+    static Pricing pricing(String prompt = "0", String completion = "1", String request = "3") {
         return new Pricing(prompt, completion, request)
     }
 }

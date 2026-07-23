@@ -25,6 +25,10 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@/hooks/shadcn/useIsMobile.ts", () => ({
+  useIsMobile: () => false,
+}));
+
 function buildDocument(tasks: Task[]): Document {
   return new Document("sample-document.pdf", 1, tasks);
 }
@@ -48,7 +52,7 @@ describe("DocumentRowStatus", () => {
     cleanup();
   });
 
-  it("should show spinner and tooltip trigger while in progress", () => {
+  it("should show spinner and hint overlay trigger while in progress", () => {
     renderRow(
       buildDocument([
         new Task("1:OCR", TaskType.OCR, 1, 5, TaskVariant.DEFAULT),

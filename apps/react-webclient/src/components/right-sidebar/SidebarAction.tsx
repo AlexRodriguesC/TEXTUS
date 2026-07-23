@@ -1,11 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { HintOverlay } from "@/components/HintOverlay.tsx";
 import { ChevronRight, Plus } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
 import { Link } from "@tanstack/react-router";
@@ -24,8 +20,9 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
 
   if (!open) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <HintOverlay
+        side="left"
+        trigger={
           <Button
             variant="secondary"
             className="relative h-10 w-10 flex items-center justify-center rounded-xl bg-muted/40 p-0"
@@ -38,15 +35,16 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
               </span>
             </Link>
           </Button>
-        </TooltipTrigger>
-        <TooltipContent side={"left"}>{t(tooltipKey)}</TooltipContent>
-      </Tooltip>
+        }
+        content={t(tooltipKey)}
+      />
     );
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <HintOverlay
+      side="left"
+      trigger={
         <Button
           onClick={() => isMobile ? setOpenMobile(false) : setOpen(false)}
           variant="secondary"
@@ -63,9 +61,9 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
             </span>
           </Link>
         </Button>
-      </TooltipTrigger>
-      <TooltipContent side={"left"}>{t(tooltipKey)}</TooltipContent>
-    </Tooltip>
+      }
+      content={t(tooltipKey)}
+    />
   );
 }
 

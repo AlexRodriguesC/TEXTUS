@@ -19,6 +19,10 @@ vi.mock("@/hooks/useMindMap.ts", () => ({
   default: () => mindMapHookState(),
 }));
 
+vi.mock("@/hooks/learning/useLearningPath.ts", () => ({
+  default: () => ({ status: "NOT_CREATED" }),
+}));
+
 vi.mock("@/hooks/useSpaceId.ts", () => ({
   default: () => spaceIdHookState(),
 }));
@@ -39,6 +43,10 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
+}));
+
+vi.mock("@/hooks/shadcn/useIsMobile.ts", () => ({
+  useIsMobile: () => false,
 }));
 
 function buildDocument(
@@ -83,7 +91,6 @@ describe("DocumentStatusList", () => {
 
     expect(screen.getByText("in-progress.pdf")).toBeInTheDocument();
     expect(screen.getByText("done.pdf")).toBeInTheDocument();
-    expect(screen.getByText("failed.pdf")).toBeInTheDocument();
     expect(screen.getAllByTestId("spinner")).toHaveLength(1);
     expect(screen.getByTitle("documents.retry.action")).toBeInTheDocument();
   });

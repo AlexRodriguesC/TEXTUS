@@ -15,11 +15,7 @@ import { Button } from "@/components/ui/button.tsx";
 import * as React from "react";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useDocuments from "@/hooks/useDocuments.ts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { HintOverlay } from "@/components/HintOverlay.tsx";
 import { cn } from "@/lib/utils.ts";
 import Introduction from "@/pages/space/tutorial/step/Introduction.tsx";
 import Upload from "@/pages/space/tutorial/step/Upload.tsx";
@@ -47,7 +43,7 @@ function EmptySpace({ onCompleted }: EmptySpace) {
       title: t("space.stepper.introduction.title"),
       component: <Introduction index={0} />,
     };
-  }, []);
+  }, [t]);
 
   const uploadFiles = useMemo((): Step => {
     return {
@@ -55,7 +51,7 @@ function EmptySpace({ onCompleted }: EmptySpace) {
       title: t("space.stepper.upload.title"),
       component: <Upload index={1} />,
     };
-  }, []);
+  }, [t]);
 
   const start = useMemo((): Step => {
     return {
@@ -63,7 +59,7 @@ function EmptySpace({ onCompleted }: EmptySpace) {
       title: t("space.stepper.start.title"),
       component: <Start index={2} />,
     };
-  }, []);
+  }, [t]);
 
   const steps = useMemo(() => {
     return [introduction, uploadFiles, start];
@@ -128,8 +124,8 @@ function EmptySpace({ onCompleted }: EmptySpace) {
           >
             {t("button.back")}
           </Button>
-          <Tooltip>
-            <TooltipTrigger asChild>
+          <HintOverlay
+            trigger={
               <span className="inline-block">
                 <Button
                   onClick={() => {
@@ -154,11 +150,9 @@ function EmptySpace({ onCompleted }: EmptySpace) {
                     : t("button.next")}
                 </Button>
               </span>
-            </TooltipTrigger>
-            {isDisabled && (
-              <TooltipContent>{t("space.stepper.prerequisite")}</TooltipContent>
-            )}
-          </Tooltip>
+            }
+            content={isDisabled ? t("space.stepper.prerequisite") : undefined}
+          />
         </div>
       </StepperPanel>
     </Stepper>

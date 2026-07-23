@@ -1,9 +1,5 @@
 import { forwardRef, useState } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { HintOverlay } from "@/components/HintOverlay.tsx";
 import { CircleQuestionMark } from "lucide-react";
 
 interface InformationQuestionMarkProps extends React.ComponentPropsWithoutRef<
@@ -19,8 +15,10 @@ const InformationQuestionMark = forwardRef<
   const [open, setOpen] = useState(false);
 
   return (
-    <Tooltip open={open} onOpenChange={setOpen}>
-      <TooltipTrigger asChild>
+    <HintOverlay
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
         <CircleQuestionMark
           ref={ref}
           size={size}
@@ -31,9 +29,9 @@ const InformationQuestionMark = forwardRef<
           }}
           {...props}
         />
-      </TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
+      }
+      content={tooltip}
+    />
   );
 });
 

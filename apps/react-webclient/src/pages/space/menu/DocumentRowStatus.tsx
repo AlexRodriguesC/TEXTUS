@@ -11,11 +11,8 @@ import {
 import { toDisplayTasks } from "@/lib/toDisplayTasks.ts";
 import { Check, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {Marker, MarkerContent, MarkerIcon} from "@/components/ui/marker.tsx";
 import {cn} from "@/lib/utils.ts";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {useIsMobile} from "@/hooks/shadcn/useIsMobile.ts";
 import {HintOverlay} from "@/components/HintOverlay.tsx";
 
 interface DocumentRowStatusProps {
@@ -40,7 +37,6 @@ function DocumentRowStatus({
   const { t } = useTranslation();
   const tasks = document.tasks;
   const inProgress = isInProgress(tasks);
-  const isMobile = useIsMobile();
   const done = isDone(tasks);
   const failed = isFailed(tasks);
   const displayName = truncateName(document.name);
@@ -74,14 +70,11 @@ function DocumentRowStatus({
                   <Spinner />
                 </MarkerIcon>
                 <MarkerContent className="flex items-center justify-between gap-2 shimmer">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      {displayNameEl}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-96 max-h-80 overflow-auto bg-muted/80">
-                      <ResourceProcessingStatus tasks={toDisplayTasks(tasks, t)} />
-                    </PopoverContent>
-                  </Popover>
+                  <HintOverlay
+                    trigger={displayNameEl}
+                    className="w-96 max-h-80 overflow-auto bg-muted/80"
+                    content={<ResourceProcessingStatus tasks={toDisplayTasks(tasks, t)} />}
+                  />
                 </MarkerContent>
               </Marker>
           )}
@@ -100,7 +93,6 @@ function DocumentRowStatus({
           )}
           {actionsDisabled ? (
               <HintOverlay
-                  isMobile={isMobile}
                   trigger={deleteDocumentEl}
                   content={t("documents.delete.information")}
               />

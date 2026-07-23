@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.service
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentTaskStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
+import ch.supsi.documentapplication.dataaccess.DatabasePathStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.ApplicationException
 import ch.supsi.documentapplication.exception.JobFailedToStartException
@@ -38,12 +39,13 @@ class DocumentServiceSpec extends Specification {
     private final Job pipelineJob = Mock()
     private final JobRepository jobRepository = Mock()
     private final BatchJobRecoveryService batchJobRecoveryService = Mock()
+    private final DatabasePathStorage databasePathStorage = Mock()
 
     private final DocumentService service =
-            new DocumentService(documentFsStorage, databaseDocumentStorage, documentTaskStorage, spaceStorage, jobOperator, pipelineJob, jobRepository, batchJobRecoveryService)
+            new DocumentService(documentFsStorage, databaseDocumentStorage, documentTaskStorage, spaceStorage, jobOperator, pipelineJob, jobRepository, batchJobRecoveryService, databasePathStorage)
 
 
-    Space buildSpace(Long id, String owner) {
+    static Space buildSpace(Long id, String owner) {
         return new Space(id, owner, "", "", "")
     }
 

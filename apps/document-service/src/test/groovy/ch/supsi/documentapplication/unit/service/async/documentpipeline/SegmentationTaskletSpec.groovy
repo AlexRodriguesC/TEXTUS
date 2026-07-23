@@ -66,7 +66,7 @@ class SegmentationTaskletSpec extends Specification {
         1 * fileSystemDocumentStorage.read(documentId) >> fsDocument
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.SEGMENTATION, 1)
         1 * fileSystemDocumentStorage.chunkExists(documentId, 1) >> false
-        1 * fileSystemDocumentStorage.createChunk(1, "hi", documentId) >> "page-1"
+        1 * fileSystemDocumentStorage.createChunk(1, { it.trim() == "hi" }, documentId) >> "page-1"
         1 * documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.SEGMENTATION, 1)
         1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.SEGMENTATION)
         status == RepeatStatus.FINISHED

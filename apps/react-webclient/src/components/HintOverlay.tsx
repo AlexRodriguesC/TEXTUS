@@ -13,25 +13,32 @@ import {useIsMobile} from "@/hooks/shadcn/useIsMobile.ts";
 
 interface HintOverlayProps {
     trigger: React.ReactNode;
-    content: React.ReactNode;
-    isMobile: boolean;
+    content?: React.ReactNode;
     className?: string;
     side?: "top" | "right" | "bottom" | "left";
     align?: "start" | "center" | "end";
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function HintOverlay({
                                 trigger,
                                 content,
-                                className = "bg-muted/90 text-primary-foreground",
+                                className,
                                 side,
                                 align,
+                                open,
+                                onOpenChange,
                             }: HintOverlayProps) {
-
     const isMobile = useIsMobile();
+
+    if (!content) {
+        return <>{trigger}</>;
+    }
+
     if (isMobile) {
         return (
-            <Popover>
+            <Popover open={open} onOpenChange={onOpenChange}>
                 <PopoverTrigger asChild>{trigger}</PopoverTrigger>
                 <PopoverContent className={className} side={side} align={align}>
                     {content}
@@ -41,7 +48,7 @@ export function HintOverlay({
     }
 
     return (
-        <Tooltip>
+        <Tooltip open={open} onOpenChange={onOpenChange}>
             <TooltipTrigger asChild>{trigger}</TooltipTrigger>
             <TooltipContent className={className} side={side} align={align}>
                 {content}
