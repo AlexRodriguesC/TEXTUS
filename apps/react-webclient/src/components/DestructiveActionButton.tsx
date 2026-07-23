@@ -31,6 +31,7 @@ function DestructiveActionButton({
     <Dialog>
       <DialogTrigger asChild>
         <Button
+            className="opacity-80 hover:opacity-100"
           disabled={props.disabled}
           variant="ghost"
           size="icon"
@@ -51,7 +52,7 @@ function DestructiveActionButton({
             <Button
               type="button"
               variant="secondary"
-              className="flex-1 order-1 md:order-2"
+              className="flex-1 order-1 md:order-2 p-2"
             >
               {t("action.destructive.cancel")}
             </Button>
@@ -60,7 +61,7 @@ function DestructiveActionButton({
             <Button
               type="button"
               variant="ghost"
-              className="text-red-500 flex-1 order-2 md:order-1"
+              className="text-red-500 flex-1 p-2 order-2 md:order-1"
               onClick={onConfirm}
             >
               {t("action.destructive.confirm")}

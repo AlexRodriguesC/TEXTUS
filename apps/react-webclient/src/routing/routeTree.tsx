@@ -7,7 +7,7 @@ import MainLayout from "../MainLayout";
 import HomePage from "@/pages/HomePage.tsx";
 import SpacesPage from "@/pages/spaces/SpacesPage.tsx";
 import ProtectedRoute from "@/pages/ProtectedRoute.tsx";
-import SpaceMenu from "@/pages/space/SpaceMenu.tsx";
+import SpaceMenu from "@/pages/space/menu/SpaceMenu.tsx";
 import SpaceChat from "@/pages/space/chat/SpaceChat.tsx";
 import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";

@@ -45,7 +45,7 @@ public class EvaluationRestClient {
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception exception) {
-            log.error("Failed to contact evaluation service: {}", exception.getMessage(), exception);
+            log.error("Failed to contact evaluation service: {}", exception.getMessage(), exception.getCause());
         }
     }
 

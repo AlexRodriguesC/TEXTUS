@@ -1,10 +1,11 @@
-import LoadingScreen from "@/components/LoadingScreen.tsx";
 import useChatContext from "@/hooks/context/useChatContext.ts";
 import useChatStream from "@/hooks/useChatStream.ts";
 import useChats from "@/hooks/useChats.ts";
 import useModels from "@/hooks/useModels.ts";
 import SpaceChatConversation from "@/pages/space/chat/SpaceChatConversation.tsx";
+import SpaceChatEmpty from "@/pages/space/chat/SpaceChatEmpty.tsx";
 import SpaceChatNoSelection from "@/pages/space/chat/SpaceChatNoSelection.tsx";
+import SpaceChatSkeleton from "@/pages/space/chat/SpaceChatSkeleton.tsx";
 
 // Space chat page shell that switches between loading, conversation, and no-selection.
 function SpaceChat() {
@@ -13,34 +14,42 @@ function SpaceChat() {
   const { sendMessage, isStreaming } = useChatStream();
   const { selectedChatId } = useChatContext();
 
-  const isInitialLoading = isChatsLoading || isModelsLoading;
   const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+
+  const renderContent = () => {
+    if (isChatsLoading) {
+      return <SpaceChatSkeleton />;
+    }
+    if (chats.length === 0) {
+      return <SpaceChatEmpty />;
+    }
+    if (isModelsLoading) {
+      return <SpaceChatSkeleton />;
+    }
+    if (selectedChatId) {
+      return (
+        <SpaceChatConversation
+          key={selectedChatId}
+          chatId={selectedChatId}
+          chatTitle={selectedChat?.title}
+          models={models}
+          defaultModel={defaultModel}
+          sendMessage={sendMessage}
+          isStreaming={isStreaming}
+          invalidateChats={invalidateChats}
+        />
+      );
+    }
+    return (
+      <SpaceChatNoSelection models={models} defaultModel={defaultModel} />
+    );
+  };
 
   return (
     <div className="flex w-full h-full overflow-hidden">
       <div className="flex flex-col flex-1 min-h-0 items-center overflow-hidden">
         <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col min-h-0 overflow-hidden">
-          {isInitialLoading ? (
-            <div className="flex flex-1 items-center justify-center text-muted-foreground gap-2">
-              <LoadingScreen />
-            </div>
-          ) : selectedChatId ? (
-            <SpaceChatConversation
-              key={selectedChatId}
-              chatId={selectedChatId}
-              chatTitle={selectedChat?.title}
-              models={models}
-              defaultModel={defaultModel}
-              sendMessage={sendMessage}
-              isStreaming={isStreaming}
-              invalidateChats={invalidateChats}
-            />
-          ) : (
-            <SpaceChatNoSelection
-              models={models}
-              defaultModel={defaultModel}
-            />
-          )}
+          {renderContent()}
         </div>
       </div>
     </div>

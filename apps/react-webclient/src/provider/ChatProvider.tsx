@@ -1,7 +1,6 @@
 import {
   type ReactNode,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -13,7 +12,7 @@ import {
 import useChats from "@/hooks/useChats.ts";
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { chats, isLoading, createChat, isCreating } = useChats();
+  const { chats } = useChats();
   const [preferredChatId, setPreferredChatId] = useState<string | null>(null);
   const [pendingMessage, setPendingMessageState] =
     useState<PendingChatMessage | null>(null);
@@ -43,13 +42,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
     return chats[0]?.id ?? null;
   }, [chats, preferredChatId]);
-
-  useEffect(() => {
-    if (isLoading || isCreating || chats.length > 0) {
-      return;
-    }
-    void createChat().then((chat) => setPreferredChatId(chat.id));
-  }, [chats.length, createChat, isCreating, isLoading]);
 
   const value = useMemo(
     () => ({

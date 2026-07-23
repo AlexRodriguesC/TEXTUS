@@ -181,7 +181,8 @@
       "success": "Documento {{fileName}} caricato con successo."
     },
     "delete": {
-      "success": "Documento {{fileName}} eliminato con successo."
+      "success": "Documento {{fileName}} eliminato con successo.",
+      "information": "I documenti non possono essere eliminati una volta generata una mappa mentale o un percorso di apprendimento. Eliminali prima se desideri eliminare un documento."
     },
     "status": {
       "overview": "Stati dei documenti"
@@ -301,7 +302,12 @@
     "history": "Cronologia",
     "empty": {
       "list": "Nessuna conversazione.",
-      "messages": "Inizia una conversazione in \"{{title}}\"."
+      "messages": "Inizia una conversazione in \"{{title}}\".",
+      "page": {
+        "title": "Nessuna conversazione",
+        "description": "Crea una chat dal pannello cronologia nella barra laterale, oppure usa il pulsante qui sotto per iniziare.",
+        "cta": "Crea chat"
+      }
     },
     "delete": {
       "title": "Eliminare la chat?",

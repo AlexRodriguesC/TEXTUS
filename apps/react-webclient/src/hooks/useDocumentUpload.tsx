@@ -28,7 +28,6 @@ export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
     CreateDocumentMutationContext
   >({
     mutation: {
-      mutationKey: CREATE_DOCUMENT_MUTATION_KEY,
       onMutate: async ({ spaceId: targetSpaceId, data }) => {
         const queryKey = getGetDocumentsQueryKey(targetSpaceId);
         await queryClient.cancelQueries({ queryKey });

@@ -19,7 +19,7 @@ function UploadZone() {
         <div className="flex flex-col gap-4 sm:gap-5 max-h-full overflow-auto">
           <DropZoneArea
               className={cn(
-                  "w-full border-2 p-0 border-dashed bg-muted/50 hover:bg-primary/50 transition-colors",
+                  "w-full rounded-none border-2 p-0 border-dashed bg-muted/50 hover:bg-primary/50 transition-colors",
                   dropzone.isDragActive && "bg-primary/50",
               )}
           >

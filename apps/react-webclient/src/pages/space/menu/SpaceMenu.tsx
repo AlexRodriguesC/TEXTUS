@@ -1,5 +1,5 @@
 import CenteredPage from "@/components/CenteredPage.tsx";
-import DocumentStatusList from "@/pages/space/DocumentStatusList.tsx";
+import DocumentStatusList from "@/pages/space/menu/DocumentStatusList.tsx";
 import UploadZone from "@/components/UploadZone.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useSpaces from "@/hooks/useSpaces.ts";

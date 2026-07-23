@@ -36,7 +36,7 @@ function SpacesListItem({
   return (
     <div
       key={spaceId}
-      className="flex flex-row items-center justify-between border border-border p-4 hover:bg-muted/25 transition-colors"
+      className="flex flex-row items-center justify-between border border-border p-4 hover:bg-primary/10 transition-colors"
     >
       <Link
         to={PathConstants.SPACE_MENU}

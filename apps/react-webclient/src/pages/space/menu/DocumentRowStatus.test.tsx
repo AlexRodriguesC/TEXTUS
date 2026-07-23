@@ -2,7 +2,7 @@ import Document from "@/classes/Document.ts";
 import Task from "@/classes/Task.ts";
 import TaskType from "@/classes/TaskType.ts";
 import TaskVariant from "@/classes/TaskVariant.ts";
-import DocumentRowStatus from "@/components/left-sidebar/DocumentRowStatus.tsx";
+import DocumentRowStatus from "@/pages/space/menu/DocumentRowStatus.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";

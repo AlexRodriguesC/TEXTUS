@@ -1,14 +1,17 @@
-import DocumentRowStatus from "@/components/left-sidebar/DocumentRowStatus.tsx";
+import DocumentRowStatus from "@/pages/space/menu/DocumentRowStatus.tsx";
 import useDocuments from "@/hooks/useDocuments.ts";
 import useMindMap from "@/hooks/useMindMap.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 
 function DocumentStatusList() {
   const { spaceId } = useSpaceId();
   const { documents, deleteDocument, retryDocument, isRetrying } =
     useDocuments(spaceId);
   const { status } = useMindMap();
-  const actionsDisabled = status === "GENERATING" || status === "DONE";
+  const {status: mapStatus} = useMindMap();
+  const {status: pathStatus} = useLearningPath();
+  const actionsDisabled = status === "GENERATING" || status === "DONE" || mapStatus !== "NOT_CREATED" || pathStatus !== "NOT_CREATED";
 
   return (
     <div className="flex flex-row w-full justify-between items-center h-fit">

@@ -8,9 +8,10 @@ import type { DocumentsResponseDTO, ErrorResponseDTO } from "@/client/model";
 import Document from "@/classes/Document.ts";
 import { mapDocument } from "@/hooks/dtoMappers.ts";
 import { CREATE_DOCUMENT_MUTATION_KEY } from "@/hooks/useDocumentUpload.tsx";
-import { isDone, isFailed } from "@/lib/documentTaskUtils.ts";
+import { shouldPollDocuments } from "@/lib/documentTaskUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.ts";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export { isDone, isFailed, isInProgress } from "@/lib/documentTaskUtils.ts";
@@ -26,24 +27,7 @@ type UploadMutationState = {
 function useDocuments(spaceId: number) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-
-  const { data: documentStatuses } = useGetDocuments(spaceId ?? -1, {
-    query: {
-      refetchInterval: (query) => {
-        const queryData = query.state.data?.data;
-        if (!queryData || !isDocumentsResponseDTO(queryData)) return 2000;
-        const documents = queryData.documents.map(mapDocument);
-        const allSettled =
-          documents.length > 0 &&
-          documents.every(
-            (doc) => isDone(doc.tasks) || isFailed(doc.tasks),
-          );
-        return allSettled ? false : 2000;
-      },
-      refetchIntervalInBackground: true,
-      enabled: spaceId != undefined,
-    },
-  });
+  const awaitingServerUploadRef = useRef(false);
 
   const uploadMutations = useMutationState({
     filters: { mutationKey: CREATE_DOCUMENT_MUTATION_KEY },
@@ -53,6 +37,21 @@ function useDocuments(spaceId: number) {
       fileName: mutation.state.variables?.data?.document?.name,
       tempId: -mutation.mutationId,
     }),
+  });
+
+  const { data: documentStatuses } = useGetDocuments(spaceId ?? -1, {
+    query: {
+      refetchInterval: (query) => {
+        const queryData = query.state.data?.data;
+        const documents =
+          queryData && isDocumentsResponseDTO(queryData)
+            ? queryData.documents.map(mapDocument)
+            : [];
+        return shouldPollDocuments(documents, awaitingServerUploadRef.current);
+      },
+      refetchIntervalInBackground: true,
+      enabled: spaceId != undefined,
+    },
   });
 
   let documents: Document[] = [];
@@ -99,6 +98,14 @@ function useDocuments(spaceId: number) {
   }
 
   const serverDocumentNames = new Set(documents.map((doc) => doc.name));
+  awaitingServerUploadRef.current = uploadMutations.some(
+    (mutation) =>
+      mutation.spaceId === spaceId &&
+      mutation.fileName != null &&
+      (mutation.status === "pending" ||
+        (mutation.status === "success" &&
+          !serverDocumentNames.has(mutation.fileName))),
+  );
   const optimisticDocuments = uploadMutations
     .filter(
       (mutation) =>

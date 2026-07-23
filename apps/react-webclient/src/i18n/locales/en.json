@@ -193,7 +193,8 @@
       "success": "Document {{fileName}} uploaded successfully."
     },
     "delete": {
-      "success": "Document {{fileName}} removed successfully."
+      "success": "Document {{fileName}} removed successfully.",
+      "information": "Documents cannot be deleted once a mind map or learning path has been generated. Delete them first if you want to delete a document."
     },
     "status": {
       "overview": "Documents status"
@@ -315,7 +316,12 @@
     "history": "History",
     "empty": {
       "list": "No conversations yet.",
-      "messages": "Start a conversation in \"{{title}}\"."
+      "messages": "Start a conversation in \"{{title}}\".",
+      "page": {
+        "title": "No conversations yet",
+        "description": "Create a chat from the sidebar history panel, or use the button below to get started.",
+        "cta": "Create chat"
+      }
     },
     "delete": {
       "title": "Delete chat?",

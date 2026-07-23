@@ -19,7 +19,7 @@ interface SidebarActionProps {
 
 function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
   const { t } = useTranslation();
-  const { state, openMobile, setOpen } = useSidebar();
+  const { state, openMobile, setOpen, setOpenMobile, isMobile } = useSidebar();
   const open = state === "expanded" || openMobile;
 
   if (!open) {
@@ -48,7 +48,7 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          onClick={() => setOpen(false)}
+          onClick={() => isMobile ? setOpenMobile(false) : setOpen(false)}
           variant="secondary"
           className="h-auto w-full flex flex-row items-center justify-between gap-3 rounded-xl px-4 py-3 bg-muted/40"
           asChild

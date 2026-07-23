@@ -2,7 +2,7 @@ import Document from "@/classes/Document.ts";
 import Task from "@/classes/Task.ts";
 import TaskType from "@/classes/TaskType.ts";
 import TaskVariant from "@/classes/TaskVariant.ts";
-import DocumentStatusList from "@/pages/space/DocumentStatusList.tsx";
+import DocumentStatusList from "@/pages/space/menu/DocumentStatusList.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";

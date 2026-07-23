@@ -1,55 +1,69 @@
-import { describe, expect, it } from "vitest";
+import Document from "@/classes/Document.ts";
 import Task from "@/classes/Task.ts";
 import TaskType from "@/classes/TaskType.ts";
 import TaskVariant from "@/classes/TaskVariant.ts";
-import { isDone, isFailed, isInProgress } from "@/lib/documentTaskUtils.ts";
+import {
+  DOCUMENTS_POLL_INTERVAL_MS,
+  shouldPollDocuments,
+} from "@/lib/documentTaskUtils.ts";
+import { describe, expect, it } from "vitest";
 
-function task(
-  type: (typeof TaskType)[keyof typeof TaskType],
-  variant: (typeof TaskVariant)[keyof typeof TaskVariant],
-  progress = 0,
-  maxProgress = 1,
-): Task {
-  return new Task(`${type}`, type, progress, maxProgress, variant);
+function buildDocument(tasks: Task[], name = "sample.pdf", id = 1): Document {
+  return new Document(name, id, tasks);
 }
 
-function allSuccessTasks(): Task[] {
+function buildDoneTasks(): Task[] {
   return [
-    task(TaskType.OCR, TaskVariant.SUCCESS, 1, 1),
-    task(TaskType.SEGMENTATION, TaskVariant.SUCCESS, 2, 2),
-    task(TaskType.SUMMARIZATION, TaskVariant.SUCCESS, 3, 3),
-    task(TaskType.TOPIC, TaskVariant.SUCCESS, 4, 4),
+    new Task("1:SEG", TaskType.SEGMENTATION, 1, 1, TaskVariant.SUCCESS),
+    new Task("1:OCR", TaskType.OCR, 1, 1, TaskVariant.SUCCESS),
+    new Task("1:SUM", TaskType.SUMMARIZATION, 1, 1, TaskVariant.SUCCESS),
+    new Task("1:TOP", TaskType.TOPIC, 1, 1, TaskVariant.SUCCESS),
   ];
 }
 
-describe("documentTaskUtils", () => {
-  it("should mark document as failed when any task has error variant", () => {
-    const tasks = [
-      task(TaskType.OCR, TaskVariant.ERROR, 1, 5),
-      task(TaskType.SEGMENTATION, TaskVariant.DEFAULT, 0, 2),
-    ];
-
-    expect(isFailed(tasks)).toBe(true);
-    expect(isDone(tasks)).toBe(false);
-    expect(isInProgress(tasks)).toBe(false);
+describe("shouldPollDocuments", () => {
+  it("returns false for an empty list with no awaiting upload", () => {
+    expect(shouldPollDocuments([], false)).toBe(false);
   });
 
-  it("should mark document as done only when all pipeline tasks succeed", () => {
-    expect(isDone(allSuccessTasks())).toBe(true);
-    expect(isDone([task(TaskType.OCR, TaskVariant.SUCCESS, 1, 1)])).toBe(
-      false,
+  it("returns the poll interval for a document with partial pipeline tasks", () => {
+    const documents = [
+      buildDocument([
+        new Task("1:OCR", TaskType.OCR, 1, 5, TaskVariant.DEFAULT),
+      ]),
+    ];
+
+    expect(shouldPollDocuments(documents, false)).toBe(
+      DOCUMENTS_POLL_INTERVAL_MS,
     );
-    expect(isDone([])).toBe(false);
   });
 
-  it("should mark partial pipeline progress as in progress", () => {
-    const tasks = [
-      task(TaskType.OCR, TaskVariant.SUCCESS, 1, 1),
-      task(TaskType.SEGMENTATION, TaskVariant.DEFAULT, 0, 2),
+  it("returns false when all documents are done or failed", () => {
+    const documents = [
+      buildDocument(buildDoneTasks()),
+      buildDocument(
+        [new Task("2:OCR", TaskType.OCR, 2, 5, TaskVariant.ERROR)],
+        "failed.pdf",
+        2,
+      ),
     ];
 
-    expect(isInProgress(tasks)).toBe(true);
-    expect(isDone(tasks)).toBe(false);
-    expect(isFailed(tasks)).toBe(false);
+    expect(shouldPollDocuments(documents, false)).toBe(false);
+  });
+
+  it("returns the poll interval when cache is settled but an upload awaits server acknowledgement", () => {
+    const documents = [buildDocument(buildDoneTasks())];
+
+    expect(shouldPollDocuments(documents, true)).toBe(
+      DOCUMENTS_POLL_INTERVAL_MS,
+    );
+  });
+
+  it("returns the poll interval for a new document with empty tasks in cache", () => {
+    const documents = [buildDocument([])];
+
+    expect(shouldPollDocuments(documents, false)).toBe(
+      DOCUMENTS_POLL_INTERVAL_MS,
+    );
   });
 });
