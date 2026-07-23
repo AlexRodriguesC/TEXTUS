@@ -5,7 +5,7 @@ import UploadZone from "@/components/UploadZone.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useSpaces from "@/hooks/useSpaces.ts";
 import { useNavigate } from "@tanstack/react-router";
-import useTutorial from "@/hooks/useTutorial.tsx";
+import useTutorial from "@/hooks/context/useTutorial.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
 import EmptySpace from "@/pages/space/EmptySpace.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";

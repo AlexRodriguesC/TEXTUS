@@ -1,11 +1,11 @@
-import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
 
 class GroupExercise {
   id: number;
   topicId: number;
   request: string;
   completed: boolean;
-  type: ExerciseTypeType;
+  type: typeof ExerciseType.GROUP;
   groups: Record<string, string[]>;
 
   constructor(
@@ -13,7 +13,7 @@ class GroupExercise {
     topicId: number,
     request: string,
     completed: boolean,
-    type: ExerciseTypeType,
+    type: typeof ExerciseType.GROUP,
     groups: Record<string, string[]>,
   ) {
     this.id = id;

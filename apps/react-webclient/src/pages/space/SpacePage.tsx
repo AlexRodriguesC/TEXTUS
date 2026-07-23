@@ -3,7 +3,7 @@ import CenteredPage from "@/components/CenteredPage.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
 import { useTranslation } from "react-i18next";
 import EmptySpace from "@/pages/space/EmptySpace.tsx";
-import useTutorial from "@/hooks/useTutorial.tsx";
+import useTutorial from "@/hooks/context/useTutorial.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 

@@ -1,22 +1,20 @@
 import {
   getGetDocumentsQueryKey,
   useDeleteDocument,
-  useGetDocuments,
+  useGetDocuments, useRetryDocument,
 } from "@/client/generated/documents/documents.ts";
 import type { DocumentsResponseDTO, ErrorResponseDTO } from "@/client/model";
 import Document from "@/classes/Document.ts";
 import { mapDocument } from "@/hooks/dtoMappers.ts";
-import { customInstance } from "@/client/mutator.ts";
 import { isDone, isFailed } from "@/lib/documentTaskUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.ts";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 export { isDone, isFailed, isInProgress } from "@/lib/documentTaskUtils.ts";
-export { default as Document } from "@/classes/Document.ts";
 export { default as Task } from "@/classes/Task.ts";
 
-function useDocuments(spaceId: number | undefined) {
+function useDocuments(spaceId: number) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -42,24 +40,19 @@ function useDocuments(spaceId: number | undefined) {
 
   const deleteMutation = useDeleteDocument();
 
-  const retryMutation = useMutation({
-    mutationFn: async (documentId: number) => {
-      if (spaceId == null) return;
-      await customInstance(
-        `/api/v1/spaces/${spaceId}/documents/${documentId}/retry`,
-        { method: "POST" },
-      );
-    },
-    onSuccess: async () => {
-      if (spaceId == null) return;
-      await queryClient.invalidateQueries({
-        queryKey: getGetDocumentsQueryKey(spaceId),
-      });
-      successToast(t("documents.retry.success"));
-    },
-    onError: () => {
-      failureToast(t("documents.retry.error"));
-    },
+  const retryMutation = useRetryDocument({
+    mutation: {
+      onSuccess: async () => {
+        if (spaceId == null) return;
+        await queryClient.invalidateQueries({
+          queryKey: getGetDocumentsQueryKey(spaceId),
+        });
+        successToast(t("documents.retry.success"));
+      },
+      onError: () => {
+        failureToast(t("documents.retry.error"));
+      },
+    }
   });
 
   const deleteDocument = (documentId: number) => {
@@ -88,7 +81,7 @@ function useDocuments(spaceId: number | undefined) {
   return {
     documents: documents,
     deleteDocument,
-    retryDocument: (documentId: number) => retryMutation.mutate(documentId),
+    retryDocument: (documentId: number) => retryMutation.mutate({spaceId, documentId}),
     isRetrying: retryMutation.isPending,
   };
 }

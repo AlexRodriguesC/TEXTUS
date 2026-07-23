@@ -11,6 +11,7 @@ import { useDraggable, useDroppable } from "@dnd-kit/core";
 import ExerciseHeader from "@/pages/space/learn/ExerciseHeader.tsx";
 import type GroupExercise from "@/classes/GroupExercise.ts";
 import { cn } from "@/lib/utils.ts";
+import * as React from "react";
 
 interface GroupProps {
   group: GroupExercise;

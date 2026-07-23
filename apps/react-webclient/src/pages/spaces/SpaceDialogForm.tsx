@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button.tsx";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import EmojiPicker, { Emoji, Theme } from "emoji-picker-react";
-import { useTheme } from "@/hooks/useTheme.ts";
+import { useTheme } from "@/hooks/context/useTheme.ts";
 import en from "emoji-picker-react/dist/data/emojis-en";
 import it from "emoji-picker-react/dist/data/emojis-it";
 import type { EmojiData } from "emoji-picker-react/dist/types/exposedTypes";

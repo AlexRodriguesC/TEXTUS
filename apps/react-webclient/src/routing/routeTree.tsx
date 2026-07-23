@@ -1,7 +1,7 @@
 import { createRootRoute, createRoute, Outlet } from "@tanstack/react-router";
 import NotFoundPage from "../pages/not-found/NotFoundPage";
-import LoginPage from "../pages/login/LoginPage";
-import RegistrationPage from "../pages/registration/RegistrationPage";
+import LoginPage from "@/pages/auth/LoginPage.tsx";
+import RegistrationPage from "@/pages/auth/registration/RegistrationPage";
 import PathConstants from "./pathConstants";
 import MainLayout from "../MainLayout";
 import HomePage from "@/pages/HomePage.tsx";

@@ -1,4 +1,5 @@
 import Question from "@/pages/space/learn/Question.tsx";
+import QuestionSkeleton from "@/pages/space/learn/QuestionSkeleton.tsx";
 import useLesson from "@/hooks/useLesson.tsx";
 import useLessonId from "@/hooks/useLessonId.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
@@ -68,8 +69,8 @@ function Lesson() {
   };
 
   const exercise = (() => {
-    if (isLoading || exerciseLoading || !nextExercise) {
-      return <LoadingScreen />;
+    if (!nextExercise) {
+      return <QuestionSkeleton />;
     }
 
     if (nextExercise.type === ExerciseType.LIST) {
@@ -117,7 +118,7 @@ function Lesson() {
 
   const content = (() => {
     if (exerciseLoading) {
-      return <LoadingScreen />;
+      return <QuestionSkeleton />;
     }
 
     if (lesson!.attemptsLeft === 0) {

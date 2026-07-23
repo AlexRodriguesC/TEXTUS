@@ -1,11 +1,11 @@
-import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
 
 class ListExercise {
   id: number;
   topicId: number;
   request: string;
   completed: boolean;
-  type: ExerciseTypeType;
+  type: typeof ExerciseType.LIST;
   answer: string[];
 
   constructor(
@@ -13,7 +13,7 @@ class ListExercise {
     topicId: number,
     request: string,
     completed: boolean,
-    type: ExerciseTypeType,
+    type: typeof ExerciseType.LIST,
     answer: string[],
   ) {
     this.id = id;

@@ -6,7 +6,7 @@ import SpacesListItem from "@/pages/spaces/SpacesListItem.tsx";
 import EmptySpaces from "@/pages/spaces/EmptySpaces.tsx";
 import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
+import SpacesListSkeleton from "@/pages/spaces/SpacesListSkeleton.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import IllustratedAside from "@/components/IllustratedAside.tsx";
 
@@ -29,7 +29,7 @@ export function SpacesPage() {
 
   const content = (() => {
     if (isLoading) {
-      return <LoadingScreen />;
+      return <SpacesListSkeleton />;
     }
 
     if (filtered.length === 0 && spaces.length === 0) {

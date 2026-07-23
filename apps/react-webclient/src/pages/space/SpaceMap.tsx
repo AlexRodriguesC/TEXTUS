@@ -17,7 +17,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useTheme } from "@/hooks/useTheme.ts";
+import { useTheme } from "@/hooks/context/useTheme.ts";
 import MapNode from "@/pages/space/MapNode.tsx";
 import dagre from "dagre";
 

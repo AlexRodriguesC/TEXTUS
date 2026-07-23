@@ -1,4 +1,4 @@
-import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
 import type LeftRight from "@/classes/LeftRight.ts";
 
 class PairExercise {
@@ -6,7 +6,7 @@ class PairExercise {
   topicId: number;
   request: string;
   completed: boolean;
-  type: ExerciseTypeType;
+  type: typeof ExerciseType.PAIR;
   pairs: LeftRight[];
 
   constructor(
@@ -14,7 +14,7 @@ class PairExercise {
     topicId: number,
     request: string,
     completed: boolean,
-    type: ExerciseTypeType,
+    type: typeof ExerciseType.PAIR,
     pairs: LeftRight[],
   ) {
     this.id = id;

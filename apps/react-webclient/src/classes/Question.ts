@@ -1,11 +1,11 @@
-import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
+import ExerciseType from "@/classes/ExerciseType.ts";
 
 class Question {
   id: number;
   topicId: number;
   request: string;
   completed: boolean;
-  type: ExerciseTypeType;
+  type: typeof ExerciseType.QUESTION;
   answer: string;
   distractors: string[];
 
@@ -14,7 +14,7 @@ class Question {
     topicId: number,
     request: string,
     completed: boolean,
-    type: ExerciseTypeType,
+    type: typeof ExerciseType.QUESTION,
     answer: string,
     distractors: string[],
   ) {

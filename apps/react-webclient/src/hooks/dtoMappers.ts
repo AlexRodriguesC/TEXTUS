@@ -157,7 +157,7 @@ export function mapQuestion(dto: QuestionResponseDTO): Question {
     dto.topicId,
     dto.request,
     dto.completed ?? false,
-    dto.type as ExerciseTypeType,
+    ExerciseType.QUESTION,
     dto.answer,
     dto.distractors,
   );
@@ -169,7 +169,7 @@ export function mapListExercise(dto: ListResponseDTO): ListExercise {
     dto.topicId,
     dto.request,
     dto.completed ?? false,
-    dto.type as ExerciseTypeType,
+    ExerciseType.LIST,
     dto.answer,
   );
 }
@@ -180,7 +180,7 @@ export function mapGroupExercise(dto: GroupResponseDTO): GroupExercise {
     dto.topicId,
     dto.request,
     dto.completed ?? false,
-    dto.type as ExerciseTypeType,
+    ExerciseType.GROUP,
     dto.groups,
   );
 }
@@ -191,7 +191,7 @@ export function mapPairExercise(dto: PairResponseDTO): PairExercise {
     dto.topicId,
     dto.request,
     dto.completed ?? false,
-    dto.type as ExerciseTypeType,
+    ExerciseType.PAIR,
     dto.pairs.map((pair) => new LeftRight(pair.left, pair.right)),
   );
 }

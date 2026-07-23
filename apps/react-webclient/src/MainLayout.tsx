@@ -1,14 +1,14 @@
 import { MeshGradientBackground } from "@/components/ui/mesh-gradient.tsx";
-import { useTheme } from "@/hooks/useTheme.ts";
+import { useTheme } from "@/hooks/context/useTheme.ts";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AppSidebar } from "@/components/left-sidebar/AppSidebar.tsx";
 import { type PropsWithChildren, useRef } from "react";
-import useSidebarOpen from "@/hooks/useSidebarOpen.tsx";
+import useSidebarOpen from "@/hooks/context/useSidebarOpen.tsx";
 import { RightSidebar } from "@/components/right-sidebar/RightSidebar.tsx";
 import * as React from "react";
-import useTutorial from "@/hooks/useTutorial.tsx";
+import useTutorial from "@/hooks/context/useTutorial.tsx";
 import LayoutHeader from "@/LayoutHeader.tsx";
-import useRightSidebarOpen from "@/hooks/useRightSidebarOpen.tsx";
+import useRightSidebarOpen from "@/hooks/context/useRightSidebarOpen.tsx";
 import RightSidebarToggle from "@/RightSidebarToggle.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { ChatProvider } from "@/provider/ChatProvider.tsx";

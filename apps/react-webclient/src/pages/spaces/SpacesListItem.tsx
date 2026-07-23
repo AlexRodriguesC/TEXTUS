@@ -49,7 +49,7 @@ function SpacesListItem({
         </div>
       </Link>
 
-      <div className="flex flex-row gap-2 items-center">
+      <div className="flex flex-row gap-2 items-center opacity-60 hover:opacity-100 transition-opacity">
         <EditSpace
           spaceId={spaceId}
           initialIcon={icon}

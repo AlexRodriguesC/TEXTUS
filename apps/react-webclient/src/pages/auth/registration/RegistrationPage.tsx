@@ -5,8 +5,8 @@ import { useNavigate } from "@tanstack/react-router";
 import useRegisterMutation from "@/hooks/useRegisterMutation.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { successToast } from "@/lib/toasts.ts";
-import UserAlreadyExistsCard from "@/pages/registration/UserAlreadyExistsCard.tsx";
-import InternalServerErrorCard from "@/pages/registration/InternalServerErrorCard.tsx";
+import UserAlreadyExistsCard from "@/pages/auth/registration/UserAlreadyExistsCard.tsx";
+import InternalServerErrorCard from "@/pages/auth/registration/InternalServerErrorCard.tsx";
 import AuthFormCard from "@/components/auth/AuthFormCard.tsx";
 
 function RegistrationPage() {

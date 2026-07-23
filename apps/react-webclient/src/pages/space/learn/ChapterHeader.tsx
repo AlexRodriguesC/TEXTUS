@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import { cn } from "@/lib/utils.ts";
-import { useTheme } from "@/hooks/useTheme.ts";
+import { useTheme } from "@/hooks/context/useTheme.ts";
 import type Lesson from "@/classes/Lesson.ts";
 import type Chapter from "@/classes/Chapter.ts";
 

@@ -9,7 +9,6 @@ import useSpaceId from "@/hooks/useSpaceId.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetLearningPathQueryKey } from "@/client/generated/paths/paths.ts";
 import { useCallback, useMemo } from "react";
-import Lesson from "@/classes/Lesson.ts";
 import type { Exercise } from "@/classes/Exercise.ts";
 import { isExerciseDto, mapExercise, mapLesson } from "@/hooks/dtoMappers.ts";
 
