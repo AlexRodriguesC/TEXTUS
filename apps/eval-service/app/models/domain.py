@@ -64,8 +64,6 @@ class MetricConfigInput(BaseModel):
   """Metric configuration passed from the API into the service layer."""
 
   name: str
-  criteria: str | None = None
-  evaluation_steps: list[str] | None = None
   threshold: float | None = None
 
 

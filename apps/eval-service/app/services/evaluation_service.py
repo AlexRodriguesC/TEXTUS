@@ -22,6 +22,30 @@ from app.services.metrics.factory import ResolvedMetric, resolve_metrics
 from app.services.metrics.registry import list_metric_definitions
 
 
+async def _run_single_metric(
+        metric_name: str,
+  metric: BaseMetric,
+  test_case: LLMTestCase,
+) -> MetricResultRecord:
+  try:
+    await metric.a_measure(test_case)
+    return MetricResultRecord(
+      metric_name=metric_name,
+      score=float(metric.score),
+      reason=str(metric.reason or ""),
+      success=bool(metric.success),
+      error=None,
+    )
+  except Exception as exc:
+    return MetricResultRecord(
+      metric_name=metric_name,
+      score=0.0,
+      reason="",
+      success=False,
+      error=str(exc),
+    )
+
+
 class EvaluationService:
   """Orchestrates metric execution and evaluation persistence."""
 
@@ -72,6 +96,7 @@ class EvaluationService:
       actual_output=request.actual_output,
       expected_output=request.expected_output,
       retrieval_context=request.retrieval_context,
+      context=[request.input] if request.input else None,
     )
 
   async def _run_metrics_concurrently(
@@ -80,31 +105,7 @@ class EvaluationService:
     test_case: LLMTestCase,
   ) -> list[MetricResultRecord]:
     tasks = [
-      self._run_single_metric(resolved.config.name, resolved.metric, test_case)
+      _run_single_metric(resolved.config.name, resolved.metric, test_case)
       for resolved in resolved_metrics
     ]
     return list(await asyncio.gather(*tasks))
-
-  async def _run_single_metric(
-    self,
-    metric_name: str,
-    metric: BaseMetric,
-    test_case: LLMTestCase,
-  ) -> MetricResultRecord:
-    try:
-      await metric.a_measure(test_case)
-      return MetricResultRecord(
-        metric_name=metric_name,
-        score=float(metric.score),
-        reason=str(metric.reason or ""),
-        success=bool(metric.success),
-        error=None,
-      )
-    except Exception as exc:
-      return MetricResultRecord(
-        metric_name=metric_name,
-        score=0.0,
-        reason="",
-        success=False,
-        error=str(exc),
-      )

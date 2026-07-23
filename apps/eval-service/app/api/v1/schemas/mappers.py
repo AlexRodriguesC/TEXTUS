@@ -22,8 +22,6 @@ from app.models.domain import (
 def metric_config_to_domain(config: MetricConfig) -> MetricConfigInput:
   return MetricConfigInput(
     name=config.name,
-    criteria=config.criteria,
-    evaluation_steps=config.evaluation_steps,
     threshold=config.threshold,
   )
 

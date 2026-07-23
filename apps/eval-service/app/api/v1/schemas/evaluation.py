@@ -10,8 +10,6 @@ class MetricConfig(BaseModel):
   """Configuration for a single metric to run during evaluation."""
 
   name: str
-  criteria: str | None = None
-  evaluation_steps: list[str] | None = None
   threshold: float | None = None
 
 

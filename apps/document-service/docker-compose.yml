@@ -33,6 +33,23 @@ services:
       - "8080:8080"
     restart: unless-stopped
 
+  eval-service:
+    env_file:
+      - path: ../../.env
+        required: true
+    build:
+      context: ../eval-service
+      dockerfile: fastapi.Dockerfile
+    container_name: eval-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/documents
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
 volumes:
   pgdata: #textus_demo_db
    # external: true
