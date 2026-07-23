@@ -11,15 +11,11 @@ import { useCallback, useMemo } from "react";
 import Chat from "@/classes/Chat.ts";
 import { mapChat } from "@/hooks/dtoMappers.ts";
 
-const ignored = -1;
-
 function useChats() {
   const { spaceId } = useSpaceId();
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useListChats(spaceId ?? ignored, {
-    query: { enabled: spaceId !== undefined },
-  });
+  const { data, isLoading } = useListChats(spaceId);
 
   const chats: Chat[] = useMemo(() => {
     if (!data || data.status !== 200 || !isChatsResponse(data.data)) return [];
@@ -27,7 +23,6 @@ function useChats() {
   }, [data]);
 
   const invalidate = useCallback(() => {
-    if (spaceId === undefined) return;
     queryClient.invalidateQueries({ queryKey: getListChatsQueryKey(spaceId) });
   }, [queryClient, spaceId]);
 
@@ -51,9 +46,6 @@ function useChats() {
 
   const createChat = useCallback(
     async (title?: string) => {
-      if (spaceId === undefined) {
-        throw new Error("spaceId is required to create a chat");
-      }
       const result = await createChatMutation({
         spaceId,
         data: title ? { title } : undefined,
@@ -68,9 +60,6 @@ function useChats() {
 
   const deleteChat = useCallback(
     (chatId: string) => {
-      if (spaceId === undefined) {
-        throw new Error("spaceId is required to delete a chat");
-      }
       return deleteChatMutation({ spaceId, chatId });
     },
     [deleteChatMutation, spaceId],

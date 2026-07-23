@@ -20,7 +20,7 @@ function SpacesListItemSkeleton() {
 
 function SpacesListSkeleton() {
   return (
-    <div className="flex flex-col max-h-[60vh] min-h-[60vh] min-w-full overflow-y-auto gap-2">
+    <div className="flex flex-1 min-h-0 flex-col min-w-full overflow-y-auto gap-2">
       {Array.from({ length: 4 }).map((_, i) => (
         <SpacesListItemSkeleton key={i} />
       ))}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button.tsx";
-import useChatContext from "@/hooks/useChatContext.ts";
+import useChatContext from "@/hooks/context/useChatContext.ts";
 import useChats from "@/hooks/useChats.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useTopics from "@/hooks/useTopics.tsx";

@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(PathController)
@@ -61,26 +62,17 @@ class PathControllerSpec extends Specification {
         result.andExpect(status().isAccepted())
     }
 
-    def "should return learning path job status"() {
-        given:
-        pathService.getLearningPathStatus("alice", 1L) >> LearningPathStatus.DONE
-
-        when:
-        def result = mockMvc.perform(get("/api/v1/spaces/1/paths/jobs").principal(authentication))
-
-        then:
-        result.andExpect(status().isOk())
-    }
-
     def "should return learning path when present"() {
         given:
         pathService.getLearningPath("alice", 1L) >> new LearningPath(99L, new PathSettings(25, 25, 25, 25), [])
+        pathService.getLearningPathStatus("alice", 1L) >> LearningPathStatus.DONE
 
         when:
         def result = mockMvc.perform(get("/api/v1/spaces/1/paths").principal(authentication))
 
         then:
         result.andExpect(status().isOk())
+                .andExpect(jsonPath('$.status').value('DONE'))
     }
 
     def "should update path settings"() {

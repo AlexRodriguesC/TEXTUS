@@ -1,20 +1,10 @@
 import CenteredPage from "@/components/CenteredPage.tsx";
 import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button.tsx";
-import useDocuments from "@/hooks/useDocuments.ts";
-import useSpaceId from "@/hooks/useSpaceId.ts";
-import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
-import PathConstants from "@/routing/pathConstants.ts";
 import GeneratePathButton from "@/pages/space/learn/GeneratePathButton.tsx";
 
 function SpaceLearnEmpty() {
   const { t } = useTranslation();
-  const { spaceId, strSpaceId } = useSpaceId();
-  const { documents } = useDocuments(spaceId);
-
-  const hasDocuments = useMemo(() => documents.length > 0, [documents.length]);
 
   return (
     <CenteredPage>
@@ -39,18 +29,7 @@ function SpaceLearnEmpty() {
             </p>
           </div>
           <div className={"h-fit w-full"}>
-            {hasDocuments ? (
-              <GeneratePathButton />
-            ) : (
-              <Button className={"w-full"} asChild>
-                <Link
-                  to={PathConstants.SPACE_MENU}
-                  params={{ spaceId: strSpaceId! }}
-                >
-                  {t("learning-path.empty.cta-add")}
-                </Link>
-              </Button>
-            )}
+            <GeneratePathButton />
           </div>
         </div>
       </div>

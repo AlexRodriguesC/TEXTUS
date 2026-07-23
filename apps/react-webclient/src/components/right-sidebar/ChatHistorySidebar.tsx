@@ -6,7 +6,7 @@ import {
   SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar.tsx";
-import useChatContext from "@/hooks/useChatContext.ts";
+import useChatContext from "@/hooks/context/useChatContext.ts";
 import useChats from "@/hooks/useChats.ts";
 import { cn } from "@/lib/utils.ts";
 import PathConstants from "@/routing/pathConstants.ts";

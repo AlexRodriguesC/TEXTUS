@@ -1,13 +1,18 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import ch.supsi.documentapplication.model.learn.LearningPath;
+import ch.supsi.documentapplication.model.learn.LearningPathStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-@Schema(description = "Response DTO containing the full learning path with settings and chapters")
+@Schema(description = "Response DTO containing the full learning path with settings, chapters, and generation status")
 public record LearningPathResponseDTO(
+        @NotNull
+        @Schema(description = "Current status of the learning path generation", example = "DONE")
+        LearningPathStatus status,
+
         @NotNull
         @Schema(description = "Settings of the learning path")
         PathSettingsResponseDTO settings,
@@ -17,9 +22,9 @@ public record LearningPathResponseDTO(
         List<ChapterResponseDTO> chapters
 ) {
 
-    public static LearningPathResponseDTO from(LearningPath learningPath) {
+    public static LearningPathResponseDTO from(LearningPath learningPath, LearningPathStatus status) {
         PathSettingsResponseDTO settings = PathSettingsResponseDTO.from(learningPath.getSettings());
         List<ChapterResponseDTO> chapters = learningPath.getChapters().stream().map(ChapterResponseDTO::from).toList();
-        return new LearningPathResponseDTO(settings, chapters);
+        return new LearningPathResponseDTO(status, settings, chapters);
     }
 }

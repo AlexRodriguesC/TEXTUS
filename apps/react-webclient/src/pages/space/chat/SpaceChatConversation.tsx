@@ -1,20 +1,19 @@
-import ChatInput from "@/components/ChatInput.tsx";
-import useChatContext from "@/hooks/useChatContext.ts";
-import useChatMessages from "@/hooks/useChatMessages.ts";
-import useChatStream from "@/hooks/useChatStream.ts";
-import useChats from "@/hooks/useChats.ts";
-import useModels from "@/hooks/useModels.ts";
-import useSpaceId from "@/hooks/useSpaceId.ts";
-import type ChatMessage from "@/classes/ChatMessage.ts";
-import ChatMessageClass from "@/classes/ChatMessage.ts";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
-import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker.tsx";
+import ChatEmptyMessages from "@/pages/space/chat/ChatEmptyMessages.tsx";
+import ChatHistoryLoading from "@/pages/space/chat/ChatHistoryLoading.tsx";
+import ChatInputFooter from "@/pages/space/chat/ChatInputFooter.tsx";
+import ChatMessageRow from "@/pages/space/chat/ChatMessageRow.tsx";
+import type {
+  ActiveTurn,
+  DisplayMessage,
+  SpaceChatConversationProps,
+} from "@/pages/space/chat/types.ts";
 import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-} from "@/components/ui/message.tsx";
+  historyIncludesUserMessage,
+  makeMessageKey,
+} from "@/pages/space/chat/utils.ts";
+import ChatMessageClass from "@/classes/ChatMessage.ts";
+import useChatContext from "@/hooks/context/useChatContext.ts";
+import useChatMessages from "@/hooks/useChatMessages.ts";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -23,101 +22,10 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
-import { Bot, Loader2, UserRound } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
-type DisplayMessage = ChatMessage & { id: string };
-
-type ActiveTurn = {
-  userId: string;
-  assistantId: string;
-  userContent: string;
-};
-
-type SpaceChatConversationProps = {
-  chatId: string;
-  chatTitle?: string;
-  models: { value: string; label: string }[];
-  defaultModel?: string;
-  sendMessage: ReturnType<typeof useChatStream>["sendMessage"];
-  isStreaming: boolean;
-  spaceId: number;
-  invalidateChats: () => void;
-};
-
-const MARKDOWN_CLASSES =
-  "prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:my-2 rounded-xl";
-
-function makeMessageKey(role: ChatMessage["role"], content: string): string {
-  return `${role}\0${content}`;
-}
-
-function historyIncludesUserMessage(
-  messages: ChatMessage[],
-  content: string,
-): boolean {
-  return messages.some(
-    (message) => message.role === "user" && message.content === content,
-  );
-}
-
-function MessageAvatarIcon({ role }: { role: ChatMessage["role"] }) {
-  return (
-    <Avatar size="sm">
-      <AvatarFallback>
-        {role === "user" ? <UserRound /> : <Bot />}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
-function ThinkingMarker() {
-  return (
-    <Marker role="status" className="shimmer">
-      <MarkerIcon>
-        <Spinner />
-      </MarkerIcon>
-      <MarkerContent className="shimmer loading-dots"/>
-    </Marker>
-  );
-}
-
-function ChatMessageRow({
-  message,
-  isStreamingPlaceholder,
-}: {
-  message: DisplayMessage;
-  isStreamingPlaceholder: boolean;
-}) {
-  if (isStreamingPlaceholder && !message.content) {
-    return <ThinkingMarker />;
-  }
-
-  const isUser = message.role === "user";
-
-  return (
-    <Message align={isUser ? "end" : "start"}>
-      <MessageAvatar>
-        <MessageAvatarIcon role={message.role} />
-      </MessageAvatar>
-      <MessageContent>
-        <Bubble variant={isUser ? "default" : "muted"}>
-          <BubbleContent className={MARKDOWN_CLASSES}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {message.content}
-            </ReactMarkdown>
-          </BubbleContent>
-        </Bubble>
-      </MessageContent>
-    </Message>
-  );
-}
-
+// Active conversation view with message list, streaming drafts, and chat input.
 function SpaceChatConversation({
   chatId,
   chatTitle,
@@ -301,21 +209,12 @@ function SpaceChatConversation({
                 aria-busy={isStreaming}
                 className="gap-4 pt-3"
               >
-                {showHistoryLoading && (
-                  <MessageScrollerItem messageId="history-loading">
-                    <div className="flex flex-1 items-center justify-center py-12 text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  </MessageScrollerItem>
-                )}
+                {showHistoryLoading && <ChatHistoryLoading />}
                 {showEmptyState && (
-                  <MessageScrollerItem messageId="empty">
-                    <div className="flex flex-1 items-center justify-center py-12 text-sm text-muted-foreground text-center px-6">
-                      {t("chat.empty.messages", {
-                        title: chatTitle ?? t("chat.new"),
-                      })}
-                    </div>
-                  </MessageScrollerItem>
+                  <ChatEmptyMessages
+                    title={chatTitle ?? t("chat.new")}
+                    asScrollerItem
+                  />
                 )}
                 {displayedMessages.map((message) => (
                   <MessageScrollerItem
@@ -336,70 +235,14 @@ function SpaceChatConversation({
           </MessageScroller>
         </div>
       </MessageScrollerProvider>
-      <div className="w-full flex items-center justify-center relative">
-        <div className="flex p-3 w-full shrink-0 place-content-center">
-          <ChatInput
-            onSubmit={(message, model) => void handleSubmit(message, model)}
-            models={models}
-            defaultModel={defaultModel}
-            disabled={isStreaming}
-          />
-        </div>
-      </div>
+      <ChatInputFooter
+        onSubmit={(message, model) => void handleSubmit(message, model)}
+        models={models}
+        defaultModel={defaultModel}
+        disabled={isStreaming}
+      />
     </div>
   );
 }
 
-function SpaceChat() {
-  const { t } = useTranslation();
-  const { spaceId } = useSpaceId();
-  const { chats, isLoading: isChatsLoading, invalidateChats } = useChats();
-  const { models, defaultModel, isLoading: isModelsLoading } = useModels();
-  const { sendMessage, isStreaming } = useChatStream();
-  const { selectedChatId } = useChatContext();
-
-  const isInitialLoading = isChatsLoading || isModelsLoading;
-  const selectedChat = chats.find((chat) => chat.id === selectedChatId);
-
-  return (
-    <div className="flex w-full h-full overflow-hidden">
-      <div className="flex flex-col flex-1 min-h-0 items-center overflow-hidden">
-        <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col min-h-0 overflow-hidden">
-          {isInitialLoading ? (
-            <div className="flex flex-1 items-center justify-center text-muted-foreground gap-2">
-              <LoadingScreen />
-            </div>
-          ) : selectedChatId ? (
-            <SpaceChatConversation
-              key={selectedChatId}
-              chatId={selectedChatId}
-              chatTitle={selectedChat?.title}
-              models={models}
-              defaultModel={defaultModel}
-              sendMessage={sendMessage}
-              isStreaming={isStreaming}
-              spaceId={spaceId}
-              invalidateChats={invalidateChats}
-            />
-          ) : (
-            <>
-              <div className="flex flex-1 min-h-0 items-center justify-center text-sm text-muted-foreground text-center px-6">
-                {t("chat.empty.messages", { title: t("chat.new") })}
-              </div>
-              <div className="flex p-3 w-full shrink-0 place-content-center">
-                <ChatInput
-                  onSubmit={() => undefined}
-                  models={models}
-                  defaultModel={defaultModel}
-                  disabled
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default SpaceChat;
+export default SpaceChatConversation;

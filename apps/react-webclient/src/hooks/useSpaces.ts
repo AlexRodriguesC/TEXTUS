@@ -1,9 +1,11 @@
-import { useReadSpaces } from "@/client/generated/spaces/spaces.ts";
+import {getReadSpacesQueryKey, useReadSpaces} from "@/client/generated/spaces/spaces.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import Space from "@/classes/Space.ts";
 import { mapSpace } from "@/hooks/dtoMappers.ts";
+import {useQueryClient} from "@tanstack/react-query";
 
 function useSpaces() {
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const { data, isLoading } = useReadSpaces({
     query: {
@@ -16,7 +18,14 @@ function useSpaces() {
     spaces = data.data.map(mapSpace);
   }
 
-  return { spaces, isLoading };
+  const refetchSpaces = async (onSuccess?: () => void) => {
+    await queryClient.invalidateQueries({
+      queryKey: getReadSpacesQueryKey()
+    });
+    onSuccess?.();
+  }
+
+  return { spaces, refetchSpaces, isLoading };
 }
 
 export default useSpaces;

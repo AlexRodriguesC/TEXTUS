@@ -79,29 +79,11 @@ public class PathController {
         return ResponseEntity.accepted().build();
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/jobs")
-    @Operation(summary = "Get learning-path job status for the specified space", description = """
-        Returns the current status of the learning-path
-        generation job associated with the specified space.
-        """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "200", description = "Job status retrieved"),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or job not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<LearningPathJobDTO> getLearningPathJob(@Parameter(description = "The ID of the space to retrieve the learning-path job for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                                 @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        var status = pathService.getLearningPathStatus(username, spaceId);
-        return ResponseEntity.ok(new LearningPathJobDTO(status));
-    }
-
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the learning path for the specified space", description = """
         Returns the learning path currently generated for the specified space,
-        including its chapters and associated topics.
+        including its generation status, chapters, and associated topics.
+        Returns 404 when no learning path has been created yet for the space.
         """)
     @ApiResponses(
             {
@@ -119,7 +101,8 @@ public class PathController {
             throw NotFoundException.learningPathNotFound(spaceId);
         }
 
-        return ResponseEntity.ok(LearningPathResponseDTO.from(learningPath));
+        var status = pathService.getLearningPathStatus(username, spaceId);
+        return ResponseEntity.ok(LearningPathResponseDTO.from(learningPath, status));
     }
 
     @DeleteMapping

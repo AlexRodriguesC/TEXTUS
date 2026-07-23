@@ -1,0 +1,50 @@
+import LoadingScreen from "@/components/LoadingScreen.tsx";
+import useChatContext from "@/hooks/context/useChatContext.ts";
+import useChatStream from "@/hooks/useChatStream.ts";
+import useChats from "@/hooks/useChats.ts";
+import useModels from "@/hooks/useModels.ts";
+import SpaceChatConversation from "@/pages/space/chat/SpaceChatConversation.tsx";
+import SpaceChatNoSelection from "@/pages/space/chat/SpaceChatNoSelection.tsx";
+
+// Space chat page shell that switches between loading, conversation, and no-selection.
+function SpaceChat() {
+  const { chats, isLoading: isChatsLoading, invalidateChats } = useChats();
+  const { models, defaultModel, isLoading: isModelsLoading } = useModels();
+  const { sendMessage, isStreaming } = useChatStream();
+  const { selectedChatId } = useChatContext();
+
+  const isInitialLoading = isChatsLoading || isModelsLoading;
+  const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+
+  return (
+    <div className="flex w-full h-full overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 items-center overflow-hidden">
+        <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col min-h-0 overflow-hidden">
+          {isInitialLoading ? (
+            <div className="flex flex-1 items-center justify-center text-muted-foreground gap-2">
+              <LoadingScreen />
+            </div>
+          ) : selectedChatId ? (
+            <SpaceChatConversation
+              key={selectedChatId}
+              chatId={selectedChatId}
+              chatTitle={selectedChat?.title}
+              models={models}
+              defaultModel={defaultModel}
+              sendMessage={sendMessage}
+              isStreaming={isStreaming}
+              invalidateChats={invalidateChats}
+            />
+          ) : (
+            <SpaceChatNoSelection
+              models={models}
+              defaultModel={defaultModel}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default SpaceChat;

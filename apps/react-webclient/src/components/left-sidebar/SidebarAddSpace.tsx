@@ -14,22 +14,26 @@ import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import PathConstants from "@/routing/pathConstants.ts";
+import useSpaces from "@/hooks/useSpaces.ts";
 
 function SidebarAddSpace() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { refetchSpaces } = useSpaces();
   const { isAuthenticated } = useAuth();
   const { state, openMobile } = useSidebar();
   const open = state === "expanded" || openMobile;
 
   const navigateToSpace = useCallback(
-    (spaceId: number) => {
-      navigate({
-        to: PathConstants.SPACE_MENU,
-        params: { spaceId: String(spaceId) },
+    async (spaceId: number) => {
+      await refetchSpaces(() => {
+        navigate({
+          to: PathConstants.SPACE_MENU,
+          params: { spaceId: String(spaceId) },
+        });
       });
     },
-    [navigate],
+    [navigate, refetchSpaces],
   );
 
   return (

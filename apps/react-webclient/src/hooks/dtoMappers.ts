@@ -114,9 +114,9 @@ export function mapLearningPath(dto: LearningPathResponseDTO): LearningPath {
 }
 
 export function isLearningPathDto(
-  data: { chapters?: unknown; settings?: unknown },
-): boolean {
-  return "chapters" in data && "settings" in data;
+  data: { chapters?: unknown; settings?: unknown; status?: unknown },
+): data is LearningPathResponseDTO {
+  return "chapters" in data && "settings" in data && "status" in data;
 }
 
 export function mapNode(dto: NodeDTO): Node {

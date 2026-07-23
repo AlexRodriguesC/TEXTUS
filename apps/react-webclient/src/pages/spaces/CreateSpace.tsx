@@ -40,17 +40,7 @@ function CreateSpace({ trigger, onSuccess }: CreateSpaceProps) {
         },
       },
     );
-  }, [
-    createSpace,
-    name,
-    description,
-    icon,
-    defaultIcon,
-    defaultName,
-    defaultDescription,
-    onSuccess,
-    t,
-  ]);
+  }, [createSpace, name, description, icon, defaultName, defaultDescription, onSuccess, t]);
 
   return (
     <SpaceDialogForm

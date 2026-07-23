@@ -282,6 +282,7 @@
       "error": "Something went wrong while scheduling the generation of the learning path"
     },
     "empty": {
+      "generating": "Generating learning path",
       "title": "Personalized learning paths",
       "description": "Turn your uploaded sources into a learning path tailored to what you actually study.",
       "cta": "Generate learning path",

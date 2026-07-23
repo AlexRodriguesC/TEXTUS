@@ -3,7 +3,6 @@ package ch.supsi.documentapplication.integration.flows
 import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO
 import ch.supsi.documentapplication.controller.DTO.request.PatchSettingsDTO
 import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO
-import ch.supsi.documentapplication.controller.DTO.response.LearningPathJobDTO
 import ch.supsi.documentapplication.controller.DTO.response.LearningPathResponseDTO
 import ch.supsi.documentapplication.dataaccess.DatabasePathStorage
 import ch.supsi.documentapplication.integration.BaseFlowSpec
@@ -27,7 +26,7 @@ class PathManagementFlow extends BaseFlowSpec implements FlowTestSupport, Integr
     ObjectMapper objectMapper = new ObjectMapper()
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    def "should get path jobs update settings and delete path when learning path is seeded"() {
+    def "should get path update settings and delete path when learning path is seeded"() {
         given:
         String username = UUID.randomUUID().toString()
         String password = UUID.randomUUID().toString()
@@ -45,18 +44,6 @@ class PathManagementFlow extends BaseFlowSpec implements FlowTestSupport, Integr
                 .responseBody
                 .id()
         seedLearningPath(spaceId)
-
-        when: "the user requests learning path job status"
-        def jobResponse = restTestClient
-                .get()
-                .uri("/api/v1/spaces/${spaceId}/paths/jobs")
-                .header('Authorization', authHeader(auth.token()))
-                .exchange()
-
-        then:
-        jobResponse.expectStatus().isOk()
-        def jobStatus = jobResponse.expectBody(LearningPathJobDTO).returnResult().responseBody.status()
-        jobStatus in [LearningPathStatus.NOT_CREATED, LearningPathStatus.DONE, LearningPathStatus.GENERATING, LearningPathStatus.FAILED]
 
         when: "the user updates path settings"
         PatchSettingsDTO settings = objectMapper.readValue('''
@@ -88,7 +75,9 @@ class PathManagementFlow extends BaseFlowSpec implements FlowTestSupport, Integr
 
         then:
         pathResponse.expectStatus().isOk()
-        pathResponse.expectBody(LearningPathResponseDTO).returnResult().responseBody.settings().questionPercentage() == 40
+        def pathBody = pathResponse.expectBody(LearningPathResponseDTO).returnResult().responseBody
+        pathBody.settings().questionPercentage() == 40
+        pathBody.status() in [LearningPathStatus.NOT_CREATED, LearningPathStatus.DONE, LearningPathStatus.GENERATING, LearningPathStatus.FAILED]
 
         when: "the user deletes the learning path"
         def deleteResponse = restTestClient
