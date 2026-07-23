@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.service.clients.exercise
 import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
+import ch.supsi.documentapplication.service.clients.EvaluationRestClient
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIListClient
 import ch.supsi.documentapplication.unit.service.clients.ClientTestSupport
 import org.springframework.ai.chat.client.ChatClient
@@ -25,6 +26,7 @@ class OpenAIListClientSpec extends Specification {
     ChatClient.CallResponseSpec callResponseSpec = Mock()
     RetryTemplateWrapper retryTemplate
     PromptTemplate promptTemplate = Mock()
+    EvaluationRestClient evaluationRestClient = Mock()
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
@@ -40,7 +42,8 @@ class OpenAIListClientSpec extends Specification {
                 retryTemplate,
                 "",
                 promptTemplate,
-                ClientTestSupport.TEST_AI_CONTEXT)
+                ClientTestSupport.TEST_AI_CONTEXT,
+                evaluationRestClient)
     }
 
     def "should call chatClient and return the generated list exercise when topic is provided"() {
@@ -63,5 +66,6 @@ class OpenAIListClientSpec extends Specification {
         then:
         result.result() == expectedList
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+        1 * evaluationRestClient.evaluateExercise(topic, expectedList)
     }
 }

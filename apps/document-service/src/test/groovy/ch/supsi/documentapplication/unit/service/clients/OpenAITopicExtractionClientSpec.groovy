@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
+import ch.supsi.documentapplication.service.clients.EvaluationRestClient
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient
 import org.apache.commons.lang3.tuple.Pair
 import org.springframework.ai.chat.client.ChatClient
@@ -30,6 +31,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
     ChatClient.CallResponseSpec callResponseSpec = Mock()
     RetryTemplateWrapper retryTemplate
     PromptTemplate promptTemplate = Mock()
+    EvaluationRestClient evaluationRestClient = Mock()
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
@@ -43,6 +45,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
 
         client = new OpenAITopicExtractionClient(
                 new ObjectMapper(),
+                evaluationRestClient,
                 chatClient,
                 retryTemplate,
                 "",
@@ -82,6 +85,10 @@ class OpenAITopicExtractionClientSpec extends Specification {
         and: "the returned topics match what the chatClient produced"
         result.result() == expectedTopics
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+
+        and: "evaluations are submitted for the topic list and each topic"
+        1 * evaluationRestClient.evaluateTopicList("page summary text", expectedTopics)
+        1 * evaluationRestClient.evaluateTopicHallucination("page summary text", expectedTopics[0])
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {

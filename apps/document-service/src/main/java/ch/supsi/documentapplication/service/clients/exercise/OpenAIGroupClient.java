@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.Group;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.Client;
+import ch.supsi.documentapplication.service.clients.EvaluationRestClient;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,12 +17,15 @@ public class OpenAIGroupClient extends Client<Topic, Group> {
 
     private static final String TOPIC = "topic";
 
+    private final EvaluationRestClient evaluationRestClient;
+
     public OpenAIGroupClient(
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate,
-            AiContext aiContext) {
+            AiContext aiContext,
+            EvaluationRestClient evaluationRestClient) {
         super(
                 chatClient,
                 new BeanOutputConverter<>(Group.class),
@@ -29,12 +33,15 @@ public class OpenAIGroupClient extends Client<Topic, Group> {
                 systemPrompt,
                 promptTemplate,
                 aiContext);
+        this.evaluationRestClient = evaluationRestClient;
     }
 
     @Override
     protected ClientResult<Group> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
         params.put(TOPIC, input);
-        return invoke(getPrompt(params), Group.class);
+        ClientResult<Group> result = invoke(getPrompt(params), Group.class);
+        evaluationRestClient.evaluateExercise(input, result.result());
+        return result;
     }
 }

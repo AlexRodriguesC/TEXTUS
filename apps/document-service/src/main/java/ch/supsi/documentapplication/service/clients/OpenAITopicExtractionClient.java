@@ -20,12 +20,14 @@ import tools.jackson.databind.ObjectMapper;
 public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>, List<Topic>> {
 
     private final ObjectMapper objectMapper;
+    private final EvaluationRestClient evaluationRestClient;
 
     private static final String PAGE_TEXT = "page_text";
     private static final String EXISTING_LABELS = "existing_labels";
 
     public OpenAITopicExtractionClient(
             ObjectMapper objectMapper,
+            EvaluationRestClient evaluationRestClient,
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
@@ -39,6 +41,7 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
                 promptTemplate,
                 aiContext);
         this.objectMapper = objectMapper;
+        this.evaluationRestClient = evaluationRestClient;
     }
 
     @Override
@@ -53,6 +56,12 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
         Map<String, Object> params = new HashMap<>();
         params.put(PAGE_TEXT, page.getSummary());
         params.put(EXISTING_LABELS, objectMapper.writeValueAsString(distinctLabels));
-        return invoke(getPrompt(params), new ParameterizedTypeReference<>() {});
+        ClientResult<List<Topic>> result = invoke(getPrompt(params), new ParameterizedTypeReference<>() {});
+        List<Topic> topics = result.result();
+        evaluationRestClient.evaluateTopicList(page.getSummary(), topics);
+        for (Topic topic : topics) {
+            evaluationRestClient.evaluateTopicHallucination(page.getSummary(), topic);
+        }
+        return result;
     }
 }
