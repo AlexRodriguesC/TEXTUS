@@ -124,7 +124,7 @@ public class DocumentController {
                     @ApiResponse(responseCode = "204", description = "Document successfully deleted"),
                     @ApiResponse(responseCode = "404", description = "Document or space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "403", description = "User does not have permission to delete this document", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "409", description = "Document cannot be deleted because a mind map was already generated", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "409", description = "Document cannot be deleted because a mind map or path was already generated", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
     public ResponseEntity<Void> deleteDocument(@Parameter(description = "The ID of the space to delete the document from", required = true) @NotNull @PathVariable("spaceId") Long spaceId,

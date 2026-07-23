@@ -75,7 +75,8 @@ function useDocuments(spaceId: number) {
   });
 
   const deleteDocument = (documentId: number) => {
-    if (spaceId == null || documentId < 0) return;
+    if (documentId < 0) return;
+    const fileName = documents.find((doc) => doc.id === documentId)?.name;
     deleteMutation.mutate(
       { spaceId, documentId },
       {
@@ -83,7 +84,7 @@ function useDocuments(spaceId: number) {
           await queryClient.invalidateQueries({
             queryKey: getGetDocumentsQueryKey(spaceId),
           });
-          successToast(t("spaces.upload.success"));
+          successToast(t("documents.delete.success", {fileName}));
         },
       },
     );

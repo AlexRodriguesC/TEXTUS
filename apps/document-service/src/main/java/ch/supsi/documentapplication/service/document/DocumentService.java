@@ -1,9 +1,6 @@
 package ch.supsi.documentapplication.service.document;
 
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
-import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentTaskStorage;
-import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
-import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
+import ch.supsi.documentapplication.dataaccess.*;
 import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.*;
 import ch.supsi.documentapplication.service.batch.BatchJobRecoveryService;
@@ -33,6 +30,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
     private final Job documentJob;
     private final JobRepository jobRepository;
     private final BatchJobRecoveryService batchJobRecoveryService;
+    private final DatabasePathStorage databasePathStorage;
 
     @Autowired
     public DocumentService(
@@ -43,7 +41,8 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
             JobOperator asyncJobOperator,
             Job documentJob,
             JobRepository jobRepository,
-            BatchJobRecoveryService batchJobRecoveryService) {
+            BatchJobRecoveryService batchJobRecoveryService,
+            DatabasePathStorage databasePathStorage) {
         super(spaceStorage);
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
@@ -52,6 +51,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         this.documentJob = documentJob;
         this.jobRepository = jobRepository;
         this.batchJobRecoveryService = batchJobRecoveryService;
+        this.databasePathStorage = databasePathStorage;
     }
 
     @Override
@@ -136,16 +136,9 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         var document = documents.stream()
                 .filter(doc -> doc.getId().equals(documentId))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> NotFoundException.documentNotFoundException(documentId));
 
-        if (document == null) {
-            throw NotFoundException.documentNotFoundException(documentId);
-        }
-
-        var mindMap = spaceStorage.readMindMap(spaceId);
-        if (mindMap != null && mindMap.getJobId() != null) {
-            throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
-        }
+        validateDocumentDeletion(spaceId, documentId);
 
         JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, document.getJobId());
         if (jobExecution != null && jobExecution.isRunning()) {
@@ -159,5 +152,25 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         }
 
         databaseDocumentStorage.deleteDocument(spaceId, documentId);
+    }
+
+    private void validateDocumentDeletion(Long spaceId, Long documentId) {
+
+        validatePath(spaceId, documentId);
+        validateMap(spaceId, documentId);
+    }
+
+    private void validateMap(Long spaceId, Long documentId) {
+        var mindMap = spaceStorage.readMindMap(spaceId);
+        if (mindMap != null && mindMap.getJobId() != null) {
+            throw StateConflictException.mindMapAlreadyGeneratedException(documentId);
+        }
+    }
+
+    private void validatePath(Long spaceId, Long documentId) {
+        var path = databasePathStorage.read(spaceId);
+        if (path != null) {
+            throw StateConflictException.learningPathAlreadyGeneratedException(documentId);
+        }
     }
 }

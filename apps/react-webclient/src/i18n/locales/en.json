@@ -193,7 +193,7 @@
       "success": "Document {{fileName}} uploaded successfully."
     },
     "delete": {
-      "success": "Documented {{fileName}} removed successfully."
+      "success": "Document {{fileName}} removed successfully."
     },
     "status": {
       "overview": "Documents status"
