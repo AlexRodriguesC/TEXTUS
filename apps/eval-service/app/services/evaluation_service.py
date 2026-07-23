@@ -1,6 +1,7 @@
 """Business logic for running evaluations and persisting results."""
 
 import asyncio
+import logging
 from uuid import UUID
 
 from deepeval.metrics.base_metric import BaseMetric
@@ -18,8 +19,11 @@ from app.models.domain import (
 )
 from app.repositories.evaluation_repository import EvaluationRepository
 from app.services.llm.model_factory import get_evaluation_llm
+from app.services.llm.retry import MAX_ATTEMPTS, is_retryable_llm_error, measure_with_retry
 from app.services.metrics.factory import ResolvedMetric, resolve_metrics
 from app.services.metrics.registry import list_metric_definitions
+
+logger = logging.getLogger(__name__)
 
 
 async def _run_single_metric(
@@ -28,7 +32,10 @@ async def _run_single_metric(
   test_case: LLMTestCase,
 ) -> MetricResultRecord:
   try:
-    await metric.a_measure(test_case)
+    await measure_with_retry(
+      lambda: metric.a_measure(test_case),
+      metric_name=metric_name,
+    )
     return MetricResultRecord(
       metric_name=metric_name,
       score=float(metric.score),
@@ -37,6 +44,13 @@ async def _run_single_metric(
       error=None,
     )
   except Exception as exc:
+    if is_retryable_llm_error(exc):
+      logger.error(
+        "Metric evaluation failed after %s attempts",
+        MAX_ATTEMPTS,
+        extra={"metric_name": metric_name, "error": str(exc)},
+        exc_info=exc,
+      )
     return MetricResultRecord(
       metric_name=metric_name,
       score=0.0,
