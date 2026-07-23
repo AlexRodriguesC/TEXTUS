@@ -1,8 +1,8 @@
 """Factory for resolving metric configurations into DeepEval metric instances."""
 
 from deepeval.metrics.base_metric import BaseMetric
+from deepeval.models.base_model import DeepEvalBaseLLM
 
-from app.core.config import Settings
 from app.core.exceptions import InvalidMetricConfigError, MetricNotFoundError
 from app.models.domain import MetricConfigInput
 from app.services.metrics.builtin import build_builtin_metric
@@ -28,17 +28,17 @@ def validate_config(config: MetricConfigInput) -> None:
     )
 
 
-def resolve_metric(config: MetricConfigInput, settings: Settings) -> BaseMetric:
+def resolve_metric(config: MetricConfigInput, llm: DeepEvalBaseLLM) -> BaseMetric:
   validate_config(config)
-  return build_builtin_metric(config, settings)
+  return build_builtin_metric(config, llm)
 
 
 def resolve_metrics(
   configs: list[MetricConfigInput],
-  settings: Settings,
+  llm: DeepEvalBaseLLM,
 ) -> list[ResolvedMetric]:
   resolved: list[ResolvedMetric] = []
   for config in configs:
-    metric = resolve_metric(config, settings)
+    metric = resolve_metric(config, llm)
     resolved.append(ResolvedMetric(config=config, metric=metric))
   return resolved

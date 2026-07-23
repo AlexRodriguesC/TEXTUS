@@ -1,7 +1,6 @@
 """Business logic for running evaluations and persisting results."""
 
 import asyncio
-import os
 from uuid import UUID
 
 from deepeval.metrics.base_metric import BaseMetric
@@ -18,6 +17,7 @@ from app.models.domain import (
   MetricResultRecord,
 )
 from app.repositories.evaluation_repository import EvaluationRepository
+from app.services.llm.model_factory import get_evaluation_llm
 from app.services.metrics.factory import ResolvedMetric, resolve_metrics
 from app.services.metrics.registry import list_metric_definitions
 
@@ -28,16 +28,10 @@ class EvaluationService:
   def __init__(self, repository: EvaluationRepository, settings: Settings) -> None:
     self._repository = repository
     self._settings = settings
-    self._configure_deepeval_environment()
-
-  def _configure_deepeval_environment(self) -> None:
-    if self._settings.openai_api_key:
-      os.environ.setdefault("OPENAI_API_KEY", self._settings.openai_api_key)
-    if self._settings.openai_base_url:
-      os.environ.setdefault("OPENAI_BASE_URL", self._settings.openai_base_url)
+    self._llm = get_evaluation_llm(settings)
 
   async def create_evaluation(self, request: EvaluationCreateInput) -> EvaluationRecord:
-    resolved_metrics = resolve_metrics(request.metrics, self._settings)
+    resolved_metrics = resolve_metrics(request.metrics, self._llm)
     test_case = self._build_test_case(request)
     results = await self._run_metrics_concurrently(resolved_metrics, test_case)
 

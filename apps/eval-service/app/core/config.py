@@ -40,7 +40,10 @@ class Settings(BaseSettings):
   db_schema: str = Field(default="evaluations", alias="EVALUATION_DB_SCHEMA")
   openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
   openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
-  default_llm_model: str = Field(default="gpt-4.1", alias="EVALUATION_LLM_MODEL")
+  default_llm_model: str = Field(
+    default="claude-haiku-4-5-free",
+    alias="EVALUATION_LLM_MODEL",
+  )
 
   @property
   def database_url(self) -> str:
