@@ -15,6 +15,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import PathConstants from "@/routing/pathConstants.ts";
 import useSpaces from "@/hooks/useSpaces.ts";
+import HoverResponseIcon from "@/components/HoverResponseIcon.tsx";
 
 function SidebarAddSpace() {
   const { t } = useTranslation();
@@ -49,7 +50,13 @@ function SidebarAddSpace() {
                   <SidebarMenuButton asChild tooltip={t("sidebar.add-space")}>
                     {!open && (
                       <CreateSpace
-                        trigger={<Plus className={"cursor-pointer"} />}
+                        trigger={
+                          <HoverResponseIcon
+                            lucideIcon={Plus}
+                            groupName="menu-button"
+                            className="cursor-pointer"
+                          />
+                        }
                         onSuccess={navigateToSpace}
                       ></CreateSpace>
                     )}
@@ -60,7 +67,9 @@ function SidebarAddSpace() {
                         trigger={
                           <Button asChild variant={"default"}>
                             <div className={"flex flex-row items-center"}>
-                              <Plus strokeWidth={4} />
+                              <HoverResponseIcon
+                                lucideIcon={Plus}
+                              />
                               <p className={"font-bold uppercase"}>
                                 {t("sidebar.add-space")}
                               </p>

@@ -59,9 +59,6 @@ function RightSidebarFooter() {
               }}
             />
           )}
-          {!open && mindMap && mindMapStatus === MindMapJobStatus.DONE && (
-            <Separator orientation={"horizontal"} />
-          )}
         </div>
       )}
     </SidebarGroup>

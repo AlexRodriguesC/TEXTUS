@@ -8,7 +8,7 @@ import useTopics from "@/hooks/useTopics.tsx";
 import usePages from "@/hooks/usePages.ts";
 import SpaceMapEmpty from "@/pages/space/SpaceMapEmpty.tsx";
 import LoadingScreen from "@/components/LoadingScreen.tsx";
-import { useCallback, useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useState } from "react";
 import {
   Controls,
   type Edge as RFEdge,
@@ -223,7 +223,7 @@ function SpaceMapFlow({
     [mindMapNodes, expandedIds],
   );
 
-  const { nodes: rfNodes, edges: rfEdges } = useMemo(
+  const { nodes: layoutedNodes, edges: rfEdges } = useMemo(
     () =>
       getLayoutedElements(
         visibleNodes,
@@ -236,16 +236,28 @@ function SpaceMapFlow({
     [visibleNodes, topics, pages, childrenMap, expandedIds],
   );
 
-  const handleNodeClick = useCallback(
-    (_: MouseEvent, node: RFNode) => {
-      const id = node.id;
-      if (!childrenMap.has(id)) return;
-      setExpandedIds((prev) => toggleExpanded(id, prev, childrenMap));
-      requestAnimationFrame(() => {
-        fitView({ padding: 0.2, duration: 200 });
-      });
-    },
-    [childrenMap, fitView],
+  const rfNodes = useMemo(
+    () =>
+      layoutedNodes.map((node) => {
+        if (!(childrenMap.get(node.id)?.length ?? 0)) {
+          return node;
+        }
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onToggleExpand: () => {
+              setExpandedIds((prev) =>
+                toggleExpanded(node.id, prev, childrenMap),
+              );
+              requestAnimationFrame(() => {
+                fitView({ padding: 0.2, duration: 200 });
+              });
+            },
+          },
+        };
+      }),
+    [layoutedNodes, childrenMap, fitView],
   );
 
   return (
@@ -259,7 +271,6 @@ function SpaceMapFlow({
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={true}
-        onNodeClick={handleNodeClick}
         fitView
       >
         <Controls showInteractive={false} />

@@ -4,7 +4,6 @@ import {
   MessageAvatar,
   MessageContent,
 } from "@/components/ui/message.tsx";
-import { MARKDOWN_CLASSES } from "@/pages/space/chat/constants.ts";
 import MessageAvatarIcon from "@/pages/space/chat/MessageAvatarIcon.tsx";
 import ThinkingMarker from "@/pages/space/chat/ThinkingMarker.tsx";
 import type { DisplayMessage } from "@/pages/space/chat/types.ts";
@@ -32,7 +31,7 @@ function ChatMessageRow({
       </MessageAvatar>
       <MessageContent>
         <Bubble variant={isUser ? "default" : "muted"}>
-          <BubbleContent className={MARKDOWN_CLASSES}>
+          <BubbleContent className={"prose prose-sm dark:prose-invert prose-p:my-1 prose-pre:my-2 rounded-xl py-1"}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {message.content}
             </ReactMarkdown>

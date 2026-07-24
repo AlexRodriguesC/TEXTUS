@@ -14,7 +14,7 @@ function SidebarSettings() {
   return (
     <SidebarMenuItem key="settings">
       <div
-        className={`flex ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
+        className={`flex cursor-pointer ${open ? "flex-row justify-between items-center w-full" : "flex-col items-center"}`}
       >
         <SidebarMenuButton asChild>
           <Profile />

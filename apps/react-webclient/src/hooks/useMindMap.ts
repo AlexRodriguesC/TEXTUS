@@ -1,26 +1,18 @@
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import {
-  getGetMindMapQueryKey,
-  getListMindMapsQueryKey,
-  useDeleteMindMap,
-  useExtractMindMap,
   useGetMindMap,
   useListMindMaps,
 } from "@/client/generated/mind-maps/mind-maps.ts";
-import { useTranslation } from "react-i18next";
-import { failureToast, successToast } from "@/lib/toasts.ts";
-import { useQueryClient } from "@tanstack/react-query";
-import type {
-  MindMapResponseDTO,
-  MindMapSummaryDTO,
-  MindMapsResponseDTO,
-} from "@/client/model";
+import type { MindMapsResponseDTO } from "@/client/model";
 import MindMap from "@/classes/MindMap.ts";
 import MindMapJobStatus, {
   type MindMapJobStatusType,
 } from "@/classes/MindMapJobStatus.ts";
 import { isMindMapDto, mapMindMap } from "@/hooks/dtoMappers.ts";
-import { useCallback, useMemo, useRef } from "react";
+import useDeleteMindMapMutation from "@/hooks/mindmap/useDeleteMindMapMutation.ts";
+import { isMindMapListEmpty } from "@/hooks/mindmap/mindMapUtils.ts";
+import useRegenerateMindMapMutation from "@/hooks/mindmap/useRegenerateMindMapMutation.ts";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   return (
@@ -31,27 +23,30 @@ function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   );
 }
 
-function isMindMapSummaryDto(data: unknown): data is MindMapSummaryDTO {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "id" in data &&
-    "status" in data
-  );
-}
-
 function useMindMap() {
   const { spaceId } = useSpaceId();
-  const queryClient = useQueryClient();
-  const { t } = useTranslation();
-  const statusRef = useRef<MindMapJobStatusType>(MindMapJobStatus.NOT_CREATED);
+  const [statusOverride, setStatusOverride] =
+    useState<MindMapJobStatusType | null>(null);
+  const statusOverrideRef = useRef(statusOverride);
+  statusOverrideRef.current = statusOverride;
 
-  const { data: listData } = useListMindMaps(spaceId ?? -1, {
+  const { data: listData } = useListMindMaps(spaceId, {
     query: {
-      enabled: spaceId !== undefined,
+      enabled: true,
       refetchIntervalInBackground: true,
-      refetchInterval: () => {
-        return statusRef.current === MindMapJobStatus.GENERATING ? 2000 : false;
+      refetchInterval: (query) => {
+        if (statusOverrideRef.current === MindMapJobStatus.GENERATING) {
+          return 2000;
+        }
+        const raw = query.state.data;
+        if (
+          raw?.status === 200 &&
+          isMindMapsResponseDto(raw.data) &&
+          raw.data.mindMaps[0]?.status === MindMapJobStatus.GENERATING
+        ) {
+          return 2000;
+        }
+        return false;
       },
     },
   });
@@ -64,21 +59,62 @@ function useMindMap() {
   const mindMapId = summary?.id;
 
   const { data: mindMapData, isLoading } = useGetMindMap(
-    spaceId ?? -1,
+    spaceId,
     mindMapId ?? -1,
     {
       query: {
-        enabled: spaceId !== undefined && mindMapId !== undefined,
+        enabled: mindMapId !== undefined,
         refetchIntervalInBackground: true,
-        refetchInterval: () => {
-          return statusRef.current === MindMapJobStatus.GENERATING ? 2000 : false;
+        refetchInterval: (query) => {
+          if (statusOverrideRef.current === MindMapJobStatus.GENERATING) {
+            return 2000;
+          }
+          const raw = query.state.data;
+          if (
+            raw?.status === 200 &&
+            isMindMapDto(raw.data) &&
+            raw.data.status === MindMapJobStatus.GENERATING
+          ) {
+            return 2000;
+          }
+          return false;
         },
       },
     },
   );
 
+  useEffect(() => {
+    if (statusOverride === MindMapJobStatus.GENERATING) {
+      const listStatus = summary?.status as MindMapJobStatusType | undefined;
+      const getStatus =
+        mindMapData?.status === 200 && isMindMapDto(mindMapData.data)
+          ? (mindMapData.data.status as MindMapJobStatusType)
+          : undefined;
+      const status = getStatus ?? listStatus;
+      if (
+        status === MindMapJobStatus.GENERATING ||
+        status === MindMapJobStatus.DONE ||
+        status === MindMapJobStatus.FAILED
+      ) {
+        setStatusOverride(null);
+      }
+    }
+
+    if (statusOverride === MindMapJobStatus.NOT_CREATED) {
+      if (isMindMapListEmpty(listData)) {
+        setStatusOverride(null);
+      }
+    }
+  }, [statusOverride, listData, mindMapData, summary?.status]);
+
+  const isListEmpty = isMindMapListEmpty(listData);
+
   let mindMapStatus: MindMapJobStatusType = MindMapJobStatus.NOT_CREATED;
-  if (
+  if (statusOverride !== null) {
+    mindMapStatus = statusOverride;
+  } else if (isListEmpty) {
+    mindMapStatus = MindMapJobStatus.NOT_CREATED;
+  } else if (
     mindMapData?.status === 200 &&
     isMindMapDto(mindMapData.data)
   ) {
@@ -86,56 +122,22 @@ function useMindMap() {
   } else if (summary) {
     mindMapStatus = summary.status as MindMapJobStatusType;
   }
-  statusRef.current = mindMapStatus;
 
-  const { mutate: deleteMutation, isPending: isDeleting } = useDeleteMindMap({
-    mutation: {
-      onSuccess: async () => {
-        if (spaceId === undefined) return;
-        await queryClient.resetQueries({
-          queryKey: getListMindMapsQueryKey(spaceId),
-        });
-        if (mindMapId !== undefined) {
-          await queryClient.resetQueries({
-            queryKey: getGetMindMapQueryKey(spaceId, mindMapId),
-          });
-        }
-      },
-    },
-  });
-
-  const { mutate: generateMutation, isPending: isGenerating } =
-    useExtractMindMap({
-      mutation: {
-        onSuccess: (response) => {
-          successToast(t("mindmap.creation.success"));
-          if (spaceId === undefined || response.status !== 202) return;
-          const created = response.data;
-          if (!isMindMapSummaryDto(created)) return;
-
-          queryClient.setQueryData(getListMindMapsQueryKey(spaceId), {
-            data: { mindMaps: [created] },
-            status: 200,
-          });
-          queryClient.setQueryData(
-            getGetMindMapQueryKey(spaceId, created.id),
-            {
-              data: {
-                id: created.id,
-                status: created.status,
-                nodes: [],
-              } satisfies MindMapResponseDTO,
-              status: 200,
-            },
-          );
-        },
-        onError: () => {
-          failureToast(t("mindmap.creation.error"));
-        },
-      },
-    });
+  const { deleteMindMap, isDeleting } = useDeleteMindMapMutation(
+    spaceId,
+    mindMapId,
+    setStatusOverride,
+  );
+  const { regenerateMindMap, isGenerating } = useRegenerateMindMapMutation(
+    spaceId,
+    mindMapId,
+    setStatusOverride,
+  );
 
   const mindMap = useMemo(() => {
+    if (isListEmpty) {
+      return new MindMap([]);
+    }
     if (
       mindMapData?.status === 200 &&
       isMindMapDto(mindMapData.data) &&
@@ -144,17 +146,7 @@ function useMindMap() {
       return mapMindMap(mindMapData.data);
     }
     return new MindMap([]);
-  }, [mindMapData]);
-
-  const deleteMindMap = useCallback(() => {
-    if (spaceId === undefined || mindMapId === undefined) return;
-    deleteMutation({ spaceId, mindMapId });
-  }, [spaceId, mindMapId, deleteMutation]);
-
-  const regenerateMindMap = useCallback(() => {
-    if (spaceId === undefined) return;
-    generateMutation({ spaceId });
-  }, [spaceId, generateMutation]);
+  }, [isListEmpty, mindMapData]);
 
   return {
     mindMap,

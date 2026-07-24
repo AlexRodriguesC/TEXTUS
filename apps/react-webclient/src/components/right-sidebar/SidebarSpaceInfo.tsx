@@ -34,7 +34,7 @@ function SidebarSpaceInfo() {
       </SidebarGroupLabel>
       <SidebarGroupContent className={"flex flex-col items-center"}>
         <SidebarAction
-          icon={<Menu className={"hover:stroke-2"} />}
+          icon={Menu}
           labelKey={"sidebar.actions.menu.label"}
           tooltipKey={"sidebar.actions.menu.tooltip"}
           to={PathConstants.SPACE_MENU}
@@ -42,19 +42,19 @@ function SidebarSpaceInfo() {
         <SidebarSeparator className={"mt-2 mb-2"} />
         <SidebarAction
           to={PathConstants.SPACE_CHAT}
-          icon={<MessagesSquare />}
+          icon={MessagesSquare}
           labelKey={"sidebar.actions.chat.label"}
           tooltipKey={"sidebar.actions.chat.tooltip"}
         />
         <SidebarAction
           to={PathConstants.SPACE_MIND_MAP}
-          icon={<Workflow />}
+          icon={Workflow}
           labelKey={"sidebar.actions.map.label"}
           tooltipKey={"sidebar.actions.map.tooltip"}
         />
         <SidebarAction
           to={PathConstants.SPACE_LEARN}
-          icon={<GraduationCap />}
+          icon={GraduationCap}
           labelKey={"sidebar.actions.learn.label"}
           tooltipKey={"sidebar.actions.learn.tooltip"}
         />

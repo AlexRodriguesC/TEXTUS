@@ -196,11 +196,6 @@ function SpaceChatConversation({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 items-center bg-transparent bg-none">
-      {/*
-        Stick to the live edge. Turn-anchoring (scrollAnchor + last-anchor)
-        intentionally jumps the latest user message to the top of the viewport;
-        that is the abrupt "scroll up" users hit on send / stream end.
-      */}
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
         <div className="relative flex flex-1 min-h-0 w-full max-w-3xl">
           <MessageScroller>

@@ -3,21 +3,11 @@ import IllustratedAside, {
   AsideFooter,
   AsideHeader,
 } from "@/components/IllustratedAside.tsx";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button.tsx";
-import useDocuments from "@/hooks/useDocuments.ts";
-import useSpaceId from "@/hooks/useSpaceId.ts";
-import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
-import PathConstants from "@/routing/pathConstants.ts";
 import GenerateMindMapButton from "@/pages/space/GenerateMindMapButton.tsx";
+import { useTranslation } from "react-i18next";
 
 function SpaceMapEmpty() {
   const { t } = useTranslation();
-  const { spaceId, strSpaceId } = useSpaceId();
-  const { documents } = useDocuments(spaceId);
-
-  const hasDocuments = useMemo(() => documents.length > 0, [documents.length]);
 
   return (
     <CenteredPage>
@@ -33,18 +23,7 @@ function SpaceMapEmpty() {
           <p className="text-center">{t("mindmap.empty.description")}</p>
         </AsideHeader>
         <AsideFooter>
-          {hasDocuments ? (
-            <GenerateMindMapButton />
-          ) : (
-            <Button className="w-full" asChild>
-              <Link
-                to={PathConstants.SPACE_MENU}
-                params={{ spaceId: strSpaceId! }}
-              >
-                {t("mindmap.empty.cta-add")}
-              </Link>
-            </Button>
-          )}
+          <GenerateMindMapButton />
         </AsideFooter>
       </IllustratedAside>
     </CenteredPage>

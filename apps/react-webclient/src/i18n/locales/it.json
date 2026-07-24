@@ -27,6 +27,7 @@
     "not-logged-in": "Non hai effettuato l'accesso"
   },
   "general": {
+    "thinking": "Sto pensando",
     "title": "Titolo",
     "summary": "Riassunto",
     "wrong": "Qualcosa è andato storto",
@@ -210,7 +211,8 @@
       "description": "Una mind map collega i tuoi argomenti così puoi vedere come le idee si relazionano e comprenderle più a fondo. Generane una dalle tue fonti caricate.",
       "cta": "Genera mind map",
       "cta-add": "Aggiungi documenti",
-      "cta-regenerate": "Rigenera mind map"
+      "cta-regenerate": "Rigenera mind map",
+      "generating": "Generazione mappa mentale in corso"
     }
   },
   "sidebar": {

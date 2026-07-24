@@ -1,65 +1,44 @@
+import GenerateJobButton from "@/components/GenerateJobButton.tsx";
 import useMindMap from "@/hooks/useMindMap.ts";
-import MindMapJobStatus from "@/classes/MindMapJobStatus.ts";
-import { useTranslation } from "react-i18next";
+import useDocuments from "@/hooks/useDocuments.ts";
+import useSpaceId from "@/hooks/useSpaceId.ts";
+import PathConstants from "@/routing/pathConstants.ts";
 import { Button } from "@/components/ui/button.tsx";
-import { Spinner } from "@/components/ui/spinner.tsx";
-import { X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 function GenerateMindMapButton() {
   const { t } = useTranslation();
+  const { spaceId, strSpaceId } = useSpaceId();
+  const { documents } = useDocuments(spaceId);
+  const hasDocuments = useMemo(() => documents.length > 0, [documents.length]);
   const { status, regenerateMindMap, deleteMindMap } = useMindMap();
 
-  if (status === MindMapJobStatus.NOT_CREATED) {
-    return (
-      <Button onClick={() => regenerateMindMap()} className={"w-full"}>
-        {t("mindmap.empty.cta")}
-      </Button>
-    );
-  }
+  const fallback = !hasDocuments ? (
+    <Button className="w-full" asChild>
+      <Link to={PathConstants.SPACE_MENU} params={{ spaceId: strSpaceId! }}>
+        {t("mindmap.empty.cta-add")}
+      </Link>
+    </Button>
+  ) : undefined;
 
-  if (status === MindMapJobStatus.GENERATING) {
-    return (
-      <Button disabled={true} className={"w-full"}>
-        <div className={"flex items-center justify-between gap-2"}>
-          {t("mindmap.empty.cta")}
-          <Spinner />
-        </div>
-      </Button>
-    );
-  }
-
-  if (status === MindMapJobStatus.FAILED) {
-    return (
-      <Button
-        onClick={() => {
-          deleteMindMap();
-          regenerateMindMap();
-        }}
-        className={"w-full"}
-      >
-        <div className={"flex items-center justify-between gap-2"}>
-          {t("mindmap.empty.cta-regenerate")}
-          <X color={"red"} />
-        </div>
-      </Button>
-    );
-  }
-
-  if (status === MindMapJobStatus.DONE) {
-    return (
-      <Button
-        onClick={() => {
-          deleteMindMap();
-          regenerateMindMap();
-        }}
-        className={"w-full"}
-      >
-        <div className={"flex items-center justify-between gap-2"}>
-          {t("mindmap.empty.cta-regenerate")}
-        </div>
-      </Button>
-    );
-  }
+  return (
+    <GenerateJobButton
+      status={status}
+      labels={{
+        cta: t("mindmap.empty.cta"),
+        generating: t("mindmap.empty.generating"),
+        ctaRegenerate: t("mindmap.empty.cta-regenerate"),
+      }}
+      onGenerate={regenerateMindMap}
+      onRegenerate={() => {
+        deleteMindMap();
+        regenerateMindMap();
+      }}
+      fallback={fallback}
+    />
+  );
 }
 
 export default GenerateMindMapButton;

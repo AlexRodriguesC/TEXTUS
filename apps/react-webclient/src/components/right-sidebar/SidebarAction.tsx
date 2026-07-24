@@ -2,12 +2,13 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
 import { HintOverlay } from "@/components/HintOverlay.tsx";
-import { ChevronRight, Plus } from "lucide-react";
+import {ChevronRight, type LucideIcon, Plus} from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
 import { Link } from "@tanstack/react-router";
+import HoverResponseIcon from "@/components/HoverResponseIcon.tsx";
 
 interface SidebarActionProps {
-  icon: React.ReactNode;
+  icon: LucideIcon;
   labelKey: string;
   tooltipKey: string;
   to: string;
@@ -29,7 +30,7 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
             asChild
           >
             <Link to={to}>
-              <span>{icon}</span>
+                <HoverResponseIcon lucideIcon={icon}/>
               <span className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-background border h-4 w-4">
                 <Plus className="h-2.5 w-2.5" />
               </span>
@@ -53,7 +54,7 @@ function SidebarAction({ icon, labelKey, tooltipKey, to }: SidebarActionProps) {
         >
           <Link to={to}>
             <div className="flex flex-row items-center gap-3">
-              <span>{icon}</span>
+                <HoverResponseIcon lucideIcon={icon}/>
               <span className="font-medium">{t(labelKey)}</span>
             </div>
             <span className="flex items-center justify-center rounded-full bg-background/60 h-7 w-7 shrink-0">

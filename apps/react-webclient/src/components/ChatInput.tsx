@@ -67,7 +67,7 @@ function ChatInput({
   };
 
   return (
-    <div className="w-full max-w-3xl rounded-md border bg-muted/30 p-3 flex flex-col gap-2">
+    <div className="w-full max-w-3xl rounded-md border bg-muted/80 p-3 flex flex-col gap-2">
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}

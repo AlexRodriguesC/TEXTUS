@@ -8,10 +8,9 @@ function DocumentStatusList() {
   const { spaceId } = useSpaceId();
   const { documents, deleteDocument, retryDocument, isRetrying } =
     useDocuments(spaceId);
-  const { status } = useMindMap();
   const {status: mapStatus} = useMindMap();
   const {status: pathStatus} = useLearningPath();
-  const actionsDisabled = status === "GENERATING" || status === "DONE" || mapStatus !== "NOT_CREATED" || pathStatus !== "NOT_CREATED";
+  const actionsDisabled = mapStatus !== "NOT_CREATED" || pathStatus !== "NOT_CREATED";
 
   return (
     <div className="flex flex-row w-full justify-between items-center h-fit">
