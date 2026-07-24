@@ -2,7 +2,6 @@ package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.request.PatchSettingsDTO;
 import ch.supsi.documentapplication.controller.DTO.response.*;
-import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.PathSettings;
 import ch.supsi.documentapplication.service.IPathService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/spaces/{spaceId}/paths")
@@ -81,29 +82,30 @@ public class PathController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the learning path for the specified space", description = """
-        Returns the learning path currently generated for the specified space,
-        including its generation status, chapters, and associated topics.
-        Returns 404 when no learning path has been created yet for the space.
+    @Operation(summary = "List learning paths for the specified space", description = """
+        Returns the learning paths currently generated for the specified space,
+        including generation status, chapters, and associated topics.
+        Returns an empty list when no learning path has been created yet for the space.
         """)
     @ApiResponses(
             {
-                    @ApiResponse(responseCode = "200", description = "Learning path retrieved"),
+                    @ApiResponse(responseCode = "200", description = "Learning paths retrieved"),
                     @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or learning path not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
-    public ResponseEntity<LearningPathResponseDTO> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+    public ResponseEntity<LearningPathsResponseDTO> getLearningPath(@Parameter(description = "The ID of the space to retrieve the learning path for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
                                                                    @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
         var learningPath = pathService.getLearningPath(username, spaceId);
 
         if (learningPath == null) {
-            throw NotFoundException.learningPathNotFound(spaceId);
+            return ResponseEntity.ok(new LearningPathsResponseDTO(List.of()));
         }
 
         var status = pathService.getLearningPathStatus(username, spaceId);
-        return ResponseEntity.ok(LearningPathResponseDTO.from(learningPath, status));
+        return ResponseEntity.ok(
+                new LearningPathsResponseDTO(List.of(LearningPathResponseDTO.from(learningPath, status))));
     }
 
     @DeleteMapping

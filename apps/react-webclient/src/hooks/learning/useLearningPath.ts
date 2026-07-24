@@ -3,19 +3,20 @@ import {
   getGetLearningPathQueryKey,
   useGetLearningPath,
 } from "@/client/generated/paths/paths.ts";
-import { ApiError } from "@/client/mutator.ts";
-import LearningPath from "@/classes/LearningPath.ts";
-import PathSettings from "@/classes/PathSettings.ts";
 import LearningPathJobStatus, {
   type LearningPathJobStatusType,
 } from "@/classes/LearningPathJobStatus.ts";
-import { isLearningPathDto, mapLearningPath } from "@/hooks/dtoMappers.ts";
+import { mapLearningPath } from "@/hooks/dtoMappers.ts";
 import useDeletePathMutation from "@/hooks/learning/useDeletePathMutation.ts";
-import { isLearningPathNotFound } from "@/hooks/learning/learningPathUtils.ts";
+import {
+  isLearningPathListEmpty,
+  isLearningPathsResponseDto,
+} from "@/hooks/learning/learningPathUtils.ts";
 import useRegeneratePathMutation from "@/hooks/learning/useRegeneratePathMutation.ts";
 import useUpdateSettingsMutation from "@/hooks/learning/useUpdateSettingsMutation.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type LearningPath from "@/classes/LearningPath.ts";
 
 function useLearningPath() {
   const { spaceId } = useSpaceId();
@@ -25,17 +26,10 @@ function useLearningPath() {
   const statusOverrideRef = useRef(statusOverride);
   statusOverrideRef.current = statusOverride;
 
-  const {
-    data: learningPathData,
-    error: learningPathError,
-    isLoading,
-  } = useGetLearningPath(spaceId, {
+  const { data: learningPathData, isLoading } = useGetLearningPath(spaceId, {
     query: {
       refetchIntervalInBackground: true,
-      retry: (_failureCount, error) => {
-        if (error instanceof ApiError && error.status === 404) return false;
-        return _failureCount < 2;
-      },
+      retry: (failureCount) => failureCount < 2,
       refetchInterval: (query) => {
         if (statusOverrideRef.current === LearningPathJobStatus.GENERATING) {
           return 2000;
@@ -43,8 +37,8 @@ function useLearningPath() {
         const raw = query.state.data;
         if (
           raw?.status === 200 &&
-          isLearningPathDto(raw.data) &&
-          raw.data.status === LearningPathJobStatus.GENERATING
+          isLearningPathsResponseDto(raw.data) &&
+          raw.data.paths[0]?.status === LearningPathJobStatus.GENERATING
         ) {
           return 2000;
         }
@@ -53,48 +47,41 @@ function useLearningPath() {
     },
   });
 
+  const paths =
+    learningPathData?.status === 200 &&
+    isLearningPathsResponseDto(learningPathData.data)
+      ? learningPathData.data.paths
+      : [];
+  const pathDto = paths[0];
+  const isListEmpty = paths.length === 0;
+
   useEffect(() => {
     if (statusOverride === LearningPathJobStatus.GENERATING) {
+      const status = pathDto?.status as LearningPathJobStatusType | undefined;
       if (
-        learningPathData?.status === 200 &&
-        isLearningPathDto(learningPathData.data)
+        status === LearningPathJobStatus.GENERATING ||
+        status === LearningPathJobStatus.DONE ||
+        status === LearningPathJobStatus.FAILED
       ) {
-        const status = learningPathData.data.status;
-        if (
-          status === LearningPathJobStatus.GENERATING ||
-          status === LearningPathJobStatus.DONE ||
-          status === LearningPathJobStatus.FAILED
-        ) {
-          setStatusOverride(null);
-        }
+        setStatusOverride(null);
       }
     }
 
     if (statusOverride === LearningPathJobStatus.NOT_CREATED) {
-      if (isLearningPathNotFound(learningPathError)) {
+      if (isLearningPathListEmpty(learningPathData)) {
         setStatusOverride(null);
       }
     }
-  }, [statusOverride, learningPathData, learningPathError]);
-
-  const isNotFound = isLearningPathNotFound(learningPathError);
-  const emptyPath = useMemo(
-    () => new LearningPath([], new PathSettings(0, 0, 0, 0)),
-    [],
-  );
+  }, [statusOverride, learningPathData, pathDto?.status]);
 
   let learningPathStatus: LearningPathJobStatusType =
     LearningPathJobStatus.NOT_CREATED;
   if (statusOverride !== null) {
     learningPathStatus = statusOverride;
-  } else if (isNotFound) {
+  } else if (isListEmpty) {
     learningPathStatus = LearningPathJobStatus.NOT_CREATED;
-  } else if (
-    learningPathData?.status === 200 &&
-    isLearningPathDto(learningPathData.data)
-  ) {
-    learningPathStatus = learningPathData.data
-      .status as LearningPathJobStatusType;
+  } else if (pathDto) {
+    learningPathStatus = pathDto.status as LearningPathJobStatusType;
   }
 
   const { updateSettings } = useUpdateSettingsMutation(spaceId);
@@ -107,19 +94,15 @@ function useLearningPath() {
     setStatusOverride,
   );
 
-  const path = useMemo(() => {
-    if (isNotFound) {
-      return emptyPath;
+  const path = useMemo((): LearningPath | undefined => {
+    if (isListEmpty || pathDto === undefined) {
+      return undefined;
     }
-    if (
-      learningPathData?.status === 200 &&
-      isLearningPathDto(learningPathData.data) &&
-      learningPathData.data.status === LearningPathJobStatus.DONE
-    ) {
-      return mapLearningPath(learningPathData.data);
+    if (pathDto.status === LearningPathJobStatus.DONE) {
+      return mapLearningPath(pathDto);
     }
-    return emptyPath;
-  }, [isNotFound, learningPathData, emptyPath]);
+    return undefined;
+  }, [isListEmpty, pathDto]);
 
   const invalidateLearningPath = useCallback(async () => {
     if (spaceId === undefined) return;

@@ -72,7 +72,21 @@ class PathControllerSpec extends Specification {
 
         then:
         result.andExpect(status().isOk())
-                .andExpect(jsonPath('$.status').value('DONE'))
+                .andExpect(jsonPath('$.paths[0].status').value('DONE'))
+    }
+
+    def "should return empty list when learning path is absent"() {
+        given:
+        pathService.getLearningPath("alice", 1L) >> null
+
+        when:
+        def result = mockMvc.perform(get("/api/v1/spaces/1/paths").principal(authentication))
+
+        then:
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath('$.paths').isArray())
+                .andExpect(jsonPath('$.paths').isEmpty())
+        0 * pathService.getLearningPathStatus(_, _)
     }
 
     def "should update path settings"() {

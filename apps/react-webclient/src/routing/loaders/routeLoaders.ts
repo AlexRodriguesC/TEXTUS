@@ -17,7 +17,6 @@ import { getGetTopicsQueryOptions } from "@/client/generated/topics/topics.ts";
 import type { MindMapsResponseDTO } from "@/client/model";
 import { ApiError } from "@/client/mutator.ts";
 import { mapLesson } from "@/hooks/dtoMappers.ts";
-import { isLearningPathNotFound } from "@/hooks/learning/learningPathUtils.ts";
 
 function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   return (
@@ -28,26 +27,11 @@ function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   );
 }
 
-const learningPathRetry = (failureCount: number, error: unknown) => {
-  if (error instanceof ApiError && error.status === 404) return false;
-  return failureCount < 2;
-};
-
 export async function ensureLearningPath(
   queryClient: QueryClient,
   spaceId: number,
 ) {
-  try {
-    await queryClient.ensureQueryData(
-      getGetLearningPathQueryOptions(spaceId, {
-        query: { retry: learningPathRetry },
-      }),
-    );
-  } catch (error) {
-    if (!isLearningPathNotFound(error)) {
-      throw error;
-    }
-  }
+  await queryClient.ensureQueryData(getGetLearningPathQueryOptions(spaceId));
 }
 
 async function ensureMindMapData(queryClient: QueryClient, spaceId: number) {

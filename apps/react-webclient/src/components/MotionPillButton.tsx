@@ -40,7 +40,9 @@ const MotionPillButton = forwardRef<HTMLButtonElement, MotionPillButtonProps>(
     const { topics } = useTopics();
 
     const mastered = useMemo(() => {
-      if (entityId === undefined || path.chapters.length === 0) return false;
+      if (entityId === undefined || !path || path.chapters.length === 0) {
+        return false;
+      }
       if (isPage) {
         return isPageFullyMastered(path, entityId, topics);
       }

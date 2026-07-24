@@ -6,6 +6,7 @@ import {
 import type { ErrorResponseDTO } from "@/client/model";
 import PathSettings from "@/classes/PathSettings.ts";
 import { isLearningPathDto, toPathSettingsDto } from "@/hooks/dtoMappers.ts";
+import { isLearningPathsResponseDto } from "@/hooks/learning/learningPathUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -32,17 +33,28 @@ function useUpdateSettingsMutation(spaceId: number | undefined) {
           queryClient.getQueryData<getLearningPathResponse>(queryKey);
 
         queryClient.setQueryData<getLearningPathResponse>(queryKey, (old) => {
-          if (!old || old.status !== 200 || !isLearningPathDto(old.data)) {
+          if (
+            old?.status !== 200 ||
+            !isLearningPathsResponseDto(old.data)
+          ) {
+            return old;
+          }
+          const existing = old.data.paths[0];
+          if (existing === undefined || !isLearningPathDto(existing)) {
             return old;
           }
           return {
             ...old,
             data: {
-              ...old.data,
-              settings: {
-                ...old.data.settings,
-                ...data,
-              },
+              paths: [
+                {
+                  ...existing,
+                  settings: {
+                    ...existing.settings,
+                    ...data,
+                  },
+                },
+              ],
             },
           };
         });

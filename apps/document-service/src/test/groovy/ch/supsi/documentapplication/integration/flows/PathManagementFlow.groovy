@@ -3,7 +3,7 @@ package ch.supsi.documentapplication.integration.flows
 import ch.supsi.documentapplication.controller.DTO.request.CreateSpaceRequestDTO
 import ch.supsi.documentapplication.controller.DTO.request.PatchSettingsDTO
 import ch.supsi.documentapplication.controller.DTO.response.CreateSpaceResponseDTO
-import ch.supsi.documentapplication.controller.DTO.response.LearningPathResponseDTO
+import ch.supsi.documentapplication.controller.DTO.response.LearningPathsResponseDTO
 import ch.supsi.documentapplication.dataaccess.DatabasePathStorage
 import ch.supsi.documentapplication.integration.BaseFlowSpec
 import ch.supsi.documentapplication.integration.IntegrationFixture
@@ -75,7 +75,9 @@ class PathManagementFlow extends BaseFlowSpec implements FlowTestSupport, Integr
 
         then:
         pathResponse.expectStatus().isOk()
-        def pathBody = pathResponse.expectBody(LearningPathResponseDTO).returnResult().responseBody
+        def pathsBody = pathResponse.expectBody(LearningPathsResponseDTO).returnResult().responseBody
+        pathsBody.paths().size() == 1
+        def pathBody = pathsBody.paths()[0]
         pathBody.settings().questionPercentage() == 40
         pathBody.status() in [LearningPathStatus.NOT_CREATED, LearningPathStatus.DONE, LearningPathStatus.GENERATING, LearningPathStatus.FAILED]
 
