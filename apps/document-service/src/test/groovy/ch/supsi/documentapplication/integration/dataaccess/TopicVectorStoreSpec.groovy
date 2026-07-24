@@ -60,6 +60,7 @@ class TopicVectorStoreSpec extends DatabaseSpec {
                 .metadata([
                         topicId       : topicId,
                         pageId        : pageId,
+                        spaceId       : spaceId,
                         embeddingModel: "text-embedding-3-small"
                 ])
                 .build()
@@ -82,6 +83,7 @@ class TopicVectorStoreSpec extends DatabaseSpec {
         def metadata = rows[0].metadata.toString()
         metadata.contains(topicId.toString())
         metadata.contains(pageId.toString())
+        metadata.contains(spaceId.toString())
         metadata.contains("text-embedding-3-small")
     }
 }

@@ -43,4 +43,7 @@ public class PromptProperties {
 
     private String feedbackSystem;
     private String feedbackUser;
+
+    private String chatRagUser;
+    private String chatRagEmptyContext;
 }

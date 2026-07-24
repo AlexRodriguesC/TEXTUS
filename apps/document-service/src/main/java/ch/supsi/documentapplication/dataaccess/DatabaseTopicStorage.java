@@ -59,6 +59,16 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
                 .list();
     }
 
+    @Override
+    public List<Topic> findRandomTopicsBySpace(Long spaceId, int limit) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_random_topics_by_space(:space_id, :limit)")
+                .param(SPACE_ID, spaceId)
+                .param("limit", limit)
+                .query((rs, rowNum) -> mapToTopic(rs))
+                .list();
+    }
+
     private Topic mapToTopic(ResultSet rs) throws SQLException {
         Array sqlLabels = rs.getArray(LABELS);
         List<String> labels = sqlLabels != null ? Arrays.asList((String[]) sqlLabels.getArray()) : List.of();

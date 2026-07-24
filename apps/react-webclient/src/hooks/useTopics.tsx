@@ -1,4 +1,7 @@
-import {getGetTopicsQueryKey, useGetTopics} from "@/client/generated/topics/topics.ts";
+import {
+  getGetTopicsQueryOptions,
+  useGetTopics,
+} from "@/client/generated/topics/topics.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import type { ErrorResponseDTO, TopicsResponseDTO } from "@/client/model";
 import Topic from "@/classes/Topic.ts";
@@ -15,11 +18,11 @@ function useTopics() {
     },
   });
 
-  const prefetchTopics = async () => {
-    queryClient.prefetchQuery({
-      queryKey: getGetTopicsQueryKey(spaceId),
-    })
-  }
+  const prefetchTopics = async (targetSpaceId?: number) => {
+    const id = targetSpaceId ?? spaceId;
+    if (id === undefined) return;
+    await queryClient.prefetchQuery(getGetTopicsQueryOptions(id));
+  };
 
   let topics: Topic[] = [];
 

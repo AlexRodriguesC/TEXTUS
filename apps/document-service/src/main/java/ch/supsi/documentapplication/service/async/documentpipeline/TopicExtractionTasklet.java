@@ -233,6 +233,7 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("topicId", topicId);
         metadata.put("pageId", pageId);
+        metadata.put("spaceId", spaceId);
         metadata.put("embeddingModel", embeddingModel);
         // PgVectorStore requires UUID primary keys, topics are addressed via metadata :(
         return Document.builder()

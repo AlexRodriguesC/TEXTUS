@@ -62,7 +62,7 @@ function ChapterGuide() {
                 key={t.id}
                 className="border p-4 hover:bg-muted/50 transition-colors"
               >
-                <div className={"flex justify-end text-foreground/40"}>
+                <div className={"flex justify-end text-foreground/40 hover:cursor-pointer hover:text-foreground transition-colors"}>
                   <InformationQuestionMark
                     tooltip={tr("chapter.guide.location", {
                       page: t.page,

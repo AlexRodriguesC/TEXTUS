@@ -5,12 +5,15 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chat;
+import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
@@ -31,6 +34,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     private final IDatabaseChatStorage chatStorage;
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
+    private final ChatRagAdvisorFactory chatRagAdvisorFactory;
     private final String defaultModel;
 
     public ChatService(
@@ -38,11 +42,13 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
             IDatabaseChatStorage chatStorage,
             @Qualifier("interactiveChatClient") ChatClient chatClient,
             ChatMemory chatMemory,
+            ChatRagAdvisorFactory chatRagAdvisorFactory,
             @Value("${spring.ai.openai.chat.model}") String defaultModel) {
         super(spaceStorage);
         this.chatStorage = chatStorage;
         this.chatClient = chatClient;
         this.chatMemory = chatMemory;
+        this.chatRagAdvisorFactory = chatRagAdvisorFactory;
         this.defaultModel = defaultModel;
     }
 
@@ -77,12 +83,21 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
 
     @Override
     public Flux<String> streamMessage(String username, Long spaceId, UUID chatId, String message, String model) {
+        Space space = getSpaceOrThrow(username, spaceId);
         Chat chat = getChatOrThrow(username, spaceId, chatId);
         maybeAutoTitle(chat, message);
 
+        List<Message> history = chatMemory.get(chatId.toString()).stream()
+                .filter(msg -> !(msg instanceof SystemMessage))
+                .toList();
+
+        Advisor ragAdvisor = chatRagAdvisorFactory.createForSpace(space.getId());
+
         var promptSpec = chatClient
                 .prompt()
+                .messages(history)
                 .user(message)
+                .advisors(ragAdvisor)
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId.toString()));
 
         String resolvedModel = StringUtils.hasText(model) ? model : defaultModel;

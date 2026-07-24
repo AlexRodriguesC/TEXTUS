@@ -1,4 +1,9 @@
-import { createRootRoute, createRoute, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  createRoute,
+  Outlet,
+} from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import NotFoundPage from "../pages/not-found/NotFoundPage";
 import LoginPage from "@/pages/auth/LoginPage.tsx";
 import RegistrationPage from "@/pages/auth/registration/RegistrationPage";
@@ -13,8 +18,17 @@ import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 import ChapterGuide from "@/pages/space/learn/ChapterGuide.tsx";
 import Lesson from "@/pages/space/learn/lesson/Lesson.tsx";
+import {
+  ensureChapterGuideData,
+  ensureLessonData,
+  ensureSpaceChatData,
+  ensureSpaceLearnData,
+  ensureSpaceMapData,
+  ensureSpaceMenuData,
+  ensureSpaces,
+} from "@/routing/loaders/routeLoaders.ts";
 
-const rootRoute = createRootRoute({
+const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   notFoundComponent: NotFoundPage,
 });
 
@@ -74,42 +88,67 @@ const spacesRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACES,
   component: SpacesPage,
+  loader: async ({ context: { queryClient } }) => {
+    await ensureSpaces(queryClient);
+  },
 });
 
 const spaceMenuRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MENU,
   component: SpaceMenu,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureSpaceMenuData(queryClient, Number(params.spaceId));
+  },
 });
 
 const spaceChatRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_CHAT,
   component: SpaceChat,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureSpaceChatData(queryClient, Number(params.spaceId));
+  },
 });
 
 const spaceMapRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MIND_MAP,
   component: SpaceMap,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureSpaceMapData(queryClient, Number(params.spaceId));
+  },
 });
 
 const spaceLearnRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN,
   component: SpaceLearn,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureSpaceLearnData(queryClient, Number(params.spaceId));
+  },
 });
 
 const spaceChapterGuideRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN_GUIDE,
   component: ChapterGuide,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureChapterGuideData(queryClient, Number(params.spaceId));
+  },
 });
 
 const lessonRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.LESSON,
   component: Lesson,
+  loader: async ({ context: { queryClient }, params }) => {
+    await ensureLessonData(
+      queryClient,
+      Number(params.spaceId),
+      Number(params.lessonId),
+    );
+  },
 });
 
 const notFoundRoute = createRoute({

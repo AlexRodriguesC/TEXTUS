@@ -40,7 +40,7 @@ function SpacesListItem({
     >
       <Link
         to={PathConstants.SPACE_MENU}
-        onClick={() => prefetchTopics()}
+        onClick={() => prefetchTopics(spaceId)}
         params={{ spaceId: String(spaceId) }}
         className="flex flex-1 flex-row items-center gap-4"
       >

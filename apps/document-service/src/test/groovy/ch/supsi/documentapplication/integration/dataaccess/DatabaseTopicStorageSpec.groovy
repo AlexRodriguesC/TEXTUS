@@ -71,4 +71,36 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         secondId != null
         firstId != secondId
     }
+
+    def "findRandomTopicsBySpace returns at most the requested limit"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long jobId = createBatchJobInstance()
+        Long pageId = createPage(spaceId, jobId)
+        (1..4).each { idx ->
+            storage.create(
+                    new Topic(null, "notes.pdf", 1, "Topic $idx", "Summary $idx", ["label"]),
+                    pageId)
+        }
+
+        when:
+        def topics = storage.findRandomTopicsBySpace(spaceId, 3)
+
+        then:
+        topics.size() == 3
+        topics*.title.every { it.startsWith("Topic ") }
+    }
+
+    def "findRandomTopicsBySpace returns empty list for space without topics"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+
+        when:
+        def topics = storage.findRandomTopicsBySpace(spaceId, 3)
+
+        then:
+        topics.isEmpty()
+    }
 }

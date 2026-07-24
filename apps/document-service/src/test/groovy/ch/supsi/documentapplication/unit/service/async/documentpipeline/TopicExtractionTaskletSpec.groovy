@@ -127,7 +127,8 @@ class TopicExtractionTaskletSpec extends Specification {
                     docs[0].getText() == "summary" &&
                     docs[0].getMetadata().get("embeddingModel") == embeddingModel &&
                     docs[0].getMetadata().containsKey("topicId") &&
-                    docs[0].getMetadata().containsKey("pageId")
+                    docs[0].getMetadata().containsKey("pageId") &&
+                    docs[0].getMetadata().get("spaceId") == spaceId
         })
         status == RepeatStatus.CONTINUABLE
     }
@@ -198,6 +199,7 @@ class TopicExtractionTaskletSpec extends Specification {
                     docs[0].getText() == "useful summary" &&
                     docs[0].getMetadata().get("topicId") == 11L &&
                     docs[0].getMetadata().get("pageId") == 1L &&
+                    docs[0].getMetadata().get("spaceId") == spaceId &&
                     docs[0].getMetadata().get("embeddingModel") == embeddingModel
         })
         status == RepeatStatus.FINISHED
