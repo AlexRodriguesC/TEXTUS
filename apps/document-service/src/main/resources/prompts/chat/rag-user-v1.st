@@ -3,7 +3,7 @@
 Context information from the user's learning space is below.
 
 ---------------------
-<question_answer_context>
+<context>
 ---------------------
 
 Answer the query using only the context above.

@@ -72,7 +72,7 @@ function DocumentRowStatus({
                 <MarkerContent className="flex items-center justify-between gap-2 shimmer">
                   <HintOverlay
                     trigger={displayNameEl}
-                    className="w-96 max-h-80 overflow-auto bg-muted/80"
+                    className="w-96 w-fit max-h-80 overflow-hidden"
                     content={<ResourceProcessingStatus tasks={toDisplayTasks(tasks, t)} />}
                   />
                 </MarkerContent>

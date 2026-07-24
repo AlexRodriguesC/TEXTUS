@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.model.learn.Topic;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.NonNull;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.postretrieval.document.DocumentPostProcessor;
@@ -27,8 +28,8 @@ public class FallbackTopicDocumentPostProcessor implements DocumentPostProcessor
     }
 
     @Override
-    public List<Document> process(Query query, List<Document> documents) {
-        if (documents != null && !documents.isEmpty()) {
+    public @NonNull List<Document> process(@NonNull Query query, @NonNull List<Document> documents) {
+        if (!documents.isEmpty()) {
             return documents;
         }
         return topicStorage.findRandomTopicsBySpace(spaceId, fallbackLimit).stream()
