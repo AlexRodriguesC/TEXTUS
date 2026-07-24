@@ -23,7 +23,7 @@ import spock.lang.Specification
 abstract class DatabaseSpec extends Specification implements IntegrationFixture {
 
     @Shared
-    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16")
+    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("pgvector/pgvector:pg16")
             .withDatabaseName("abc")
             .withUsername("appuser")
             .withPassword("appsecret")

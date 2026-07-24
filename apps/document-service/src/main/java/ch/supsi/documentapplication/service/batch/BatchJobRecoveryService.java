@@ -146,12 +146,6 @@ public class BatchJobRecoveryService {
         }
     }
 
-    /**
-     * Statuses eligible for {@link org.springframework.batch.core.launch.JobOperator#recover}.
-     * Per its contract, recover() is meant for executions stuck in STARTED (or, by
-     * extension, STOPPING) due to an abrupt shutdown — not for UNKNOWN, which is
-     * handled separately by abandonment.
-     */
     private static boolean isRecoverable(BatchStatus status) {
         return status == BatchStatus.STARTED || status == BatchStatus.STOPPING;
     }

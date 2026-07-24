@@ -12,10 +12,14 @@ import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient;
 import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +29,9 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingProperties;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepContribution;
@@ -33,6 +40,7 @@ import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.retry.RetryException;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Log4j2
 @Component
@@ -47,6 +55,8 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
     private final IDatabaseAiUsageStorage aiUsageStorage;
     private final DocumentTaskProgressService documentTaskProgressService;
     private final AppProperties appProperties;
+    private final VectorStore vectorStore;
+    private final String embeddingModel;
 
     @Autowired
     public TopicExtractionTasklet(
@@ -55,13 +65,17 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
             OpenAITopicExtractionClient topicExtractionClient,
             IDatabaseAiUsageStorage aiUsageStorage,
             DocumentTaskProgressService documentTaskProgressService,
-            AppProperties appProperties) {
+            AppProperties appProperties,
+            VectorStore vectorStore,
+            OpenAiEmbeddingProperties openAiEmbeddingProperties) {
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.databaseTopicStorage = databaseTopicStorage;
         this.topicExtractionClient = topicExtractionClient;
         this.aiUsageStorage = aiUsageStorage;
         this.documentTaskProgressService = documentTaskProgressService;
         this.appProperties = appProperties;
+        this.vectorStore = vectorStore;
+        this.embeddingModel = openAiEmbeddingProperties.getModel();
     }
 
     @Override
@@ -181,8 +195,21 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
                 List<Topic> topics = extractionResult.result();
                 existingTopics.addAll(topics);
 
+                List<Document> documents = new ArrayList<>();
                 for (Topic topic : topics) {
-                    databaseTopicStorage.create(topic, page.getId());
+                    Long topicId = databaseTopicStorage.create(topic, page.getId());
+                    String summary = topic.getSummary();
+                    if (!StringUtils.hasText(summary)) {
+                        log.warn(
+                                "Skipping vector store add for topic {} on page {}, empty summary",
+                                topicId,
+                                page.getId());
+                        continue;
+                    }
+                    documents.add(toDocument(topicId, page.getId(), summary));
+                }
+                if (!documents.isEmpty()) {
+                    vectorStore.add(documents);
                 }
 
                 extractionResult
@@ -200,5 +227,19 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         } catch (ExecutionException e) {
             throw new RuntimeException("Parallel topic extraction failed", e.getCause());
         }
+    }
+
+    private Document toDocument(Long topicId, Long pageId, String summary) {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("topicId", topicId);
+        metadata.put("pageId", pageId);
+        metadata.put("embeddingModel", embeddingModel);
+        // PgVectorStore requires UUID primary keys, topics are addressed via metadata :(
+        return Document.builder()
+                .id(UUID.nameUUIDFromBytes(("topic:" + topicId).getBytes(StandardCharsets.UTF_8))
+                        .toString())
+                .text(summary)
+                .metadata(metadata)
+                .build();
     }
 }

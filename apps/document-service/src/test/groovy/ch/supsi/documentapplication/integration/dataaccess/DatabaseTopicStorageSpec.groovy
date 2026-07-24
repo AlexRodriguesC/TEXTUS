@@ -22,11 +22,13 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         def topic = new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", ["label-a", "label-b"])
 
         when:
-        storage.create(topic, pageId)
+        Long topicId = storage.create(topic, pageId)
         def topics = storage.getByPageId(pageId)
 
         then:
+        topicId != null
         topics.size() == 1
+        topics[0].id == topicId
         topics[0].title == "Topic A"
         topics[0].summary == "Summary A"
         topics[0].labels.sort() == ["label-a", "label-b"]
@@ -49,5 +51,24 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         topics*.title.contains("Topic B")
         topics.find { it.title == "Topic B" }.summary == "Summary B"
         topics.find { it.title == "Topic B" }.labels == ["space-label"]
+    }
+
+    def "should return generated id from createAndReturnId"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long jobId = createBatchJobInstance()
+        Long pageId = createPage(spaceId, jobId)
+        def topic = new Topic(null, "notes.pdf", 1, "Topic C", "Summary C", ["id-label"])
+
+        when:
+        Long firstId = storage.create(topic, pageId)
+        Long secondId = storage.create(
+                new Topic(null, "notes.pdf", 1, "Topic D", "Summary D", ["id-label"]), pageId)
+
+        then:
+        firstId != null
+        secondId != null
+        firstId != secondId
     }
 }

@@ -92,6 +92,7 @@ dependencies {
 	// Spring AI
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M8'
 	implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector:2.0.0-M8'
 	implementation 'org.springframework.ai:spring-ai-client-chat'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 

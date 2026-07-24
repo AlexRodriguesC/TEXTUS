@@ -1,4 +1,4 @@
-FROM postgres:16
+FROM pgvector/pgvector:pg16
 
 ENV POSTGRES_USER=appuser
 ENV POSTGRES_PASSWORD=appsecret

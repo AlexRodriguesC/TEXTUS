@@ -19,6 +19,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
     },
   },
   queryCache: new QueryCache({
@@ -34,7 +35,7 @@ const queryClient = new QueryClient({
         window.dispatchEvent(new CustomEvent("unauthorized"));
       }
     },
-  }),
+  })
 });
 
 function App() {

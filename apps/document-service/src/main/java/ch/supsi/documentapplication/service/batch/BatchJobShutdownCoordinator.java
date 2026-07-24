@@ -65,6 +65,6 @@ public class BatchJobShutdownCoordinator {
     }
 
     private static boolean isRunning(BatchStatus status) {
-        return status == BatchStatus.STARTED || status == BatchStatus.STOPPING || status == BatchStatus.UNKNOWN;
+        return status == BatchStatus.STARTED || status == BatchStatus.STARTING;
     }
 }

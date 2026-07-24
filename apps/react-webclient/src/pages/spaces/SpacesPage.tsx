@@ -19,6 +19,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination.tsx";
+import {useQueryClient} from "@tanstack/react-query";
 
 function getPaginationRange(
   current: number,
@@ -56,6 +57,7 @@ function getPaginationRange(
 
 export function SpacesPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const searchInputRef = useRef<HTMLInputElement>(null);

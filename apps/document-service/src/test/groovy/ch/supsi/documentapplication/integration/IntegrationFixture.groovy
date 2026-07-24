@@ -11,7 +11,6 @@ import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
 import ch.supsi.documentapplication.model.learn.Topic
 import org.springframework.batch.core.repository.dao.DefaultExecutionContextSerializer
-import org.springframework.batch.infrastructure.item.ExecutionContext
 import org.springframework.jdbc.core.simple.JdbcClient
 
 trait IntegrationFixture {

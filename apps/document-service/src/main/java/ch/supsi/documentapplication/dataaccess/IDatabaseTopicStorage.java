@@ -9,7 +9,5 @@ public interface IDatabaseTopicStorage {
 
     List<Topic> getBySpaceId(Long spaceId);
 
-    List<Topic> getByDocumentId(Long documentId);
-
-    void create(Topic topic, Long pageId);
+    Long create(Topic topic, Long pageId);
 }

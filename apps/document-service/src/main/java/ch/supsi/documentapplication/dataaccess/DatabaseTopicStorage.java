@@ -30,8 +30,8 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     }
 
     @Override
-    public void create(Topic topic, Long pageId) {
-        jdbcClient
+    public Long create(Topic topic, Long pageId) {
+        return jdbcClient
                 .sql("SELECT documents.create_topic(:page_id, :title, :summary, :labels)")
                 .param(PAGE_ID, pageId)
                 .param(TITLE, topic.getTitle())
@@ -59,22 +59,13 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
                 .list();
     }
 
-    @Override
-    public List<Topic> getByDocumentId(Long documentId) {
-        return jdbcClient
-                .sql("SELECT * FROM documents.read_topics_by_document(:document_id)")
-                .param(DOCUMENT_ID, documentId)
-                .query((rs, rowNum) -> mapToTopic(rs))
-                .list();
-    }
-
     private Topic mapToTopic(ResultSet rs) throws SQLException {
         Array sqlLabels = rs.getArray(LABELS);
         List<String> labels = sqlLabels != null ? Arrays.asList((String[]) sqlLabels.getArray()) : List.of();
         return new Topic(
                 rs.getLong(ID),
                 rs.getString("src_file_name"),
-                rs.getLong("page_id"),
+                rs.getLong(PAGE_ID),
                 rs.getString(TITLE),
                 rs.getString(SUMMARY),
                 labels);

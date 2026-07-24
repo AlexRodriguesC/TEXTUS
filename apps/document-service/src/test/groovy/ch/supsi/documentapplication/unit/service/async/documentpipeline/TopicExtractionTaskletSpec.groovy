@@ -15,6 +15,9 @@ import ch.supsi.documentapplication.service.clients.OpenAITopicExtractionClient
 import ch.supsi.documentapplication.service.document.DocumentTaskProgressService
 import ch.supsi.documentapplication.unit.service.async.TaskletTestSupport
 import org.apache.commons.lang3.tuple.Pair
+import org.springframework.ai.document.Document
+import org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingProperties
+import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.batch.core.step.StepContribution
 import org.springframework.batch.infrastructure.repeat.RepeatStatus
 import org.springframework.test.util.ReflectionTestUtils
@@ -28,7 +31,14 @@ class TopicExtractionTaskletSpec extends Specification {
     IDatabaseAiUsageStorage aiUsageStorage = Mock()
     DocumentTaskProgressService documentTaskProgressService = Mock()
     AppProperties appProperties = new AppProperties()
+    VectorStore vectorStore = Mock()
     StepContribution stepContribution = Mock()
+
+    String embeddingModel = "abc"
+
+    OpenAiEmbeddingProperties openAiEmbeddingProperties = Mock({
+        getModel() >> embeddingModel
+    })
 
     TopicExtractionTasklet topicExtractionTasklet = new TopicExtractionTasklet(
             databaseDocumentStorage,
@@ -36,7 +46,9 @@ class TopicExtractionTaskletSpec extends Specification {
             topicExtractionClient,
             aiUsageStorage,
             documentTaskProgressService,
-            appProperties)
+            appProperties,
+            vectorStore,
+            openAiEmbeddingProperties)
 
     Long spaceId = 1L
     Long databaseDocumentId = 100L
@@ -60,6 +72,7 @@ class TopicExtractionTaskletSpec extends Specification {
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
         2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
+        0 * vectorStore._
         status == RepeatStatus.FINISHED
     }
 
@@ -67,7 +80,7 @@ class TopicExtractionTaskletSpec extends Specification {
         given:
         def chunkContext = chunkContextWithDocumentId()
         def pages = [spacePage(1L), spacePage(2L)]
-        def existingTopic = topic(10L)
+        def existingTopic = topic(10L, "summary")
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
@@ -79,6 +92,7 @@ class TopicExtractionTaskletSpec extends Specification {
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
         2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
+        0 * vectorStore._
         status == RepeatStatus.FINISHED
     }
 
@@ -87,7 +101,8 @@ class TopicExtractionTaskletSpec extends Specification {
         def chunkContext = chunkContextWithDocumentId()
         def pages = [spacePage(1L), spacePage(2L), spacePage(3L)]
         def processedPageIds = [] as Set<Long>
-        def extractedTopic = topic(null)
+        def extractedTopic = topic(null, "summary")
+        def topicIdSeq = 1000L
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
@@ -105,7 +120,15 @@ class TopicExtractionTaskletSpec extends Specification {
             processedPageIds.add(input.left.id)
             new ClientResult<>([extractedTopic], [])
         }
-        2 * databaseTopicStorage.create(extractedTopic, _)
+        2 * databaseTopicStorage.create(extractedTopic, _) >> { Topic t, Long pageId -> topicIdSeq++ }
+        2 * vectorStore.add({ args ->
+            def docs = args as List<Document>
+            docs.size() == 1 &&
+                    docs[0].getText() == "summary" &&
+                    docs[0].getMetadata().get("embeddingModel") == embeddingModel &&
+                    docs[0].getMetadata().containsKey("topicId") &&
+                    docs[0].getMetadata().containsKey("pageId")
+        })
         status == RepeatStatus.CONTINUABLE
     }
 
@@ -114,8 +137,9 @@ class TopicExtractionTaskletSpec extends Specification {
         def chunkContext = chunkContextWithDocumentId()
         def pages = [spacePage(1L), spacePage(2L), spacePage(3L), spacePage(4L)]
         def processedPageIds = [2L] as Set<Long>
-        def existingTopic = topic(99L)
-        def extractedTopic = topic(null)
+        def existingTopic = topic(99L, "existing")
+        def extractedTopic = topic(null, "summary")
+        def topicIdSeq = 2000L
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
@@ -133,8 +157,50 @@ class TopicExtractionTaskletSpec extends Specification {
             processedPageIds.add(input.left.id)
             new ClientResult<>([extractedTopic], [])
         }
-        2 * databaseTopicStorage.create(extractedTopic, _)
+        2 * databaseTopicStorage.create(extractedTopic, _) >> { Topic t, Long pageId -> topicIdSeq++ }
+        2 * vectorStore.add(_ as List)
         status == RepeatStatus.CONTINUABLE
+    }
+
+    def "should batch vectorStore.add once per page and skip blank summaries"() {
+        given:
+        appProperties.maxChunksPerStep = 1
+        appProperties.maxParallelism = 1
+        def chunkContext = chunkContextWithDocumentId()
+        def pages = [spacePage(1L)]
+        def processedPageIds = [] as Set<Long>
+        def withSummary = topic(null, "useful summary")
+        def blankSummary = topic(null, "  ")
+        def nullSummary = new Topic(null, null, null, "empty", null, ["label"])
+
+        when:
+        RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
+
+        then:
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
+        2 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
+        _ * databaseTopicStorage.getByPageId(_) >> { Long pageId ->
+            processedPageIds.contains(pageId) ? [withSummary] : []
+        }
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
+        2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
+        1 * databaseTopicStorage.getBySpaceId(spaceId) >> []
+        1 * topicExtractionClient.getResult(_ as Pair) >> { Pair<Page, List<Topic>> input ->
+            processedPageIds.add(input.left.id)
+            new ClientResult<>([withSummary, blankSummary, nullSummary], [])
+        }
+        1 * databaseTopicStorage.create(withSummary, 1L) >> 11L
+        1 * databaseTopicStorage.create(blankSummary, 1L) >> 12L
+        1 * databaseTopicStorage.create(nullSummary, 1L) >> 13L
+        1 * vectorStore.add({ args ->
+            def docs = args as List<Document>
+            docs.size() == 1 &&
+                    docs[0].getText() == "useful summary" &&
+                    docs[0].getMetadata().get("topicId") == 11L &&
+                    docs[0].getMetadata().get("pageId") == 1L &&
+                    docs[0].getMetadata().get("embeddingModel") == embeddingModel
+        })
+        status == RepeatStatus.FINISHED
     }
 
     private chunkContextWithDocumentId() {
@@ -145,7 +211,7 @@ class TopicExtractionTaskletSpec extends Specification {
         new SpacePage(id, 100L, "title-$id", "summary-$id")
     }
 
-    private static Topic topic(Long id) {
-        new Topic(id, null, null, "topic", "summary", ["label"])
+    private static Topic topic(Long id, String summary) {
+        new Topic(id, null, null, "topic", summary, ["label"])
     }
 }
