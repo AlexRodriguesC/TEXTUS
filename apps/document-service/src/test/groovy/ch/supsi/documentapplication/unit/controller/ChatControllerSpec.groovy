@@ -98,7 +98,7 @@ class ChatControllerSpec extends Specification {
         def chatId = UUID.randomUUID()
         def timestamp = Instant.parse("2026-01-01T00:00:00Z")
         chatService.getHistory("pippo", 1L, chatId) >> [
-                new ChatMessageResponseDTO("user", "Hello", timestamp)
+                new ChatMessageResponseDTO("user", "Hello", timestamp, List.of())
         ]
 
         when:
@@ -108,6 +108,7 @@ class ChatControllerSpec extends Specification {
         result.andExpect(status().isOk())
         result.andExpect(jsonPath('$.messages[0].role').value("user"))
         result.andExpect(jsonPath('$.messages[0].content').value("Hello"))
+        result.andExpect(jsonPath('$.messages[0].topics').isArray())
     }
 
     def "should delete chat"() {

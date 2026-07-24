@@ -319,6 +319,12 @@
     "empty": {
       "list": "No conversations yet.",
       "messages": "Start a conversation in \"{{title}}\".",
+      "suggestions": {
+        "askAbout": "Ask about {{title}}",
+        "tellMeMore": "Tell me more about {{title}}",
+        "helpUnderstand": "Help me understand {{title}}",
+        "explore": "What should I know about {{title}}?"
+      },
       "page": {
         "title": "No conversations yet",
         "description": "Create a chat from the sidebar history panel, or use the button below to get started.",

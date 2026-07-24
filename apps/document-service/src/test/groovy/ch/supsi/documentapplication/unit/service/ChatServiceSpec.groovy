@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service
 
 import ch.supsi.documentapplication.controller.DTO.response.ChatMessageResponseDTO
+import ch.supsi.documentapplication.dataaccess.IDatabaseChatMessageTopicStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.exception.UnauthorizedException
@@ -8,12 +9,19 @@ import ch.supsi.documentapplication.model.Chat
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.service.ChatService
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory
+import ch.supsi.documentapplication.service.rag.FallbackTopicDocumentPostProcessor
 import org.springframework.ai.chat.client.ChatClient
+import org.springframework.ai.chat.client.ChatClientResponse
 import org.springframework.ai.chat.client.advisor.api.Advisor
 import org.springframework.ai.chat.memory.ChatMemory
+import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.ai.chat.model.ChatResponse
+import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.chat.prompt.ChatOptions
+import org.springframework.ai.document.Document
 import org.springframework.ai.openai.OpenAiChatOptions
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor
 import reactor.core.publisher.Flux
 import spock.lang.Specification
 
@@ -25,12 +33,20 @@ class ChatServiceSpec extends Specification {
 
     IDatabaseSpaceStorage spaceStorage = Mock()
     IDatabaseChatStorage chatStorage = Mock()
+    IDatabaseChatMessageTopicStorage chatMessageTopicStorage = Mock()
     ChatClient chatClient = Mock()
     ChatMemory chatMemory = Mock()
     ChatRagAdvisorFactory chatRagAdvisorFactory = Mock()
     Advisor ragAdvisor = Mock()
 
-    ChatService service = new ChatService(spaceStorage, chatStorage, chatClient, chatMemory, chatRagAdvisorFactory, "default-model")
+    ChatService service = new ChatService(
+            spaceStorage,
+            chatStorage,
+            chatMessageTopicStorage,
+            chatClient,
+            chatMemory,
+            chatRagAdvisorFactory,
+            "default-model")
 
     def "listChats validates space ownership"() {
         given:
@@ -71,7 +87,7 @@ class ChatServiceSpec extends Specification {
         1 * chatStorage.delete(chatId)
     }
 
-    def "getHistory maps user messages"() {
+    def "getHistory maps user messages with empty topics"() {
         given:
         def chatId = UUID.randomUUID()
         def now = Instant.now()
@@ -84,9 +100,34 @@ class ChatServiceSpec extends Specification {
         List<ChatMessageResponseDTO> history = service.getHistory("pippo", 1L, chatId)
 
         then:
+        1 * chatMessageTopicStorage.findByChatId(chatId) >> [:]
         history.size() == 1
         history[0].role() == "user"
         history[0].content() == "Hello"
+        history[0].topics() == []
+    }
+
+    def "getHistory maps assistant topics by timestamp"() {
+        given:
+        def chatId = UUID.randomUUID()
+        def now = Instant.parse("2026-01-01T00:00:00Z")
+        def chat = new Chat(chatId, 1L, "pippo", "Title", now, now)
+        def assistant = AssistantMessage.builder()
+                .content("Answer")
+                .properties(Map.of("jdbc.conversation_ts", now))
+                .build()
+        spaceStorage.read(1L) >> Optional.of(new Space(1L, "pippo", "icon", "Space", "desc"))
+        chatStorage.findById(chatId, 1L, "pippo") >> Optional.of(chat)
+        chatMemory.get(chatId.toString()) >> [assistant]
+
+        when:
+        List<ChatMessageResponseDTO> history = service.getHistory("pippo", 1L, chatId)
+
+        then:
+        1 * chatMessageTopicStorage.findByChatId(chatId) >> [(now): [12L, 45L]]
+        history.size() == 1
+        history[0].role() == "assistant"
+        history[0].topics() == [12L, 45L]
     }
 
     def "streamMessage validates space and attaches RAG advisor with history"() {
@@ -100,9 +141,15 @@ class ChatServiceSpec extends Specification {
 
         def requestSpec = Mock(ChatClient.ChatClientRequestSpec)
         def streamSpec = Mock(ChatClient.StreamResponseSpec)
+        def clientResponse = ChatClientResponse.builder()
+                .chatResponse(ChatResponse.builder()
+                        .generations([new Generation(new AssistantMessage("answer"))])
+                        .build())
+                .context([:])
+                .build()
 
         when:
-        Flux<String> flux = service.streamMessage("pippo", 1L, chatId, "Follow up", null)
+        def result = service.streamMessage("pippo", 1L, chatId, "Follow up", null).collectList().block()
 
         then:
         1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
@@ -117,7 +164,52 @@ class ChatServiceSpec extends Specification {
             requestSpec
         }
         1 * requestSpec.stream() >> streamSpec
-        1 * streamSpec.content() >> Flux.just("answer")
-        flux.collectList().block() == ["answer"]
+        1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
+        1 * chatStorage.touchUpdatedAt(chatId)
+        0 * chatMessageTopicStorage._
+        result == ["answer"]
+    }
+
+    def "streamMessage persists grounded topic ids for assistant reply"() {
+        given:
+        def chatId = UUID.randomUUID()
+        def now = Instant.parse("2026-01-02T00:00:00Z")
+        def chat = new Chat(chatId, 1L, "pippo", "Title", now, now)
+        def assistant = AssistantMessage.builder()
+                .content("answer")
+                .properties(Map.of("jdbc.conversation_ts", now))
+                .build()
+        spaceStorage.read(1L) >> Optional.of(new Space(1L, "pippo", "icon", "Space", "desc"))
+        chatStorage.findById(chatId, 1L, "pippo") >> Optional.of(chat)
+        chatMemory.get(chatId.toString()) >>> [[new UserMessage("Earlier question")], [new UserMessage("Earlier question"), assistant]]
+
+        def requestSpec = Mock(ChatClient.ChatClientRequestSpec)
+        def streamSpec = Mock(ChatClient.StreamResponseSpec)
+        def document = Document.builder()
+                .text("topic")
+                .metadata([(FallbackTopicDocumentPostProcessor.METADATA_TOPIC_ID): 99L])
+                .build()
+        def clientResponse = ChatClientResponse.builder()
+                .chatResponse(ChatResponse.builder()
+                        .generations([new Generation(new AssistantMessage("answer"))])
+                        .build())
+                .context([(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT): [document]])
+                .build()
+
+        when:
+        service.streamMessage("pippo", 1L, chatId, "Follow up", null).blockLast()
+
+        then:
+        1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
+        1 * chatClient.prompt() >> requestSpec
+        1 * requestSpec.messages(_) >> requestSpec
+        1 * requestSpec.user("Follow up") >> requestSpec
+        1 * requestSpec.advisors(ragAdvisor) >> requestSpec
+        1 * requestSpec.advisors(_) >> requestSpec
+        1 * requestSpec.options(_ as ChatOptions.Builder) >> requestSpec
+        1 * requestSpec.stream() >> streamSpec
+        1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
+        1 * chatStorage.touchUpdatedAt(chatId)
+        1 * chatMessageTopicStorage.save(chatId, now, [99L])
     }
 }

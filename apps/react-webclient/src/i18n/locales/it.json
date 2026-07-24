@@ -305,6 +305,12 @@
     "empty": {
       "list": "Nessuna conversazione.",
       "messages": "Inizia una conversazione in \"{{title}}\".",
+      "suggestions": {
+        "askAbout": "Chiedi informazioni su {{title}}",
+        "tellMeMore": "Dimmi di più su {{title}}",
+        "helpUnderstand": "Aiutami a capire {{title}}",
+        "explore": "Cosa dovrei sapere su {{title}}?"
+      },
       "page": {
         "title": "Nessuna conversazione",
         "description": "Crea una chat dal pannello cronologia nella barra laterale, oppure usa il pulsante qui sotto per iniziare.",

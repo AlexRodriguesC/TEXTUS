@@ -209,6 +209,8 @@ function SpaceChatConversation({
                   <ChatEmptyMessages
                     title={chatTitle ?? t("chat.new")}
                     asScrollerItem
+                    onSuggestionClick={(message) => void handleSubmit(message)}
+                    disabled={isStreaming}
                   />
                 )}
                 {displayedMessages.map((message) => (
