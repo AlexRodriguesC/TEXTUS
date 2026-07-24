@@ -15,6 +15,9 @@ import lombok.Setter;
 public class MindMap {
 
     @JsonIgnore
+    private Long id;
+
+    @JsonIgnore
     private Long jobId;
 
     @JsonPropertyDescription(

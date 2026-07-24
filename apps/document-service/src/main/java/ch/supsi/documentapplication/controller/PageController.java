@@ -35,39 +35,14 @@ public class PageController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Get pages for a space",
-            description = "Retrieves all pages belonging to the specified space. Only the owner of the space can access its pages.")
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "Pages retrieved successfully",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = PagesResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "403",
-                description = "User is not the owner of the specified space",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @Operation(summary = "Get pages for a space", description = "Retrieves all pages belonging to the specified space. Only the owner of the space can access its pages.")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Pages retrieved successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PagesResponseDTO.class))),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<PagesResponseDTO> getPages(
             @Parameter(description = "The ID of the space to retrieve pages from", required = true, example = "1")
                     @PathVariable

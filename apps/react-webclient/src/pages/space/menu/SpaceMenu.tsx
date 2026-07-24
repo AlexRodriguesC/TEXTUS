@@ -50,7 +50,11 @@ function SpaceMenu() {
             )}
           </span>
         </div>
-        <IllustratedAside className={"w-full min-w-[90%]"} lottieSrc={"/animations/menu.lottie"}>
+        <IllustratedAside
+          className="w-full min-w-[90%]"
+          contentClassName="gap-4"
+          lottieSrc="/animations/menu.lottie"
+        >
           <div className="flex flex-col gap-4">
             <UploadZone />
 

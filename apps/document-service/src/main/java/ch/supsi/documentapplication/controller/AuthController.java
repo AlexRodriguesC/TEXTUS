@@ -60,7 +60,8 @@ public class AuthController {
     @Operation(summary = "Register user", description = "Registers a new user and returns a JWT token for the created account.")
     @ApiResponses(
             {
-                    @ApiResponse(responseCode = "200", description = "Registration successful"), @ApiResponse(responseCode = "400", description = "Invalid user payload", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
+                    @ApiResponse(responseCode = "200", description = "Registration successful"),
+                    @ApiResponse(responseCode = "400", description = "Invalid user payload", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
                     @ApiResponse(responseCode = "409", description = "User already exists", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
             })

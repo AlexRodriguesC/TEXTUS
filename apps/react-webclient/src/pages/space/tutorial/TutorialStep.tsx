@@ -32,12 +32,9 @@ function TutorialStep({
         lottieSrc={lottieSrc}
         lottieSide={lottieSide}
         aside={aside}
+        contentClassName="flex-1 min-w-0 justify-center gap-8"
       >
-        <div
-          className={
-            "flex flex-col items-center md:items-start justify-center gap-8 min-w-0 flex-1"
-          }
-        >
+        <div className="flex flex-col items-center md:items-start justify-center gap-8 min-w-0 flex-1">
           <h2 className="text-2xl font-semibold mb-2">{t(titleKey)}</h2>
           <p className="wrap-break-word">
             <Trans

@@ -8,7 +8,10 @@ import CreateSpace from "@/pages/spaces/CreateSpace.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
 import SpacesListSkeleton from "@/pages/spaces/SpacesListSkeleton.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
-import IllustratedAside from "@/components/IllustratedAside.tsx";
+import IllustratedAside, {
+  AsideFooter,
+  AsideHeader,
+} from "@/components/IllustratedAside.tsx";
 import useListPageSize from "@/hooks/useListPageSize.ts";
 import {
   Pagination,
@@ -114,16 +117,18 @@ export function SpacesPage() {
           <CenteredPage>
             <IllustratedAside
               className="gap-4"
-              lottieSrc={"/animations/not_found.lottie"}
+              lottieSrc="/animations/not_found.lottie"
               lottieClassName="opacity-60"
               lottieProps={{ loop: true, autoplay: true }}
             >
-              <div className={"flex flex-col items-center gap-2"}>
+              <AsideHeader>
                 <p>{t("spaces.not-found")}</p>
-                <Button variant={"outline"} onClick={resetSearch}>
+              </AsideHeader>
+              <AsideFooter>
+                <Button variant="outline" onClick={resetSearch}>
                   {t("spaces.reset-search")}
                 </Button>
-              </div>
+              </AsideFooter>
             </IllustratedAside>
           </CenteredPage>
         </div>

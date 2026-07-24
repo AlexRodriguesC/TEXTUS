@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION documents.read_mind_map(p_space_id BIGINT)
     RETURNS TABLE (
+                      mind_map_id       BIGINT,
                       job_id            BIGINT,
                       node_type         TEXT,
                       page_id           BIGINT,
@@ -14,6 +15,7 @@ $$
 BEGIN
     RETURN QUERY
         SELECT
+            mm.id AS mind_map_id,
             mm.job_id,
             child.node_type,
             child.page_id,

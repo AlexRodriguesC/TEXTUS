@@ -85,6 +85,7 @@ class DatabaseSpaceStorageSpec extends DatabaseSpec {
 
         then:
         map != null
+        map.id != null
         map.jobId == jobId
         map.root == null
     }

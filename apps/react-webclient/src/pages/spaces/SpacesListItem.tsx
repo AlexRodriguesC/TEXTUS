@@ -36,13 +36,13 @@ function SpacesListItem({
   return (
     <div
       key={spaceId}
-      className="flex flex-row items-center justify-between border border-border p-4 hover:bg-primary/10 transition-colors"
+      className="flex p-0 flex-row items-center justify-between border border-border p-4 hover:bg-primary/10 transition-colors"
     >
       <Link
         to={PathConstants.SPACE_MENU}
         onClick={() => prefetchTopics(spaceId)}
         params={{ spaceId: String(spaceId) }}
-        className="flex flex-1 flex-row items-center gap-4"
+        className="flex p-0 flex-1 flex-row items-center gap-4"
       >
         <Emoji unified={icon} />
         <div className="flex flex-col">

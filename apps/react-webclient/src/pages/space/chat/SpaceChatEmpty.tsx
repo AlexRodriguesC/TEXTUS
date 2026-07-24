@@ -1,4 +1,7 @@
-import IllustratedAside from "@/components/IllustratedAside.tsx";
+import IllustratedAside, {
+  AsideFooter,
+  AsideHeader,
+} from "@/components/IllustratedAside.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import useChatContext from "@/hooks/context/useChatContext.ts";
@@ -19,23 +22,26 @@ function SpaceChatEmpty() {
   return (
     <div className="flex flex-1 items-center justify-center px-4">
       <IllustratedAside
-        className="gap-4 max-w-lg"
+        className="gap-4 max-w-xxl"
         lottieSrc="/animations/think.lottie"
         lottieProps={{ loop: true, autoplay: true }}
       >
-        <div className="flex flex-col items-center gap-3 text-center">
+        <AsideHeader className="gap-3 text-center">
           <h2 className="text-lg font-medium">{t("chat.empty.page.title")}</h2>
           <p className="text-sm text-muted-foreground">
             {t("chat.empty.page.description")}
           </p>
+        </AsideHeader>
+        <AsideFooter>
           <Button
+              className="w-full"
             disabled={isCreating}
             onClick={() => void handleCreate()}
           >
             {isCreating && <Spinner />}
             {t("chat.empty.page.cta")}
           </Button>
-        </div>
+        </AsideFooter>
       </IllustratedAside>
     </div>
   );

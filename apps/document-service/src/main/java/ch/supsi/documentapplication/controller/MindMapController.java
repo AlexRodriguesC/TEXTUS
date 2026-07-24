@@ -1,10 +1,9 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.MindMapJobDTO;
 import ch.supsi.documentapplication.controller.DTO.response.MindMapResponseDTO;
-import ch.supsi.documentapplication.exception.NotFoundException;
-import ch.supsi.documentapplication.model.MindMap;
+import ch.supsi.documentapplication.controller.DTO.response.MindMapSummaryDTO;
+import ch.supsi.documentapplication.controller.DTO.response.MindMapsResponseDTO;
 import ch.supsi.documentapplication.service.ISpaceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,30 +33,11 @@ public class MindMapController {
         this.spaceService = spaceService;
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, path = "/jobs")
-    @Operation(summary = "Get mind-map job status for the specified space", description = """
-            Returns the current status of the mind-map
-            generation job associated with the specified space.
-            """)
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "200", description = "Job status retrieved"),
-                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space or job not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-            })
-    public ResponseEntity<MindMapJobDTO> getMindMapJob(@Parameter(description = "The ID of the space to retrieve the mind-map job for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                       @Parameter(hidden = true) Authentication authentication) {
-        String username = authentication.getName();
-        var status = spaceService.getMindMapStatus(username, spaceId);
-        return ResponseEntity.ok(new MindMapJobDTO(status));
-    }
-
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a mind-map for the specified space", description = """
             Starts asynchronous mind-map generation for the specified space.
-            The mind-map is created from the documents currently associated with the space.
-            The request is accepted for background processing and the result may not be immediately available.
+            The mind-map row is created synchronously and the response includes its id and GENERATING status.
+            Node generation continues in the background.
             """)
     @ApiResponses(
             {
@@ -68,42 +48,64 @@ public class MindMapController {
                     @ApiResponse(responseCode = "409", description = "A mind-map generation is already in progress for this space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
-    public ResponseEntity<Void> extractMindMap(@Parameter(description = "The ID of the space to create the mind map for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                  @Parameter(hidden = true) Authentication authentication) {
+    public ResponseEntity<MindMapSummaryDTO> extractMindMap(
+            @Parameter(description = "The ID of the space to create the mind map for", required = true)
+                    @NotNull @PathVariable("spaceId") Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        spaceService.createMindMap(username, spaceId);
-        return ResponseEntity.accepted().build();
+        var summary = spaceService.createMindMap(username, spaceId);
+        return ResponseEntity.accepted().body(summary);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the mind-map for the specified space", description = """
-            Returns the current mind-map for the specified space.
-            If no mind-map has been generated yet for the space, the endpoint returns 404.
+    @Operation(summary = "List mind-maps for the specified space", description = """
+            Returns the mind maps associated with the specified space, including generation status.
+            The list is empty when no mind map has been created yet.
+            """)
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Mind maps retrieved successfully"),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
+    public ResponseEntity<MindMapsResponseDTO> listMindMaps(
+            @Parameter(description = "The ID of the space to list mind maps for", required = true)
+                    @NotNull @PathVariable("spaceId") Long spaceId,
+            @Parameter(hidden = true) Authentication authentication) {
+        String username = authentication.getName();
+        var mindMaps = spaceService.listMindMaps(username, spaceId);
+        return ResponseEntity.ok(new MindMapsResponseDTO(mindMaps));
+    }
+
+    @GetMapping(value = "/{mindMapId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a mind-map by id", description = """
+            Returns the mind map for the specified space and id, including generation status and nodes.
+            Returns 404 when the mind map does not exist or does not belong to the space.
             """)
     @ApiResponses(
             {
                     @ApiResponse(responseCode = "200", description = "Mind-map retrieved successfully"),
                     @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space or mind-map not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
-    public ResponseEntity<MindMapResponseDTO> getMindMap(@Parameter(description = "The ID of the space to retrieve the mind map for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                         @Parameter(hidden = true) Authentication authentication) {
-
+    public ResponseEntity<MindMapResponseDTO> getMindMap(
+            @Parameter(description = "The ID of the space", required = true) @NotNull @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(description = "The ID of the mind map", required = true) @NotNull @PathVariable("mindMapId")
+                    Long mindMapId,
+            @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        var mindMap = spaceService.getMindMap(username, spaceId);
-
-        if (mindMap == null || mindMap.getJobId() == null) {
-            throw NotFoundException.mindMapNotFoundException(spaceId);
-        }
-
-        var dto = MindMapResponseDTO.from(mindMap);
-        return ResponseEntity.ok(dto);
+        var mindMap = spaceService.getMindMap(username, spaceId, mindMapId);
+        var status = spaceService.getMindMapStatus(username, spaceId);
+        return ResponseEntity.ok(MindMapResponseDTO.from(mindMap, status));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{mindMapId}")
     @Operation(summary = "Delete the mind-map for the specified space", description = """
-            Deletes the mind-map associated with the specified space.
+            Deletes the mind-map associated with the specified space and id.
+            Returns 404 when the mind map does not exist or does not belong to the space.
             If a generation job is currently running for this mind-map, it will be stopped first.
             """)
     @ApiResponses(
@@ -113,10 +115,14 @@ public class MindMapController {
                     @ApiResponse(responseCode = "404", description = "Space or mind-map not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
             })
-    public ResponseEntity<Void> deleteMindMap(@Parameter(description = "The ID of the space to delete the mind-map for", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
-                                                @Parameter(hidden = true) Authentication authentication) {
+    public ResponseEntity<Void> deleteMindMap(
+            @Parameter(description = "The ID of the space", required = true) @NotNull @PathVariable("spaceId")
+                    Long spaceId,
+            @Parameter(description = "The ID of the mind map", required = true) @NotNull @PathVariable("mindMapId")
+                    Long mindMapId,
+            @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
-        spaceService.deleteMindMap(username, spaceId);
+        spaceService.deleteMindMap(username, spaceId, mindMapId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -132,8 +132,12 @@ export function mapMindMap(dto: MindMapResponseDTO): MindMap {
   return new MindMap((dto.nodes ?? []).map(mapNode));
 }
 
-export function isMindMapDto(data: { nodes?: unknown }): boolean {
-  return "nodes" in data;
+export function isMindMapDto(data: {
+  id?: unknown;
+  status?: unknown;
+  nodes?: unknown;
+}): data is MindMapResponseDTO {
+  return "id" in data && "status" in data && "nodes" in data;
 }
 
 export function mapTopic(dto: TopicResponseDTO): Topic {

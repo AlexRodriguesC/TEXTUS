@@ -1,6 +1,9 @@
 import MainLayout from "@/MainLayout.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
-import IllustratedAside from "@/components/IllustratedAside.tsx";
+import IllustratedAside, {
+  AsideFooter,
+  AsideHeader,
+} from "@/components/IllustratedAside.tsx";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
@@ -12,13 +15,15 @@ function NotFoundPage() {
   return (
     <MainLayout sidebarEnabled={false}>
       <CenteredPage>
-        <IllustratedAside lottieSrc={"/animations/not_found.lottie"}>
-          <div className={"flex flex-col items-center gap-4"}>
+        <IllustratedAside lottieSrc="/animations/not_found.lottie">
+          <AsideHeader>
             <p>{t("notfound")}</p>
+          </AsideHeader>
+          <AsideFooter>
             <Link to={PathConstants.HOME}>
               <Button>{t("general.go-home")}</Button>
             </Link>
-          </div>
+          </AsideFooter>
         </IllustratedAside>
       </CenteredPage>
     </MainLayout>

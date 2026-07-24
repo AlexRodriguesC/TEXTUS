@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapNode;
 import ch.supsi.documentapplication.model.MindMapNodeType;
+import ch.supsi.documentapplication.model.MindMapStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -16,6 +18,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MindMapResponseDTO {
+
+    @NotNull
+    @Schema(description = "Unique identifier of the mind map", example = "1")
+    private Long id;
+
+    @NotNull
+    @Schema(description = "Current status of the mind map generation", example = "DONE")
+    private MindMapStatus status;
 
     private List<NodeDTO> nodes;
 
@@ -42,14 +52,18 @@ public class MindMapResponseDTO {
         private Long parentEntityId;
     }
 
-    public static MindMapResponseDTO from(MindMap mindMap) {
+    public static MindMapResponseDTO from(MindMap mindMap, MindMapStatus status) {
         List<NodeDTO> nodes = new ArrayList<>();
 
         if (mindMap != null && mindMap.getRoot() != null) {
             flatten(mindMap.getRoot(), null, null, nodes);
         }
 
-        return MindMapResponseDTO.builder().nodes(nodes).build();
+        return MindMapResponseDTO.builder()
+                .id(mindMap != null ? mindMap.getId() : null)
+                .status(status)
+                .nodes(nodes)
+                .build();
     }
 
     private static void flatten(

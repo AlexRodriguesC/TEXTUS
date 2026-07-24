@@ -40,13 +40,14 @@ public class PathController {
             Updates the distribution percentages for question, list, group, and pair content types.
             All values must be between 0 and 100, and their sum must equal 100.
             """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input, values out of range or sum not 100", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Settings updated successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input, values out of range or sum not 100", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "403", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<?> updatePathSettings(
             @PathVariable("spaceId") @NotNull Long spaceId,
             @Valid @RequestBody PatchSettingsDTO settings,

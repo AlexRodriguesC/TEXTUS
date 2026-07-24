@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.service;
 
+import ch.supsi.documentapplication.controller.DTO.response.MindMapSummaryDTO;
 import ch.supsi.documentapplication.model.MindMap;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import ch.supsi.documentapplication.model.Space;
@@ -17,12 +18,16 @@ public interface ISpaceService {
 
     void delete(String username, Long spaceId);
 
-    void createMindMap(String username, @NotNull Long spaceId);
+    MindMapSummaryDTO createMindMap(String username, @NotNull Long spaceId);
+
+    List<MindMapSummaryDTO> listMindMaps(String username, @NotNull Long spaceId);
 
     @Nullable
     MindMap getMindMap(String username, @NotNull Long spaceId);
 
+    MindMap getMindMap(String username, @NotNull Long spaceId, @NotNull Long mindMapId);
+
     MindMapStatus getMindMapStatus(String username, @NotNull Long spaceId);
 
-    void deleteMindMap(String username, @NotNull Long spaceId);
+    void deleteMindMap(String username, @NotNull Long spaceId, @NotNull Long mindMapId);
 }

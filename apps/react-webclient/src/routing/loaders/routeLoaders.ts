@@ -6,22 +6,26 @@ import {
   getGetNextExerciseQueryOptions,
 } from "@/client/generated/lessons/lessons.ts";
 import {
-  getGetMindMapJobQueryOptions,
   getGetMindMapQueryOptions,
+  getListMindMapsQueryOptions,
 } from "@/client/generated/mind-maps/mind-maps.ts";
 import { getGetModelsQueryOptions } from "@/client/generated/models/models.ts";
 import { getGetPagesQueryOptions } from "@/client/generated/pages/pages.ts";
 import { getGetLearningPathQueryOptions } from "@/client/generated/paths/paths.ts";
 import { getReadSpacesQueryOptions } from "@/client/generated/spaces/spaces.ts";
 import { getGetTopicsQueryOptions } from "@/client/generated/topics/topics.ts";
-import type { MindMapJobDTO } from "@/client/model";
+import type { MindMapsResponseDTO } from "@/client/model";
 import { ApiError } from "@/client/mutator.ts";
-import MindMapJobStatus from "@/classes/MindMapJobStatus.ts";
 import { mapLesson } from "@/hooks/dtoMappers.ts";
 import { isLearningPathNotFound } from "@/hooks/learning/learningPathUtils.ts";
 
-function isMindMapJobDto(data: unknown): data is MindMapJobDTO {
-  return typeof data === "object" && data !== null && "status" in data;
+function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "mindMaps" in data &&
+    Array.isArray((data as MindMapsResponseDTO).mindMaps)
+  );
 }
 
 const learningPathRetry = (failureCount: number, error: unknown) => {
@@ -47,12 +51,29 @@ export async function ensureLearningPath(
 }
 
 async function ensureMindMapData(queryClient: QueryClient, spaceId: number) {
-  const jobResponse = await queryClient.ensureQueryData(
-    getGetMindMapJobQueryOptions(spaceId),
+  const listResponse = await queryClient.ensureQueryData(
+    getListMindMapsQueryOptions(spaceId),
   );
-  const job = jobResponse?.data;
-  if (isMindMapJobDto(job) && job.status === MindMapJobStatus.DONE) {
-    await queryClient.ensureQueryData(getGetMindMapQueryOptions(spaceId));
+  const list = listResponse?.data;
+  if (!isMindMapsResponseDto(list) || list.mindMaps.length === 0) {
+    return;
+  }
+  const mindMapId = list.mindMaps[0].id;
+  try {
+    await queryClient.ensureQueryData(
+      getGetMindMapQueryOptions(spaceId, mindMapId, {
+        query: {
+          retry: (failureCount, error) => {
+            if (error instanceof ApiError && error.status === 404) return false;
+            return failureCount < 2;
+          },
+        },
+      }),
+    );
+  } catch (error) {
+    if (!(error instanceof ApiError && error.status === 404)) {
+      throw error;
+    }
   }
 }
 
@@ -67,7 +88,7 @@ export async function ensureSpaceMenuData(
   await Promise.all([
     queryClient.ensureQueryData(getReadSpacesQueryOptions()),
     queryClient.ensureQueryData(getGetDocumentsQueryOptions(spaceId)),
-    queryClient.ensureQueryData(getGetMindMapJobQueryOptions(spaceId)),
+    queryClient.ensureQueryData(getListMindMapsQueryOptions(spaceId)),
     ensureLearningPath(queryClient, spaceId),
   ]);
 }

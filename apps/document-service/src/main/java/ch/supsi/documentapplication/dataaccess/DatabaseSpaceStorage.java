@@ -80,6 +80,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
                 .sql("SELECT * FROM documents.read_mind_map(:space_id)")
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new MindMapRow(
+                        rs.getLong(MIND_MAP_ID),
                         rs.getLong(JOB_ID),
                         rs.getString(NODE_TYPE),
                         rs.getObject(PAGE_ID, Long.class),
@@ -94,6 +95,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
         }
 
         MindMap mindMap = new MindMap();
+        mindMap.setId(rows.getFirst().mindMapId());
         mindMap.setJobId(rows.getFirst().jobId());
 
         List<MindMapRow> nodeRows =
@@ -129,6 +131,7 @@ public class DatabaseSpaceStorage extends DatabaseStorage implements IDatabaseSp
     }
 
     private record MindMapRow(
+            Long mindMapId,
             Long jobId,
             String nodeType,
             Long pageId,

@@ -21,9 +21,6 @@ public class SetupTasklet implements Tasklet {
     @Value("#{jobParameters['SPACE_ID']}")
     protected Long spaceId;
 
-    @Value("#{stepExecution.jobExecution.jobInstanceId}")
-    private Long jobInstanceId;
-
     private final DatabaseSpaceStorage databaseSpaceStorage;
 
     public SetupTasklet(DatabaseSpaceStorage databaseSpaceStorage) {
@@ -42,13 +39,20 @@ public class SetupTasklet implements Tasklet {
             return RepeatStatus.FINISHED;
         }
 
-        Long mapId = databaseSpaceStorage.createMindMap(optSpace.get().getId(), jobInstanceId);
+        var mindMap = databaseSpaceStorage.readMindMap(optSpace.get().getId());
+        if (mindMap == null || mindMap.getId() == null) {
+            var message = String.format("No mind map found for space with id %s", spaceId);
+            log.error(message);
+            contribution.setExitStatus(ExitStatus.FAILED);
+            return RepeatStatus.FINISHED;
+        }
+
         chunkContext
                 .getStepContext()
                 .getStepExecution()
                 .getJobExecution()
                 .getExecutionContext()
-                .put("MAP_ID", mapId);
+                .put("MAP_ID", mindMap.getId());
 
         return RepeatStatus.FINISHED;
     }

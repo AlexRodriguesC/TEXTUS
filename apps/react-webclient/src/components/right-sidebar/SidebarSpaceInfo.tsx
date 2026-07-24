@@ -34,7 +34,7 @@ function SidebarSpaceInfo() {
       </SidebarGroupLabel>
       <SidebarGroupContent className={"flex flex-col items-center"}>
         <SidebarAction
-          icon={<Menu />}
+          icon={<Menu className={"hover:stroke-2"} />}
           labelKey={"sidebar.actions.menu.label"}
           tooltipKey={"sidebar.actions.menu.tooltip"}
           to={PathConstants.SPACE_MENU}

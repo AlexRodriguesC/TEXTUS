@@ -41,12 +41,13 @@ public class LearningController {
         lesson if one already exists for the current user. Triggered when the user
         clicks a lesson on their learning path.
         """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "New lesson created"),
-            @ApiResponse(responseCode = "409", description = "Existing lesson already in progress"),
-            @ApiResponse(responseCode = "404", description = "Space or lesson not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "201", description = "New lesson created"),
+                    @ApiResponse(responseCode = "404", description = "Space or lesson not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "409", description = "Existing lesson already in progress"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<LessonResponseDTO> startLesson(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
@@ -67,11 +68,12 @@ public class LearningController {
         the number of attempts used so far, and whether the lesson has been completed
         (mastered or exhausted).
         """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lesson status retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Lesson status retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<LessonResponseDTO> getLesson(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
@@ -89,19 +91,13 @@ public class LearningController {
     dynamically based on BKT mastery and exercise family. Returns 204 No Content
     once no further exercises are needed for this lesson.
     """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Next exercise returned successfully",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(oneOf = {
-                                    QuestionResponseDTO.class,
-                                    ListResponseDTO.class,
-                                    PairResponseDTO.class,
-                                    GroupResponseDTO.class
-                            }))),
-            @ApiResponse(responseCode = "204", description = "No further exercises to serve; lesson is complete"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Next exercise returned successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(oneOf = {QuestionResponseDTO.class, ListResponseDTO.class, PairResponseDTO.class, GroupResponseDTO.class}))),
+                    @ApiResponse(responseCode = "204", description = "No further exercises to serve; lesson is complete"),
+                    @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<ExerciseDTO> getNextExercise(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
@@ -118,11 +114,12 @@ public class LearningController {
         with its resolved attempt status. Useful for review or debugging; not part of
         the primary lesson-taking flow.
         """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Exercises retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Exercises retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<ExercisesResponseDTO> getExercises(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
@@ -138,12 +135,13 @@ public class LearningController {
     Deletes every exercise served so far for this lesson, resetting its attempt
     history.
     """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Exercises deleted successfully"),
-            @ApiResponse(responseCode = "400", description = "Lesson attempts not exhausted", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "204", description = "Exercises deleted successfully"),
+                    @ApiResponse(responseCode = "400", description = "Lesson attempts not exhausted", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<Void> deleteExercises(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
@@ -162,12 +160,13 @@ public class LearningController {
         the updated lesson state. The attemptId should be client-generated to support safe
         retries without creating duplicate attempts.
         """)
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Attempt recorded and feedback returned"),
-            @ApiResponse(responseCode = "409", description = "Submitted exerciseId does not match the lesson's current exercise", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "201", description = "Attempt recorded and feedback returned"),
+                    @ApiResponse(responseCode = "404", description = "Lesson not found for this lesson", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "409", description = "Submitted exerciseId does not match the lesson's current exercise", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<AttemptResponseDTO> submitAttempt(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,

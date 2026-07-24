@@ -1,6 +1,9 @@
 import MainLayout from "@/MainLayout.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
-import IllustratedAside from "@/components/IllustratedAside.tsx";
+import IllustratedAside, {
+  AsideFooter,
+  AsideHeader,
+} from "@/components/IllustratedAside.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -31,37 +34,29 @@ function ErrorFallback({ error }: { error: unknown }) {
   return (
     <MainLayout sidebarEnabled={false}>
       <CenteredPage>
-        <IllustratedAside lottieSrc={"/animations/not_found.lottie"}>
-          <div className={"flex flex-col items-center gap-8 h-full"}>
-            <p className={"text-center"}>{t("errorBoundary.message")}</p>
-            <div
-              className={
-                "flex flex-col w-full max-w-[90%] md:w-sm justify-center h-full gap-2"
-              }
-            >
+        <IllustratedAside lottieSrc="/animations/not_found.lottie">
+          <AsideHeader>
+            <p className="text-center">{t("errorBoundary.message")}</p>
+          </AsideHeader>
+          <AsideFooter>
+            <div className="flex flex-col w-full max-w-[90%] md:w-sm gap-2">
               <Button asChild>
                 <Link to={PathConstants.HOME}>{t("general.go-home")}</Link>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant={"outline"}>
+                  <Button variant="outline">
                     {t("errorBoundary.cause")}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className={"max-w-sm flex place-content-center"}
-                >
-                  <DropdownMenuLabel
-                    className={
-                      "normal-case font-normal tracking-normal whitespace-pre-wrap wrap-break-word"
-                    }
-                  >
+                <DropdownMenuContent className="max-w-sm flex place-content-center">
+                  <DropdownMenuLabel className="normal-case font-normal tracking-normal whitespace-pre-wrap wrap-break-word">
                     {errorMessage}
                   </DropdownMenuLabel>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          </div>
+          </AsideFooter>
         </IllustratedAside>
       </CenteredPage>
     </MainLayout>

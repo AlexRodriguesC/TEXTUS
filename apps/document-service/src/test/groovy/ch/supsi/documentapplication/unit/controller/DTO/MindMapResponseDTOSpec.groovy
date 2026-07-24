@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.controller.DTO
 import ch.supsi.documentapplication.controller.DTO.response.MindMapResponseDTO
 import ch.supsi.documentapplication.model.MindMap
 import ch.supsi.documentapplication.model.MindMapNode
+import ch.supsi.documentapplication.model.MindMapStatus
 import spock.lang.Specification
 
 class MindMapResponseDTOSpec extends Specification {
@@ -10,12 +11,15 @@ class MindMapResponseDTOSpec extends Specification {
     def "should flatten a single root page node"() {
         given:
         def mindMap = new MindMap()
+        mindMap.id = 5L
         mindMap.root = MindMapNode.page(10L)
 
         when:
-        def dto = MindMapResponseDTO.from(mindMap)
+        def dto = MindMapResponseDTO.from(mindMap, MindMapStatus.DONE)
 
         then:
+        dto.id == 5L
+        dto.status == MindMapStatus.DONE
         dto.nodes.size() == 1
         dto.nodes[0].nodeType == MindMapResponseDTO.NodeType.PAGE
         dto.nodes[0].entityId == 10L
@@ -31,12 +35,15 @@ class MindMapResponseDTOSpec extends Specification {
         root.children = [topic, childPage]
 
         def mindMap = new MindMap()
+        mindMap.id = 9L
         mindMap.root = root
 
         when:
-        def dto = MindMapResponseDTO.from(mindMap)
+        def dto = MindMapResponseDTO.from(mindMap, MindMapStatus.DONE)
 
         then:
+        dto.id == 9L
+        dto.status == MindMapStatus.DONE
         dto.nodes.size() == 3
         dto.nodes[0].nodeType == MindMapResponseDTO.NodeType.PAGE
         dto.nodes[0].entityId == 10L
@@ -53,11 +60,14 @@ class MindMapResponseDTOSpec extends Specification {
     def "should return empty nodes when mind map has no root"() {
         given:
         def mindMap = new MindMap()
+        mindMap.id = 3L
 
         when:
-        def dto = MindMapResponseDTO.from(mindMap)
+        def dto = MindMapResponseDTO.from(mindMap, MindMapStatus.GENERATING)
 
         then:
+        dto.id == 3L
+        dto.status == MindMapStatus.GENERATING
         dto.nodes.isEmpty()
     }
 }

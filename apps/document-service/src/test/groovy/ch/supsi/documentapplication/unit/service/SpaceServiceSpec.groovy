@@ -10,9 +10,13 @@ import ch.supsi.documentapplication.model.MindMapStatus
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.service.SpaceService
 import org.springframework.batch.core.job.Job
+import org.springframework.batch.core.job.JobExecution
+import org.springframework.batch.core.job.JobInstance
 import org.springframework.batch.core.job.parameters.JobParameters
 import org.springframework.batch.core.launch.JobOperator
 import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.infrastructure.item.ExecutionContext
+import org.springframework.core.task.SyncTaskExecutor
 import spock.lang.Specification
 
 class SpaceServiceSpec extends Specification {
@@ -21,6 +25,7 @@ class SpaceServiceSpec extends Specification {
     def jobOperator = Mock(JobOperator)
     def mindMapJob = Mock(Job)
     def jobRepository = Mock(JobRepository)
+    def batchTaskExecutor = new SyncTaskExecutor()
 
     def service = new SpaceService(spaceStorage, jobOperator, mindMapJob, jobRepository)
 
@@ -81,8 +86,8 @@ class SpaceServiceSpec extends Specification {
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
         def mindMap = new MindMap()
         mindMap.setJobId(99L)
-        def jobInstance = Mock(org.springframework.batch.core.job.JobInstance)
-        def jobExecution = Mock(org.springframework.batch.core.job.JobExecution)
+        def jobInstance = Mock(JobInstance)
+        def jobExecution = Mock(JobExecution)
 
         when:
         def status = service.getMindMapStatus("alice", 10L)
@@ -101,8 +106,8 @@ class SpaceServiceSpec extends Specification {
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
         def mindMap = new MindMap()
         mindMap.setJobId(99L)
-        def jobInstance = Mock(org.springframework.batch.core.job.JobInstance)
-        def jobExecution = Mock(org.springframework.batch.core.job.JobExecution)
+        def jobInstance = Mock(JobInstance)
+        def jobExecution = Mock(JobExecution)
 
         when:
         def status = service.getMindMapStatus("alice", 10L)
@@ -116,16 +121,17 @@ class SpaceServiceSpec extends Specification {
         status == MindMapStatus.FAILED
     }
 
-    def "should delete mind map and stop running job"() {
+    def "should delete mind map by id and stop running job"() {
         given:
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
         def mindMap = new MindMap()
+        mindMap.setId(7L)
         mindMap.setJobId(99L)
-        def jobInstance = Mock(org.springframework.batch.core.job.JobInstance)
-        def jobExecution = Mock(org.springframework.batch.core.job.JobExecution)
+        def jobInstance = Mock(JobInstance)
+        def jobExecution = Mock(JobExecution)
 
         when:
-        service.deleteMindMap("alice", 10L)
+        service.deleteMindMap("alice", 10L, 7L)
 
         then:
         1 * spaceStorage.read(10L) >> space
@@ -137,30 +143,81 @@ class SpaceServiceSpec extends Specification {
         1 * spaceStorage.deleteMindMap(10L)
     }
 
-    def "should create mind map and start job"() {
+    def "should throw not found when deleting mind map with mismatched id"() {
         given:
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
+        def mindMap = new MindMap()
+        mindMap.setId(7L)
+        mindMap.setJobId(99L)
 
         when:
-        service.createMindMap("alice", 10L)
+        service.deleteMindMap("alice", 10L, 99L)
 
         then:
         1 * spaceStorage.read(10L) >> space
-        1 * jobOperator.start(mindMapJob, _ as JobParameters)
-        noExceptionThrown()
+        1 * spaceStorage.readMindMap(10L) >> mindMap
+        thrown(NotFoundException)
+        0 * spaceStorage.deleteMindMap(_)
     }
 
-    def "should throw domain exception when mind map job fails"() {
+    def "should create mind map row before starting job and return generating summary"() {
         given:
         def space = Optional.of(new Space(10L, "alice", "", "", ""))
+        def jobInstance = Mock(JobInstance)
+        def jobExecution = Mock(JobExecution)
+        mindMapJob.getName() >> "mind_map_creation_job"
+
+        when:
+        def summary = service.createMindMap("alice", 10L)
+
+        then:
+        1 * spaceStorage.read(10L) >> space
+        1 * jobRepository.createJobInstance("mind_map_creation_job", _ as JobParameters) >> jobInstance
+        1 * jobInstance.getInstanceId() >> 99L
+        1 * spaceStorage.createMindMap(10L, 99L) >> 42L
+        1 * jobRepository.createJobExecution(jobInstance, _ as JobParameters, _ as ExecutionContext) >> jobExecution
+        1 * mindMapJob.execute(jobExecution)
+        summary.id() == 42L
+        summary.status() == MindMapStatus.GENERATING
+    }
+
+    def "should throw domain exception when mind map job fails to start"() {
+        given:
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
+        mindMapJob.getName() >> "mind_map_creation_job"
 
         when:
         service.createMindMap("alice", 10L)
 
         then:
         1 * spaceStorage.read(10L) >> space
-        1 * jobOperator.start(mindMapJob, _ as JobParameters) >> { throw new RuntimeException("boom") }
+        1 * jobRepository.createJobInstance("mind_map_creation_job", _ as JobParameters) >> {
+            throw new RuntimeException("boom")
+        }
         thrown(JobFailedToStartException)
+    }
+
+    def "should list mind maps with resolved status"() {
+        given:
+        def space = Optional.of(new Space(10L, "alice", "", "", ""))
+        def mindMap = new MindMap()
+        mindMap.setId(7L)
+        mindMap.setJobId(99L)
+        def jobInstance = Mock(JobInstance)
+        def jobExecution = Mock(JobExecution)
+
+        when:
+        def result = service.listMindMaps("alice", 10L)
+
+        then:
+        1 * spaceStorage.read(10L) >> space
+        1 * spaceStorage.readMindMap(10L) >> mindMap
+        1 * jobRepository.getJobInstance(99L) >> jobInstance
+        1 * jobRepository.getLastJobExecution(jobInstance) >> jobExecution
+        1 * jobExecution.getStatus() >> org.springframework.batch.core.BatchStatus.COMPLETED
+        result.size() == 1
+        result[0].id() == 7L
+        result[0].status() == MindMapStatus.DONE
     }
 
     def "should return spaces for owner"() {

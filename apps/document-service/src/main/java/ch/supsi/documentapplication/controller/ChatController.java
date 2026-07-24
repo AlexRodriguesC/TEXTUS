@@ -45,23 +45,12 @@ public class ChatController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List chats", description = "Returns all chat conversations for the current user in the space.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Chats retrieved successfully"),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Chats retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<ChatsResponseDTO> listChats(
             @PathVariable Long spaceId, @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
@@ -71,23 +60,12 @@ public class ChatController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create chat", description = "Creates a new chat conversation in the space.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Chat created successfully"),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "201", description = "Chat created successfully"),
+                    @ApiResponse(responseCode = "404", description = "Space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<ChatResponseDTO> createChat(
             @PathVariable Long spaceId,
             @RequestBody(required = false) CreateChatRequestDTO request,
@@ -100,23 +78,12 @@ public class ChatController {
 
     @GetMapping(value = "/{chatId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get chat history", description = "Returns the message history for a chat conversation.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "History retrieved successfully"),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space or chat not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "History retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Space or chat not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<ChatHistoryResponseDTO> getHistory(
             @PathVariable Long spaceId,
             @PathVariable UUID chatId,
@@ -128,23 +95,12 @@ public class ChatController {
 
     @DeleteMapping("/{chatId}")
     @Operation(summary = "Delete chat", description = "Deletes a chat conversation and its message history.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Chat deleted successfully"),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space or chat not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "204", description = "Chat deleted successfully"),
+                    @ApiResponse(responseCode = "404", description = "Space or chat not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public ResponseEntity<Void> deleteChat(
             @PathVariable Long spaceId,
             @PathVariable UUID chatId,
@@ -155,26 +111,13 @@ public class ChatController {
     }
 
     @PostMapping(value = "/{chatId}/messages", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(
-            summary = "Send message",
-            description = "Sends a user message and streams the assistant response as server-sent events.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Streaming response started"),
-        @ApiResponse(
-                responseCode = "404",
-                description = "Space or chat not found",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "Internal server error",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = ErrorResponseDTO.class)))
-    })
+    @Operation(summary = "Send message", description = "Sends a user message and streams the assistant response as server-sent events.")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "200", description = "Streaming response started"),
+                    @ApiResponse(responseCode = "404", description = "Space or chat not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
     public SseEmitter sendMessage(
             @PathVariable Long spaceId,
             @PathVariable UUID chatId,

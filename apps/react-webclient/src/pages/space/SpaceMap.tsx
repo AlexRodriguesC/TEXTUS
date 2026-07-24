@@ -251,11 +251,8 @@ function SpaceMapFlow({
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <ReactFlow
-        proOptions={{
-          hideAttribution: true,
-        }}
         colorMode={theme}
-        style={{ backgroundColor: "transparent", borderWidth: 2 }}
+        style={{ backgroundColor: "transparent", borderWidth: 0 }}
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
