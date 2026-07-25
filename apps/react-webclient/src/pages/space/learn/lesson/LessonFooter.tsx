@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useTranslation } from "react-i18next";
 import useLessonId from "@/hooks/useLessonId.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
@@ -11,6 +10,7 @@ import PathConstants from "@/routing/pathConstants.ts";
 import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
 import RetryLessonButton from "@/components/RetryLessonButton.tsx";
 import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
+import LessonFooterSkeleton from "@/pages/space/learn/lesson/LessonFooterSkeleton.tsx";
 
 interface LessonFooterProps {
   onConfirm: () => void;
@@ -57,12 +57,7 @@ function LessonFooter({
     : null;
 
   if (!lesson) {
-    return (
-      <div className={"flex flex-row items-center justify-between w-full"}>
-        <Skeleton className={"h-9 w-24"} />
-        <Skeleton className={"h-9 w-28"} />
-      </div>
-    );
+    return <LessonFooterSkeleton className="w-full" />;
   }
 
   const content = (() => {

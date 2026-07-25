@@ -39,7 +39,7 @@ function useDocuments(spaceId: number) {
     }),
   });
 
-  const { data: documentStatuses } = useGetDocuments(spaceId ?? -1, {
+  const { data: documentStatuses, isLoading } = useGetDocuments(spaceId ?? -1, {
     query: {
       refetchInterval: (query) => {
         const queryData = query.state.data?.data;
@@ -127,6 +127,7 @@ function useDocuments(spaceId: number) {
     retryDocument: (documentId: number) =>
       retryMutation.mutate({ spaceId, documentId }),
     isRetrying: retryMutation.isPending,
+    isLoading,
   };
 }
 

@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,9 +14,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class DatabaseChatMessageTopicStorage extends DatabaseStorage implements IDatabaseChatMessageTopicStorage {
 
-    private static final String CHAT_ID = "chat_id";
-    private static final String MESSAGE_TIMESTAMP = "message_timestamp";
-    private static final String TOPIC_ID = "topic_id";
+    private static final String CHAT_ID = "chatId";
+    private static final String MESSAGE_TIMESTAMP = "messageTimestamp";
+    private static final String TOPIC_IDS = "topicIds";
 
     @Autowired
     public DatabaseChatMessageTopicStorage(JdbcClient jdbcClient) {
@@ -27,34 +28,22 @@ public class DatabaseChatMessageTopicStorage extends DatabaseStorage implements 
         if (topicIds == null || topicIds.isEmpty()) {
             return;
         }
-        for (Long topicId : topicIds) {
-            jdbcClient
-                    .sql(
-                            """
-                            INSERT INTO documents.chat_message_topic (chat_id, message_timestamp, topic_id)
-                            VALUES (:chatId, :messageTimestamp, :topicId)
-                            ON CONFLICT DO NOTHING
-                            """)
-                    .param(CHAT_ID, chatId)
-                    .param(MESSAGE_TIMESTAMP, messageTimestamp)
-                    .param(TOPIC_ID, topicId)
-                    .update();
-        }
+        jdbcClient
+                .sql("SELECT documents.save_chat_message_topics(:chatId, :messageTimestamp, :topicIds)")
+                .param(CHAT_ID, chatId)
+                .param(MESSAGE_TIMESTAMP, Timestamp.from(messageTimestamp))
+                .param(TOPIC_IDS, topicIds.toArray(new Long[0]))
+                .query()
+                .singleValue();
     }
 
     @Override
     public Map<Instant, List<Long>> findByChatId(UUID chatId) {
         return jdbcClient
-                .sql(
-                        """
-                        SELECT message_timestamp, topic_id
-                        FROM documents.chat_message_topic
-                        WHERE chat_id = :chatId
-                        ORDER BY message_timestamp, topic_id
-                        """)
+                .sql("SELECT * FROM documents.read_chat_message_topics(:chatId)")
                 .param(CHAT_ID, chatId)
                 .query((rs, rowNum) ->
-                        new TopicRow(rs.getTimestamp(MESSAGE_TIMESTAMP).toInstant(), rs.getLong(TOPIC_ID)))
+                        new TopicRow(rs.getTimestamp("message_timestamp").toInstant(), rs.getLong("topic_id")))
                 .list()
                 .stream()
                 .collect(

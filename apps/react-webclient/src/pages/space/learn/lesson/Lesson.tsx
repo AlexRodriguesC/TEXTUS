@@ -1,5 +1,4 @@
 import Question from "@/pages/space/learn/Question.tsx";
-import QuestionSkeleton from "@/pages/space/learn/QuestionSkeleton.tsx";
 import useLesson from "@/hooks/useLesson.tsx";
 import useLessonId from "@/hooks/useLessonId.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
@@ -14,9 +13,10 @@ import useSubmitSolution from "@/hooks/useSubmitSolution.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import AttemptsExhausted from "@/pages/space/learn/lesson/AttemptsExhausted.tsx";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
 import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
 import ExerciseType from "@/classes/ExerciseType.ts";
+import LessonPageSkeleton from "@/pages/space/learn/lesson/LessonPageSkeleton.tsx";
+import LessonQuestionSkeleton from "@/pages/space/learn/LessonQuestionSkeleton.tsx";
 
 function Lesson() {
   const { lessonId } = useLessonId();
@@ -34,7 +34,7 @@ function Lesson() {
   });
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LessonPageSkeleton />;
   }
 
   const handleNext = () => {
@@ -65,12 +65,11 @@ function Lesson() {
     );
     setWasCorrect(result?.correct ?? false);
     setSubmitted(true);
-
   };
 
-  const exercise = (() => {
+  const renderExercise = () => {
     if (!nextExercise) {
-      return <QuestionSkeleton />;
+      return <LessonQuestionSkeleton />;
     }
 
     if (nextExercise.type === ExerciseType.LIST) {
@@ -114,11 +113,11 @@ function Lesson() {
       );
     }
     throw new Error("Invalid exercise type");
-  })();
+  };
 
   const content = (() => {
     if (exerciseLoading) {
-      return <QuestionSkeleton />;
+      return <LessonQuestionSkeleton />;
     }
 
     if (lesson!.attemptsLeft === 0) {
@@ -133,11 +132,7 @@ function Lesson() {
       return <LessonCheckpointCompleted />;
     }
 
-    return (
-      <>
-        {exercise}
-      </>
-    );
+    return renderExercise();
   })();
 
   return (

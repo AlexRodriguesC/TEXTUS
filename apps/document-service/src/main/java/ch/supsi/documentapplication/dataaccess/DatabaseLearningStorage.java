@@ -64,18 +64,12 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     private Question getQuestion(Long exerciseId) {
-        Long questionId = jdbcClient
-                .sql("SELECT id FROM documents.question WHERE exercise_id = :exerciseId")
-                .param("exerciseId", exerciseId)
-                .query(Long.class)
-                .single();
-
         return jdbcClient
-                .sql("SELECT * FROM documents.read_question(:questionId)")
-                .param("questionId", questionId)
+                .sql("SELECT * FROM documents.read_question(:exerciseId)")
+                .param("exerciseId", exerciseId)
                 .query((rs, rowNum) -> {
                     Question q = new Question();
-                    q.setId(questionId);
+                    q.setId(rs.getLong("id"));
                     q.setRequest(rs.getString("question"));
                     q.setAnswer(rs.getString("answer"));
                     q.setDistractor(
@@ -86,19 +80,13 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     private ch.supsi.documentapplication.model.learn.exercise.List getList(Long exerciseId) {
-        Long listExerciseId = jdbcClient
-                .sql("SELECT id FROM documents.list_exercise WHERE exercise_id = :exerciseId")
-                .param("exerciseId", exerciseId)
-                .query(Long.class)
-                .single();
-
         return jdbcClient
-                .sql("SELECT * FROM documents.read_list(:listExerciseId)")
-                .param("listExerciseId", listExerciseId)
+                .sql("SELECT * FROM documents.read_list(:exerciseId)")
+                .param("exerciseId", exerciseId)
                 .query((rs, rowNum) -> {
                     ch.supsi.documentapplication.model.learn.exercise.List l =
                             new ch.supsi.documentapplication.model.learn.exercise.List();
-                    l.setId(listExerciseId);
+                    l.setId(rs.getLong("id"));
                     l.setRequest(rs.getString("request"));
                     l.setAnswer(Arrays.asList((String[]) rs.getArray("answer").getArray()));
                     return l;
@@ -107,18 +95,12 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     private Group getGroup(Long exerciseId) {
-        Long groupExerciseId = jdbcClient
-                .sql("SELECT id FROM documents.group_exercise WHERE exercise_id = :exerciseId")
-                .param("exerciseId", exerciseId)
-                .query(Long.class)
-                .single();
-
         return jdbcClient
-                .sql("SELECT * FROM documents.read_group(:groupExerciseId)")
-                .param("groupExerciseId", groupExerciseId)
+                .sql("SELECT * FROM documents.read_group(:exerciseId)")
+                .param("exerciseId", exerciseId)
                 .query((rs, rowNum) -> {
                     Group g = new Group();
-                    g.setId(groupExerciseId);
+                    g.setId(rs.getLong("group_exercise_id"));
                     g.setRequest(rs.getString("request"));
 
                     String answerJson = rs.getString("answer");
@@ -135,18 +117,12 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
     }
 
     private PairExercise getPair(Long exerciseId) {
-        Long pairExerciseId = jdbcClient
-                .sql("SELECT id FROM documents.pair_exercise WHERE exercise_id = :exerciseId")
-                .param("exerciseId", exerciseId)
-                .query(Long.class)
-                .single();
-
         return jdbcClient
-                .sql("SELECT * FROM documents.read_pair(:pairExerciseId)")
-                .param("pairExerciseId", pairExerciseId)
+                .sql("SELECT * FROM documents.read_pair(:exerciseId)")
+                .param("exerciseId", exerciseId)
                 .query((rs, rowNum) -> {
                     PairExercise p = new PairExercise();
-                    p.setId(pairExerciseId);
+                    p.setId(rs.getLong("id"));
                     p.setRequest(rs.getString("request"));
 
                     String pairsJson = rs.getString("pairs");

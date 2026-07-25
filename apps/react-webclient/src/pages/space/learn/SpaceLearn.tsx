@@ -10,7 +10,7 @@ import type Lesson from "@/classes/Lesson.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import PathNode from "@/pages/space/learn/PathNode.tsx";
 import { cn } from "@/lib/utils.ts";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
+import SpaceLearnSkeleton from "@/pages/space/learn/SpaceLearnSkeleton.tsx";
 import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";
@@ -142,10 +142,6 @@ function SpaceLearn() {
     return () => observer.disconnect();
   }, [path, headerHeight]);
 
-  if (status !== LearningPathJobStatus.NOT_CREATED && isPathLoading) {
-    return <LoadingScreen />;
-  }
-
   if (
     path === undefined ||
     status === LearningPathJobStatus.NOT_CREATED ||
@@ -167,24 +163,29 @@ function SpaceLearn() {
             <ChapterHeader key={current.index} chapter={current} />
           </div>
 
+
           <div className="flex h-full flex-col items-center pt-4">
-            {path.chapters.map((chapter, i) => (
-              <div key={chapter.index} className={cn("flex flex-col")}>
-                <ChapterPath chapter={chapter} chapters={path.chapters} />
-                {i < path.chapters.length - 1 && (
-                  <div
-                    className="flex items-center gap-3 my-4"
-                    data-chapter-index={chapter.index}
-                  >
-                    <Separator className="flex-1 bg-border/50" />
-                    <span className="text-muted-foreground text-xs whitespace-wrap">
-                      {chapter.description}
-                    </span>
-                    <Separator className="flex-1 bg-border/50" />
-                  </div>
-                )}
-              </div>
-            ))}
+            {isPathLoading ? (
+              <SpaceLearnSkeleton />
+            ) : (
+              path.chapters.map((chapter, i) => (
+                <div key={chapter.index} className={cn("flex flex-col")}>
+                  <ChapterPath chapter={chapter} chapters={path.chapters} />
+                  {i < path.chapters.length - 1 && (
+                    <div
+                      className="flex items-center gap-3 my-4"
+                      data-chapter-index={chapter.index}
+                    >
+                      <Separator className="flex-1 bg-border/50" />
+                      <span className="text-muted-foreground text-xs whitespace-wrap">
+                        {chapter.description}
+                      </span>
+                      <Separator className="flex-1 bg-border/50" />
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
 
             <div
               className="flex w-full flex-col items-center justify-center gap-4"

@@ -7,7 +7,7 @@ import type Page from "@/classes/Page.ts";
 import useTopics from "@/hooks/useTopics.tsx";
 import usePages from "@/hooks/usePages.ts";
 import SpaceMapEmpty from "@/pages/space/SpaceMapEmpty.tsx";
-import LoadingScreen from "@/components/LoadingScreen.tsx";
+import SpaceMapSkeleton from "@/pages/space/SpaceMapSkeleton.tsx";
 import { useMemo, useState } from "react";
 import {
   Controls,
@@ -291,7 +291,7 @@ function SpaceMap() {
     .join(",");
 
   if (status !== "NOT_CREATED" && isMindMapLoading) {
-    return <LoadingScreen />;
+    return <SpaceMapSkeleton />;
   }
 
   if (

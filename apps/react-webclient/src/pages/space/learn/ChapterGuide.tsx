@@ -9,24 +9,25 @@ import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import ChapterGuideBreadcrumbs from "@/pages/space/learn/ChapterGuideBreadcrumbs.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { useTranslation } from "react-i18next";
+import ChapterGuideSkeleton from "@/pages/space/learn/ChapterGuideSkeleton.tsx";
 
 function ChapterGuide() {
   const { t: tr } = useTranslation();
   const { chapterId } = useChapterId();
   const { spaceId } = useSpaceId();
-  const { path } = useLearningPath();
+  const { path, isPathLoading } = useLearningPath();
   const { topics } = useTopics();
   const navigate = useNavigate();
 
-  // Resolve chapter data
   const chapter = path?.chapters?.find((c) => c.index === chapterId);
   const chapterTopics = chapter?.lessons.flatMap((n) => n.topics) ?? [];
 
-  // Filter topics client-side
   const tops = useMemo(
     () => topics.filter((t) => chapterTopics.includes(t.id)),
-    [topics],
+    [topics, chapterTopics],
   );
+
+  const isLoading = isPathLoading || !chapter;
 
   useEffect(() => {
     if (spaceId === undefined) {
@@ -35,27 +36,27 @@ function ChapterGuide() {
   }, [spaceId, navigate]);
 
   useEffect(() => {
-    if (spaceId !== undefined && !chapter) {
+    if (spaceId !== undefined && path && !isPathLoading && !chapter) {
       navigate({
         to: PathConstants.SPACE_LEARN,
         params: { spaceId: String(spaceId) },
       });
     }
-  }, [spaceId, chapter, navigate]);
+  }, [spaceId, chapter, navigate, path, isPathLoading]);
 
-  if (!spaceId || !chapter) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p>Loading chapter...</p>
-      </div>
-    );
+  if (!spaceId) {
+    return null;
+  }
+
+  if (isLoading) {
+    return <ChapterGuideSkeleton />;
   }
 
   return (
     <div className="flex h-full w-full justify-center overflow-hidden">
       <ScrollArea className="h-full w-full max-w-[90%] lg:max-w-[40%]">
         <div className="flex flex-col gap-6 px-4 py-6">
-          <ChapterGuideBreadcrumbs chapter={chapter} />
+          <ChapterGuideBreadcrumbs chapter={chapter!} />
           <div className="flex flex-col gap-4">
             {tops.map((t) => (
               <div
@@ -65,11 +66,11 @@ function ChapterGuide() {
                 <div className="flex justify-between items-center text-foreground/40">
                   <h2 className="font-semibold text-foreground">{t.title}</h2>
                   <InformationQuestionMark
-                      className="hover:cursor-pointer hover:text-foreground transition-colors"
-                      tooltip={tr("chapter.guide.location", {
-                        page: t.page,
-                        documentName: t.sourceFileName,
-                      })}
+                    className="hover:cursor-pointer hover:text-foreground transition-colors"
+                    tooltip={tr("chapter.guide.location", {
+                      page: t.page,
+                      documentName: t.sourceFileName,
+                    })}
                   />
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">

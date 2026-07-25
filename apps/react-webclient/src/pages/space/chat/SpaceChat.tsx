@@ -7,7 +7,6 @@ import SpaceChatEmpty from "@/pages/space/chat/SpaceChatEmpty.tsx";
 import SpaceChatNoSelection from "@/pages/space/chat/SpaceChatNoSelection.tsx";
 import SpaceChatSkeleton from "@/pages/space/chat/SpaceChatSkeleton.tsx";
 
-// Space chat page shell that switches between loading, conversation, and no-selection.
 function SpaceChat() {
   const { chats, isLoading: isChatsLoading, invalidateChats } = useChats();
   const { models, defaultModel, isLoading: isModelsLoading } = useModels();
@@ -15,16 +14,14 @@ function SpaceChat() {
   const { selectedChatId } = useChatContext();
 
   const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+  const isLoading = isChatsLoading || isModelsLoading;
 
   const renderContent = () => {
-    if (isChatsLoading) {
+    if (isLoading) {
       return <SpaceChatSkeleton />;
     }
     if (chats.length === 0) {
       return <SpaceChatEmpty />;
-    }
-    if (isModelsLoading) {
-      return <SpaceChatSkeleton />;
     }
     if (selectedChatId) {
       return (

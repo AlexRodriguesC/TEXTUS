@@ -24,12 +24,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     @Override
     public UUID create(Long spaceId, String owner, String title) {
         return jdbcClient
-                .sql(
-                        """
-                        INSERT INTO documents.chat (space_id, owner_id, title)
-                        VALUES (:spaceId, :owner, :title)
-                        RETURNING id
-                        """)
+                .sql("SELECT documents.create_chat(:spaceId, :owner, :title)")
                 .param(SPACE_ID, spaceId)
                 .param(OWNER, owner)
                 .param(TITLE, title)
@@ -40,13 +35,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     @Override
     public List<Chat> findBySpaceAndOwner(Long spaceId, String owner) {
         return jdbcClient
-                .sql(
-                        """
-                        SELECT id, space_id, owner_id, title, created_at, updated_at
-                        FROM documents.chat
-                        WHERE space_id = :spaceId AND owner_id = :owner
-                        ORDER BY updated_at DESC
-                        """)
+                .sql("SELECT * FROM documents.read_chats_by_space_and_owner(:spaceId, :owner)")
                 .param(SPACE_ID, spaceId)
                 .param(OWNER, owner)
                 .query(this::mapRow)
@@ -56,12 +45,7 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     @Override
     public Optional<Chat> findById(UUID chatId, Long spaceId, String owner) {
         return jdbcClient
-                .sql(
-                        """
-                        SELECT id, space_id, owner_id, title, created_at, updated_at
-                        FROM documents.chat
-                        WHERE id = :chatId AND space_id = :spaceId AND owner_id = :owner
-                        """)
+                .sql("SELECT * FROM documents.read_chat(:chatId, :spaceId, :owner)")
                 .param(CHAT_ID, chatId)
                 .param(SPACE_ID, spaceId)
                 .param(OWNER, owner)
@@ -72,36 +56,29 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     @Override
     public void updateTitle(UUID chatId, String title) {
         jdbcClient
-                .sql(
-                        """
-                        UPDATE documents.chat
-                        SET title = :title, updated_at = NOW()
-                        WHERE id = :chatId
-                        """)
+                .sql("SELECT documents.update_chat_title(:chatId, :title)")
                 .param(CHAT_ID, chatId)
                 .param(TITLE, title)
-                .update();
+                .query()
+                .singleValue();
     }
 
     @Override
     public void touchUpdatedAt(UUID chatId) {
         jdbcClient
-                .sql(
-                        """
-                        UPDATE documents.chat
-                        SET updated_at = NOW()
-                        WHERE id = :chatId
-                        """)
+                .sql("SELECT documents.touch_chat_updated_at(:chatId)")
                 .param(CHAT_ID, chatId)
-                .update();
+                .query()
+                .singleValue();
     }
 
     @Override
     public void delete(UUID chatId) {
         jdbcClient
-                .sql("DELETE FROM documents.chat WHERE id = :chatId")
+                .sql("SELECT documents.delete_chat(:chatId)")
                 .param(CHAT_ID, chatId)
-                .update();
+                .query()
+                .singleValue();
     }
 
     private Chat mapRow(ResultSet rs, int rowNum) throws SQLException {

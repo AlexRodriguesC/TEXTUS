@@ -88,8 +88,8 @@ const spacesRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACES,
   component: SpacesPage,
-  loader: async ({ context: { queryClient } }) => {
-    await ensureSpaces(queryClient);
+  loader: ({ context: { queryClient } }) => {
+    void ensureSpaces(queryClient);
   },
 });
 
@@ -97,8 +97,8 @@ const spaceMenuRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MENU,
   component: SpaceMenu,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureSpaceMenuData(queryClient, Number(params.spaceId));
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureSpaceMenuData(queryClient, Number(params.spaceId));
   },
 });
 
@@ -106,8 +106,8 @@ const spaceChatRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_CHAT,
   component: SpaceChat,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureSpaceChatData(queryClient, Number(params.spaceId));
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureSpaceChatData(queryClient, Number(params.spaceId));
   },
 });
 
@@ -115,8 +115,8 @@ const spaceMapRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MIND_MAP,
   component: SpaceMap,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureSpaceMapData(queryClient, Number(params.spaceId));
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureSpaceMapData(queryClient, Number(params.spaceId));
   },
 });
 
@@ -124,8 +124,8 @@ const spaceLearnRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN,
   component: SpaceLearn,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureSpaceLearnData(queryClient, Number(params.spaceId));
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureSpaceLearnData(queryClient, Number(params.spaceId));
   },
 });
 
@@ -133,8 +133,8 @@ const spaceChapterGuideRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN_GUIDE,
   component: ChapterGuide,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureChapterGuideData(queryClient, Number(params.spaceId));
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureChapterGuideData(queryClient, Number(params.spaceId));
   },
 });
 
@@ -142,8 +142,8 @@ const lessonRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.LESSON,
   component: Lesson,
-  loader: async ({ context: { queryClient }, params }) => {
-    await ensureLessonData(
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureLessonData(
       queryClient,
       Number(params.spaceId),
       Number(params.lessonId),

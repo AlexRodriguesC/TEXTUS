@@ -137,23 +137,22 @@ export function SpacesPage() {
 
     return (
       <div className="flex flex-1 min-h-0 flex-col">
-        <div
-          ref={listRef}
-          className="flex flex-1 min-h-0 flex-col min-w-full overflow-y-auto gap-2"
-        >
-          {paginated.map((space, index) => (
-            <div
-              key={space.spaceId}
-              ref={index === 0 ? itemRef : undefined}
-            >
-              <SpacesListItem
-                icon={space.icon}
-                spaceId={space.spaceId}
-                name={space.name}
-                description={space.description}
-              />
-            </div>
-          ))}
+        <div ref={listRef} className="flex flex-1 min-h-0 flex-col min-w-full">
+          <div className="flex flex-1 min-h-0 flex-col min-w-full overflow-y-auto gap-2">
+            {paginated.map((space, index) => (
+              <div
+                key={space.spaceId}
+                ref={index === 0 ? itemRef : undefined}
+              >
+                <SpacesListItem
+                  icon={space.icon}
+                  spaceId={space.spaceId}
+                  name={space.name}
+                  description={space.description}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         {totalPages > 1 && (

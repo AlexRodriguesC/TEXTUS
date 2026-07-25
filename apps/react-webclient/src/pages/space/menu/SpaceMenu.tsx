@@ -10,15 +10,20 @@ import EmptySpace from "@/pages/space/EmptySpace.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { useTranslation } from "react-i18next";
 import IllustratedAside from "@/components/IllustratedAside.tsx";
+import useDocuments from "@/hooks/useDocuments.ts";
+import SpaceMenuSkeleton from "@/pages/space/menu/SpaceMenuSkeleton.tsx";
 
 function SpaceMenu() {
   const { spaceId } = useSpaceId();
-  const { spaces, isLoading } = useSpaces();
+  const { spaces, isLoading: isSpacesLoading } = useSpaces();
+  const { isLoading: isDocumentsLoading } = useDocuments(spaceId);
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { tutorialEnabled, enableTutorial, disableTutorial } = useTutorial();
 
-  if (!isLoading && !spaces.find((s) => s.spaceId === spaceId)) {
+  const isLoading = isSpacesLoading || isDocumentsLoading;
+
+  if (!isSpacesLoading && !spaces.find((s) => s.spaceId === spaceId)) {
     navigate({ to: PathConstants.NOT_FOUND });
   }
 
@@ -37,34 +42,38 @@ function SpaceMenu() {
   }
 
   return (
-    <CenteredPage>
-      <div className={"place-content-center"}>
-        <div className={"flex w-full justify-end"}>
+      <CenteredPage>
+        <div className={"place-content-center"}>
+          {isLoading && <SpaceMenuSkeleton />}
+          {!isLoading && (
+              <>
+                <div className={"flex w-full justify-end"}>
           <span className="flex items-center h-[2em] leading-none overflow-hidden cursor-pointer">
             {!tutorialEnabled && (
-              <InformationQuestionMark
-                size={16}
-                onClick={enableTutorial}
-                tooltip={t("tutorial.show")}
-              />
+                <InformationQuestionMark
+                    size={16}
+                    onClick={enableTutorial}
+                    tooltip={t("tutorial.show")}
+                />
             )}
           </span>
+                </div>
+                <IllustratedAside
+                    className="w-full min-w-[90%]"
+                    contentClassName="gap-4"
+                    lottieSrc="/animations/menu.lottie"
+                >
+                  <div className="flex flex-col gap-4">
+                    <UploadZone />
+                    <div className={"flex flex-col w-full items-center"}>
+                      <DocumentStatusList />
+                    </div>
+                  </div>
+                </IllustratedAside>
+              </>
+          )}
         </div>
-        <IllustratedAside
-          className="w-full min-w-[90%]"
-          contentClassName="gap-4"
-          lottieSrc="/animations/menu.lottie"
-        >
-          <div className="flex flex-col gap-4">
-            <UploadZone />
-
-            <div className={"flex flex-col w-full items-center"}>
-              <DocumentStatusList />
-            </div>
-          </div>
-        </IllustratedAside>
-      </div>
-    </CenteredPage>
+      </CenteredPage>
   );
 }
 

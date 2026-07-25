@@ -5,8 +5,8 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import LessonAttemptsIndicator from "@/components/LessonAttemptsIndicator.tsx";
+import LessonHeaderSkeleton from "@/pages/space/learn/lesson/LessonHeaderSkeleton.tsx";
 
 function LessonHeader() {
   const { lessonId } = useLessonId();
@@ -14,13 +14,7 @@ function LessonHeader() {
   const { lesson, isLoading } = useLesson({ lessonId: lessonId });
 
   if (isLoading || !lesson) {
-    return (
-      <>
-        <Skeleton className={"h-9 w-9 rounded-md"} />
-        <Skeleton className={"flex-1 h-3 rounded-full"} />
-        <Skeleton className={"h-6 w-16 rounded-md"} />
-      </>
-    );
+    return <LessonHeaderSkeleton className="flex items-center gap-3 w-full" />;
   }
 
   const content = (() => {

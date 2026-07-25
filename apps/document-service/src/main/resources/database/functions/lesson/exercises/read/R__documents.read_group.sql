@@ -11,7 +11,6 @@ BEGIN
         SELECT
             ge.id AS group_exercise_id,
             ge.request,
-            -- Construct the answer JSONB from group_answer and group_answer_item tables
             (
                 SELECT jsonb_object_agg(ga.label, items.items_array)
                 FROM documents.group_answer ga
@@ -23,6 +22,6 @@ BEGIN
                 WHERE ga.group_exercise_id = ge.id
             ) AS answer
         FROM documents.group_exercise ge
-        WHERE ge.id = p_exercise_id;
+        WHERE ge.exercise_id = p_exercise_id;
 END;
 $$;

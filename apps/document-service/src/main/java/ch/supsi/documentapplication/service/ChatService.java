@@ -97,9 +97,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         Chat chat = getChatOrThrow(username, spaceId, chatId);
         maybeAutoTitle(chat, message);
 
-        List<Message> history = chatMemory.get(chatId.toString()).stream()
-                .filter(msg -> !(msg instanceof SystemMessage))
-                .toList();
+        List<Message> history = chatMemory.get(chatId.toString());
 
         Advisor ragAdvisor = chatRagAdvisorFactory.createForSpace(space.getId());
 

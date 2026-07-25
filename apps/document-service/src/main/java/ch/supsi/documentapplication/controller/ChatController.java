@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -124,24 +125,48 @@ public class ChatController {
             @Valid @RequestBody SendMessageRequestDTO request,
             @Parameter(hidden = true) Authentication authentication,
             HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-cache, no-transform");
-        response.setHeader("Connection", "keep-alive");
 
+        configureSseHeaders(response);
+
+        Flux<String> messageStream = streamChatMessages(authentication, spaceId, chatId, request);
+
+        return createSseEmitterForStream(messageStream);
+    }
+
+    private void configureSseHeaders(HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache, no-transform");
+        response.setHeader(HttpHeaders.CONNECTION, "keep-alive");
+    }
+
+    private Flux<String> streamChatMessages(
+            Authentication authentication, Long spaceId, UUID chatId, SendMessageRequestDTO request) {
         String username = authentication.getName();
-        Flux<String> flux = chatService.streamMessage(username, spaceId, chatId, request.message(), request.model());
+        return chatService.streamMessage(username, spaceId, chatId, request.message(), request.model());
+    }
 
+    private SseEmitter createSseEmitterForStream(Flux<String> flux) {
         SseEmitter emitter = new SseEmitter(0L);
-        Disposable subscription = flux.subscribe(
-                chunk -> {
-                    try {
-                        emitter.send(SseEmitter.event().data(chunk));
-                    } catch (IOException e) {
-                        emitter.completeWithError(e);
-                    }
-                },
+        Disposable subscription = subscribeToStream(flux, emitter);
+        attachEmitterLifecycleHandlers(emitter, subscription);
+        return emitter;
+    }
+
+    private Disposable subscribeToStream(Flux<String> flux, SseEmitter emitter) {
+        return flux.subscribe(
+                chunk -> sendChunkToEmitter(emitter, chunk),
                 emitter::completeWithError,
                 emitter::complete);
+    }
 
+    private void sendChunkToEmitter(SseEmitter emitter, String chunk) {
+        try {
+            emitter.send(SseEmitter.event().data(chunk));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    private void attachEmitterLifecycleHandlers(SseEmitter emitter, Disposable subscription) {
         emitter.onCompletion(subscription::dispose);
         emitter.onTimeout(() -> {
             subscription.dispose();
@@ -151,7 +176,5 @@ public class ChatController {
             subscription.dispose();
             emitter.completeWithError(error);
         });
-
-        return emitter;
     }
 }
