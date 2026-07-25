@@ -10,13 +10,13 @@ const SUGGESTION_KEYS = [
 
 const MAX_SUGGESTIONS = 4;
 
-export function pickSuggestedTopics(topics: Topic[]): Topic[] {
+export function pickSuggestedTopics({topics, maxSuggestions = MAX_SUGGESTIONS} : {topics: Topic[], maxSuggestions?: number}) {
   const shuffled = [...topics];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled.slice(0, Math.min(MAX_SUGGESTIONS, shuffled.length));
+  return shuffled.slice(0, Math.min(maxSuggestions, shuffled.length));
 }
 
 export function buildTopicSuggestion(

@@ -8,24 +8,28 @@ import {
 } from "@/pages/space/chat/chatTopicSuggestions.ts";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import {useIsMobile} from "@/hooks/shadcn/useIsMobile.ts";
+
+interface ChatEmptyMessagesProps {
+  title: string;
+  asScrollerItem?: boolean;
+  onSuggestionClick?: (message: string) => void;
+  disabled?: boolean;
+}
 
 function ChatEmptyMessages({
   title,
   asScrollerItem = false,
   onSuggestionClick,
   disabled = false,
-}: {
-  title: string;
-  asScrollerItem?: boolean;
-  onSuggestionClick?: (message: string) => void;
-  disabled?: boolean;
-}) {
+}: ChatEmptyMessagesProps) {
   const { t } = useTranslation();
   const { topics } = useTopics();
+  const isMobile = useIsMobile();
   const suggestedTopicsRef = useRef<Topic[] | null>(null);
 
   if (suggestedTopicsRef.current === null && topics.length > 0) {
-    suggestedTopicsRef.current = pickSuggestedTopics(topics);
+    suggestedTopicsRef.current = pickSuggestedTopics({topics, maxSuggestions: isMobile ? 2 : 4});
   }
 
   const suggestedTopics = suggestedTopicsRef.current ?? [];
@@ -34,15 +38,15 @@ function ChatEmptyMessages({
     onSuggestionClick !== undefined && suggestedTopics.length > 0;
 
   const content = (
-    <div className="flex flex-1 flex-col items-center gap-4 py-12 text-center px-6 w-full">
+    <div className="flex flex-1 flex-col items-center gap-4 py-12 text-center px-6 w-full h-full">
       <p className="text-sm text-muted-foreground">{text}</p>
       {showSuggestions && (
-        <BubbleGroup className="flex flex-col w-full">
+        <BubbleGroup className="flex flex-col w-full gap-8">
           {suggestedTopics.map((topic, index) => {
             const message = buildTopicSuggestion(t, topic, index);
             return (
-              <Bubble key={topic.id} variant="tinted" align={index % 2 === 0 ? "start" : "end"}>
-                <BubbleContent asChild>
+              <Bubble key={topic.id} variant="default" align={index % 2 === 0 ? "start" : "end"}>
+                <BubbleContent className={"rounded-xl"} asChild>
                   <button
                     type="button"
                     disabled={disabled}
