@@ -234,7 +234,7 @@
     "empty": {
       "title": "No topics yet",
       "description": "Upload documents in the menu to extract topics from your sources.",
-      "cta": "Go to menu"
+      "cta": "Add documents"
     }
   },
   "sidebar": {

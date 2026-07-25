@@ -2,11 +2,9 @@ package ch.supsi.documentapplication.controller.DTO.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.ai.chat.messages.Message;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Locale;
 
 @Schema(description = "A single message in a chat conversation")
 public record ChatMessageResponseDTO(

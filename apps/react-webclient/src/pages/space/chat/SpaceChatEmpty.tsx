@@ -1,3 +1,4 @@
+import CenteredPage from "@/components/CenteredPage.tsx";
 import IllustratedAside, {
   AsideFooter,
   AsideHeader,
@@ -20,21 +21,21 @@ function SpaceChatEmpty() {
   }, [createChat, setSelectedChatId]);
 
   return (
-    <div className="flex flex-1 items-center justify-center px-4">
+    <CenteredPage>
       <IllustratedAside
-        className="gap-4 max-w-xxl"
+        className="max-w-[80%]"
         lottieSrc="/animations/think.lottie"
         lottieProps={{ loop: true, autoplay: true }}
       >
-        <AsideHeader className="gap-3 text-center">
-          <h2 className="text-lg font-medium">{t("chat.empty.page.title")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("chat.empty.page.description")}
+        <AsideHeader>
+          <p className="font-bold uppercase text-center">
+            {t("chat.empty.page.title")}
           </p>
+          <p className="text-center">{t("chat.empty.page.description")}</p>
         </AsideHeader>
         <AsideFooter>
           <Button
-              className="w-full"
+            className="w-full"
             disabled={isCreating}
             onClick={() => void handleCreate()}
           >
@@ -43,7 +44,7 @@ function SpaceChatEmpty() {
           </Button>
         </AsideFooter>
       </IllustratedAside>
-    </div>
+    </CenteredPage>
   );
 }
 

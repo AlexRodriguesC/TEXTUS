@@ -13,17 +13,18 @@ function SourceEntry({topicId}: {topicId: number}) {
     if (!topic) return null;
 
     return (
-        <div className={"flex flex-row items-center w-full gap-2"}>
-            <p>{t("chat.source.based-on", {title: topic.title})}</p>
-            <Link
-                to={PathConstants.SPACE_TOPICS}
-                params={{ spaceId: strSpaceId }}
-                search={{ q: topic.title }}
-            >
-                <ArrowUpRight/>
-            </Link>
-        </div>
-    )
+        <Link
+            to={PathConstants.SPACE_TOPICS}
+            params={{ spaceId: strSpaceId }}
+            search={{ q: topic.title }}
+            className="flex w-full items-center justify-between gap-2 border px-3 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
+        >
+            <span className="truncate">
+                {t("chat.source.based-on", { title: topic.title })}
+            </span>
+            <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+    );
 }
 
 export default SourceEntry;

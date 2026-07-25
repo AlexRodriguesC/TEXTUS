@@ -2,7 +2,7 @@ import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import {
   Message,
   MessageAvatar,
-  MessageContent, MessageFooter,
+  MessageContent,
 } from "@/components/ui/message.tsx";
 import MessageAvatarIcon from "@/pages/space/chat/MessageAvatarIcon.tsx";
 import ThinkingMarker from "@/pages/space/chat/ThinkingMarker.tsx";

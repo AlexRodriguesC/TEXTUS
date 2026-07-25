@@ -20,7 +20,6 @@ import Space from "@/classes/Space.ts";
 import Task from "@/classes/Task.ts";
 import Topic from "@/classes/Topic.ts";
 import type { Exercise } from "@/classes/Exercise.ts";
-import type { ChatMessageRole } from "@/classes/ChatMessage.ts";
 import type { ExerciseTypeType } from "@/classes/ExerciseType.ts";
 import type { TaskTypeType } from "@/classes/TaskType.ts";
 import type { TaskVariantType } from "@/classes/TaskVariant.ts";

@@ -10,20 +10,27 @@ function SourcesFooter({message}: {message: ChatMessage }) {
     if (!message || !message.topics || message.topics.length === 0) return null;
 
     const content = (
-        <div className={"flex flex-col gap-2"}>
-            {message.topics.map(t => <SourceEntry key={t} topicId={t}/>)}
+        <div className="flex flex-col gap-1">
+            {message.topics.map((topicId) => (
+                <SourceEntry key={topicId} topicId={topicId} />
+            ))}
         </div>
-    )
+    );
 
     return (
         <MessageFooter className="user-select-none">
-            <HintOverlay trigger={
-                <div className={"select-none"}>
-                    {t("chat.sources.basedOn", {count: message.topics.length})}
-                </div>
-            } content={content}/>
+            <HintOverlay
+                variant="panel"
+                className="min-w-56 p-0"
+                trigger={
+                    <div className="select-none cursor-pointer">
+                        {t("chat.sources.basedOn", { count: message.topics.length })}
+                    </div>
+                }
+                content={content}
+            />
         </MessageFooter>
-    )
+    );
 }
 
 export default SourcesFooter;

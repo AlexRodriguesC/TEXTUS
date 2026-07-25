@@ -101,11 +101,11 @@ function SpaceChatConversation({
       });
 
       const userMessage: DisplayMessage = Object.assign(
-        new ChatMessageClass("user", message, new Date().toISOString()),
+        new ChatMessageClass("user", message, new Date().toISOString(), []),
         { id: userId },
       );
       const assistantPlaceholder: DisplayMessage = Object.assign(
-        new ChatMessageClass("assistant", "", new Date().toISOString()),
+        new ChatMessageClass("assistant", "", new Date().toISOString(), []),
         { id: assistantId },
       );
 
@@ -125,6 +125,7 @@ function SpaceChatConversation({
                       "assistant",
                       draft.content + token,
                       draft.timestamp,
+                        draft.topics
                     ),
                     { id: assistantId },
                   )

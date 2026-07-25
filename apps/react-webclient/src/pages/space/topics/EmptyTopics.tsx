@@ -17,7 +17,7 @@ function EmptyTopics() {
     <CenteredPage>
       <IllustratedAside
         className="max-w-[80%]"
-        lottieSrc="/animations/ideas.lottie"
+        lottieSrc="/animations/start.lottie"
         lottieProps={{ autoplay: false }}
       >
         <AsideHeader>
