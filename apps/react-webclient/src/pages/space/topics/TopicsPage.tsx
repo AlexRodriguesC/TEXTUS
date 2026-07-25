@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import SearchInput from "@/components/SearchInput.tsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
@@ -229,12 +229,13 @@ function TopicsPage() {
     <div className="mx-auto flex h-full w-full max-w-[75%] flex-col">
       {!isLoading && !isEmpty && (
         <header className="flex shrink-0 flex-col items-center gap-4 px-4 pt-8">
-          <Input
+          <SearchInput
             ref={searchInputRef}
             className="w-full max-w-[90%] lg:max-w-[40%]"
             placeholder={t("topics.search")}
+            clearLabel={t("topics.reset-search")}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
           />
         </header>
       )}

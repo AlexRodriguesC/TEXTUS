@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import SearchInput from "@/components/SearchInput.tsx";
 import { useMemo, useRef, useState } from "react";
 import SpacesListItem from "@/pages/spaces/SpacesListItem.tsx";
 import EmptySpaces from "@/pages/spaces/EmptySpaces.tsx";
@@ -225,12 +225,13 @@ export function SpacesPage() {
             </Button>
           }
         />
-        <Input
+        <SearchInput
           ref={searchInputRef}
           placeholder={t("spaces.search")}
+          clearLabel={t("spaces.reset-search")}
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
+          onChange={(value) => {
+            setSearch(value);
             setPage(1);
           }}
         />
