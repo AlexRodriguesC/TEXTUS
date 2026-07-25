@@ -215,6 +215,16 @@
       "generating": "Generazione mappa mentale in corso"
     }
   },
+  "topics": {
+    "search": "Cerca argomenti",
+    "reset-search": "Reimposta ricerca",
+    "not-found": "Nessun argomento corrisponde alla ricerca",
+    "empty": {
+      "title": "Nessun argomento ancora",
+      "description": "Carica documenti dal menu per estrarre argomenti dalle tue fonti.",
+      "cta": "Vai al menu"
+    }
+  },
   "sidebar": {
     "settings": {
       "path": {
@@ -239,6 +249,10 @@
       "chat": {
         "label": "Chat",
         "tooltip": "Apri una chat per interagire con un'IA basata sui tuoi documenti"
+      },
+      "topics": {
+        "label": "Argomenti",
+        "tooltip": "Sfoglia gli argomenti estratti dalle tue fonti caricate"
       },
       "menu": {
         "label": "Menu",
@@ -320,6 +334,13 @@
     "delete": {
       "title": "Eliminare la chat?",
       "description": "Questa conversazione e i suoi messaggi verranno eliminati definitivamente."
+    },
+    "sources": {
+      "basedOn_one": "Basato su {{count}} fonte",
+      "basedOn_other": "Basato su {{count}} fonti"
+    },
+    "source" : {
+      "based-on": "Basato su {{title}}"
     }
   },
   "mind-map": {

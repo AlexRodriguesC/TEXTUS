@@ -12,7 +12,7 @@ function useTopics() {
   const { spaceId } = useSpaceId();
   const queryClient = useQueryClient();
 
-  const { data: topicsData } = useGetTopics(spaceId ?? 0, {
+  const { data: topicsData, isLoading } = useGetTopics(spaceId ?? 0, {
     query: {
       enabled: spaceId !== undefined,
     },
@@ -31,7 +31,9 @@ function useTopics() {
   }
 
   return {
-    topics, prefetchTopics,
+    topics,
+    prefetchTopics,
+    isLoading,
   };
 }
 

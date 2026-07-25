@@ -2,10 +2,7 @@ package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.request.CreateChatRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.request.SendMessageRequestDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ChatHistoryResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ChatResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ChatsResponseDTO;
-import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
+import ch.supsi.documentapplication.controller.DTO.response.*;
 import ch.supsi.documentapplication.model.Chat;
 import ch.supsi.documentapplication.service.IChatService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +16,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
+
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

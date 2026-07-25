@@ -245,20 +245,8 @@ export function mapChat(dto: ChatResponseDTO): Chat {
   return new Chat(dto.id, dto.title, dto.createdAt, dto.updatedAt);
 }
 
-export function mapChatMessage(dto: ChatMessageResponseDTO): ChatMessage {
-  return new ChatMessage(
-    dto.role as ChatMessageRole,
-    dto.content,
-    dto.timestamp,
-  );
-}
-
-export function mapChatMessageFromCustom(dto: {
-  role: ChatMessageRole;
-  content: string;
-  timestamp: string;
-}): ChatMessage {
-  return new ChatMessage(dto.role, dto.content, dto.timestamp);
+export function mapChatMessageFromCustom(dto: ChatMessageResponseDTO): ChatMessage {
+  return new ChatMessage(dto.role, dto.content, dto.timestamp, dto.topics);
 }
 
 export function mapSpace(dto: ReadSpaceResponseDTO): Space {

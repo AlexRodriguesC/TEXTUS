@@ -45,20 +45,6 @@ class DatabaseChatStorageSpec extends DatabaseSpec {
         chat.get().title() == "Lookup chat"
     }
 
-    def "should update title when updateTitle is called"() {
-        given:
-        createUser("chat-owner-3")
-        Long spaceId = createSpace("chat-owner-3")
-        UUID chatId = storage.create(spaceId, "chat-owner-3", "Old title")
-
-        when:
-        storage.updateTitle(chatId, "New title")
-        def chat = storage.findById(chatId, spaceId, "chat-owner-3")
-
-        then:
-        chat.get().title() == "New title"
-    }
-
     def "should delete chat when delete is called"() {
         given:
         createUser("chat-owner-4")

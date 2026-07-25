@@ -105,6 +105,13 @@ export async function ensureSpaceLearnData(
   await ensureLearningPath(queryClient, spaceId);
 }
 
+export async function ensureSpaceTopicsData(
+  queryClient: QueryClient,
+  spaceId: number,
+) {
+  await queryClient.ensureQueryData(getGetTopicsQueryOptions(spaceId));
+}
+
 export async function ensureChapterGuideData(
   queryClient: QueryClient,
   spaceId: number,

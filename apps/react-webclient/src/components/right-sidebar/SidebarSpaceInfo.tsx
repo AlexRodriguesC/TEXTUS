@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import useSpaces from "@/hooks/useSpaces.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
-import { GraduationCap, Menu, MessagesSquare, Workflow } from "lucide-react";
+import { BookOpen, GraduationCap, Menu, MessagesSquare, Workflow } from "lucide-react";
 import SidebarAction from "@/components/right-sidebar/SidebarAction.tsx";
 import RightSidebarBreadcrumbs from "@/components/right-sidebar/RightSidebarBreadcrumbs.tsx";
 import PathConstants from "@/routing/pathConstants.ts";
@@ -45,6 +45,12 @@ function SidebarSpaceInfo() {
           icon={MessagesSquare}
           labelKey={"sidebar.actions.chat.label"}
           tooltipKey={"sidebar.actions.chat.tooltip"}
+        />
+        <SidebarAction
+          to={PathConstants.SPACE_TOPICS}
+          icon={BookOpen}
+          labelKey={"sidebar.actions.topics.label"}
+          tooltipKey={"sidebar.actions.topics.tooltip"}
         />
         <SidebarAction
           to={PathConstants.SPACE_MIND_MAP}

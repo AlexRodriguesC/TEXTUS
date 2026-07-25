@@ -18,6 +18,7 @@ import SpaceMap from "@/pages/space/SpaceMap.tsx";
 import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 import ChapterGuide from "@/pages/space/learn/ChapterGuide.tsx";
 import Lesson from "@/pages/space/learn/lesson/Lesson.tsx";
+import TopicsPage from "@/pages/space/topics/TopicsPage.tsx";
 import {
   ensureChapterGuideData,
   ensureLessonData,
@@ -25,6 +26,7 @@ import {
   ensureSpaceLearnData,
   ensureSpaceMapData,
   ensureSpaceMenuData,
+  ensureSpaceTopicsData,
   ensureSpaces,
 } from "@/routing/loaders/routeLoaders.ts";
 
@@ -111,6 +113,18 @@ const spaceChatRoute = createRoute({
   },
 });
 
+const spaceTopicsRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: PathConstants.SPACE_TOPICS,
+  component: TopicsPage,
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
+  loader: ({ context: { queryClient }, params }) => {
+    void ensureSpaceTopicsData(queryClient, Number(params.spaceId));
+  },
+});
+
 const spaceMapRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_MIND_MAP,
@@ -164,6 +178,7 @@ export const routeTree = rootRoute.addChildren([
     spacesRoute,
     spaceMenuRoute,
     spaceChatRoute,
+    spaceTopicsRoute,
     spaceMapRoute,
     spaceLearnRoute,
     spaceChapterGuideRoute,

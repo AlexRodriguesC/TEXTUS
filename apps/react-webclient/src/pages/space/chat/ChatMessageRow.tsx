@@ -2,13 +2,14 @@ import { Bubble, BubbleContent } from "@/components/ui/bubble.tsx";
 import {
   Message,
   MessageAvatar,
-  MessageContent,
+  MessageContent, MessageFooter,
 } from "@/components/ui/message.tsx";
 import MessageAvatarIcon from "@/pages/space/chat/MessageAvatarIcon.tsx";
 import ThinkingMarker from "@/pages/space/chat/ThinkingMarker.tsx";
 import type { DisplayMessage } from "@/pages/space/chat/types.ts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import SourcesFooter from "@/pages/space/chat/SourcesFooter.tsx";
 
 // Single user or assistant message row with markdown content in the chat list.
 function ChatMessageRow({
@@ -37,6 +38,7 @@ function ChatMessageRow({
             </ReactMarkdown>
           </BubbleContent>
         </Bubble>
+        <SourcesFooter message={message}/>
       </MessageContent>
     </Message>
   );

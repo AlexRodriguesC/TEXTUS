@@ -227,6 +227,16 @@
       "generating": "Generating mind map"
     }
   },
+  "topics": {
+    "search": "Search topics",
+    "reset-search": "Reset search",
+    "not-found": "No topics match your search",
+    "empty": {
+      "title": "No topics yet",
+      "description": "Upload documents in the menu to extract topics from your sources.",
+      "cta": "Go to menu"
+    }
+  },
   "sidebar": {
     "settings": {
       "path": {
@@ -251,6 +261,10 @@
       "chat": {
         "label": "Chat",
         "tooltip": "Open a chat to interact with an AI based on your documents"
+      },
+      "topics": {
+        "label": "Topics",
+        "tooltip": "Browse topics extracted from your uploaded sources"
       },
       "menu": {
         "label": "Menu",
@@ -334,6 +348,13 @@
     "delete": {
       "title": "Delete chat?",
       "description": "This conversation and its messages will be permanently deleted."
+    },
+    "sources": {
+      "basedOn_one": "Based on {{count}} source",
+      "basedOn_other": "Based on {{count}} sources"
+    },
+    "source" : {
+      "based-on": "Based on {{title}}"
     }
   },
   "mind-map": {

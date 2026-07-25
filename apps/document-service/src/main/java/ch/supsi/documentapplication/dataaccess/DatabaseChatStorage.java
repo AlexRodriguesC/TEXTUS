@@ -54,16 +54,6 @@ public class DatabaseChatStorage extends DatabaseStorage implements IDatabaseCha
     }
 
     @Override
-    public void updateTitle(UUID chatId, String title) {
-        jdbcClient
-                .sql("SELECT documents.update_chat_title(:chatId, :title)")
-                .param(CHAT_ID, chatId)
-                .param(TITLE, title)
-                .query()
-                .singleValue();
-    }
-
-    @Override
     public void touchUpdatedAt(UUID chatId) {
         jdbcClient
                 .sql("SELECT documents.touch_chat_updated_at(:chatId)")

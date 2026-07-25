@@ -13,8 +13,6 @@ public interface IDatabaseChatStorage {
 
     Optional<Chat> findById(UUID chatId, Long spaceId, String owner);
 
-    void updateTitle(UUID chatId, String title);
-
     void touchUpdatedAt(UUID chatId);
 
     void delete(UUID chatId);

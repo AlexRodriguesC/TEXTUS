@@ -7,13 +7,11 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chat;
 import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.model.TimestampedChatMessage;
+import ch.supsi.documentapplication.repository.ITimestampedChatMessageRepository;
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory;
-import ch.supsi.documentapplication.service.rag.TopicGroundingExtractor;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -21,7 +19,6 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
@@ -34,11 +31,9 @@ import reactor.core.publisher.Flux;
 @Service
 public class ChatService extends ch.supsi.documentapplication.service.Service implements IChatService {
 
-    private static final int AUTO_TITLE_MAX_LENGTH = 50;
-    private static final String MESSAGE_TIMESTAMP_METADATA = "timestamp";
-
     private final IDatabaseChatStorage chatStorage;
     private final IDatabaseChatMessageTopicStorage chatMessageTopicStorage;
+    private final ITimestampedChatMessageRepository timestampedChatMessageRepository;
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
     private final ChatRagAdvisorFactory chatRagAdvisorFactory;
@@ -48,6 +43,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
             IDatabaseSpaceStorage spaceStorage,
             IDatabaseChatStorage chatStorage,
             IDatabaseChatMessageTopicStorage chatMessageTopicStorage,
+            ITimestampedChatMessageRepository timestampedChatMessageRepository,
             @Qualifier("interactiveChatClient") ChatClient chatClient,
             ChatMemory chatMemory,
             ChatRagAdvisorFactory chatRagAdvisorFactory,
@@ -55,6 +51,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         super(spaceStorage);
         this.chatStorage = chatStorage;
         this.chatMessageTopicStorage = chatMessageTopicStorage;
+        this.timestampedChatMessageRepository = timestampedChatMessageRepository;
         this.chatClient = chatClient;
         this.chatMemory = chatMemory;
         this.chatRagAdvisorFactory = chatRagAdvisorFactory;
@@ -81,7 +78,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     public List<ChatMessageResponseDTO> getHistory(String username, Long spaceId, UUID chatId) {
         getChatOrThrow(username, spaceId, chatId);
         Map<Instant, List<Long>> topicsByTimestamp = chatMessageTopicStorage.findByChatId(chatId);
-        return mapMessages(chatMemory.get(chatId.toString()), topicsByTimestamp);
+        return mapMessages(timestampedChatMessageRepository.findByConversationId(chatId.toString()), topicsByTimestamp);
     }
 
     @Override
@@ -95,9 +92,9 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     public Flux<String> streamMessage(String username, Long spaceId, UUID chatId, String message, String model) {
         Space space = getSpaceOrThrow(username, spaceId);
         Chat chat = getChatOrThrow(username, spaceId, chatId);
-        maybeAutoTitle(chat, message);
+        var stringChatId = chat.id().toString();
 
-        List<Message> history = chatMemory.get(chatId.toString());
+        List<Message> history = chatMemory.get(stringChatId);
 
         Advisor ragAdvisor = chatRagAdvisorFactory.createForSpace(space.getId());
 
@@ -106,32 +103,42 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
                 .messages(history)
                 .user(message)
                 .advisors(ragAdvisor)
-                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId.toString()));
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, stringChatId));
 
         String resolvedModel = StringUtils.hasText(model) ? model : defaultModel;
         promptSpec = promptSpec.options(OpenAiChatOptions.builder().model(resolvedModel));
 
-        AtomicReference<List<Long>> topicIds = new AtomicReference<>(List.of());
+        Flux<ChatClientResponse> responses = promptSpec.stream().chatClientResponse();
+        AtomicReference<List<Long>> topicIdsRef = new AtomicReference<>(List.of());
 
-        return promptSpec.stream()
-                .chatClientResponse()
-                .doOnNext(response -> captureTopicIds(response, topicIds))
-                .mapNotNull(this::extractStreamChunk)
+        return responses
+                .doOnNext(response -> {
+                    if (topicIdsRef.get().isEmpty()) {
+                        List<Long> ids = extractTopicIds(response);
+                        if (!ids.isEmpty()) {
+                            topicIdsRef.set(ids);
+                        }
+                    }
+                })
                 .doOnComplete(() -> {
+                    persistGrounding(chatId, topicIdsRef.get());
                     chatStorage.touchUpdatedAt(chatId);
-                    persistGrounding(chatId, topicIds.get());
-                });
+                })
+                .mapNotNull(this::extractStreamChunk);
     }
 
-    private void captureTopicIds(ChatClientResponse response, AtomicReference<List<Long>> topicIds) {
-        Object documentContext = response.context().get(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT);
-        if (documentContext instanceof List<?> documents) {
-            List<Document> typedDocuments = documents.stream()
-                    .filter(Document.class::isInstance)
-                    .map(Document.class::cast)
-                    .toList();
-            topicIds.set(TopicGroundingExtractor.extractTopicIds(typedDocuments));
-        }
+    private List<Long> extractTopicIds(ChatClientResponse response) {
+        List<Document> documents = extractRetrievedDocuments(response);
+        return documents.stream()
+                .map(doc -> Long.valueOf(doc.getMetadata().get("topicId").toString()))
+                .distinct()
+                .toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Document> extractRetrievedDocuments(ChatClientResponse response) {
+        Object raw = response.context().get(RetrievalAugmentationAdvisor.DOCUMENT_CONTEXT);
+        return raw != null ? (List<Document>) raw : List.of();
     }
 
     private String extractStreamChunk(ChatClientResponse response) {
@@ -145,17 +152,10 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         if (topicIds.isEmpty()) {
             return;
         }
-        List<Message> messages = chatMemory.get(chatId.toString());
-        for (int index = messages.size() - 1; index >= 0; index--) {
-            Message message = messages.get(index);
-            if (message instanceof SystemMessage) {
-                continue;
-            }
-            if (message.getMessageType() == MessageType.ASSISTANT) {
-                chatMessageTopicStorage.save(chatId, extractTimestamp(message), topicIds);
-            }
-            return;
-        }
+        timestampedChatMessageRepository.findByConversationId(chatId.toString()).stream()
+                .filter(wrapper -> wrapper.message().getMessageType() == MessageType.ASSISTANT)
+                .max(Comparator.comparing(TimestampedChatMessage::timestamp))
+                .ifPresent(wrapper -> chatMessageTopicStorage.save(chatId, wrapper.timestamp(), topicIds));
     }
 
     private Chat getChatOrThrow(String username, Long spaceId, UUID chatId) {
@@ -165,57 +165,17 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
                 .orElseThrow(() -> NotFoundException.chatNotFound(chatId));
     }
 
-    private void maybeAutoTitle(Chat chat, String message) {
-        if (!Chat.DEFAULT_TITLE.equals(chat.title())) {
-            return;
-        }
-        String trimmed = message.trim();
-        if (!StringUtils.hasText(trimmed)) {
-            return;
-        }
-        String title = trimmed.length() <= AUTO_TITLE_MAX_LENGTH
-                ? trimmed
-                : trimmed.substring(0, AUTO_TITLE_MAX_LENGTH - 1) + "…";
-        chatStorage.updateTitle(chat.id(), title);
-    }
-
     private List<ChatMessageResponseDTO> mapMessages(
-            List<Message> messages, Map<Instant, List<Long>> topicsByTimestamp) {
-        List<ChatMessageResponseDTO> result = new ArrayList<>();
-        for (Message message : messages) {
-            if (message instanceof SystemMessage) {
-                continue;
-            }
-            String role = mapRole(message);
-            if (role == null) {
-                continue;
-            }
-            Instant timestamp = extractTimestamp(message);
-            List<Long> topics =
-                    "assistant".equals(role) ? topicsByTimestamp.getOrDefault(timestamp, List.of()) : List.of();
-            result.add(new ChatMessageResponseDTO(role, message.getText(), timestamp, topics));
-        }
-        return result;
-    }
-
-    private String mapRole(Message message) {
-        MessageType type = message.getMessageType();
-        return switch (type) {
-            case USER -> "user";
-            case ASSISTANT -> "assistant";
-            case SYSTEM -> "system";
-            default -> null;
-        };
-    }
-
-    private Instant extractTimestamp(Message message) {
-        Map<String, Object> metadata = message.getMetadata();
-        for (String key : List.of(MESSAGE_TIMESTAMP_METADATA, "conversation_ts", "jdbc.conversation_ts")) {
-            Object timestamp = metadata.get(key);
-            if (timestamp instanceof Instant instant) {
-                return instant;
-            }
-        }
-        return Instant.now();
+            List<TimestampedChatMessage> messages, Map<Instant, List<Long>> topicsByTimestamp) {
+        return messages.stream()
+                .filter(wrapper -> wrapper.message().getMessageType() != MessageType.SYSTEM)
+                .map(wrapper -> {
+                    String role = wrapper.message().getMessageType().getValue().toLowerCase(Locale.ROOT);
+                    List<Long> topics = "assistant".equals(role)
+                            ? topicsByTimestamp.getOrDefault(wrapper.timestamp(), List.of())
+                            : List.of();
+                    return new ChatMessageResponseDTO(role, wrapper.message().getText(), wrapper.timestamp(), topics);
+                })
+                .toList();
     }
 }
