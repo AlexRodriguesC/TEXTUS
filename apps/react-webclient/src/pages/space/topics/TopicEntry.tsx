@@ -11,10 +11,10 @@ function TopicEntry({ topic }: TopicEntryProps) {
 
   return (
     <div className="border p-4 hover:bg-muted/50 transition-colors">
-      <div className="flex justify-between items-center text-foreground/40">
+      <div className="flex flex-row gap-2 items-center text-foreground/40">
         <h2 className="font-semibold text-foreground">{topic.title}</h2>
         <InformationQuestionMark
-          className="hover:cursor-pointer hover:text-foreground transition-colors"
+          className="hover:text-foreground transition-colors size-4"
           tooltip={t("chapter.guide.location", {
             page: topic.page,
             documentName: topic.sourceFileName,

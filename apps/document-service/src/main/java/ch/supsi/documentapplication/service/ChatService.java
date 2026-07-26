@@ -6,11 +6,10 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chat;
+import ch.supsi.documentapplication.model.SequencedChatMessage;
 import ch.supsi.documentapplication.model.Space;
-import ch.supsi.documentapplication.model.TimestampedChatMessage;
-import ch.supsi.documentapplication.repository.ITimestampedChatMessageRepository;
+import ch.supsi.documentapplication.repository.ISequencedChatMessageRepository;
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.ai.chat.client.ChatClient;
@@ -33,7 +32,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
 
     private final IDatabaseChatStorage chatStorage;
     private final IDatabaseChatMessageTopicStorage chatMessageTopicStorage;
-    private final ITimestampedChatMessageRepository timestampedChatMessageRepository;
+    private final ISequencedChatMessageRepository sequencedChatMessageRepository;
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
     private final ChatRagAdvisorFactory chatRagAdvisorFactory;
@@ -43,7 +42,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
             IDatabaseSpaceStorage spaceStorage,
             IDatabaseChatStorage chatStorage,
             IDatabaseChatMessageTopicStorage chatMessageTopicStorage,
-            ITimestampedChatMessageRepository timestampedChatMessageRepository,
+            ISequencedChatMessageRepository sequencedChatMessageRepository,
             @Qualifier("interactiveChatClient") ChatClient chatClient,
             ChatMemory chatMemory,
             ChatRagAdvisorFactory chatRagAdvisorFactory,
@@ -51,7 +50,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         super(spaceStorage);
         this.chatStorage = chatStorage;
         this.chatMessageTopicStorage = chatMessageTopicStorage;
-        this.timestampedChatMessageRepository = timestampedChatMessageRepository;
+        this.sequencedChatMessageRepository = sequencedChatMessageRepository;
         this.chatClient = chatClient;
         this.chatMemory = chatMemory;
         this.chatRagAdvisorFactory = chatRagAdvisorFactory;
@@ -77,8 +76,8 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     @Override
     public List<ChatMessageResponseDTO> getHistory(String username, Long spaceId, UUID chatId) {
         getChatOrThrow(username, spaceId, chatId);
-        Map<Instant, List<Long>> topicsByTimestamp = chatMessageTopicStorage.findByChatId(chatId);
-        return mapMessages(timestampedChatMessageRepository.findByConversationId(chatId.toString()), topicsByTimestamp);
+        Map<Long, List<Long>> topicsBySequenceId = chatMessageTopicStorage.findByChatId(chatId);
+        return mapMessages(sequencedChatMessageRepository.findByConversationId(chatId.toString()), topicsBySequenceId);
     }
 
     @Override
@@ -152,10 +151,10 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         if (topicIds.isEmpty()) {
             return;
         }
-        timestampedChatMessageRepository.findByConversationId(chatId.toString()).stream()
+        sequencedChatMessageRepository.findByConversationId(chatId.toString()).stream()
                 .filter(wrapper -> wrapper.message().getMessageType() == MessageType.ASSISTANT)
-                .max(Comparator.comparing(TimestampedChatMessage::timestamp))
-                .ifPresent(wrapper -> chatMessageTopicStorage.save(chatId, wrapper.timestamp(), topicIds));
+                .max(Comparator.comparingLong(SequencedChatMessage::sequenceId))
+                .ifPresent(wrapper -> chatMessageTopicStorage.save(chatId, wrapper.sequenceId(), topicIds));
     }
 
     private Chat getChatOrThrow(String username, Long spaceId, UUID chatId) {
@@ -166,7 +165,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     }
 
     private List<ChatMessageResponseDTO> mapMessages(
-            List<TimestampedChatMessage> messages, Map<Instant, List<Long>> topicsByTimestamp) {
+            List<SequencedChatMessage> messages, Map<Long, List<Long>> topicsBySequenceId) {
         return messages.stream()
                 .filter(wrapper -> wrapper.message().getMessageType() != MessageType.SYSTEM)
                 .map(wrapper -> {
@@ -175,7 +174,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
                                     .name()
                                     .toLowerCase(Locale.ROOT)
                                     .equals(role)
-                            ? topicsByTimestamp.getOrDefault(wrapper.timestamp(), List.of())
+                            ? topicsBySequenceId.getOrDefault(wrapper.sequenceId(), List.of())
                             : List.of();
                     return new ChatMessageResponseDTO(role, wrapper.message().getText(), wrapper.timestamp(), topics);
                 })

@@ -6,9 +6,9 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Chat
+import ch.supsi.documentapplication.model.SequencedChatMessage
 import ch.supsi.documentapplication.model.Space
-import ch.supsi.documentapplication.model.TimestampedChatMessage
-import ch.supsi.documentapplication.repository.ITimestampedChatMessageRepository
+import ch.supsi.documentapplication.repository.ISequencedChatMessageRepository
 import ch.supsi.documentapplication.service.ChatService
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory
 import ch.supsi.documentapplication.service.rag.FallbackTopicDocumentPostProcessor
@@ -36,7 +36,7 @@ class ChatServiceSpec extends Specification {
     IDatabaseSpaceStorage spaceStorage = Mock()
     IDatabaseChatStorage chatStorage = Mock()
     IDatabaseChatMessageTopicStorage chatMessageTopicStorage = Mock()
-    ITimestampedChatMessageRepository timestampedChatMessageRepository = Mock()
+    ISequencedChatMessageRepository sequencedChatMessageRepository = Mock()
     ChatClient chatClient = Mock()
     ChatMemory chatMemory = Mock()
     ChatRagAdvisorFactory chatRagAdvisorFactory = Mock()
@@ -46,7 +46,7 @@ class ChatServiceSpec extends Specification {
             spaceStorage,
             chatStorage,
             chatMessageTopicStorage,
-            timestampedChatMessageRepository,
+            sequencedChatMessageRepository,
             chatClient,
             chatMemory,
             chatRagAdvisorFactory,
@@ -98,8 +98,8 @@ class ChatServiceSpec extends Specification {
         def chat = new Chat(chatId, 1L, "pippo", "Title", now, now)
         spaceStorage.read(1L) >> Optional.of(new Space(1L, "pippo", "icon", "Space", "desc"))
         chatStorage.findById(chatId, 1L, "pippo") >> Optional.of(chat)
-        timestampedChatMessageRepository.findByConversationId(chatId.toString()) >> [
-                new TimestampedChatMessage(new UserMessage("Hello"), now)
+        sequencedChatMessageRepository.findByConversationId(chatId.toString()) >> [
+                new SequencedChatMessage(new UserMessage("Hello"), 0L, now)
         ]
 
         when:
@@ -113,7 +113,7 @@ class ChatServiceSpec extends Specification {
         history[0].topics() == []
     }
 
-    def "getHistory maps assistant topics by timestamp"() {
+    def "getHistory maps assistant topics by sequence id"() {
         given:
         def chatId = UUID.randomUUID()
         def now = Instant.parse("2026-01-01T00:00:00Z")
@@ -121,15 +121,15 @@ class ChatServiceSpec extends Specification {
         def assistant = AssistantMessage.builder().content("Answer").build()
         spaceStorage.read(1L) >> Optional.of(new Space(1L, "pippo", "icon", "Space", "desc"))
         chatStorage.findById(chatId, 1L, "pippo") >> Optional.of(chat)
-        timestampedChatMessageRepository.findByConversationId(chatId.toString()) >> [
-                new TimestampedChatMessage(assistant, now)
+        sequencedChatMessageRepository.findByConversationId(chatId.toString()) >> [
+                new SequencedChatMessage(assistant, 1L, now)
         ]
 
         when:
         List<ChatMessageResponseDTO> history = service.getHistory("pippo", 1L, chatId)
 
         then:
-        1 * chatMessageTopicStorage.findByChatId(chatId) >> [(now): [12L, 45L]]
+        1 * chatMessageTopicStorage.findByChatId(chatId) >> [(1L): [12L, 45L]]
         history.size() == 1
         history[0].role() == "assistant"
         history[0].topics() == [12L, 45L]
@@ -211,12 +211,12 @@ class ChatServiceSpec extends Specification {
         1 * requestSpec.options(_ as ChatOptions.Builder) >> requestSpec
         1 * requestSpec.stream() >> streamSpec
         1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
-        1 * timestampedChatMessageRepository.findByConversationId(chatId.toString()) >> [
-                new TimestampedChatMessage(new UserMessage("Earlier question"), now.minusSeconds(60)),
-                new TimestampedChatMessage(assistant, now)
+        1 * sequencedChatMessageRepository.findByConversationId(chatId.toString()) >> [
+                new SequencedChatMessage(new UserMessage("Earlier question"), 0L, now.minusSeconds(60)),
+                new SequencedChatMessage(assistant, 1L, now)
         ]
         1 * chatStorage.touchUpdatedAt(chatId)
-        1 * chatMessageTopicStorage.save(chatId, now, [99L])
+        1 * chatMessageTopicStorage.save(chatId, 1L, [99L])
     }
 
     def "streamMessage does not persist grounding when assistant message is not yet available"() {
@@ -254,9 +254,9 @@ class ChatServiceSpec extends Specification {
         1 * requestSpec.options(_ as ChatOptions.Builder) >> requestSpec
         1 * requestSpec.stream() >> streamSpec
         1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
-        1 * timestampedChatMessageRepository.findByConversationId(chatId.toString()) >> [
-                new TimestampedChatMessage(new UserMessage("Earlier question"), now.minusSeconds(60)),
-                new TimestampedChatMessage(new UserMessage("Follow up"), now)
+        1 * sequencedChatMessageRepository.findByConversationId(chatId.toString()) >> [
+                new SequencedChatMessage(new UserMessage("Earlier question"), 0L, now.minusSeconds(60)),
+                new SequencedChatMessage(new UserMessage("Follow up"), 1L, now)
         ]
         1 * chatStorage.touchUpdatedAt(chatId)
         0 * chatMessageTopicStorage.save(_, _, _)
@@ -300,12 +300,12 @@ class ChatServiceSpec extends Specification {
         1 * requestSpec.options(_ as ChatOptions.Builder) >> requestSpec
         1 * requestSpec.stream() >> streamSpec
         1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
-        1 * timestampedChatMessageRepository.findByConversationId(chatId.toString()) >> [
-                new TimestampedChatMessage(olderAssistant, older),
-                new TimestampedChatMessage(newerAssistant, newer)
+        1 * sequencedChatMessageRepository.findByConversationId(chatId.toString()) >> [
+                new SequencedChatMessage(olderAssistant, 0L, older),
+                new SequencedChatMessage(newerAssistant, 3L, newer)
         ]
         1 * chatStorage.touchUpdatedAt(chatId)
-        1 * chatMessageTopicStorage.save(chatId, newer, [99L])
-        0 * chatMessageTopicStorage.save(chatId, older, _)
+        1 * chatMessageTopicStorage.save(chatId, 3L, [99L])
+        0 * chatMessageTopicStorage.save(chatId, 0L, _)
     }
 }

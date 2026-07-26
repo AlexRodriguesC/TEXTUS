@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION documents.save_chat_message_topics(
-    p_chat_id           UUID,
-    p_message_timestamp TIMESTAMPTZ,
-    p_topic_ids         BIGINT[]
+    p_chat_id             UUID,
+    p_message_sequence_id BIGINT,
+    p_topic_ids           BIGINT[]
 )
     RETURNS VOID
     LANGUAGE plpgsql
@@ -16,8 +16,8 @@ BEGIN
 
     FOREACH v_topic_id IN ARRAY p_topic_ids
         LOOP
-            INSERT INTO documents.chat_message_topic (chat_id, message_timestamp, topic_id)
-            VALUES (p_chat_id, p_message_timestamp, v_topic_id)
+            INSERT INTO documents.chat_message_topic (chat_id, message_sequence_id, topic_id)
+            VALUES (p_chat_id, p_message_sequence_id, v_topic_id)
             ON CONFLICT DO NOTHING;
         END LOOP;
 END;

@@ -6,8 +6,6 @@ import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage
 import ch.supsi.documentapplication.model.learn.Topic
 import spock.lang.Subject
 
-import java.time.Instant
-
 class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
 
     @Subject
@@ -22,7 +20,7 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         topicStorage = new DatabaseTopicStorage(jdbcClient)
     }
 
-    def "should save and load topic ids grouped by message timestamp"() {
+    def "should save and load topic ids grouped by message sequence id"() {
         given:
         createUser("grounding-owner")
         Long spaceId = createSpace("grounding-owner")
@@ -31,18 +29,16 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         Long pageId = createPage(spaceId, jobId)
         Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", []), pageId)
         Long topicB = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic B", "Summary B", []), pageId)
-        def firstTimestamp = Instant.parse("2026-01-01T10:00:00Z")
-        def secondTimestamp = Instant.parse("2026-01-01T10:01:00Z")
 
         when:
-        storage.save(chatId, firstTimestamp, [topicB, topicA])
-        storage.save(chatId, secondTimestamp, [topicA])
-        def topicsByTimestamp = storage.findByChatId(chatId)
+        storage.save(chatId, 1L, [topicB, topicA])
+        storage.save(chatId, 3L, [topicA])
+        def topicsBySequenceId = storage.findByChatId(chatId)
 
         then:
-        topicsByTimestamp.size() == 2
-        topicsByTimestamp[firstTimestamp] == [topicA, topicB]
-        topicsByTimestamp[secondTimestamp] == [topicA]
+        topicsBySequenceId.size() == 2
+        topicsBySequenceId[1L] == [topicA, topicB]
+        topicsBySequenceId[3L] == [topicA]
     }
 
     def "should not insert rows when topic ids are empty"() {
@@ -50,13 +46,37 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         createUser("grounding-owner-2")
         Long spaceId = createSpace("grounding-owner-2")
         UUID chatId = chatStorage.create(spaceId, "grounding-owner-2", "Empty grounding chat")
-        def timestamp = Instant.parse("2026-01-01T11:00:00Z")
 
         when:
-        storage.save(chatId, timestamp, [])
-        def topicsByTimestamp = storage.findByChatId(chatId)
+        storage.save(chatId, 0L, [])
+        def topicsBySequenceId = storage.findByChatId(chatId)
 
         then:
-        topicsByTimestamp.isEmpty()
+        topicsBySequenceId.isEmpty()
+    }
+
+    def "should retain topic associations keyed by sequence id across memory re-save"() {
+        given:
+        createUser("grounding-owner-3")
+        Long spaceId = createSpace("grounding-owner-3")
+        UUID chatId = chatStorage.create(spaceId, "grounding-owner-3", "Multi-turn chat")
+        Long jobId = createBatchJobInstance()
+        Long pageId = createPage(spaceId, jobId)
+        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", []), pageId)
+
+        when:
+        storage.save(chatId, 1L, [topicA])
+        def topicsAfterFirstTurn = storage.findByChatId(chatId)
+
+        then:
+        topicsAfterFirstTurn[1L] == [topicA]
+
+        when:
+        storage.save(chatId, 3L, [topicA])
+        def topicsAfterSecondTurn = storage.findByChatId(chatId)
+
+        then:
+        topicsAfterSecondTurn[1L] == [topicA]
+        topicsAfterSecondTurn[3L] == [topicA]
     }
 }
