@@ -1,119 +1,42 @@
-import Question from "@/pages/space/learn/Question.tsx";
 import useLesson from "@/hooks/useLesson.tsx";
 import useLessonId from "@/hooks/useLessonId.ts";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import LessonHeader from "@/pages/space/learn/lesson/LessonHeader.tsx";
 import LessonFooter from "@/pages/space/learn/lesson/LessonFooter.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { useState } from "react";
-import List from "@/pages/space/learn/List.tsx";
-import Group from "@/pages/space/learn/Group.tsx";
-import Pair from "@/pages/space/learn/Pair.tsx";
-import useSubmitSolution from "@/hooks/useSubmitSolution.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import AttemptsExhausted from "@/pages/space/learn/lesson/AttemptsExhausted.tsx";
 import LessonCompleted from "@/pages/space/learn/lesson/LessonCompleted.tsx";
 import LessonCheckpointCompleted from "@/pages/space/learn/lesson/LessonCheckpointCompleted.tsx";
-import ExerciseType from "@/classes/ExerciseType.ts";
 import LessonPageSkeleton from "@/pages/space/learn/lesson/LessonPageSkeleton.tsx";
 import LessonQuestionSkeleton from "@/pages/space/learn/LessonQuestionSkeleton.tsx";
+import ExerciseRenderer from "@/pages/space/learn/ExerciseRenderer.tsx";
+import useLessonSession from "@/hooks/learning/useLessonSession.ts";
 
 function Lesson() {
   const { lessonId } = useLessonId();
   const { spaceId } = useSpaceId();
   const { isLoading, nextExercise, exerciseLoading, lesson, resetNextExercise } =
-    useLesson({
-      lessonId: lessonId,
-    });
-  const [answer, setAnswer] = useState<unknown | null>(null);
-  const [submitted, setSubmitted] = useState<boolean>(false);
-  const [wasCorrect, setWasCorrect] = useState<boolean | null>(null);
-  const { isPending: isAttemptLoading, submitSolution } = useSubmitSolution({
+    useLesson({ lessonId });
+  const {
+    answer,
+    setAnswer,
+    submitted,
+    wasCorrect,
+    isAttemptLoading,
+    handleNext,
+    handleSkip,
+    handleConfirm,
+  } = useLessonSession({
     spaceId,
     lessonId,
+    nextExercise,
+    resetNextExercise,
   });
 
   if (isLoading) {
     return <LessonPageSkeleton />;
   }
-
-  const handleNext = () => {
-    resetNextExercise()?.then(() => {
-      setAnswer(null);
-      setSubmitted(false);
-      setWasCorrect(null);
-    });
-  };
-
-  const handleSkip = async () => {
-    if (!nextExercise || isAttemptLoading) return;
-    const result = await submitSolution(
-      nextExercise.id,
-      nextExercise.type,
-      null,
-    );
-    setWasCorrect(result?.correct ?? false);
-    setSubmitted(true);
-  };
-
-  const handleConfirm = async () => {
-    if (!nextExercise || answer === null || isAttemptLoading) return;
-    const result = await submitSolution(
-      nextExercise.id,
-      nextExercise.type,
-      answer,
-    );
-    setWasCorrect(result?.correct ?? false);
-    setSubmitted(true);
-  };
-
-  const renderExercise = () => {
-    if (!nextExercise) {
-      return <LessonQuestionSkeleton />;
-    }
-
-    if (nextExercise.type === ExerciseType.LIST) {
-      return (
-        <List
-          key={nextExercise.id}
-          list={nextExercise}
-          submitted={submitted}
-          onAnswer={setAnswer}
-        />
-      );
-    }
-    if (nextExercise.type === ExerciseType.QUESTION) {
-      return (
-        <Question
-          key={nextExercise.id}
-          question={nextExercise}
-          submitted={submitted}
-          onAnswer={setAnswer}
-        />
-      );
-    }
-    if (nextExercise.type === ExerciseType.GROUP) {
-      return (
-        <Group
-          key={nextExercise.id}
-          group={nextExercise}
-          onAnswer={setAnswer}
-          submitted={submitted}
-        />
-      );
-    }
-    if (nextExercise.type === ExerciseType.PAIR) {
-      return (
-        <Pair
-          key={nextExercise.id}
-          pair={nextExercise}
-          onAnswer={setAnswer}
-          submitted={submitted}
-        />
-      );
-    }
-    throw new Error("Invalid exercise type");
-  };
 
   const content = (() => {
     if (exerciseLoading) {
@@ -132,7 +55,13 @@ function Lesson() {
       return <LessonCheckpointCompleted />;
     }
 
-    return renderExercise();
+    return (
+      <ExerciseRenderer
+        exercise={nextExercise}
+        submitted={submitted}
+        onAnswer={setAnswer}
+      />
+    );
   })();
 
   return (

@@ -2,145 +2,31 @@ import SpaceLearnEmpty from "@/pages/space/learn/SpaceLearnEmpty.tsx";
 import CenteredPage from "@/components/CenteredPage.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import ChapterHeader from "@/pages/space/learn/ChapterHeader.tsx";
-import { useEffect, useRef, useState } from "react";
+import ChapterPath from "@/pages/space/learn/ChapterPath.tsx";
+import { useRef } from "react";
 import { Separator } from "@/components/ui/separator.tsx";
 import useLearningPath from "@/hooks/learning/useLearningPath.ts";
-import type Chapter from "@/classes/Chapter.ts";
-import type Lesson from "@/classes/Lesson.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
-import PathNode from "@/pages/space/learn/PathNode.tsx";
 import { cn } from "@/lib/utils.ts";
 import SpaceLearnSkeleton from "@/pages/space/learn/SpaceLearnSkeleton.tsx";
 import ResponsiveLottie from "@/components/ResponsiveLottie.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";
 import { ArrowUp } from "lucide-react";
-
-const OFFSETS = [0, 60, 0, -60];
-
-function getPrerequisiteLesson(
-  chapters: Chapter[],
-  chapterIndex: number,
-  lesson: Lesson,
-): Lesson | null {
-  if (lesson.index > 0) {
-    const chapter = chapters.find((c) => c.index === chapterIndex);
-    return chapter?.lessons.find((l) => l.index === lesson.index - 1) ?? null;
-  }
-
-  return null;
-}
-
-function ChapterPath({
-  chapter,
-  chapters,
-}: {
-  chapter: Chapter;
-  chapters: Chapter[];
-}) {
-  return (
-    <div
-      className="flex flex-col items-center gap-2 pb-8"
-      data-chapter-index={chapter.index}
-    >
-      <div className="flex flex-col items-center gap-6 pt-4">
-        {chapter.lessons.map((lesson: Lesson, i: number) => {
-          const prerequisite = getPrerequisiteLesson(
-            chapters,
-            chapter.index,
-            lesson,
-          );
-          const disabled = prerequisite !== null && !prerequisite.completed;
-
-          return (
-            <PathNode
-              key={lesson.id}
-              node={lesson}
-              offset={OFFSETS[i % OFFSETS.length]}
-              disabled={disabled}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import useElementSize from "@/hooks/useElementSize.ts";
+import useActiveChapter from "@/hooks/learning/useActiveChapter.ts";
 
 function SpaceLearn() {
   const { path, status, isPathLoading } = useLearningPath();
   const { t } = useTranslation();
-  const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [viewportHeight, setViewportHeight] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
-  const intersectingRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    if (path?.chapters.length) {
-      setActiveChapter((prev: Chapter | null) => prev ?? path.chapters[0]);
-    }
-  }, [path]);
-
-  useEffect(() => {
-    if (!headerRef.current) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setHeaderHeight(entry.contentRect.height);
-    });
-    ro.observe(headerRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!viewportRef.current) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setViewportHeight(entry.contentRect.height);
-    });
-    ro.observe(viewportRef.current);
-    return () => ro.disconnect();
-  }, [isPathLoading, path?.chapters.length]);
-
-  useEffect(() => {
-    if (!path?.chapters.length || !viewportRef.current || headerHeight === 0) {
-      return;
-    }
-
-    const elements = document.querySelectorAll<HTMLDivElement>(
-      "[data-chapter-index]",
-    );
-    intersectingRef.current = new Set();
-
-    // Collapse the root into a thin band just below the sticky header.
-    // Bottom margin uses a percentage (not px) so it can never collapse
-    // the root's area to zero/negative, regardless of rounding.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const index = Number(entry.target.getAttribute("data-chapter-index"));
-          if (entry.isIntersecting) {
-            intersectingRef.current.add(index);
-          } else {
-            intersectingRef.current.delete(index);
-          }
-        });
-
-        if (intersectingRef.current.size === 0) return;
-
-        const bestIndex = Math.min(...intersectingRef.current);
-        const chapter = path.chapters.find((c) => c.index === bestIndex);
-        if (chapter) setActiveChapter(chapter);
-      },
-      {
-        root: viewportRef.current,
-        rootMargin: `-${headerHeight}px 0px -80% 0px`,
-        threshold: 0,
-      },
-    );
-
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, [path, headerHeight]);
+  const headerHeight = useElementSize(headerRef);
+  const viewportHeight = useElementSize(viewportRef, [
+    isPathLoading,
+    path?.chapters.length,
+  ]);
+  const activeChapter = useActiveChapter(path, viewportRef, headerHeight);
 
   if (
     path === undefined ||
@@ -162,7 +48,6 @@ function SpaceLearn() {
           >
             <ChapterHeader key={current.index} chapter={current} />
           </div>
-
 
           <div className="flex h-full flex-col items-center pt-4">
             {isPathLoading ? (

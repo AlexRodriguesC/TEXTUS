@@ -1,16 +1,12 @@
-import { Button } from "@/components/ui/button.tsx";
-import { useTranslation } from "react-i18next";
 import useLessonId from "@/hooks/useLessonId.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useLesson from "@/hooks/useLesson.tsx";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
-import useLearningPath from "@/hooks/learning/useLearningPath.ts";
-import PathConstants from "@/routing/pathConstants.ts";
-import ReviewTopicsButton from "@/components/ReviewTopicsButton.tsx";
-import RetryLessonButton from "@/components/RetryLessonButton.tsx";
-import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
+import useLessonNavigation from "@/hooks/learning/useLessonNavigation.ts";
 import LessonFooterSkeleton from "@/pages/space/learn/lesson/LessonFooterSkeleton.tsx";
+import MasteredFooter from "@/pages/space/learn/lesson/footer/MasteredFooter.tsx";
+import CheckpointFooter from "@/pages/space/learn/lesson/footer/CheckpointFooter.tsx";
+import ExhaustedFooter from "@/pages/space/learn/lesson/footer/ExhaustedFooter.tsx";
+import ExerciseFooter from "@/pages/space/learn/lesson/footer/ExerciseFooter.tsx";
 
 interface LessonFooterProps {
   onConfirm: () => void;
@@ -29,150 +25,71 @@ function LessonFooter({
   onNext,
   confirmationEnabled = false,
   skipEnabled = true,
-    wasCorrect,
-    answer,
+  wasCorrect,
+  answer,
   submitted,
 }: LessonFooterProps) {
-  const { t } = useTranslation();
   const { lessonId } = useLessonId();
   const { strSpaceId } = useSpaceId();
-  const { lesson, exerciseLoading, nextExercise, deleteExercises, isDeletingExercises, invalidateLearningPath } =
-    useLesson({ lessonId: lessonId });
-  const { path } = useLearningPath();
+  const {
+    lesson,
+    exerciseLoading,
+    nextExercise,
+    deleteExercises,
+    isDeletingExercises,
+    invalidateLearningPath,
+  } = useLesson({ lessonId });
+  const navigation = useLessonNavigation();
 
-  const chapterId =
-    path?.chapters
-      .flatMap((chapter) => chapter.lessons)
-      .findIndex((item) => item.id === lessonId) ?? 0;
-
-  const flatLessons =
-    path?.chapters.flatMap((chapter) => chapter.lessons) ?? [];
-  const currentIndex = flatLessons.findIndex((l) => l.id === lessonId);
-  const nextLesson =
-    currentIndex >= 0 && currentIndex < flatLessons.length - 1
-      ? flatLessons[currentIndex + 1]
-      : null;
-  const nextChapter = nextLesson
-    ? path?.chapters.find((c) => c.lessons.some((l) => l.id === nextLesson.id))
-    : null;
-
-  if (!lesson) {
+  if (!lesson || !strSpaceId) {
     return <LessonFooterSkeleton className="w-full" />;
   }
 
   const content = (() => {
     if (lesson.isMastered()) {
       return (
-        <>
-          <ReviewTopicsButton
-            strSpaceId={strSpaceId!}
-            chapterId={chapterId}
-            onCancel={() => undefined}
-          />
-
-          <Link
-            to={PathConstants.LESSON}
-            params={{
-              spaceId: strSpaceId!,
-              lessonId: nextLesson?.id.toString() ?? "",
-              chapterId: nextChapter?.index.toString() ?? "",
-            }}
-          >
-            <Button
-              className={"flex flex-row items-center"}
-              onClick={() => invalidateLearningPath()}
-            >
-              <ArrowRight size={16} />
-              {t("button.next")}
-            </Button>
-          </Link>
-        </>
+        <MasteredFooter
+          strSpaceId={strSpaceId}
+          navigation={navigation}
+          onInvalidatePath={() => invalidateLearningPath()}
+        />
       );
     }
 
-    if (lesson.isCheckpoint() && lesson.topics.length == 0) {
+    if (lesson.isCheckpoint() && lesson.topics.length === 0) {
       return (
-        <>
-          <Link to={PathConstants.SPACE_LEARN} params={{ spaceId: strSpaceId }}>
-            <Button
-              className={"flex flex-row items-center"}
-              disabled={exerciseLoading}
-              variant={"outline"}
-            >
-              <ArrowLeft size={16} />
-              {t("button.back")}
-            </Button>
-          </Link>
-
-          <Link
-            to={PathConstants.LESSON}
-            params={{
-              spaceId: strSpaceId!,
-              lessonId: nextLesson?.id.toString() ?? "",
-              chapterId: nextChapter?.index.toString() ?? "",
-            }}
-          >
-            <Button className={"flex flex-row items-center"}>
-              <ArrowRight size={16} />
-              {t("button.next")}
-            </Button>
-          </Link>
-        </>
+        <CheckpointFooter
+          strSpaceId={strSpaceId}
+          navigation={navigation}
+          exerciseLoading={exerciseLoading}
+        />
       );
     }
 
     if (lesson.attemptsLeft === 0) {
       return (
-        <>
-          <ReviewTopicsButton
-            strSpaceId={strSpaceId!}
-            chapterId={chapterId}
-            onCancel={() => undefined}
-          />
-          <RetryLessonButton
-            onRetry={() => void deleteExercises()}
-            isDeleting={isDeletingExercises}
-          />
-        </>
+        <ExhaustedFooter
+          strSpaceId={strSpaceId}
+          chapterId={navigation.chapterId}
+          onRetry={() => void deleteExercises()}
+          isDeleting={isDeletingExercises}
+        />
       );
     }
 
     return (
-      <>
-        {!submitted && (
-          <Button
-            disabled={exerciseLoading || !skipEnabled}
-            onClick={onSkip}
-            variant={"outline"}
-          >
-            {t("button.skip")}
-          </Button>
-        )}
-          {nextExercise && submitted && !wasCorrect && (
-              <ExerciseHelpButton
-                  exercise={nextExercise}
-                  userAnswer={answer}
-                  topicId={nextExercise.topicId}
-              />
-          )}
-        {submitted ? (
-          <Button
-            disabled={exerciseLoading}
-            onClick={onNext}
-            className="ml-auto"
-          >
-            {t("button.next")}
-          </Button>
-        ) : (
-          <Button
-            disabled={!confirmationEnabled}
-            onClick={onConfirm}
-            className="ml-auto"
-          >
-            {t("button.submit")}
-          </Button>
-        )}
-      </>
+      <ExerciseFooter
+        submitted={submitted}
+        exerciseLoading={exerciseLoading}
+        skipEnabled={skipEnabled}
+        confirmationEnabled={confirmationEnabled}
+        wasCorrect={wasCorrect}
+        answer={answer}
+        nextExercise={nextExercise}
+        onConfirm={onConfirm}
+        onSkip={onSkip}
+        onNext={onNext}
+      />
     );
   })();
 

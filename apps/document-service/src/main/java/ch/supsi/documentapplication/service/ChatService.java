@@ -171,7 +171,10 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
                 .filter(wrapper -> wrapper.message().getMessageType() != MessageType.SYSTEM)
                 .map(wrapper -> {
                     String role = wrapper.message().getMessageType().getValue().toLowerCase(Locale.ROOT);
-                    List<Long> topics = "assistant".equals(role)
+                    List<Long> topics = MessageType.ASSISTANT
+                                    .name()
+                                    .toLowerCase(Locale.ROOT)
+                                    .equals(role)
                             ? topicsByTimestamp.getOrDefault(wrapper.timestamp(), List.of())
                             : List.of();
                     return new ChatMessageResponseDTO(role, wrapper.message().getText(), wrapper.timestamp(), topics);

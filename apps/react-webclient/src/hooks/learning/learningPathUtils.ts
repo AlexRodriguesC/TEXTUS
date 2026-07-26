@@ -8,6 +8,21 @@ import type Topic from "@/classes/Topic.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import { isLearningPathDto } from "@/hooks/dtoMappers.ts";
 import type { QueryClient } from "@tanstack/react-query";
+import type Chapter from "@/classes/Chapter.ts";
+import type Lesson from "@/classes/Lesson.ts";
+
+export function getPrerequisiteLesson(
+  chapters: Chapter[],
+  chapterIndex: number,
+  lesson: Lesson,
+): Lesson | null {
+  if (lesson.index > 0) {
+    const chapter = chapters.find((c) => c.index === chapterIndex);
+    return chapter?.lessons.find((l) => l.index === lesson.index - 1) ?? null;
+  }
+
+  return null;
+}
 
 function isTopicInPath(path: LearningPath, topicId: number): boolean {
   return path.chapters.some((chapter) =>
