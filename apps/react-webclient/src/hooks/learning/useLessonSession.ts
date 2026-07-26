@@ -24,11 +24,7 @@ function useLessonSession({
   });
 
   const handleNext = () => {
-    void resetNextExercise()?.then(() => {
-      setAnswer(null);
-      setSubmitted(false);
-      setWasCorrect(null);
-    });
+    void resetNextExercise();
   };
 
   const handleSkip = async () => {

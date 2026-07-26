@@ -12,12 +12,29 @@ import LessonPageSkeleton from "@/pages/space/learn/lesson/LessonPageSkeleton.ts
 import LessonQuestionSkeleton from "@/pages/space/learn/LessonQuestionSkeleton.tsx";
 import ExerciseRenderer from "@/pages/space/learn/ExerciseRenderer.tsx";
 import useLessonSession from "@/hooks/learning/useLessonSession.ts";
+import type { Exercise } from "@/classes/Exercise.ts";
+import type LessonModel from "@/classes/Lesson.ts";
 
 function Lesson() {
   const { lessonId } = useLessonId();
-  const { spaceId } = useSpaceId();
-  const { isLoading, nextExercise, exerciseLoading, lesson, resetNextExercise } =
-    useLesson({ lessonId });
+  return <LessonView key={lessonId} />;
+}
+
+interface LessonExerciseSessionProps {
+  spaceId: number | undefined;
+  lessonId: number | undefined;
+  nextExercise: Exercise | undefined;
+  exerciseLoading: boolean;
+  resetNextExercise: () => Promise<void> | void;
+}
+
+function LessonExerciseSession({
+  spaceId,
+  lessonId,
+  nextExercise,
+  exerciseLoading,
+  resetNextExercise,
+}: LessonExerciseSessionProps) {
   const {
     answer,
     setAnswer,
@@ -34,35 +51,80 @@ function Lesson() {
     resetNextExercise,
   });
 
-  if (isLoading) {
-    return <LessonPageSkeleton />;
-  }
+  return (
+    <>
+      <div className="flex-1 min-h-0 overflow-y-auto w-full place-content-center">
+        {exerciseLoading ? (
+          <LessonQuestionSkeleton />
+        ) : (
+          <ExerciseRenderer
+            exercise={nextExercise}
+            submitted={submitted}
+            onAnswer={setAnswer}
+          />
+        )}
+      </div>
+      <Separator />
+      <div className="sticky bottom-4 pt-4 flex items-center gap-3 w-full">
+        <LessonFooter
+          submitted={submitted}
+          onConfirm={() => void handleConfirm()}
+          onSkip={() => void handleSkip()}
+          onNext={handleNext}
+          confirmationEnabled={answer !== null && !isAttemptLoading}
+          wasCorrect={wasCorrect}
+          answer={answer}
+          skipEnabled={!isAttemptLoading}
+        />
+      </div>
+    </>
+  );
+}
 
+function LessonOutcome({ lesson }: { lesson: LessonModel }) {
   const content = (() => {
-    if (exerciseLoading) {
-      return <LessonQuestionSkeleton />;
-    }
-
-    if (lesson!.attemptsLeft === 0) {
+    if (lesson.attemptsLeft === 0) {
       return <AttemptsExhausted />;
     }
 
-    if (lesson!.isMastered()) {
+    if (lesson.isMastered()) {
       return <LessonCompleted />;
     }
 
-    if (lesson!.isCheckpoint() && lesson?.topics.length === 0) {
-      return <LessonCheckpointCompleted />;
-    }
-
-    return (
-      <ExerciseRenderer
-        exercise={nextExercise}
-        submitted={submitted}
-        onAnswer={setAnswer}
-      />
-    );
+    return <LessonCheckpointCompleted />;
   })();
+
+  return (
+    <>
+      <div className="flex-1 min-h-0 overflow-y-auto w-full place-content-center">
+        {content}
+      </div>
+      <Separator />
+      <div className="sticky bottom-4 pt-4 flex items-center gap-3 w-full">
+        <LessonFooter
+          submitted={false}
+          onConfirm={() => undefined}
+          onSkip={() => undefined}
+        />
+      </div>
+    </>
+  );
+}
+
+function LessonView() {
+  const { lessonId } = useLessonId();
+  const { spaceId } = useSpaceId();
+  const { isLoading, nextExercise, exerciseLoading, lesson, resetNextExercise } =
+    useLesson({ lessonId });
+
+  if (isLoading || !lesson) {
+    return <LessonPageSkeleton />;
+  }
+
+  const isOutcome =
+    lesson.attemptsLeft === 0 ||
+    lesson.isMastered() ||
+    (lesson.isCheckpoint() && lesson.topics.length === 0);
 
   return (
     <CenteredPage>
@@ -70,22 +132,18 @@ function Lesson() {
         <div className="sticky top-4 flex items-center gap-3 w-full">
           <LessonHeader />
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto w-full place-content-center">
-          {content}
-        </div>
-        <Separator></Separator>
-        <div className="sticky bottom-4 pt-4 flex items-center gap-3 w-full">
-          <LessonFooter
-            submitted={submitted}
-            onConfirm={() => void handleConfirm()}
-            onSkip={() => void handleSkip()}
-            onNext={handleNext}
-            confirmationEnabled={answer !== null && !isAttemptLoading}
-            wasCorrect={wasCorrect}
-            answer={answer}
-            skipEnabled={!isAttemptLoading}
+        {isOutcome ? (
+          <LessonOutcome lesson={lesson} />
+        ) : (
+          <LessonExerciseSession
+            key={nextExercise?.id ?? "pending"}
+            spaceId={spaceId}
+            lessonId={lessonId}
+            nextExercise={nextExercise}
+            exerciseLoading={exerciseLoading}
+            resetNextExercise={resetNextExercise}
           />
-        </div>
+        )}
       </div>
     </CenteredPage>
   );
