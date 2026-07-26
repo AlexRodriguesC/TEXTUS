@@ -313,8 +313,8 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
                     int attemptsLeft = rs.getInt("attempts_left");
                     double mastery = rs.getDouble("mastery");
 
-                    List<Long> topics =
-                            Arrays.asList((Long[]) rs.getArray("topic_ids").getArray());
+                    List<Long> topics = new ArrayList<>(
+                            Arrays.asList((Long[]) rs.getArray("topic_ids").getArray()));
                     return new Lesson(id, chapterId, index, type, topics, currentTopic, attemptsLeft, mastery);
                 })
                 .single();
@@ -327,12 +327,15 @@ public class DatabaseLearningStorage extends DatabaseStorage implements IDatabas
 
     @Override
     public void update(Lesson lesson) {
+        Long[] topicIds =
+                lesson.getTopics() == null ? new Long[0] : lesson.getTopics().toArray(new Long[0]);
         jdbcClient
-                .sql("SELECT documents.update_lesson(:lessonId, :currentTopic, :attemptsLeft, :mastery)")
+                .sql("SELECT documents.update_lesson(:lessonId, :currentTopic, :attemptsLeft, :mastery, :topicIds)")
                 .param("lessonId", lesson.getId())
                 .param("currentTopic", lesson.getCurrentTopic())
                 .param("attemptsLeft", lesson.getAttemptsLeft())
                 .param("mastery", lesson.getMastery())
+                .param("topicIds", topicIds)
                 .query()
                 .listOfRows();
     }

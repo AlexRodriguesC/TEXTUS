@@ -1,10 +1,7 @@
 import useLearningPath from "@/hooks/learning/useLearningPath.ts";
 import useTopics from "@/hooks/useTopics.tsx";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import useChapterId from "@/hooks/useChapterId.ts";
-import { useNavigate } from "@tanstack/react-router";
-import PathConstants from "@/routing/pathConstants.ts";
-import useSpaceId from "@/hooks/useSpaceId.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import ChapterGuideBreadcrumbs from "@/pages/space/learn/ChapterGuideBreadcrumbs.tsx";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
@@ -14,10 +11,8 @@ import ChapterGuideSkeleton from "@/pages/space/learn/ChapterGuideSkeleton.tsx";
 function ChapterGuide() {
   const { t: tr } = useTranslation();
   const { chapterId } = useChapterId();
-  const { spaceId } = useSpaceId();
   const { path, isPathLoading } = useLearningPath();
   const { topics } = useTopics();
-  const navigate = useNavigate();
 
   const chapter = path?.chapters?.find((c) => c.index === chapterId);
   const chapterTopics = chapter?.lessons.flatMap((n) => n.topics) ?? [];
@@ -28,25 +23,6 @@ function ChapterGuide() {
   );
 
   const isLoading = isPathLoading || !chapter;
-
-  useEffect(() => {
-    if (spaceId === undefined) {
-      navigate({ to: PathConstants.NOT_FOUND });
-    }
-  }, [spaceId, navigate]);
-
-  useEffect(() => {
-    if (spaceId !== undefined && path && !isPathLoading && !chapter) {
-      navigate({
-        to: PathConstants.SPACE_LEARN,
-        params: { spaceId: String(spaceId) },
-      });
-    }
-  }, [spaceId, chapter, navigate, path, isPathLoading]);
-
-  if (!spaceId) {
-    return null;
-  }
 
   if (isLoading) {
     return <ChapterGuideSkeleton />;

@@ -12,7 +12,7 @@ import { isMindMapDto, mapMindMap } from "@/hooks/dtoMappers.ts";
 import useDeleteMindMapMutation from "@/hooks/mindmap/useDeleteMindMapMutation.ts";
 import { isMindMapListEmpty } from "@/hooks/mindmap/mindMapUtils.ts";
 import useRegenerateMindMapMutation from "@/hooks/mindmap/useRegenerateMindMapMutation.ts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   return (
@@ -83,45 +83,48 @@ function useMindMap() {
     },
   );
 
-  useEffect(() => {
+  const isListEmpty = isMindMapListEmpty(listData);
+
+  const mindMapStatus = useMemo((): MindMapJobStatusType => {
     if (statusOverride === MindMapJobStatus.GENERATING) {
       const listStatus = summary?.status as MindMapJobStatusType | undefined;
       const getStatus =
         mindMapData?.status === 200 && isMindMapDto(mindMapData.data)
           ? (mindMapData.data.status as MindMapJobStatusType)
           : undefined;
-      const status = getStatus ?? listStatus;
+      const serverStatus = getStatus ?? listStatus;
       if (
-        status === MindMapJobStatus.GENERATING ||
-        status === MindMapJobStatus.DONE ||
-        status === MindMapJobStatus.FAILED
+        serverStatus === MindMapJobStatus.GENERATING ||
+        serverStatus === MindMapJobStatus.DONE ||
+        serverStatus === MindMapJobStatus.FAILED
       ) {
-        setStatusOverride(null);
+        return serverStatus;
       }
+      return MindMapJobStatus.GENERATING;
     }
 
     if (statusOverride === MindMapJobStatus.NOT_CREATED) {
-      if (isMindMapListEmpty(listData)) {
-        setStatusOverride(null);
-      }
+      return MindMapJobStatus.NOT_CREATED;
     }
-  }, [statusOverride, listData, mindMapData, summary?.status]);
 
-  const isListEmpty = isMindMapListEmpty(listData);
+    if (statusOverride !== null) {
+      return statusOverride;
+    }
 
-  let mindMapStatus: MindMapJobStatusType = MindMapJobStatus.NOT_CREATED;
-  if (statusOverride !== null) {
-    mindMapStatus = statusOverride;
-  } else if (isListEmpty) {
-    mindMapStatus = MindMapJobStatus.NOT_CREATED;
-  } else if (
-    mindMapData?.status === 200 &&
-    isMindMapDto(mindMapData.data)
-  ) {
-    mindMapStatus = mindMapData.data.status as MindMapJobStatusType;
-  } else if (summary) {
-    mindMapStatus = summary.status as MindMapJobStatusType;
-  }
+    if (isListEmpty) {
+      return MindMapJobStatus.NOT_CREATED;
+    }
+
+    if (mindMapData?.status === 200 && isMindMapDto(mindMapData.data)) {
+      return mindMapData.data.status as MindMapJobStatusType;
+    }
+
+    if (summary) {
+      return summary.status as MindMapJobStatusType;
+    }
+
+    return MindMapJobStatus.NOT_CREATED;
+  }, [statusOverride, isListEmpty, mindMapData, summary]);
 
   const { deleteMindMap, isDeleting } = useDeleteMindMapMutation(
     spaceId,

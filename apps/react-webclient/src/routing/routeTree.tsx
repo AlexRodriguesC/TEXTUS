@@ -2,6 +2,7 @@ import {
   createRootRouteWithContext,
   createRoute,
   Outlet,
+  redirect,
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import NotFoundPage from "../pages/not-found/NotFoundPage";
@@ -19,6 +20,7 @@ import SpaceLearn from "@/pages/space/learn/SpaceLearn.tsx";
 import ChapterGuide from "@/pages/space/learn/ChapterGuide.tsx";
 import Lesson from "@/pages/space/learn/lesson/Lesson.tsx";
 import TopicsPage from "@/pages/space/topics/TopicsPage.tsx";
+import { requireAuth } from "@/routing/auth.ts";
 import {
   ensureChapterGuideData,
   ensureLessonData,
@@ -28,6 +30,7 @@ import {
   ensureSpaceMenuData,
   ensureSpaceTopicsData,
   ensureSpaces,
+  requireValidChapterGuideRoute,
 } from "@/routing/loaders/routeLoaders.ts";
 
 const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -59,6 +62,9 @@ const authRoute = createRoute({
 const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "main",
+  beforeLoad: () => {
+    requireAuth();
+  },
   component: () => (
     <ProtectedRoute>
       <MainLayout sidebarEnabled={true}>
@@ -147,8 +153,16 @@ const spaceChapterGuideRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: PathConstants.SPACE_LEARN_GUIDE,
   component: ChapterGuide,
-  loader: ({ context: { queryClient }, params }) => {
-    void ensureChapterGuideData(queryClient, Number(params.spaceId));
+  beforeLoad: async ({ context: { queryClient }, params }) => {
+    const spaceId = Number(params.spaceId);
+    const chapterId = Number(params.chapterId);
+
+    if (Number.isNaN(spaceId)) {
+      throw redirect({ to: PathConstants.NOT_FOUND });
+    }
+
+    await ensureChapterGuideData(queryClient, spaceId);
+    requireValidChapterGuideRoute(queryClient, spaceId, chapterId);
   },
 });
 

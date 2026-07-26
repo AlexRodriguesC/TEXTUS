@@ -231,4 +231,39 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         then:
         updated.attemptsLeft == before - 1
     }
+
+    def "persists checkpoint topics on lesson update"() {
+        given:
+        createUser("checkpoint-owner", "abc")
+        Long spaceId = createSpace("checkpoint-owner")
+        Long jobId = createBatchJobInstance()
+        Long pathId = pathStorage.createLearningPath(spaceId, jobId)
+        Long checkpointTopicId = createTopic(spaceId, jobId)
+        Chapter chapter = new Chapter(0, "Chapter", "desc", [checkpointTopicId], [checkpointTopicId])
+        chapter.buildLessons()
+        pathStorage.create(pathId, chapter, spaceId)
+        Long checkpointId = jdbcClient
+                .sql("""
+                SELECT id FROM documents.lesson
+                WHERE chapter_id = (SELECT id FROM documents.chapter WHERE path_id = :pathId)
+                  AND type = 'checkpoint'
+                """)
+                .param("pathId", pathId)
+                .query(Long.class)
+                .single()
+        Lesson checkpoint = storage.readLesson(checkpointId)
+
+        when:
+        checkpoint.topics.add(checkpointTopicId)
+        storage.update(checkpoint)
+
+        then:
+        storage.readLesson(checkpointId).topics == [checkpointTopicId]
+
+        when:
+        storage.update(checkpoint)
+
+        then:
+        storage.readLesson(checkpointId).topics == [checkpointTopicId]
+    }
 }

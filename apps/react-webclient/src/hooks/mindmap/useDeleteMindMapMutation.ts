@@ -77,6 +77,7 @@ function useDeleteMindMapMutation(
           _error,
           { spaceId: targetSpaceId, mindMapId: targetMindMapId },
         ) => {
+          setStatusOverride(null);
           await queryClient.invalidateQueries({
             queryKey: getListMindMapsQueryKey(targetSpaceId),
           });

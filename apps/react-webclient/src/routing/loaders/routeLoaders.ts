@@ -1,4 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { redirect } from "@tanstack/react-router";
+import PathConstants from "@/routing/pathConstants.ts";
 import { getListChatsQueryOptions } from "@/client/generated/chats/chats.ts";
 import { getGetDocumentsQueryOptions } from "@/client/generated/documents/documents.ts";
 import {
@@ -16,7 +18,13 @@ import { getReadSpacesQueryOptions } from "@/client/generated/spaces/spaces.ts";
 import { getGetTopicsQueryOptions } from "@/client/generated/topics/topics.ts";
 import type { MindMapsResponseDTO } from "@/client/model";
 import { ApiError } from "@/client/mutator.ts";
-import { mapLesson } from "@/hooks/dtoMappers.ts";
+import { mapLesson, mapLearningPath, isLearningPathDto } from "@/hooks/dtoMappers.ts";
+import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
+import { isLearningPathsResponseDto } from "@/hooks/learning/learningPathUtils.ts";
+import {
+  getGetLearningPathQueryKey,
+  type getLearningPathResponse,
+} from "@/client/generated/paths/paths.ts";
 
 function isMindMapsResponseDto(data: unknown): data is MindMapsResponseDTO {
   return (
@@ -120,6 +128,47 @@ export async function ensureChapterGuideData(
     ensureLearningPath(queryClient, spaceId),
     queryClient.ensureQueryData(getGetTopicsQueryOptions(spaceId)),
   ]);
+}
+
+export function requireValidChapterGuideRoute(
+  queryClient: QueryClient,
+  spaceId: number,
+  chapterId: number,
+) {
+  const response = queryClient.getQueryData<getLearningPathResponse>(
+    getGetLearningPathQueryKey(spaceId),
+  );
+
+  if (
+    response?.status !== 200 ||
+    !isLearningPathsResponseDto(response.data)
+  ) {
+    throw redirect({
+      to: PathConstants.SPACE_LEARN,
+      params: { spaceId: String(spaceId) },
+    });
+  }
+
+  const pathDto = response.data.paths[0];
+  if (
+    !pathDto ||
+    pathDto.status !== LearningPathJobStatus.DONE ||
+    !isLearningPathDto(pathDto)
+  ) {
+    throw redirect({
+      to: PathConstants.SPACE_LEARN,
+      params: { spaceId: String(spaceId) },
+    });
+  }
+
+  const path = mapLearningPath(pathDto);
+  const chapter = path.chapters.find((item) => item.index === chapterId);
+  if (!chapter) {
+    throw redirect({
+      to: PathConstants.SPACE_LEARN,
+      params: { spaceId: String(spaceId) },
+    });
+  }
 }
 
 export async function ensureLessonData(

@@ -15,9 +15,27 @@ import { useTranslation } from "react-i18next";
 import { ArrowUp } from "lucide-react";
 import useElementSize from "@/hooks/useElementSize.ts";
 import useActiveChapter from "@/hooks/learning/useActiveChapter.ts";
+import useSpaceId from "@/hooks/useSpaceId.ts";
 
 function SpaceLearn() {
-  const { path, status, isPathLoading } = useLearningPath();
+  const { spaceId } = useSpaceId();
+  const { path, status } = useLearningPath();
+
+  if (
+    path === undefined ||
+    status === LearningPathJobStatus.NOT_CREATED ||
+    path.chapters.length === 0
+  ) {
+    return <SpaceLearnEmpty />;
+  }
+
+  const pathKey = path.chapters.map((chapter) => chapter.index).join("-");
+
+  return <SpaceLearnView key={`${spaceId}-${pathKey}`} />;
+}
+
+function SpaceLearnView() {
+  const { path, isPathLoading } = useLearningPath();
   const { t } = useTranslation();
   const viewportRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -28,11 +46,7 @@ function SpaceLearn() {
   ]);
   const activeChapter = useActiveChapter(path, viewportRef, headerHeight);
 
-  if (
-    path === undefined ||
-    status === LearningPathJobStatus.NOT_CREATED ||
-    path.chapters.length === 0
-  ) {
+  if (!path || path.chapters.length === 0) {
     return <SpaceLearnEmpty />;
   }
 

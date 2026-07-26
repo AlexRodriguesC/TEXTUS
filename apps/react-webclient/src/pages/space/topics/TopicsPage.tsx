@@ -16,14 +16,20 @@ import type Topic from "@/classes/Topic.ts";
 const filterTopics = (topic: Topic, search: string) =>
   topic.title.toLowerCase().includes(search.toLowerCase());
 
-function TopicsPage() {
+interface TopicsPaginatedContentProps {
+  topics: Topic[];
+  search: string;
+  isLoading: boolean;
+  onResetSearch: () => void;
+}
+
+function TopicsPaginatedContent({
+  topics,
+  search,
+  isLoading,
+  onResetSearch,
+}: TopicsPaginatedContentProps) {
   const { t } = useTranslation();
-  const { strSpaceId } = useSpaceId();
-  const navigate = useNavigate();
-  const { q } = useSearch({ strict: false }) as { q?: string };
-  const search = q ?? "";
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const { topics, isLoading } = useTopics();
 
   const {
     listRef,
@@ -43,8 +49,56 @@ function TopicsPage() {
       topic.title.toLowerCase().includes(search.toLowerCase()),
     )?.id,
     gapPx: 16,
-    resetPageOnSearchChange: true,
   });
+
+  if (isLoading) {
+    return <TopicEntryListSkeleton />;
+  }
+
+  if (isEmpty) {
+    return (
+      <div className="flex flex-1 min-h-0 items-center justify-center overflow-y-auto">
+        <EmptyTopics />
+      </div>
+    );
+  }
+
+  if (isNotFound) {
+    return (
+      <SearchNotFoundAside
+        message={t("topics.not-found")}
+        resetLabel={t("topics.reset-search")}
+        onReset={onResetSearch}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-1 min-h-0 flex-col items-center overflow-hidden">
+      <div ref={listRef} className="flex flex-1 min-h-0 w-full flex-col px-4">
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto py-6">
+          <TopicEntryList topics={paginated} itemRef={itemRef} />
+        </div>
+
+        <PaginatedListControls
+          safePage={safePage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          className="pb-6"
+        />
+      </div>
+    </div>
+  );
+}
+
+function TopicsPage() {
+  const { t } = useTranslation();
+  const { strSpaceId } = useSpaceId();
+  const navigate = useNavigate();
+  const { q } = useSearch({ strict: false }) as { q?: string };
+  const search = q ?? "";
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { topics, isLoading } = useTopics();
 
   const setSearch = (value: string) => {
     navigate({
@@ -60,53 +114,11 @@ function TopicsPage() {
     searchInputRef.current?.focus();
   };
 
-  const content = (() => {
-    if (isLoading) {
-      return <TopicEntryListSkeleton />;
-    }
-
-    if (isEmpty) {
-      return (
-        <div className="flex flex-1 min-h-0 items-center justify-center overflow-y-auto">
-          <EmptyTopics />
-        </div>
-      );
-    }
-
-    if (isNotFound) {
-      return (
-        <SearchNotFoundAside
-          message={t("topics.not-found")}
-          resetLabel={t("topics.reset-search")}
-          onReset={resetSearch}
-        />
-      );
-    }
-
-    return (
-      <div className="flex flex-1 min-h-0 flex-col items-center overflow-hidden">
-        <div
-          ref={listRef}
-          className="flex flex-1 min-h-0 w-full flex-col px-4"
-        >
-          <div className="flex flex-1 min-h-0 flex-col overflow-y-auto py-6">
-            <TopicEntryList topics={paginated} itemRef={itemRef} />
-          </div>
-
-          <PaginatedListControls
-            safePage={safePage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
-            className="pb-6"
-          />
-        </div>
-      </div>
-    );
-  })();
+  const showSearch = !isLoading && topics.length > 0;
 
   return (
     <div className="flex h-full w-full flex-col">
-      {!isLoading && !isEmpty && (
+      {showSearch && (
         <header className="flex shrink-0 flex-col items-center gap-4 px-4 pt-8">
           <SearchInput
             ref={searchInputRef}
@@ -119,7 +131,15 @@ function TopicsPage() {
         </header>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col">{content}</div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <TopicsPaginatedContent
+          key={search}
+          topics={topics}
+          search={search}
+          isLoading={isLoading}
+          onResetSearch={resetSearch}
+        />
+      </div>
     </div>
   );
 }

@@ -19,7 +19,7 @@ function NotFoundPage() {
           <AsideHeader>
             <p>{t("notfound")}</p>
           </AsideHeader>
-          <AsideFooter>
+          <AsideFooter className="flex justify-center">
             <Link to={PathConstants.HOME}>
               <Button>{t("general.go-home")}</Button>
             </Link>

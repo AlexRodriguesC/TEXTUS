@@ -52,6 +52,7 @@ function useDeletePathMutation(
           }
         },
         onSettled: async (_data, _error, { spaceId: targetSpaceId }) => {
+          setStatusOverride(null);
           await queryClient.invalidateQueries({
             queryKey: getGetLearningPathQueryKey(targetSpaceId),
           });

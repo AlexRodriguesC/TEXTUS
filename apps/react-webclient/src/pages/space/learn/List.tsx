@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -30,6 +30,15 @@ interface SortableItemProps {
   value: string;
   disabled: boolean;
   status?: "correct" | "incorrect" | null;
+}
+
+function createShuffledItems(answer: string[]) {
+  const arr = answer.map((value, i) => ({ id: `${i}-${value}`, value }));
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 function SortableItem({ id, value, disabled, status }: SortableItemProps) {
@@ -76,14 +85,13 @@ function SortableItem({ id, value, disabled, status }: SortableItemProps) {
 }
 
 function List({ list, submitted, onAnswer }: ListProps) {
-  const [items, setItems] = useState(() => {
-    const arr = list.answer.map((value, i) => ({ id: `${i}-${value}`, value }));
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  });
+  const [items, setItems] = useState(() => createShuffledItems(list.answer));
+  const hasNotifiedInitial = useRef(false);
+
+  if (!hasNotifiedInitial.current && onAnswer) {
+    hasNotifiedInitial.current = true;
+    onAnswer(items.map((item) => item.value));
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -95,14 +103,11 @@ function List({ list, submitted, onAnswer }: ListProps) {
     setItems((prev) => {
       const oldIndex = prev.findIndex((i) => i.id === active.id);
       const newIndex = prev.findIndex((i) => i.id === over.id);
-      return arrayMove(prev, oldIndex, newIndex);
+      const next = arrayMove(prev, oldIndex, newIndex);
+      onAnswer?.(next.map((item) => item.value));
+      return next;
     });
   }
-
-  useEffect(() => {
-    if (!onAnswer) return;
-    onAnswer(items.map((i) => i.value));
-  }, [items, onAnswer]);
 
   return (
     <div className={"flex flex-col gap-8"}>

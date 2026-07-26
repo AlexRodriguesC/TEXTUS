@@ -107,10 +107,14 @@ public class LearningService extends Service implements ILearningService {
     }
 
     private Topic findCurrentTopic(Long spaceId, Lesson lesson) throws ApplicationException {
+        return findTopicById(spaceId, lesson.getCurrentTopicId());
+    }
+
+    private Topic findTopicById(Long spaceId, Long topicId) throws ApplicationException {
         var topics = databaseTopicStorage.getBySpaceId(spaceId);
 
         return topics.stream()
-                .filter(t -> Objects.equals(t.getId(), lesson.getCurrentTopicId()))
+                .filter(t -> Objects.equals(t.getId(), topicId))
                 .findFirst()
                 .orElse(null);
     }
@@ -139,7 +143,7 @@ public class LearningService extends Service implements ILearningService {
         }
 
         BaseExercise<?> exercise = lesson.getExerciseInProgress();
-        Topic topic = findCurrentTopic(space.getId(), lesson);
+        Topic topic = findTopicById(space.getId(), exercise.getTopicId());
         Attempt<?> attempt = Attempt.from(request, exercise, topic);
         boolean isAnswerWrong = attempt.isAnswerWrong();
 

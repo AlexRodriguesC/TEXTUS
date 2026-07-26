@@ -1,5 +1,5 @@
 import useListPageSize from "@/hooks/useListPageSize.ts";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useMemo, useRef, useState, type RefObject } from "react";
 
 interface UsePaginatedFilterOptions<T> {
   items: T[];
@@ -9,7 +9,6 @@ interface UsePaginatedFilterOptions<T> {
   isEmpty?: (items: T[], filtered: T[]) => boolean;
   measureKey?: string | number;
   gapPx?: number;
-  resetPageOnSearchChange?: boolean;
 }
 
 interface UsePaginatedFilterResult<T> {
@@ -34,7 +33,6 @@ function usePaginatedFilter<T>({
   isEmpty: isEmptyFn,
   measureKey,
   gapPx,
-  resetPageOnSearchChange = false,
 }: UsePaginatedFilterOptions<T>): UsePaginatedFilterResult<T> {
   const [page, setPage] = useState(1);
   const listRef = useRef<HTMLDivElement>(null);
@@ -64,12 +62,6 @@ function usePaginatedFilter<T>({
     const start = (safePage - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, safePage, pageSize]);
-
-  useEffect(() => {
-    if (resetPageOnSearchChange) {
-      setPage(1);
-    }
-  }, [search, resetPageOnSearchChange]);
 
   const goToPage = (nextPage: number) => {
     setPage(Math.min(Math.max(1, nextPage), totalPages));

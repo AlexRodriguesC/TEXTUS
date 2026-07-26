@@ -177,4 +177,65 @@ class LearningServiceSpec extends Specification {
         1 * learningStorage.update(lesson)
         1 * learningStorage.deleteExercises(1L)
     }
+
+    def "should add exercise topic to checkpoint on wrong attempt"() {
+        given:
+        setupSpace()
+        def checkpoint = new Lesson(2L, 1L, 1, LessonType.CHECKPOINT, [], 0L, 5, 0.10d)
+        def lesson = buildLesson(1L)
+        def exercise = new Question()
+        exercise.setId(10L)
+        exercise.setTopicId(100L)
+        exercise.setAnswer("4")
+        exercise.setDistractor(["3", "5"])
+        exercise.setCompleted(false)
+        lesson.addExercise(exercise)
+        def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
+        chapter.setLessons([lesson, checkpoint])
+        def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
+        def topic = new Topic(100L, "a.pdf", 1, "title", "summary", [])
+
+        when:
+        service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))
+
+        then:
+        1 * learningStorage.readLesson(1L) >> lesson
+        1 * pathStorage.read(10L) >> path
+        1 * topicStorage.getBySpaceId(10L) >> [topic]
+        1 * learningStorage.create(_, "alice", 1L, 10L)
+        1 * learningStorage.updateExercise(_)
+        1 * learningStorage.update(lesson)
+        1 * learningStorage.update({ Lesson l -> l.id == 2L && l.topics == [100L] })
+        checkpoint.topics == [100L]
+    }
+
+    def "should not update checkpoint when topic already present on wrong attempt"() {
+        given:
+        setupSpace()
+        def checkpoint = new Lesson(2L, 1L, 1, LessonType.CHECKPOINT, [100L], 0L, 5, 0.10d)
+        def lesson = buildLesson(1L)
+        def exercise = new Question()
+        exercise.setId(10L)
+        exercise.setTopicId(100L)
+        exercise.setAnswer("4")
+        exercise.setDistractor(["3", "5"])
+        exercise.setCompleted(false)
+        lesson.addExercise(exercise)
+        def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
+        chapter.setLessons([lesson, checkpoint])
+        def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
+        def topic = new Topic(100L, "a.pdf", 1, "title", "summary", [])
+
+        when:
+        service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))
+
+        then:
+        1 * learningStorage.readLesson(1L) >> lesson
+        1 * pathStorage.read(10L) >> path
+        1 * topicStorage.getBySpaceId(10L) >> [topic]
+        1 * learningStorage.create(_, "alice", 1L, 10L)
+        1 * learningStorage.updateExercise(_)
+        1 * learningStorage.update(lesson)
+        0 * learningStorage.update({ Lesson l -> l.id == 2L })
+    }
 }

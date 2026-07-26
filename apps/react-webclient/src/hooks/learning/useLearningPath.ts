@@ -9,13 +9,12 @@ import LearningPathJobStatus, {
 import { mapLearningPath } from "@/hooks/dtoMappers.ts";
 import useDeletePathMutation from "@/hooks/learning/useDeletePathMutation.ts";
 import {
-  isLearningPathListEmpty,
   isLearningPathsResponseDto,
 } from "@/hooks/learning/learningPathUtils.ts";
 import useRegeneratePathMutation from "@/hooks/learning/useRegeneratePathMutation.ts";
 import useUpdateSettingsMutation from "@/hooks/learning/useUpdateSettingsMutation.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type LearningPath from "@/classes/LearningPath.ts";
 
 function useLearningPath() {
@@ -55,34 +54,39 @@ function useLearningPath() {
   const pathDto = paths[0];
   const isListEmpty = paths.length === 0;
 
-  useEffect(() => {
+  const learningPathStatus = useMemo((): LearningPathJobStatusType => {
     if (statusOverride === LearningPathJobStatus.GENERATING) {
-      const status = pathDto?.status as LearningPathJobStatusType | undefined;
+      const serverStatus = pathDto?.status as
+        | LearningPathJobStatusType
+        | undefined;
       if (
-        status === LearningPathJobStatus.GENERATING ||
-        status === LearningPathJobStatus.DONE ||
-        status === LearningPathJobStatus.FAILED
+        serverStatus === LearningPathJobStatus.GENERATING ||
+        serverStatus === LearningPathJobStatus.DONE ||
+        serverStatus === LearningPathJobStatus.FAILED
       ) {
-        setStatusOverride(null);
+        return serverStatus;
       }
+      return LearningPathJobStatus.GENERATING;
     }
 
     if (statusOverride === LearningPathJobStatus.NOT_CREATED) {
-      if (isLearningPathListEmpty(learningPathData)) {
-        setStatusOverride(null);
-      }
+      return LearningPathJobStatus.NOT_CREATED;
     }
-  }, [statusOverride, learningPathData, pathDto?.status]);
 
-  let learningPathStatus: LearningPathJobStatusType =
-    LearningPathJobStatus.NOT_CREATED;
-  if (statusOverride !== null) {
-    learningPathStatus = statusOverride;
-  } else if (isListEmpty) {
-    learningPathStatus = LearningPathJobStatus.NOT_CREATED;
-  } else if (pathDto) {
-    learningPathStatus = pathDto.status as LearningPathJobStatusType;
-  }
+    if (statusOverride !== null) {
+      return statusOverride;
+    }
+
+    if (isListEmpty) {
+      return LearningPathJobStatus.NOT_CREATED;
+    }
+
+    if (pathDto) {
+      return pathDto.status as LearningPathJobStatusType;
+    }
+
+    return LearningPathJobStatus.NOT_CREATED;
+  }, [statusOverride, isListEmpty, pathDto]);
 
   const { updateSettings } = useUpdateSettingsMutation(spaceId);
   const { deletePath, isDeleting } = useDeletePathMutation(

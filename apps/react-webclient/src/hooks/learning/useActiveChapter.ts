@@ -7,14 +7,8 @@ function useActiveChapter(
   viewportRef: RefObject<HTMLDivElement | null>,
   headerHeight: number,
 ): Chapter | null {
-  const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
+  const [observedChapter, setObservedChapter] = useState<Chapter | null>(null);
   const intersectingRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    if (path?.chapters.length) {
-      setActiveChapter((prev) => prev ?? path.chapters[0]);
-    }
-  }, [path]);
 
   useEffect(() => {
     if (!path?.chapters.length || !viewportRef.current || headerHeight === 0) {
@@ -41,7 +35,7 @@ function useActiveChapter(
 
         const bestIndex = Math.min(...intersectingRef.current);
         const chapter = path.chapters.find((c) => c.index === bestIndex);
-        if (chapter) setActiveChapter(chapter);
+        if (chapter) setObservedChapter(chapter);
       },
       {
         root: viewportRef.current,
@@ -55,7 +49,7 @@ function useActiveChapter(
     return () => observer.disconnect();
   }, [path, headerHeight, viewportRef]);
 
-  return activeChapter;
+  return observedChapter ?? path?.chapters[0] ?? null;
 }
 
 export default useActiveChapter;
