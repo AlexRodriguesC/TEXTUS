@@ -46,8 +46,8 @@ function PathNode({
             {getNodeIcon(node.type)}
           </MotionButton>
         </PopoverTrigger>
-        <PopoverContent side="bottom" className="bg-muted/80 py-4 px-10 w-fit">
-          <PathNodePopover lessonId={node.id} />
+        <PopoverContent side="bottom" className="bg-muted/80 py-4 w-xxs">
+          <PathNodePopover className={"w-full"} lessonId={node.id} />
         </PopoverContent>
       </Popover>
     </div>

@@ -40,7 +40,7 @@ function SpaceChatConversation({
   return (
     <div className="flex flex-col flex-1 min-h-0 items-center bg-transparent bg-none">
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
-        <div className="relative flex flex-1 min-h-0 w-full max-w-[90%] md:max-w-3xl">
+        <div className="relative flex flex-1 min-h-0 w-full">
           <MessageScroller>
             <MessageScrollerViewport>
               <MessageScrollerContent

@@ -36,7 +36,7 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
 
     if (lesson.isMastered()) {
         return (
-            <div className={cn("flex flex-col gap-2 w-fit", className)}>
+            <div className={cn("flex flex-col gap-2", className)}>
                 <ReviewTopicsButton
                     onCancel={() => {}}
                     strSpaceId={strSpaceId}
@@ -48,7 +48,7 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
 
     if (lesson.attemptsLeft === 0) {
         return (
-            <div className={cn("flex flex-col gap-2 w-fit", className)}>
+            <div className={cn("flex flex-col gap-2", className)}>
                 <RetryLessonButton
                   onRetry={() => void deleteExercises()}
                   isDeleting={isDeletingExercises}
@@ -63,10 +63,10 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
     }
 
     return (
-      <div className={cn("flex flex-col gap-2", className)}>
-        <div className={"flex flex-row md:flex-col gap-2"}>
+      <div className={cn("flex flex-col gap-2 w-full", className)}>
+        <div className={"flex flex-row md:flex-col gap-2 w-full"}>
           <Link
-            className="order-1 md:order-2"
+            className="order-1 md:order-2 w-full"
             to={PathConstants.LESSON}
             params={{
               spaceId: strSpaceId!,
@@ -77,13 +77,13 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
             <Button className={"w-full"}>{t("button.continue")}</Button>
           </Link>
           <LessonAttemptsIndicator
-            className="order-2 md:order-1 place-self-center"
+            className="order-2 md:order-1 place-content-center place-items-center w-full"
             maxAttempts={lesson.maxAttempts}
             attemptsLeft={lesson.attemptsLeft}
           />
         </div>
         <ReviewTopicsButton
-          className={"order-3"}
+          className={"order-3 w-full"}
           onCancel={() => {}}
           strSpaceId={strSpaceId}
           chapterId={chapterId}
@@ -92,7 +92,7 @@ function PathNodePopover({ lessonId, className }: PathNodePopoverProps) {
     );
   })();
 
-  return <div className={"flex flex-col items-center w-fit"}>{content}</div>;
+  return <div className={"flex flex-col items-center w-full"}>{content}</div>;
 }
 
 export default PathNodePopover;

@@ -19,7 +19,7 @@ function ExerciseHeader({ question, topicId }: ExerciseHeaderProps) {
     <div
       className={cn(
         "w-full",
-        topic ? "flex flex-row gap-2 justify-between" : "",
+        topic ? "flex flex-row gap-2 justify-between items-center" : "",
       )}
     >
       <p>{question}</p>

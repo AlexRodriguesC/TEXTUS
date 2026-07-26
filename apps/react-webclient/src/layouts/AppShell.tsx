@@ -6,6 +6,8 @@ import RightSidebarToggle from "@/RightSidebarToggle.tsx";
 import { ChatProvider } from "@/provider/ChatProvider.tsx";
 import useSpaceId from "@/hooks/useSpaceId.ts";
 import useTutorial from "@/hooks/context/useTutorial.tsx";
+import useIsFullBleedPage from "@/hooks/useIsFullBleedPage.ts";
+import { PageContainer } from "@/layouts/PageContainer.tsx";
 import { useRef, type ReactNode } from "react";
 import * as React from "react";
 
@@ -26,6 +28,7 @@ function AppShell({
 }: AppShellProps) {
   const { spaceId } = useSpaceId();
   const { tutorialEnabled } = useTutorial();
+  const isFullBleed = useIsFullBleedPage();
   const showRightSidebar = spaceId !== undefined && !tutorialEnabled;
   const chatEnabled = spaceId !== undefined;
   const rightTogglePortalRef = useRef<HTMLDivElement>(null);
@@ -39,7 +42,9 @@ function AppShell({
           rightTogglePortalRef={rightTogglePortalRef}
         />
         <main className="flex justify-center h-full w-full min-w-0 min-h-0 overflow-hidden">
-          {children}
+          <PageContainer variant={isFullBleed ? "full" : "default"}>
+            {children}
+          </PageContainer>
         </main>
       </SidebarInset>
 

@@ -19,16 +19,15 @@ function ReviewTopicsButton({
   const { t } = useTranslation();
 
   return (
-    <div className={className}>
       <Link
-        to={PathConstants.SPACE_LEARN_GUIDE}
-        params={{ spaceId: strSpaceId, chapterId: chapterId.toString() }}
+          className={className}
+          to={PathConstants.SPACE_LEARN_GUIDE}
+          params={{ spaceId: strSpaceId, chapterId: chapterId.toString() }}
       >
-        <Button onClick={onCancel} variant={"outline"}>
+        <Button className={"w-full"} onClick={onCancel} variant={"outline"}>
           {t("button.review-topics")}
         </Button>
       </Link>
-    </div>
   );
 }
 

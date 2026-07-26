@@ -54,7 +54,7 @@ function ChapterGuide() {
 
   return (
     <div className="flex h-full w-full justify-center overflow-hidden">
-      <ScrollArea className="h-full w-full max-w-[90%] lg:max-w-[40%]">
+      <ScrollArea className="h-full w-full">
         <div className="flex flex-col gap-6 px-4 py-6">
           <ChapterGuideBreadcrumbs chapter={chapter!} />
           <div className="flex flex-col gap-4">

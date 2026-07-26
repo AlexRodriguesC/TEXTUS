@@ -87,7 +87,7 @@ function TopicsPage() {
       <div className="flex flex-1 min-h-0 flex-col items-center overflow-hidden">
         <div
           ref={listRef}
-          className="flex flex-1 min-h-0 w-full max-w-[90%] lg:max-w-[40%] flex-col px-4"
+          className="flex flex-1 min-h-0 w-full flex-col px-4"
         >
           <div className="flex flex-1 min-h-0 flex-col overflow-y-auto py-6">
             <TopicEntryList topics={paginated} itemRef={itemRef} />
@@ -105,12 +105,12 @@ function TopicsPage() {
   })();
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[75%] flex-col">
+    <div className="flex h-full w-full flex-col">
       {!isLoading && !isEmpty && (
         <header className="flex shrink-0 flex-col items-center gap-4 px-4 pt-8">
           <SearchInput
             ref={searchInputRef}
-            className="w-full max-w-[90%] lg:max-w-[40%]"
+            className="w-full"
             placeholder={t("topics.search")}
             clearLabel={t("topics.reset-search")}
             value={search}

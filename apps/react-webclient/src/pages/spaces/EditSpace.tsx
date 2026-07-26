@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { failureToastAction } from "@/lib/toasts.ts";
+import { failureToastAction, successToast } from "@/lib/toasts.ts";
 import { Button } from "@base-ui/react";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";
 import useUpdateSpaceMutation from "@/hooks/useUpdateSpaceMutation.ts";
@@ -29,6 +29,16 @@ function EditSpace({
   const { updateSpace } = useUpdateSpaceMutation();
 
   const submitUpdate = useCallback(() => {
+    const isUnchanged =
+      icon === initialIcon &&
+      name === initialName &&
+      description === initialDescription;
+
+    if (isUnchanged) {
+      successToast(t("spaces.update.success"));
+      return;
+    }
+
     updateSpace(
       { spaceId, icon, name, description },
       {
@@ -40,7 +50,17 @@ function EditSpace({
         },
       },
     );
-  }, [updateSpace, spaceId, icon, name, description, t]);
+  }, [
+    updateSpace,
+    spaceId,
+    icon,
+    name,
+    description,
+    initialIcon,
+    initialName,
+    initialDescription,
+    t,
+  ]);
 
   return (
     <SpaceDialogForm

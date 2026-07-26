@@ -134,6 +134,8 @@ h6 {
 
   --destructive: oklch(0.577 0.245 27.325);
 
+  --success: oklch(0.527 0.154 150.069);
+
   --input: oklch(0.925 0.005 214.3);
 
   --ring: oklch(0.723 0.014 214.4);
@@ -168,6 +170,8 @@ h6 {
 }
 
 @theme inline {
+  --max-width-page-mobile: 90%;
+  --max-width-page-desktop: 40%;
   --font-heading: var(--font-sans);
   --font-sans: "Roboto Variable", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -226,6 +230,7 @@ h6 {
   --accent: oklch(0.275 0.011 216.9);
   --accent-foreground: oklch(0.987 0.002 197.1);
   --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.792 0.209 151.711);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.56 0.021 213.5);

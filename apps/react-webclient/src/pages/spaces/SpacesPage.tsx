@@ -101,7 +101,7 @@ export function SpacesPage() {
   })();
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[75%] flex-col">
+    <div className="flex h-full w-full flex-col">
       <header className="flex shrink-0 flex-col items-center gap-4 pt-8 md:flex-row md:items-start md:gap-16">
         <CreateSpace
           trigger={

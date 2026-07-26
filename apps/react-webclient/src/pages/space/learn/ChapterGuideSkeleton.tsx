@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 function ChapterGuideSkeleton() {
   return (
     <div className="flex h-full w-full justify-center overflow-hidden">
-      <div className="h-full w-full max-w-[90%] lg:max-w-[40%] px-4 py-6 flex flex-col gap-6">
+      <div className="h-full w-full px-4 py-6 flex flex-col gap-6">
         <Skeleton className="h-4 w-48" />
         <div className="flex flex-col gap-4">
           {Array.from({ length: 4 }).map((_, index) => (

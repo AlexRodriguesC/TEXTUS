@@ -15,6 +15,7 @@ import type PathSettingsClass from "@/classes/PathSettings.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import PathSettingsSkeleton from "@/components/right-sidebar/settings/PathSettingsSkeleton.tsx";
+import { successToast } from "@/lib/toasts.ts";
 
 const DISPLAY_NAMES = ["question", "list", "group", "pair"] as const;
 type DisplayName = (typeof DISPLAY_NAMES)[number];
@@ -82,6 +83,18 @@ function PathSettingsContent({
   };
 
   const handleApply = () => {
+    const isUnchanged =
+      percentages.questionPercentage === path.settings.questionPercentage &&
+      percentages.listPercentage === path.settings.listPercentage &&
+      percentages.pairPercentage === path.settings.pairPercentage &&
+      percentages.groupPercentage === path.settings.groupPercentage;
+
+    if (isUnchanged) {
+      successToast(t("learning-path.settings.success"));
+      onClose();
+      return;
+    }
+
     updateSettings(percentages);
     onClose();
   };

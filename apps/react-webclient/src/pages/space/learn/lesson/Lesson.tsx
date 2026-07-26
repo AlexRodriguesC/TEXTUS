@@ -66,7 +66,7 @@ function Lesson() {
 
   return (
     <CenteredPage>
-      <div className="flex flex-col items-center gap-4 h-full w-[90%] md:w-3/5">
+      <div className="flex flex-col items-center gap-4 h-full">
         <div className="sticky top-4 flex items-center gap-3 w-full">
           <LessonHeader />
         </div>

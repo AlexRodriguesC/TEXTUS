@@ -45,7 +45,7 @@ function SpaceChat() {
   return (
     <div className="flex w-full h-full overflow-hidden">
       <div className="flex flex-col flex-1 min-h-0 items-center overflow-hidden">
-        <div className="w-full h-full md:max-w-[80%] lg:max-w-[60%] flex flex-col min-h-0 overflow-hidden">
+        <div className="flex w-full h-full flex-col min-h-0 overflow-hidden">
           {renderContent()}
         </div>
       </div>

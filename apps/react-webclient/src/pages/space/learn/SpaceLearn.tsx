@@ -40,7 +40,7 @@ function SpaceLearn() {
 
   return (
     <CenteredPage>
-      <div className="h-full w-full max-w-[90%] lg:max-w-[40%] flex flex-col min-h-0">
+      <div className="flex h-full w-full flex-col min-h-0">
         <ScrollArea className="h-full w-full min-h-0" viewportRef={viewportRef}>
           <div
             ref={headerRef}

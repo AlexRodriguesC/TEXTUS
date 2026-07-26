@@ -18,7 +18,7 @@ function TopicInformationModal({ topic }: { topic: Topic }) {
     <Dialog>
       <DialogTrigger asChild>
         <InformationQuestionMark
-          className={"cursor-pointer"}
+          className={"cursor-pointer text-muted-foreground size-4"}
           tooltip={t("exercise.guide.tooltip")}
         />
       </DialogTrigger>
