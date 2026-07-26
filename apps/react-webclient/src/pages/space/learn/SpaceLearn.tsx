@@ -90,7 +90,7 @@ function SpaceLearnView() {
               className="flex w-full flex-col items-center justify-center gap-4"
               style={{ minHeight: Math.max(viewportHeight - headerHeight, 0) }}
             >
-              <div className="opacity-60">
+              <div>
                 <ResponsiveLottie src={"/animations/not_found.lottie"} />
               </div>
 

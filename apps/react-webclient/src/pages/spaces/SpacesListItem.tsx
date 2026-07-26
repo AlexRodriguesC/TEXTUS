@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { failureToastAction } from "@/lib/toasts.ts";
+import { failureToastAction } from "@/lib/toasts.tsx";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 import DestructiveActionButton from "@/components/DestructiveActionButton.tsx";

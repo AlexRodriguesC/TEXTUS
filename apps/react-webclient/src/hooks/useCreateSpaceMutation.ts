@@ -4,7 +4,7 @@ import {
   type readSpacesResponse,
 } from "@/client/generated/spaces/spaces.ts";
 import type { CreateSpaceResponseDTO, ReadSpaceResponseDTO } from "@/client/model";
-import { successToast } from "@/lib/toasts.ts";
+import { successToast } from "@/lib/toasts.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";

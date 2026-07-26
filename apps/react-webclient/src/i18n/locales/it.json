@@ -305,7 +305,8 @@
     },
     "header": {
       "guide": "Guida",
-      "lessons-left": "{{count}} lezioni rimanenti da completare!"
+      "lessons-left": "{{count}} lezioni rimanenti da completare!",
+      "mastered": "Tutte le lezioni sono state completate!"
     }
   },
   "loading": {

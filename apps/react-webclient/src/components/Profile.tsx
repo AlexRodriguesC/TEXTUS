@@ -12,13 +12,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Link } from "@tanstack/react-router";
+import {Link, useNavigate} from "@tanstack/react-router";
 import PathConstants from "@/routing/pathConstants.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { useTranslation } from "react-i18next";
 
 function Profile() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
@@ -44,7 +45,9 @@ function Profile() {
               <DropdownMenuLabel>
                 {t("profile.logged-as", { username: user.username })}
               </DropdownMenuLabel>
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onClick={() => {
+                navigate({to: PathConstants.HOME}).then(() => logout());
+              }}>
                 {t("logout")}
               </DropdownMenuItem>
             </DropdownMenuGroup>

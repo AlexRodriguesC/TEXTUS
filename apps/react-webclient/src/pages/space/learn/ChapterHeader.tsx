@@ -22,6 +22,7 @@ function ChapterHeader({ chapter }: ChapterHeaderProps) {
   const masteredLessons = chapter.lessons
     .map((l: Lesson) => l.completed)
     .filter((l: Lesson) => l).length;
+  const allMastered = masteredLessons === totalLessons;
 
   return (
     <div
@@ -41,9 +42,10 @@ function ChapterHeader({ chapter }: ChapterHeaderProps) {
           {chapter.title}
         </p>
         <p className={cn("text-secondary-foreground text-sm shrink-0", theme == "dark" ? "text-muted-foreground" : "text-primary-foreground")}>
-          {t("chapter.header.lessons-left", {
+          {!allMastered && t("chapter.header.lessons-left", {
             count: totalLessons - masteredLessons,
           })}
+          {allMastered && t("chapter.header.mastered")}
         </p>
       </div>
       <Button

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useDropzone } from "@/components/ui/dropzone.tsx";
-import { failureToast, successToast } from "@/lib/toasts.ts";
+import { failureToast, successToast } from "@/lib/toasts.tsx";
 import {
   getGetDocumentsQueryKey,
   useCreateDocument,

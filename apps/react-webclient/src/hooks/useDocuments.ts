@@ -9,7 +9,7 @@ import Document from "@/classes/Document.ts";
 import { mapDocument } from "@/hooks/dtoMappers.ts";
 import { CREATE_DOCUMENT_MUTATION_KEY } from "@/hooks/useDocumentUpload.tsx";
 import { shouldPollDocuments } from "@/lib/documentTaskUtils.ts";
-import { failureToast, successToast } from "@/lib/toasts.ts";
+import { failureToast, successToast } from "@/lib/toasts.tsx";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";

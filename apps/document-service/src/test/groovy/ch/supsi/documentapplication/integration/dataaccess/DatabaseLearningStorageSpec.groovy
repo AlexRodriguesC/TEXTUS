@@ -43,7 +43,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
     def "creates and reads back a question exercise, then updates it"() {
         given:
         Question question = new Question()
-        question.setTopicId(1L)
+        question.setTopicId(topicId)
         question.setIndex(0)
         question.setExplanation("Explain me")
         question.setRequest("What is 2+2?")

@@ -8,7 +8,7 @@ import LearningPathJobStatus, {
   type LearningPathJobStatusType,
 } from "@/classes/LearningPathJobStatus.ts";
 import { setPathStatus } from "@/hooks/learning/learningPathUtils.ts";
-import { failureToast, successToast } from "@/lib/toasts.ts";
+import { failureToast, successToast } from "@/lib/toasts.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";

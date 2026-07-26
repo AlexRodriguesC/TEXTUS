@@ -128,7 +128,7 @@ function LessonView() {
 
   return (
     <CenteredPage>
-      <div className="flex flex-col items-center gap-4 h-full">
+      <div className="flex flex-col items-center gap-4 h-full w-full">
         <div className="sticky top-4 flex items-center gap-3 w-full">
           <LessonHeader />
         </div>

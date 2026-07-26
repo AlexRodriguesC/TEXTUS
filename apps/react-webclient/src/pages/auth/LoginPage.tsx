@@ -6,7 +6,7 @@ import PathConstants from "@/routing/pathConstants.ts";
 import useLoginMutation from "@/hooks/useLoginMutation.ts";
 import { useAuth } from "@/hooks/useAuth.ts";
 import { ErrorCard } from "@/components/ErrorCard.tsx";
-import { successToast } from "@/lib/toasts.ts";
+import { successToast } from "@/lib/toasts.tsx";
 import AuthFormCard from "@/components/auth/AuthFormCard.tsx";
 
 function LoginPage() {

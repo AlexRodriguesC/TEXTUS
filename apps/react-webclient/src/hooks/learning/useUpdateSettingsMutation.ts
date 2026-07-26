@@ -7,7 +7,7 @@ import type { ErrorResponseDTO } from "@/client/model";
 import PathSettings from "@/classes/PathSettings.ts";
 import { isLearningPathDto, toPathSettingsDto } from "@/hooks/dtoMappers.ts";
 import { isLearningPathsResponseDto } from "@/hooks/learning/learningPathUtils.ts";
-import { failureToast, successToast } from "@/lib/toasts.ts";
+import { failureToast, successToast } from "@/lib/toasts.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";

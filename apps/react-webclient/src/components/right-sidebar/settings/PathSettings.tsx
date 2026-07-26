@@ -15,7 +15,7 @@ import type PathSettingsClass from "@/classes/PathSettings.ts";
 import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import PathSettingsSkeleton from "@/components/right-sidebar/settings/PathSettingsSkeleton.tsx";
-import { successToast } from "@/lib/toasts.ts";
+import { successToast } from "@/lib/toasts.tsx";
 
 const DISPLAY_NAMES = ["question", "list", "group", "pair"] as const;
 type DisplayName = (typeof DISPLAY_NAMES)[number];

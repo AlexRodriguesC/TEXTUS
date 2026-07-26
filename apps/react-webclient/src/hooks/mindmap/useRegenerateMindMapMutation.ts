@@ -10,7 +10,7 @@ import MindMapJobStatus, {
   type MindMapJobStatusType,
 } from "@/classes/MindMapJobStatus.ts";
 import { setMindMapStatus } from "@/hooks/mindmap/mindMapUtils.ts";
-import { failureToast, successToast } from "@/lib/toasts.ts";
+import { failureToast, successToast } from "@/lib/toasts.tsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";

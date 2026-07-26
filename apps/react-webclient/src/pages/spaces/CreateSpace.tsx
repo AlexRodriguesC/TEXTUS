@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { failureToastAction } from "@/lib/toasts.ts";
+import { failureToastAction } from "@/lib/toasts.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTranslation } from "react-i18next";
 import SpaceDialogForm from "@/pages/spaces/SpaceDialogForm.tsx";

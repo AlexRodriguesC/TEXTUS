@@ -318,7 +318,8 @@
     },
     "header": {
       "guide": "Guide",
-      "lessons-left": "{{count}} lessons left to master!"
+      "lessons-left": "{{count}} lessons left to master!",
+      "mastered": "All lessons mastered!"
     }
   },
   "loading": {
