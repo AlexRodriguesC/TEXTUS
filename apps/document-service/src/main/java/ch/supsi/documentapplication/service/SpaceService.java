@@ -89,22 +89,26 @@ public class SpaceService extends ch.supsi.documentapplication.service.Service i
                 .addLong("TRIGGERED_AT", System.currentTimeMillis())
                 .toJobParameters();
 
-        JobInstance jobInstance = jobRepository.createJobInstance(mindMapJob.getName(), jobParameters);
-        Long mapId = spaceStorage.createMindMap(space.getId(), jobInstance.getInstanceId());
-
-        ExecutionContext executionContext = new ExecutionContext();
-        executionContext.put("MAP_ID", mapId);
-        JobExecution jobExecution = jobRepository.createJobExecution(jobInstance, jobParameters, executionContext);
-
         try {
+            JobInstance jobInstance = jobRepository.createJobInstance(mindMapJob.getName(), jobParameters);
+            Long mapId = spaceStorage.createMindMap(space.getId(), jobInstance.getInstanceId());
+
+            ExecutionContext executionContext = new ExecutionContext();
+            executionContext.put("MAP_ID", mapId);
+            JobExecution jobExecution = jobRepository.createJobExecution(jobInstance, jobParameters, executionContext);
+
             mindMapJob.execute(jobExecution);
+
+            return new MindMapSummaryDTO(mapId, MindMapStatus.GENERATING);
         } catch (JobInterruptedException e) {
             // Execute already handles the task state update gracefully in this case
             log.warn("Job for mind map in space with id {} was interrupted", spaceId, e);
             throw new JobFailedToStartException("Job for mind map in space with id " + spaceId + " was interrupted");
+        } catch (Exception e) {
+            String message = String.format("Failed to start job %s", mindMapJob.getName());
+            log.error(message, e);
+            throw new JobFailedToStartException(message);
         }
-
-        return new MindMapSummaryDTO(mapId, MindMapStatus.GENERATING);
     }
 
     @Override

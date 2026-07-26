@@ -26,7 +26,7 @@ function HomePage() {
           </div>
           <div className="flex w-full max-w-xs flex-col gap-2 md:max-w-sm">
             <Button asChild className="w-full" variant="default">
-              <Link to={PathConstants.SPACES}>{t("home.start")}</Link>
+              <Link to={isAuthenticated ? PathConstants.SPACES : PathConstants.LOGIN}>{t("home.start")}</Link>
             </Button>
             {!isAuthenticated && (
               <Button asChild className="w-full" variant="secondary">

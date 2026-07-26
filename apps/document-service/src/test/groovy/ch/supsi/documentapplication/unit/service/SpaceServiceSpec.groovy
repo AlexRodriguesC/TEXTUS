@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.model.MindMap
 import ch.supsi.documentapplication.model.MindMapStatus
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.service.SpaceService
+import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.JobExecution
 import org.springframework.batch.core.job.JobInstance
@@ -214,7 +215,7 @@ class SpaceServiceSpec extends Specification {
         1 * spaceStorage.readMindMap(10L) >> mindMap
         1 * jobRepository.getJobInstance(99L) >> jobInstance
         1 * jobRepository.getLastJobExecution(jobInstance) >> jobExecution
-        1 * jobExecution.getStatus() >> org.springframework.batch.core.BatchStatus.COMPLETED
+        1 * jobExecution.getStatus() >> BatchStatus.COMPLETED
         result.size() == 1
         result[0].id() == 7L
         result[0].status() == MindMapStatus.DONE
