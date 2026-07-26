@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -170,7 +171,7 @@ public class LearningController {
     public ResponseEntity<AttemptResponseDTO> submitAttempt(
             @PathVariable Long spaceId,
             @PathVariable Long lessonId,
-            @RequestBody AttemptRequestDTO request,
+            @Valid @RequestBody AttemptRequestDTO request,
             @Parameter(hidden = true) Authentication authentication
     ) {
         String owner = authentication.getName();

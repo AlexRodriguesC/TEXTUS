@@ -105,6 +105,10 @@
       "error": "Si è verificato un errore durante il caricamento del seguente documento: {{fileName}}.",
       "none": "È stato tentato il caricamento dei documenti, ma non ne è stato trovato nessuno."
     },
+    "validation": {
+      "nameRequired": "Il nome è obbligatorio.",
+      "descriptionRequired": "La descrizione è obbligatoria."
+    },
     "delete": {
       "title": "Eliminare spazio?",
       "success": "Spazio eliminato con successo."

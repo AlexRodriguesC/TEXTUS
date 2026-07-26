@@ -4,10 +4,12 @@ import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.model.learn.Lesson;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Valid
 @Schema(description = "Represents a chapter within a learning path, including its position, title, description, and the nodes (collections of topics) contained in it.")
 public record   ChapterResponseDTO(
         @NotNull

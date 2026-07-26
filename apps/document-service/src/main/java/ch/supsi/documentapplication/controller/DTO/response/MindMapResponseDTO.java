@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.model.MindMapNodeType;
 import ch.supsi.documentapplication.model.MindMapStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Valid
 public class MindMapResponseDTO {
 
     @NotNull

@@ -3,9 +3,11 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import ch.supsi.documentapplication.model.Chat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.UUID;
 
+@Valid
 @Schema(description = "Metadata for a chat conversation")
 public record ChatResponseDTO(
         @Schema(description = "Unique identifier of the chat") @NotNull UUID id,

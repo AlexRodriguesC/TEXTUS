@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -44,7 +45,7 @@ public class SpaceController {
                     @ApiResponse(responseCode = "400", description = "Invalid request"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             })
-    public ResponseEntity<@NotNull CreateSpaceResponseDTO> createSpace(@Parameter(description = "The name and description of the space to be created", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)) @RequestBody CreateSpaceRequestDTO createSpaceRequestDTO,
+    public ResponseEntity<@NotNull CreateSpaceResponseDTO> createSpace(@Valid @Parameter(description = "The name and description of the space to be created", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)) @RequestBody CreateSpaceRequestDTO createSpaceRequestDTO,
                                                                        @Parameter(hidden = true) Authentication authentication) {
 
         String username = authentication.getName();
@@ -60,7 +61,7 @@ public class SpaceController {
                     @ApiResponse(responseCode = "200", description = "Space retrieved"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             })
-    public ResponseEntity<@NotNull List<ReadSpaceResponseDTO>> readSpaces(@Parameter(hidden = true) Authentication authentication) {
+    public ResponseEntity<@NotNull List<@Valid ReadSpaceResponseDTO>> readSpaces(@Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
         var spaces = spaceService.getSpaces(username);
         var spaceDTOs = spaces.stream().map(space -> new ReadSpaceResponseDTO(space.getId(), space.getIcon(), space.getName(), space.getDescription())).toList();
@@ -93,7 +94,7 @@ public class SpaceController {
             })
     public ResponseEntity<Void> updateSpace(@Parameter(hidden = true) Authentication authentication,
                                             @PathVariable Long spaceId,
-                                            @RequestBody @NotNull UpdateSpaceRequestDTO request) {
+                                            @Valid @RequestBody @NotNull UpdateSpaceRequestDTO request) {
         String username = authentication.getName();
         var space = new Space(spaceId, username, request.icon(), request.name(), request.description());
         spaceService.update(space);

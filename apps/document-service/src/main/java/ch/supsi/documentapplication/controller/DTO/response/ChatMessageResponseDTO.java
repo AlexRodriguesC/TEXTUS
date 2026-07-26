@@ -2,10 +2,12 @@ package ch.supsi.documentapplication.controller.DTO.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.List;
 
+@Valid
 @Schema(description = "A single message in a chat conversation")
 public record ChatMessageResponseDTO(
         @Schema(description = "Role of the message author", example = "user") @NotNull String role,

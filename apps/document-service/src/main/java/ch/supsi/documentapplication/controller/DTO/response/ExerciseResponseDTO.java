@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
+@Valid
 @Schema(description = "Represents a single exercise served to the user for a lesson")
 public record ExerciseResponseDTO(
         @Schema(description = "Unique identifier of the exercise") Long exerciseId,

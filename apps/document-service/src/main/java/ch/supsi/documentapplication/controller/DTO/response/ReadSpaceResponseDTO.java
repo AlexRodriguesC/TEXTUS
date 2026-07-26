@@ -1,9 +1,11 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@Valid
 @Schema(description = "Response DTO containing the details of a space")
 public record ReadSpaceResponseDTO(
         @NotNull

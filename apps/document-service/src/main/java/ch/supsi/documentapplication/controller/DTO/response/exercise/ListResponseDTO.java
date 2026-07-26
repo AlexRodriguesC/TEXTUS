@@ -4,9 +4,11 @@ import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.LessonType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Valid
 public record ListResponseDTO(
         @NotNull Long id,
         @NotNull  Long topicId,

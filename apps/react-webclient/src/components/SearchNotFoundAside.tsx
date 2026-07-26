@@ -22,13 +22,12 @@ function SearchNotFoundAside({
         <IllustratedAside
           className="gap-4"
           lottieSrc="/animations/not_found.lottie"
-          lottieClassName="opacity-60"
           lottieProps={{ loop: true, autoplay: true }}
         >
           <AsideHeader>
             <p>{message}</p>
           </AsideHeader>
-          <AsideFooter>
+          <AsideFooter className="flex w-full place-content-center">
             <Button variant="outline" onClick={onReset}>
               {resetLabel}
             </Button>

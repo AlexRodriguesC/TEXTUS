@@ -120,6 +120,10 @@
     "delete": {
       "title": "Delete space?",
       "success": "Space deleted successfully."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "descriptionRequired": "Description is required."
     }
   },
   "exercise": {

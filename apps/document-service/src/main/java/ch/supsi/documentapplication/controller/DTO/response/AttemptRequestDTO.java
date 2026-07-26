@@ -5,9 +5,11 @@ import ch.supsi.documentapplication.model.learn.exercise.Question;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Valid
 @Schema(description = "Request body for submitting an attempt at the lesson's current exercise")
 public record AttemptRequestDTO(
         ExerciseType exerciseType,

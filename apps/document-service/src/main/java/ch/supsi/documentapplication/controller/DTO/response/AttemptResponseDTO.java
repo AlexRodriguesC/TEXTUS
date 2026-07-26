@@ -1,10 +1,12 @@
 package ch.supsi.documentapplication.controller.DTO.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.List;
 
+@Valid
 @Schema(description = "Feedback returned after submitting an attempt")
 public record AttemptResponseDTO(
         @Schema(description = "Identifier of the attempted exercise") Long exerciseId,

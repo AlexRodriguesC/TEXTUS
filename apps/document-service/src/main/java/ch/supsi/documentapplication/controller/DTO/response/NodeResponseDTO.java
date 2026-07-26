@@ -3,9 +3,11 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import ch.supsi.documentapplication.model.learn.LessonType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Valid
 @Schema(description = "Response DTO containing a node in a learning path chapter")
 public record NodeResponseDTO(
         @NotNull

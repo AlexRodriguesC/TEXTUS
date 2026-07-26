@@ -4,9 +4,11 @@ import ch.supsi.documentapplication.model.learn.Lesson;
 import ch.supsi.documentapplication.model.learn.LessonType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Valid
 @Schema(description = "Represents the current state of a lesson (node) within a learning path")
 public record LessonResponseDTO(
         @Schema(description = "Identifier of the lesson (node)") @NotNull Long id,

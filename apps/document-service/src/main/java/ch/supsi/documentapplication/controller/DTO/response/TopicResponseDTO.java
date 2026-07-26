@@ -3,8 +3,10 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import java.util.List;
 
+@Valid
 @Schema(description = "Response DTO containing a topic with its details")
 public record TopicResponseDTO(
         @NotNull

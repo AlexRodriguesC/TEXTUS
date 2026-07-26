@@ -67,7 +67,7 @@ public class ChatController {
             })
     public ResponseEntity<ChatResponseDTO> createChat(
             @PathVariable Long spaceId,
-            @RequestBody(required = false) CreateChatRequestDTO request,
+            @Valid @RequestBody(required = false) CreateChatRequestDTO request,
             @Parameter(hidden = true) Authentication authentication) {
         String username = authentication.getName();
         String title = request != null ? request.title() : null;

@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.controller.DTO.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
+@Valid
 @Schema(description = "Request body for updating an existing space. All fields are optional.")
 public record UpdateSpaceRequestDTO(
         @Schema(

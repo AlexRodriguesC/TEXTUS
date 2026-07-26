@@ -4,7 +4,9 @@ import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.model.TaskVariant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
+@Valid
 @Schema(description = "Processing task progress for a document pipeline stage")
 public record TaskDto(
         @NotNull

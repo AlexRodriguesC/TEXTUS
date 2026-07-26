@@ -4,9 +4,11 @@ import ch.supsi.documentapplication.model.learn.LearningPath;
 import ch.supsi.documentapplication.model.learn.LearningPathStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
+@Valid
 @Schema(description = "Response DTO containing the full learning path with settings, chapters, and generation status")
 public record LearningPathResponseDTO(
         @NotNull

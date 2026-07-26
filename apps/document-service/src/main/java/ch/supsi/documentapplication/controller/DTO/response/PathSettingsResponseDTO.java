@@ -3,7 +3,9 @@ package ch.supsi.documentapplication.controller.DTO.response;
 import ch.supsi.documentapplication.model.PathSettings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
+@Valid
 @Schema(description = "Response DTO containing the learning path settings with percentage allocations")
 public record PathSettingsResponseDTO(
         @NotNull
