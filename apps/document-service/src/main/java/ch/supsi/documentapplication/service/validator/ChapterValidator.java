@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.exception.AIOutputMappingFailedException;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import java.util.List;
+import java.util.Optional;
 
 public class ChapterValidator implements FeedbackAwareValidator<List<Chapter>, List<Label>, ChapterFeedback> {
 
@@ -25,8 +26,9 @@ public class ChapterValidator implements FeedbackAwareValidator<List<Chapter>, L
             throw AIOutputMappingFailedException.create("chapter", "chapters or labels cannot be null");
         }
 
-        List<Long> actualIds =
-                actual.stream().flatMap(ch -> ch.getLabels().stream()).toList();
+        List<Long> actualIds = actual.stream()
+                .flatMap(ch -> Optional.ofNullable(ch.getLabels()).orElse(List.of()).stream())
+                .toList();
         List<Long> expectedIds = expected.stream().map(Label::id).toList();
 
         List<Long> missing = expectedIds.stream()

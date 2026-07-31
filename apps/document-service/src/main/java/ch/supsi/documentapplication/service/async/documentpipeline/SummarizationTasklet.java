@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.model.Page;
 import ch.supsi.documentapplication.model.PageChunk;
+import ch.supsi.documentapplication.model.PageSummarization;
 import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient;
@@ -221,13 +222,27 @@ public class SummarizationTasklet extends ProcessingTasklet {
                     "Skipping empty page for document with documentId: {}, page: {}",
                     databaseDocumentId,
                     chunk.pageNumber());
+            fileSystemDocumentStorage.deleteChunk(fsDocumentId, String.valueOf(chunk.pageNumber()));
             return chunk.pageNumber();
         }
         var result = summarisationClient.getResult(chunk.content());
-        Long pageId = databaseDocumentStorage.create(result.result(), spaceId, databaseDocumentId);
-        result.usages().forEach(usage -> aiUsageStorage.create("page", pageId, "summarize", usage));
+        PageSummarization summarization = result.result();
+        if (summarization.isContentPage()) {
+            Page page = new Page(null, summarization.getTitle(), summarization.getSummary());
+            Long pageId = databaseDocumentStorage.create(page, spaceId, databaseDocumentId);
+            result.usages().forEach(usage -> aiUsageStorage.create("page", pageId, "summarize", usage));
+            log.info(
+                    "Processed content page for document with documentId: {}, page: {}",
+                    databaseDocumentId,
+                    chunk.pageNumber());
+        } else {
+            result.usages().forEach(usage -> aiUsageStorage.create("document", databaseDocumentId, "summarize", usage));
+            log.info(
+                    "Skipped non-content page for document with documentId: {}, page: {}",
+                    databaseDocumentId,
+                    chunk.pageNumber());
+        }
         fileSystemDocumentStorage.deleteChunk(fsDocumentId, String.valueOf(chunk.pageNumber()));
-        log.info("Processed page for document with documentId: {}, page: {}", databaseDocumentId, chunk.pageNumber());
         return chunk.pageNumber();
     }
 }

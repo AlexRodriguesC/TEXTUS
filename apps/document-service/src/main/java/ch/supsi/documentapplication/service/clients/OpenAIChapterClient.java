@@ -7,12 +7,7 @@ import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -88,9 +83,10 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
 
             chapters = chapters.stream()
                     .map(c -> {
-                        List<Long> toAdd = assignmentByIndex.getOrDefault(c.getIndex(), List.of());
+                        List<Long> toAdd = assignmentByIndex.getOrDefault(c.getIndex(), new ArrayList<>());
                         if (toAdd.isEmpty()) return c;
-                        List<Long> mergedLabelIds = new ArrayList<>(c.getLabels());
+                        List<Long> mergedLabelIds = new ArrayList<>(
+                                Optional.ofNullable(c.getLabels()).orElse(new ArrayList<>()));
                         mergedLabelIds.addAll(toAdd);
                         return new Chapter(
                                 c.getIndex(), c.getTitle(), c.getDescription(), mergedLabelIds, c.getTopics());

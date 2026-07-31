@@ -2,7 +2,7 @@ package ch.supsi.documentapplication.unit.service.clients
 
 import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.AiUsage
-import ch.supsi.documentapplication.model.Page
+import ch.supsi.documentapplication.model.PageSummarization
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.OpenAISummarizationClient
 import org.springframework.ai.chat.client.ChatClient
@@ -45,22 +45,80 @@ class OpenAISummarizationClientSpec extends Specification {
                 ClientTestSupport.TEST_AI_CONTEXT)
     }
 
-    def "should call chatClient and return the summarized page"() {
+    def "should call chatClient and return the summarized content page"() {
         given: "a document text and a rendered prompt"
         def documentText = "some long document content"
-        def expectedPage = new Page(null, "title1", "summary1")
+        def expectedSummarization = new PageSummarization(true, "title1", "summary1")
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(Page.class) >> ClientTestSupport.responseEntityFor(expectedPage)
+        callResponseSpec.responseEntity(PageSummarization.class) >> ClientTestSupport.responseEntityFor(expectedSummarization)
 
         when: "getResult is invoked"
         def result = client.getResult(documentText)
 
-        then: "the returned page matches what the chatClient produced"
-        result.result() == expectedPage
+        then: "the returned summarization matches what the chatClient produced"
+        result.result() == expectedSummarization
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+    }
+
+    def "should return rejected non-content page without validation error"() {
+        given:
+        def documentText = "Table of Contents\nChapter 1 .... 3"
+        def rejectedSummarization = new PageSummarization(false, "", "")
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(PageSummarization.class) >> ClientTestSupport.responseEntityFor(rejectedSummarization)
+
+        when:
+        def result = client.getResult(documentText)
+
+        then:
+        !result.result().contentPage
+        result.result().title == ""
+        result.result().summary == ""
+    }
+
+    def "should retry when content page is missing title or summary"() {
+        given:
+        def documentText = "some document content"
+        def invalidSummarization = new PageSummarization(true, "", "summary only")
+        int attempt = 0
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> {
+            attempt++
+            return callResponseSpec
+        }
+        callResponseSpec.responseEntity(PageSummarization.class) >> ClientTestSupport.responseEntityFor(invalidSummarization)
+
+        when:
+        client.getResult(documentText)
+
+        then:
+        thrown(RetriesFailedException)
+        attempt == 3
+    }
+
+    def "should wrap mapping validation failures in RetriesFailedException after retries are exhausted"() {
+        given:
+        def documentText = "some document content"
+        def invalidSummarization = new PageSummarization(true, "title only", "   ")
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(PageSummarization.class) >> ClientTestSupport.responseEntityFor(invalidSummarization)
+
+        when:
+        client.getResult(documentText)
+
+        then:
+        thrown(RetriesFailedException)
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
@@ -81,7 +139,7 @@ class OpenAISummarizationClientSpec extends Specification {
     def "should succeed after a transient failure is retried"() {
         given: "a document text and an eventual successful response"
         def documentText = "some document content"
-        def expectedPage = new Page(null, "title2", "summary2")
+        def expectedSummarization = new PageSummarization(true, "title2", "summary2")
         int attempt = 0
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
@@ -93,13 +151,13 @@ class OpenAISummarizationClientSpec extends Specification {
             }
             return callResponseSpec
         }
-        callResponseSpec.responseEntity(Page.class) >> ClientTestSupport.responseEntityFor(expectedPage)
+        callResponseSpec.responseEntity(PageSummarization.class) >> ClientTestSupport.responseEntityFor(expectedSummarization)
 
         when: "getResult is invoked"
         def result = client.getResult(documentText)
 
-        then: "the retry succeeds and the page is returned"
-        result.result() == expectedPage
+        then: "the retry succeeds and the summarization is returned"
+        result.result() == expectedSummarization
         attempt == 2
     }
 }
