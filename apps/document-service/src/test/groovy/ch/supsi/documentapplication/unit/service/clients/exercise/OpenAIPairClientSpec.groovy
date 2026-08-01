@@ -50,7 +50,7 @@ class OpenAIPairClientSpec extends Specification {
 
     def "should call chatClient and return the generated pair exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, "Animals", "Animal sounds summary", ["sounds"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Animals", "Animal sounds summary", ["sounds"])
         def expectedPair = new PairExercise()
         expectedPair.setRequest("Match animal to sound")
         expectedPair.setAnswer([new LeftRight("cat", "meow"), new LeftRight("dog", "bark")])

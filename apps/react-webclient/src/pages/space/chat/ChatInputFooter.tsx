@@ -14,7 +14,7 @@ function ChatInputFooter({
 }) {
   return (
     <div className="w-full flex items-center justify-center relative">
-      <div className="flex p-3 w-full shrink-0 place-content-center">
+      <div className="flex py-3 w-full shrink-0 place-content-center">
         <ChatInput
           onSubmit={onSubmit}
           models={models}

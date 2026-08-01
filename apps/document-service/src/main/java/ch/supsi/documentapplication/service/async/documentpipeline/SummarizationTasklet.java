@@ -228,7 +228,7 @@ public class SummarizationTasklet extends ProcessingTasklet {
         var result = summarisationClient.getResult(chunk.content());
         PageSummarization summarization = result.result();
         if (summarization.isContentPage()) {
-            Page page = new Page(null, summarization.getTitle(), summarization.getSummary());
+            Page page = new Page(null, chunk.pageNumber(), summarization.getTitle(), summarization.getSummary());
             Long pageId = databaseDocumentStorage.create(page, spaceId, databaseDocumentId);
             result.usages().forEach(usage -> aiUsageStorage.create("page", pageId, "summarize", usage));
             log.info(

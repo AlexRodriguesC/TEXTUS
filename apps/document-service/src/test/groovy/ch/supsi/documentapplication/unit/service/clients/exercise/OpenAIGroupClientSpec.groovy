@@ -49,7 +49,7 @@ class OpenAIGroupClientSpec extends Specification {
 
     def "should call chatClient and return the generated group exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, "Biology", "Biology summary", ["taxonomy"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Biology", "Biology summary", ["taxonomy"])
         def expectedGroup = new Group()
         expectedGroup.setRequest("Group these items")
         expectedGroup.setAnswer([fruit: ["apple", "banana"], vegetable: ["carrot"]])

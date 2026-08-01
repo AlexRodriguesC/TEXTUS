@@ -27,8 +27,8 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         UUID chatId = chatStorage.create(spaceId, "grounding-owner", "Grounding chat")
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", []), pageId)
-        Long topicB = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic B", "Summary B", []), pageId)
+        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", []), pageId)
+        Long topicB = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", []), pageId)
 
         when:
         storage.save(chatId, 1L, [topicB, topicA])
@@ -62,7 +62,7 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         UUID chatId = chatStorage.create(spaceId, "grounding-owner-3", "Multi-turn chat")
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", []), pageId)
+        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", []), pageId)
 
         when:
         storage.save(chatId, 1L, [topicA])

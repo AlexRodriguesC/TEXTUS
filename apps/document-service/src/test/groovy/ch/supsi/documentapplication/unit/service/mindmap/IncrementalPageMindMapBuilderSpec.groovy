@@ -12,7 +12,7 @@ class IncrementalPageMindMapBuilderSpec extends Specification {
     IncrementalPageMindMapBuilder builder = new IncrementalPageMindMapBuilder()
 
     static Page page(Long id) {
-        new Page(id, "Page $id", "Summary $id")
+        new Page(id, 1, "Page $id", "Summary $id")
     }
 
     def "should return single-node tree without step calls when only one page exists"() {

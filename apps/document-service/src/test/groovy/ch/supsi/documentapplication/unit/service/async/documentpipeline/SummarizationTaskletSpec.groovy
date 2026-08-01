@@ -70,7 +70,7 @@ class SummarizationTaskletSpec extends Specification {
         given:
         def chunkContext = TaskletTestSupport.chunkContext(
                 [(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId])
-        def existingPage = new Page(1L, "title", "summary")
+        def existingPage = new Page(1L, 1, "title", "summary")
         def pendingChunk = new PageChunk(2, "chunk content")
 
         when:
@@ -101,7 +101,7 @@ class SummarizationTaskletSpec extends Specification {
         1 * fileSystemDocumentStorage.listChunks(documentId, 5) >> [chunk]
         1 * summarisationClient.getResult("substantive page text") >> new ClientResult<>(
                 new PageSummarization(true, "Page title", "Page summary"), [usage])
-        1 * databaseDocumentStorage.create({ it.title == "Page title" && it.summary == "Page summary" }, 1L, databaseDocumentId) >> 99L
+        1 * databaseDocumentStorage.create({ it.title == "Page title" && it.summary == "Page summary" && it.pageNumber == 1 }, 1L, databaseDocumentId) >> 99L
         1 * aiUsageStorage.create("page", 99L, "summarize", usage)
         0 * aiUsageStorage.create("document", _, "summarize", _)
         1 * fileSystemDocumentStorage.deleteChunk(documentId, "1")
@@ -184,7 +184,7 @@ class SummarizationTaskletSpec extends Specification {
                 new PageSummarization(true, "Lesson", "Summary"), [usage])
         1 * summarisationClient.getResult("Index") >> new ClientResult<>(
                 new PageSummarization(false, "", ""), [usage])
-        1 * databaseDocumentStorage.create({ it.title == "Lesson" }, 1L, databaseDocumentId) >> 50L
+        1 * databaseDocumentStorage.create({ it.title == "Lesson" && it.pageNumber == 1 }, 1L, databaseDocumentId) >> 50L
         1 * aiUsageStorage.create("page", 50L, "summarize", usage)
         1 * aiUsageStorage.create("document", databaseDocumentId, "summarize", usage)
         1 * fileSystemDocumentStorage.deleteChunk(documentId, "1")

@@ -19,7 +19,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, "Topic A", "Summary A", ["label-a", "label-b"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", ["label-a", "label-b"])
 
         when:
         Long topicId = storage.create(topic, pageId)
@@ -33,6 +33,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         topics[0].summary == "Summary A"
         topics[0].labels.sort() == ["label-a", "label-b"]
         topics[0].page == pageId
+        topics[0].pageNumber == 1
     }
 
     def "should create topic and read it back by space id"() {
@@ -41,7 +42,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, "Topic B", "Summary B", ["space-label"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", ["space-label"])
 
         when:
         storage.create(topic, pageId)
@@ -59,12 +60,12 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, "Topic C", "Summary C", ["id-label"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic C", "Summary C", ["id-label"])
 
         when:
         Long firstId = storage.create(topic, pageId)
         Long secondId = storage.create(
-                new Topic(null, "notes.pdf", 1, "Topic D", "Summary D", ["id-label"]), pageId)
+                new Topic(null, "notes.pdf", 1, 1, "Topic D", "Summary D", ["id-label"]), pageId)
 
         then:
         firstId != null
@@ -80,7 +81,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long pageId = createPage(spaceId, jobId)
         (1..4).each { idx ->
             storage.create(
-                    new Topic(null, "notes.pdf", 1, "Topic $idx", "Summary $idx", ["label"]),
+                    new Topic(null, "notes.pdf", 1, 1, "Topic $idx", "Summary $idx", ["label"]),
                     pageId)
         }
 

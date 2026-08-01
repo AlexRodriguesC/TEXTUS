@@ -13,14 +13,14 @@ class MindMapAssemblerSpec extends Specification {
     MindMapAssembler assembler = new MindMapAssembler()
 
     static Topic topic(Long id, Long pageId) {
-        new Topic(id, "doc.pdf", pageId, "Title $id", "Summary $id", ["label"])
+        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"])
     }
 
     def "should assemble a mixed page and topic tree from a page tree"() {
         given:
         def pages = [
-                new Page(10L, "Intro", "Intro summary"),
-                new Page(20L, "Methods", "Methods summary")
+                new Page(10L, 1, "Intro", "Intro summary"),
+                new Page(20L, 1, "Methods", "Methods summary")
         ]
         def topics = [
                 topic(1L, 10L),
@@ -43,7 +43,7 @@ class MindMapAssemblerSpec extends Specification {
 
     def "should build page topic groups from pages and topics"() {
         given:
-        def pages = [new Page(10L, "A", "S"), new Page(20L, "B", "S")]
+        def pages = [new Page(10L, 1, "A", "S"), new Page(20L, 1, "B", "S")]
         def topics = [topic(1L, 10L), topic(2L, 10L), topic(3L, 20L)]
 
         when:

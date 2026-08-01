@@ -16,7 +16,7 @@ class PageServiceSpec extends Specification {
     def "should return pages when space belongs to owner"() {
         given:
         databaseSpaceStorage.read(10L) >> Optional.of(new Space(10L, "alice", "icon", "name", "desc"))
-        databaseDocumentStorage.getPagesBySpaceId(10L) >> [new SpacePage(1L, 5L, "Title", "Summary")]
+        databaseDocumentStorage.getPagesBySpaceId(10L) >> [new SpacePage(1L, 5L, 1, "Title", "Summary")]
 
         when:
         def result = service.getPagesBySpace("alice", 10L)

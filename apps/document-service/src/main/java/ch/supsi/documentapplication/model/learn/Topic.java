@@ -27,7 +27,13 @@ public class Topic {
 
     @ToString.Exclude
     @Setter
+    @JsonIgnore
     private Long page;
+
+    @ToString.Exclude
+    @Setter
+    @JsonIgnore
+    private Integer pageNumber;
 
     @ToString.Exclude
     @JsonPropertyDescription(

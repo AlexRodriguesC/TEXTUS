@@ -3,6 +3,7 @@ CREATE OR REPLACE FUNCTION documents.read_pages_by_space(p_space_id BIGINT)
             (
                 id           BIGINT,
                 document_id  BIGINT,
+                page_number  INTEGER,
                 title        TEXT,
                 summary      TEXT
             )
@@ -11,7 +12,7 @@ AS
 $$
 BEGIN
     RETURN QUERY
-        SELECT p.id, p.document_id, p.title, p.summary
+        SELECT p.id, p.document_id, p.page_number, p.title, p.summary
         FROM documents.page p
         WHERE p.space_id = p_space_id
         ORDER BY p.id;

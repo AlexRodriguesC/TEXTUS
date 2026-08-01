@@ -9,7 +9,7 @@ import {
   isInProgress,
 } from "@/lib/documentTaskUtils.ts";
 import { toDisplayTasks } from "@/lib/toDisplayTasks.ts";
-import { Check, RotateCcw } from "lucide-react";
+import {Check, RotateCcw, X} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {Marker, MarkerContent, MarkerIcon} from "@/components/ui/marker.tsx";
 import {cn} from "@/lib/utils.ts";
@@ -41,7 +41,9 @@ function DocumentRowStatus({
   const failed = isFailed(tasks);
   const displayName = truncateName(document.name);
 
-  const displayNameEl = <span className={cn("min-w-0 truncate uppercase", done ? "text-primary-foreground" : "")}>{displayName}</span>;
+  const displayNameEl = (
+      <span className="min-w-0 truncate uppercase">{displayName}</span>
+  );
   const deleteDocumentEl = (
       <DestructiveActionButton
           disabled={actionsDisabled}
@@ -52,34 +54,35 @@ function DocumentRowStatus({
 
 
   return (
-      <div className="flex flex-row w-full items-center justify-between">
-        <div className="flex flex-row gap-2 items-center min-w-0">
-          {done && (
-              <Marker role="status" className="w-full flex place-content-center items-center">
-                <MarkerIcon>
-                    <Check color={"green"} />
-                </MarkerIcon>
-                <MarkerContent className="flex items-center justify-between gap-2">
-                  {displayNameEl}
-                </MarkerContent>
-              </Marker>
-          )}
-          {inProgress && (
-              <Marker role="status" className="w-full flex place-content-center items-center">
-                <MarkerIcon>
-                  <Spinner />
-                </MarkerIcon>
-                <MarkerContent className="flex items-center justify-between gap-2 shimmer">
-                  <HintOverlay
+      <div className="flex flex-row w-full items-center">
+        <Marker
+            role="status"
+            className={cn(
+                "w-full justify-start",
+                done && "text-(--success)",
+                inProgress && "text-primary-background",
+                failed && "text-destructive",
+            )}
+        >
+          <MarkerIcon>
+            {done && <Check />}
+            {inProgress && <Spinner />}
+            {failed && <X />}
+          </MarkerIcon>
+          <MarkerContent className={cn(
+              "flex items-center justify-between gap-2",
+              inProgress && "shimmer",
+          )}>
+            {done ? displayNameEl : (
+                <HintOverlay
                     variant="panel"
                     trigger={displayNameEl}
                     className="w-fit max-h-80 overflow-hidden"
                     content={<ResourceProcessingStatus tasks={toDisplayTasks(tasks, t)} />}
-                  />
-                </MarkerContent>
-              </Marker>
-          )}
-        </div>
+                />
+            )}
+          </MarkerContent>
+        </Marker>
         <div className="flex flex-row gap-1 items-center shrink-0">
           {failed && (
               <Button

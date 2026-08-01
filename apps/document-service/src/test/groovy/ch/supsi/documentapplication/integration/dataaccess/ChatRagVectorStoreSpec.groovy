@@ -54,8 +54,8 @@ class ChatRagVectorStoreSpec extends DatabaseSpec {
         Long jobId = createBatchJobInstance()
         Long pageA = createPage(spaceA, jobId)
         Long pageB = createPage(spaceB, jobId)
-        Long topicA = storage.create(new Topic(null, "a.pdf", 1, "Space A Topic", "Alpha summary", []), pageA)
-        Long topicB = storage.create(new Topic(null, "b.pdf", 1, "Space B Topic", "Beta summary", []), pageB)
+        Long topicA = storage.create(new Topic(null, "a.pdf", 1, 1, "Space A Topic", "Alpha summary", []), pageA)
+        Long topicB = storage.create(new Topic(null, "b.pdf", 1, 1, "Space B Topic", "Beta summary", []), pageB)
 
         vectorStore.add([
                 topicDocument(topicA, pageA, spaceA, "Alpha summary"),
@@ -94,7 +94,7 @@ class ChatRagVectorStoreSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        storage.create(new Topic(null, "notes.pdf", 1, "Fallback Topic", "Fallback summary", []), pageId)
+        storage.create(new Topic(null, "notes.pdf", 1, 1, "Fallback Topic", "Fallback summary", []), pageId)
         def processor = new FallbackTopicDocumentPostProcessor(storage, spaceId, 3)
         def query = Query.builder().text("unrelated question").build()
 

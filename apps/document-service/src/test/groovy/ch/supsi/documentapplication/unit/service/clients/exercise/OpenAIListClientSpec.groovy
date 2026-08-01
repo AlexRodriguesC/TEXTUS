@@ -48,7 +48,7 @@ class OpenAIListClientSpec extends Specification {
 
     def "should call chatClient and return the generated list exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, "Processes", "Process summary", ["steps"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Processes", "Process summary", ["steps"])
         def expectedList = new ch.supsi.documentapplication.model.learn.exercise.List()
         expectedList.setRequest("Order these steps")
         expectedList.setAnswer(["step1", "step2", "step3"])

@@ -6,13 +6,10 @@ import ch.supsi.documentapplication.model.FsDocument;
 import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
 import ch.supsi.documentapplication.service.document.DocumentTaskProgressService;
+import ch.supsi.documentapplication.service.pdf.PdfPageTextExtractor;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -70,20 +67,6 @@ public class SegmentationTasklet extends ProcessingTasklet {
     }
 
     private List<String> extractContents(FsDocument fsDocument) throws IOException {
-        ArrayList<String> contents = new ArrayList<>();
-
-        try (PDDocument pdfDocument = Loader.loadPDF(fsDocument.getBytes())) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            int pageCount = pdfDocument.getNumberOfPages();
-
-            for (int page = 1; page <= pageCount; page++) {
-                stripper.setStartPage(page);
-                stripper.setEndPage(page);
-
-                String rawPageText = stripper.getText(pdfDocument);
-                contents.add(rawPageText);
-            }
-        }
-        return contents;
+        return PdfPageTextExtractor.extractPageTexts(fsDocument.getBytes());
     }
 }

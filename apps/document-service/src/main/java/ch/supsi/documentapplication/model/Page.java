@@ -14,6 +14,9 @@ public class Page {
     @JsonIgnore
     private Long id;
 
+    @JsonIgnore
+    private Integer pageNumber;
+
     @JsonPropertyDescription(
             "A concise title (5 to 15 words) accurately reflecting the page's main subject, grounded only in the source document.")
     private String title;

@@ -49,7 +49,7 @@ class TopicControllerSpec extends Specification {
     def "should return topics for space"() {
         given:
         topicService.getTopicsBySpace("alice", 1L) >> [
-                new Topic(10L, "doc.pdf", 1, "Title", "Summary", ["label"])
+                new Topic(10L, "doc.pdf", 1, 1, "Title", "Summary", ["label"])
         ]
 
         when:
@@ -58,6 +58,7 @@ class TopicControllerSpec extends Specification {
         then:
         result.andExpect(status().isOk())
         result.andExpect(jsonPath('$.topics[0].id').value(10))
+        result.andExpect(jsonPath('$.topics[0].page').value(1))
         result.andExpect(jsonPath('$.topics[0].title').value("Title"))
     }
 }

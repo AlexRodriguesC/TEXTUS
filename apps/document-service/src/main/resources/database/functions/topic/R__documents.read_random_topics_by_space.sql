@@ -8,6 +8,7 @@ CREATE OR REPLACE FUNCTION documents.read_random_topics_by_space(
     RETURNS TABLE (
                       id            BIGINT,
                       page_id       BIGINT,
+                      page_number   INTEGER,
                       src_file_name TEXT,
                       title         TEXT,
                       summary       TEXT,
@@ -18,6 +19,7 @@ AS $$
 SELECT
     t.id,
     t.page_id,
+    p.page_number,
     d.name AS src_file_name,
     t.title,
     t.summary,
@@ -28,7 +30,7 @@ FROM documents.topic t
          JOIN documents.page p ON p.id = t.page_id
          JOIN documents.document d ON d.id = p.document_id
 WHERE p.space_id = p_space_id
-GROUP BY t.id, t.page_id, d.name, t.title, t.summary
+GROUP BY t.id, t.page_id, p.page_number, d.name, t.title, t.summary
 ORDER BY random()
 LIMIT p_limit
 $$;

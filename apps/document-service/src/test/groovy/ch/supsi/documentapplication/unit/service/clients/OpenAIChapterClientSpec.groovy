@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.service.clients
 import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest
 import ch.supsi.documentapplication.service.async.learningpipeline.Label
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient
 import ch.supsi.documentapplication.service.validator.ChapterValidator
@@ -31,6 +32,7 @@ class OpenAIChapterClientSpec extends Specification {
     PromptTemplate feedbackPromptTemplate = Mock()
     ObjectMapper objectMapper = new ObjectMapper()
     ChapterValidator chapterValidator = new ChapterValidator()
+    Map capturedPromptParams
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
@@ -40,6 +42,11 @@ class OpenAIChapterClientSpec extends Specification {
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
 
         requestSpec.options(_) >> requestSpec
+        capturedPromptParams = null
+        promptTemplate.render(_ as Map) >> { Map params ->
+            capturedPromptParams = new HashMap(params)
+            "rendered prompt"
+        }
 
         client = new OpenAIChapterClient(
                 objectMapper,
@@ -60,22 +67,52 @@ class OpenAIChapterClientSpec extends Specification {
                 new Label(2L, "basics"),
                 new Label(3L, "advanced")
         ]
+        def request = new ChapterGenerationRequest(labels, 5)
         def expectedChapters = [
                 new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L, 3L])
         ]
 
-        promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
         callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedChapters)
 
         when:
-        def result = client.getResult(labels)
+        def result = client.getResult(request)
 
         then:
         result.result()*.index == [0]
         result.result()*.labels == [[1L, 2L, 3L]]
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
+        capturedPromptParams.max_chapters == 5
+        capturedPromptParams.labels == objectMapper.writeValueAsString(labels)
+        0 * feedbackPromptTemplate._
+    }
+
+    def "should pass the computed chapter cap into the prompt template"() {
+        given:
+        def labels = [
+                new Label(1L, "intro"),
+                new Label(2L, "basics"),
+                new Label(3L, "advanced"),
+                new Label(4L, "practice")
+        ]
+        def request = new ChapterGenerationRequest(labels, 2)
+        def expectedChapters = [
+                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L]),
+                new Chapter(1, "Application", "Applied practice overview", [3L, 4L])
+        ]
+
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedChapters)
+
+        when:
+        def result = client.getResult(request)
+
+        then:
+        result.result()*.index == [0, 1]
+        capturedPromptParams.max_chapters == 2
+        capturedPromptParams.containsKey("labels")
         0 * feedbackPromptTemplate._
     }
 
@@ -86,18 +123,18 @@ class OpenAIChapterClientSpec extends Specification {
                 new Label(2L, "basics"),
                 new Label(3L, "advanced")
         ]
+        def request = new ChapterGenerationRequest(labels, 3)
         def chaptersWithDuplicates = [
                 new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L]),
                 new Chapter(1, "Deep Dive", "Advanced topics overview", [2L, 3L])
         ]
 
-        promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
         callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
 
         when:
-        def result = client.getResult(labels)
+        def result = client.getResult(request)
 
         then:
         result.result()*.index == [0, 1]
@@ -113,17 +150,17 @@ class OpenAIChapterClientSpec extends Specification {
                 new Label(1L, "intro"),
                 new Label(2L, "basics")
         ]
+        def request = new ChapterGenerationRequest(labels, 2)
         def chaptersWithExtras = [
                 new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L, 99L])
         ]
 
-        promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
         callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
 
         when:
-        def result = client.getResult(labels)
+        def result = client.getResult(request)
 
         then:
         result.result()*.index == [0]
@@ -138,18 +175,18 @@ class OpenAIChapterClientSpec extends Specification {
                 new Label(1L, "intro"),
                 new Label(2L, "basics")
         ]
+        def request = new ChapterGenerationRequest(labels, 2)
         def chaptersWithExtras = [
                 new Chapter(0, "Extras Only", "Only extra labels here", [99L]),
                 new Chapter(1, "Foundations", "Core concepts overview", [1L, 2L])
         ]
 
-        promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
         callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
 
         when:
-        def result = client.getResult(labels)
+        def result = client.getResult(request)
 
         then:
         result.result()*.index == [0]
@@ -164,19 +201,19 @@ class OpenAIChapterClientSpec extends Specification {
                 new Label(1L, "intro"),
                 new Label(2L, "basics")
         ]
+        def request = new ChapterGenerationRequest(labels, 2)
         def chaptersWithDuplicates = [
                 new Chapter(0, "Part One", "First part overview", [1L]),
                 new Chapter(1, "Part Two", "Second part overview", [2L]),
                 new Chapter(2, "Duplicate", "Duplicate label only", [1L])
         ]
 
-        promptTemplate.render(_ as Map) >> "rendered prompt"
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
         callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
 
         when:
-        def result = client.getResult(labels)
+        def result = client.getResult(request)
 
         then:
         result.result()*.index == [0, 1]

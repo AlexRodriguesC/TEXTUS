@@ -31,8 +31,8 @@ class FallbackTopicDocumentPostProcessorSpec extends Specification {
         given:
         def query = Query.builder().text("question").build()
         def topics = [
-                new Topic(1L, null, 10L, "Topic One", "Summary one", []),
-                new Topic(2L, null, 11L, "Topic Two", null, []),
+                new Topic(1L, null, 10L, 1, "Topic One", "Summary one", []),
+                new Topic(2L, null, 11L, 1, "Topic Two", null, []),
         ]
 
         when:

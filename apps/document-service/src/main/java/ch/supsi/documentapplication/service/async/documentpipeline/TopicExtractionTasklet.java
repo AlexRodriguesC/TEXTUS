@@ -6,7 +6,6 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Page;
-import ch.supsi.documentapplication.model.SpacePage;
 import ch.supsi.documentapplication.model.TaskType;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
@@ -15,7 +14,6 @@ import ch.supsi.documentapplication.service.document.DocumentTaskProgressService
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,17 +90,18 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         int maxPagesPerStep = appProperties.getMaxChunksPerStep();
         int maxParallelism = appProperties.getMaxParallelism();
 
-        List<Page> pendingPages = listPendingPages();
+        List<Page> documentPages = databaseDocumentStorage.getPages(databaseDocumentId);
+        Set<Long> documentPageIds = getDocumentPageIds(documentPages);
+        List<Page> pendingPages = listPendingPages(documentPages);
         if (pendingPages.isEmpty()) {
             log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
             documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC);
             return RepeatStatus.FINISHED;
         }
 
-        Set<Long> documentPageIds = getDocumentPageIds(databaseDocumentId);
-        AtomicInteger documentProgress = new AtomicInteger(getDocumentTopicProgress(databaseDocumentId));
+        AtomicInteger documentProgress = new AtomicInteger(getDocumentTopicProgress(documentPages));
 
-        List<Topic> existingTopics = new ArrayList<>(databaseTopicStorage.getBySpaceId(spaceId));
+        List<Topic> existingTopics = listExistingTopics(documentPages);
 
         try (ExecutorService executor = Executors.newFixedThreadPool(maxParallelism)) {
             while (processedThisStep < maxPagesPerStep && !pendingPages.isEmpty()) {
@@ -119,7 +118,8 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
             }
         }
 
-        if (listPendingPages().isEmpty()) {
+        documentPages = databaseDocumentStorage.getPages(databaseDocumentId);
+        if (listPendingPages(documentPages).isEmpty()) {
             log.debug("Finished topic extraction step for space with spaceId {}", spaceId);
             documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC);
             return RepeatStatus.FINISHED;
@@ -133,7 +133,8 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
             return;
         }
 
-        int pendingCount = countPendingDocumentPages(databaseDocumentId);
+        List<Page> documentPages = databaseDocumentStorage.getPages(databaseDocumentId);
+        int pendingCount = countPendingDocumentPages(documentPages);
         int maxProgress = Math.max(1, pendingCount);
         documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, maxProgress);
         stepExecutionContext.put(TOPIC_TASK_STARTED, true);
@@ -143,34 +144,34 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
         }
     }
 
-    private int countPendingDocumentPages(Long databaseDocumentId) {
-        return (int) databaseDocumentStorage.getPages(databaseDocumentId).stream()
+    private int countPendingDocumentPages(List<Page> documentPages) {
+        return (int) documentPages.stream()
                 .filter(page -> databaseTopicStorage.getByPageId(page.getId()).isEmpty())
                 .count();
     }
 
-    private int getDocumentTopicProgress(Long databaseDocumentId) {
-        int pending = countPendingDocumentPages(databaseDocumentId);
-        int total = databaseDocumentStorage.getPages(databaseDocumentId).size();
+    private int getDocumentTopicProgress(List<Page> documentPages) {
+        int pending = countPendingDocumentPages(documentPages);
+        int total = documentPages.size();
         return Math.max(0, total - pending);
     }
 
-    private Set<Long> getDocumentPageIds(Long databaseDocumentId) {
-        return new HashSet<>(databaseDocumentStorage.getPages(databaseDocumentId).stream()
-                .map(Page::getId)
-                .toList());
+    private Set<Long> getDocumentPageIds(List<Page> documentPages) {
+        return Set.copyOf(documentPages.stream().map(Page::getId).toList());
     }
 
-    private List<Page> listPendingPages() {
-        return databaseDocumentStorage.getPagesBySpaceId(spaceId).stream()
-                .filter(spacePage ->
-                        databaseTopicStorage.getByPageId(spacePage.getId()).isEmpty())
-                .map(this::toPage)
+    private List<Page> listPendingPages(List<Page> documentPages) {
+        return documentPages.stream()
+                .filter(page -> databaseTopicStorage.getByPageId(page.getId()).isEmpty())
                 .toList();
     }
 
-    private Page toPage(SpacePage spacePage) {
-        return new Page(spacePage.getId(), spacePage.getTitle(), spacePage.getSummary());
+    private List<Topic> listExistingTopics(List<Page> documentPages) {
+        List<Topic> existingTopics = new ArrayList<>();
+        for (Page page : documentPages) {
+            existingTopics.addAll(databaseTopicStorage.getByPageId(page.getId()));
+        }
+        return existingTopics;
     }
 
     private void extractBatchInParallel(
@@ -191,13 +192,20 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
 
             for (int i = 0; i < batch.size(); i++) {
                 Page page = batch.get(i);
+                if (!documentPageIds.contains(page.getId())) {
+                    throw new IllegalStateException("Refusing to extract topics for page %d outside document %d"
+                            .formatted(page.getId(), databaseDocumentId));
+                }
+
                 ClientResult<List<Topic>> extractionResult = futures.get(i).get();
                 List<Topic> topics = extractionResult.result();
-                existingTopics.addAll(topics);
 
                 List<Document> documents = new ArrayList<>();
                 for (Topic topic : topics) {
+                    topic.setPage(page.getId());
+                    topic.setPageNumber(page.getPageNumber());
                     Long topicId = databaseTopicStorage.create(topic, page.getId());
+                    existingTopics.add(topic);
                     String summary = topic.getSummary();
                     if (!StringUtils.hasText(summary)) {
                         log.warn(
@@ -216,10 +224,8 @@ public class TopicExtractionTasklet extends ProcessingTasklet {
                         .usages()
                         .forEach(usage -> aiUsageStorage.create("page", page.getId(), "topic_extract", usage));
 
-                if (documentPageIds.contains(page.getId())) {
-                    int progress = documentProgress.incrementAndGet();
-                    documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.TOPIC, progress);
-                }
+                int progress = documentProgress.incrementAndGet();
+                documentTaskProgressService.updateProgress(databaseDocumentId, TaskType.TOPIC, progress);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

@@ -60,6 +60,8 @@ describe("DocumentRowStatus", () => {
     );
 
     expect(screen.getByTestId("spinner")).toBeInTheDocument();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getByRole("status")).toHaveClass("text-primary");
     expect(screen.getByText("sample-document.pdf")).toHaveAttribute(
       "data-slot",
       "tooltip-trigger",
@@ -79,6 +81,8 @@ describe("DocumentRowStatus", () => {
 
     expect(screen.queryByTestId("spinner")).not.toBeInTheDocument();
     expect(screen.queryByTestId("processing-status")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getByRole("status")).toHaveClass("text-(--success)");
   });
 
   it("should show retry action without processing tooltip when failed", () => {
@@ -90,5 +94,7 @@ describe("DocumentRowStatus", () => {
 
     expect(screen.getByTitle("documents.retry.action")).toBeInTheDocument();
     expect(screen.queryByTestId("processing-status")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.getByRole("status")).toHaveClass("text-destructive");
   });
 });

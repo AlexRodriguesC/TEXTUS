@@ -32,6 +32,8 @@ Interpretation rules:
 - If a coherent cluster has fewer than 3 labels, merge it into the most semantically related neighboring chapter rather than leaving it undersized.
 - Avoid chapters with more than 10 labels; split into multiple sequential chapters if needed, provided each resulting chapter still contains at least 3 labels.
 - If splitting a chapter would produce any sub-chapter with fewer than 3 labels, do not split it; keep it as one chapter instead.
+- Prefer fewer chapters over more chapters when grouping is ambiguous.
+- Never produce more chapters than the MAX_CHAPTERS value provided in the user prompt.
 
 Output schema:
 {

@@ -54,12 +54,12 @@ class OpenAITopicExtractionClientSpec extends Specification {
     }
 
     static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
-        return new Topic(id, "1", 1, title, summary, labels)
+        return new Topic(id, "1", 1, 1, title, summary, labels)
     }
 
     def "should extract distinct labels from existing topics, build prompt and return extracted topics"() {
         given: "a page and existing topics with overlapping labels"
-        def page = new Page(1L, "title1", "page summary text")
+        def page = new Page(1L, 1, "title1", "page summary text")
         def existingTopics = [
                 topic(1L, "topicA",
                         "summ", ["label1", "label2"]),
@@ -93,7 +93,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {
         given: "a page and empty existing topics"
-        def page = new Page(1L, "title1", "page summary text")
+        def page = new Page(1L, 1, "title1", "page summary text")
         def input = Pair.of(page, [])
 
         promptTemplate.render(_ as Map) >> "rendered prompt"
@@ -109,7 +109,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
 
     def "should handle empty existing topics without labels"() {
         given: "a page with no existing topics"
-        def page = new Page(1L, "title1", "page summary text")
+        def page = new Page(1L, 1, "title1", "page summary text")
         def input = Pair.of(page, [])
         def expectedTopics = [topic(1L, "topic1", "summ", ["label1"])]
 

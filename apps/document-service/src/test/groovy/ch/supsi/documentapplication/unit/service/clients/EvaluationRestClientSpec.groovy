@@ -77,7 +77,7 @@ class EvaluationRestClientSpec extends Specification {
 
     def "should submit topic list and hallucination evaluations"() {
         given:
-        def topics = [new Topic(1L, "file", 1, "Topic A", "Summary A", ["a"])]
+        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
         def clientSpy = Spy(client)
 
         when:

@@ -15,6 +15,7 @@ public class AppProperties {
 
     private int maxChunksPerStep;
     private int maxParallelism;
+    private int maxChapters;
 
     private String tessdataPath;
     private int ocrThreshold;

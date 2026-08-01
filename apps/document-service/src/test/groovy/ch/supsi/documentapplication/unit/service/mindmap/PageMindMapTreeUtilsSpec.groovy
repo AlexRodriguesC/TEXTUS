@@ -40,7 +40,7 @@ class PageMindMapTreeUtilsSpec extends Specification {
 
     def "should sanitize duplicate and extra page ids"() {
         given:
-        def pages = [new Page(10L, "A", "S"), new Page(20L, "B", "S")]
+        def pages = [new Page(10L, 1, "A", "S"), new Page(20L, 1, "B", "S")]
         def pageMindMap = new PageMindMap()
         pageMindMap.root = new PageMindMapNode(10L, [
                 new PageMindMapNode(10L),

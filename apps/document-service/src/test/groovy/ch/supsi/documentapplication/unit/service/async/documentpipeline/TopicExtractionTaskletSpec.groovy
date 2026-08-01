@@ -6,7 +6,6 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
 import ch.supsi.documentapplication.model.ClientResult
 import ch.supsi.documentapplication.model.Page
-import ch.supsi.documentapplication.model.SpacePage
 import ch.supsi.documentapplication.model.TaskType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.async.documentpipeline.SetupTasklet
@@ -59,7 +58,7 @@ class TopicExtractionTaskletSpec extends Specification {
         ReflectionTestUtils.setField(topicExtractionTasklet, "spaceId", spaceId)
     }
 
-    def "should return FINISHED when no pages exist in space"() {
+    def "should return FINISHED when no pages exist in document"() {
         given:
         def chunkContext = chunkContextWithDocumentId()
 
@@ -67,8 +66,9 @@ class TopicExtractionTaskletSpec extends Specification {
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
 
         then:
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
         _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
-        1 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> []
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
         2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
@@ -76,19 +76,20 @@ class TopicExtractionTaskletSpec extends Specification {
         status == RepeatStatus.FINISHED
     }
 
-    def "should return FINISHED when all pages already have topics"() {
+    def "should return FINISHED when all document pages already have topics"() {
         given:
         def chunkContext = chunkContextWithDocumentId()
-        def pages = [spacePage(1L), spacePage(2L)]
-        def existingTopic = topic(10L, "summary")
+        def pages = [page(1L, 1), page(2L, 2)]
+        def existingTopic = topic(10L, 1L, 1, "summary")
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
 
         then:
-        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
-        1 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
-        2 * databaseTopicStorage.getByPageId(_) >> [existingTopic]
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> pages
+        _ * databaseTopicStorage.getByPageId(_) >> [existingTopic]
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
         2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         0 * topicExtractionClient._
@@ -99,28 +100,33 @@ class TopicExtractionTaskletSpec extends Specification {
     def "should return CONTINUABLE when pending pages exceed maxChunksPerStep"() {
         given:
         def chunkContext = chunkContextWithDocumentId()
-        def pages = [spacePage(1L), spacePage(2L), spacePage(3L)]
+        def pages = [page(1L, 1), page(2L, 2), page(3L, 3)]
         def processedPageIds = [] as Set<Long>
-        def extractedTopic = topic(null, "summary")
+        def extractedTopic = topic(null, 999L, 99, "summary")
         def topicIdSeq = 1000L
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
 
         then:
-        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
-        2 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> pages
         _ * databaseTopicStorage.getByPageId(_) >> { Long pageId ->
             processedPageIds.contains(pageId) ? [extractedTopic] : []
         }
-        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
-        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
-        1 * databaseTopicStorage.getBySpaceId(spaceId) >> []
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 3)
+        0 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         2 * topicExtractionClient.getResult(_ as Pair) >> { Pair<Page, List<Topic>> input ->
             processedPageIds.add(input.left.id)
             new ClientResult<>([extractedTopic], [])
         }
-        2 * databaseTopicStorage.create(extractedTopic, _) >> { Topic t, Long pageId -> topicIdSeq++ }
+        2 * databaseTopicStorage.create({ Topic t ->
+            processedPageIds.contains(t.page) && t.pageNumber == pages.find { it.id == t.page }.pageNumber
+        }, _) >> { Topic t, Long pageId ->
+            assert t.page == pageId
+            topicIdSeq++
+        }
         2 * vectorStore.add({ args ->
             def docs = args as List<Document>
             docs.size() == 1 &&
@@ -136,31 +142,72 @@ class TopicExtractionTaskletSpec extends Specification {
     def "should skip pages that already have topics on resume"() {
         given:
         def chunkContext = chunkContextWithDocumentId()
-        def pages = [spacePage(1L), spacePage(2L), spacePage(3L), spacePage(4L)]
+        def pages = [page(1L, 1), page(2L, 2), page(3L, 3), page(4L, 4)]
         def processedPageIds = [2L] as Set<Long>
-        def existingTopic = topic(99L, "existing")
-        def extractedTopic = topic(null, "summary")
+        def existingTopic = topic(99L, 2L, 2, "existing")
+        def extractedTopic = topic(null, 999L, 99, "summary")
         def topicIdSeq = 2000L
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
 
         then:
-        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
-        2 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> pages
         _ * databaseTopicStorage.getByPageId(_) >> { Long pageId ->
             processedPageIds.contains(pageId) ? [existingTopic] : []
         }
-        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
-        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
-        1 * databaseTopicStorage.getBySpaceId(spaceId) >> [existingTopic]
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 3)
+        0 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         2 * topicExtractionClient.getResult(_ as Pair) >> { Pair<Page, List<Topic>> input ->
             processedPageIds.add(input.left.id)
             new ClientResult<>([extractedTopic], [])
         }
-        2 * databaseTopicStorage.create(extractedTopic, _) >> { Topic t, Long pageId -> topicIdSeq++ }
+        2 * databaseTopicStorage.create({ Topic t ->
+            t.page == t.page && processedPageIds.contains(t.page)
+        }, _) >> { Topic t, Long pageId ->
+            assert t.page == pageId
+            assert t.pageNumber == pages.find { it.id == pageId }.pageNumber
+            topicIdSeq++
+        }
         2 * vectorStore.add(_ as List)
         status == RepeatStatus.CONTINUABLE
+    }
+
+    def "should overwrite hallucinated page fields before persistence"() {
+        given:
+        appProperties.maxChunksPerStep = 1
+        appProperties.maxParallelism = 1
+        def chunkContext = chunkContextWithDocumentId()
+        def pages = [page(11L, 3)]
+        def hallucinated = topic(null, 847L, 999, "useful summary")
+        def created = false
+
+        when:
+        RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
+
+        then:
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> pages
+        _ * databaseTopicStorage.getByPageId(11L) >> { created ? [hallucinated] : [] }
+        1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
+        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
+        1 * topicExtractionClient.getResult(_ as Pair) >> new ClientResult<>([hallucinated], [])
+        1 * databaseTopicStorage.create({ Topic t ->
+            t.page == 11L && t.pageNumber == 3
+        }, 11L) >> {
+            created = true
+            42L
+        }
+        1 * vectorStore.add({ args ->
+            def docs = args as List<Document>
+            docs.size() == 1 &&
+                    docs[0].getMetadata().get("topicId") == 42L &&
+                    docs[0].getMetadata().get("pageId") == 11L
+        })
+        status == RepeatStatus.FINISHED
     }
 
     def "should batch vectorStore.add once per page and skip blank summaries"() {
@@ -168,31 +215,31 @@ class TopicExtractionTaskletSpec extends Specification {
         appProperties.maxChunksPerStep = 1
         appProperties.maxParallelism = 1
         def chunkContext = chunkContextWithDocumentId()
-        def pages = [spacePage(1L)]
+        def pages = [page(1L, 1)]
         def processedPageIds = [] as Set<Long>
-        def withSummary = topic(null, "useful summary")
-        def blankSummary = topic(null, "  ")
-        def nullSummary = new Topic(null, null, null, "empty", null, ["label"])
+        def withSummary = topic(null, null, null, "useful summary")
+        def blankSummary = topic(null, null, null, "  ")
+        def nullSummary = new Topic(null, null, null, null, "empty", null, ["label"])
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
 
         then:
-        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> []
-        2 * databaseDocumentStorage.getPagesBySpaceId(spaceId) >> pages
+        0 * databaseDocumentStorage.getPagesBySpaceId(_)
+        0 * databaseTopicStorage.getBySpaceId(_)
+        _ * databaseDocumentStorage.getPages(databaseDocumentId) >> pages
         _ * databaseTopicStorage.getByPageId(_) >> { Long pageId ->
             processedPageIds.contains(pageId) ? [withSummary] : []
         }
         1 * documentTaskProgressService.startTask(databaseDocumentId, TaskType.TOPIC, 1)
-        2 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
-        1 * databaseTopicStorage.getBySpaceId(spaceId) >> []
+        1 * documentTaskProgressService.completeTask(databaseDocumentId, TaskType.TOPIC)
         1 * topicExtractionClient.getResult(_ as Pair) >> { Pair<Page, List<Topic>> input ->
             processedPageIds.add(input.left.id)
             new ClientResult<>([withSummary, blankSummary, nullSummary], [])
         }
-        1 * databaseTopicStorage.create(withSummary, 1L) >> 11L
-        1 * databaseTopicStorage.create(blankSummary, 1L) >> 12L
-        1 * databaseTopicStorage.create(nullSummary, 1L) >> 13L
+        1 * databaseTopicStorage.create({ Topic t -> t.is(withSummary) && t.page == 1L && t.pageNumber == 1 }, 1L) >> 11L
+        1 * databaseTopicStorage.create({ Topic t -> t.is(blankSummary) && t.page == 1L && t.pageNumber == 1 }, 1L) >> 12L
+        1 * databaseTopicStorage.create({ Topic t -> t.is(nullSummary) && t.page == 1L && t.pageNumber == 1 }, 1L) >> 13L
         1 * vectorStore.add({ args ->
             def docs = args as List<Document>
             docs.size() == 1 &&
@@ -209,11 +256,11 @@ class TopicExtractionTaskletSpec extends Specification {
         TaskletTestSupport.chunkContext([(SetupTasklet.DATABASE_DOCUMENT_ID): databaseDocumentId])
     }
 
-    private static SpacePage spacePage(Long id) {
-        new SpacePage(id, 100L, "title-$id", "summary-$id")
+    private static Page page(Long id, Integer pageNumber) {
+        new Page(id, pageNumber, "title-$id", "summary-$id")
     }
 
-    private static Topic topic(Long id, String summary) {
-        new Topic(id, null, null, "topic", summary, ["label"])
+    private static Topic topic(Long id, Long pageId, Integer pageNumber, String summary) {
+        new Topic(id, null, pageId, pageNumber, "topic", summary, ["label"])
     }
 }

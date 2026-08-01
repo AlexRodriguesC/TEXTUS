@@ -115,8 +115,8 @@ trait IntegrationFixture {
         Long documentId = createDocument(spaceId, jobId)
         jdbcClient
                 .sql("""
-                INSERT INTO documents.page (space_id, document_id, title, summary)
-                VALUES (:spaceId, :documentId, 'test title', 'test summary')
+                INSERT INTO documents.page (space_id, document_id, page_number, title, summary)
+                VALUES (:spaceId, :documentId, 1, 'test title', 'test summary')
                 RETURNING id
                 """)
                 .param("spaceId", spaceId)
@@ -127,7 +127,7 @@ trait IntegrationFixture {
 
     Long createTopic(Long spaceId, Long jobId, String title = "Topic title") {
         Long pageId = createPage(spaceId, jobId)
-        Topic topic = new Topic(null, "a.pdf", 1, title, "Topic summary", ["label1", "label2"])
+        Topic topic = new Topic(null, "a.pdf", 1, 1, title, "Topic summary", ["label1", "label2"])
         new DatabaseTopicStorage(jdbcClient).create(topic, pageId)
         jdbcClient
                 .sql("SELECT id FROM documents.topic WHERE page_id = :pageId")

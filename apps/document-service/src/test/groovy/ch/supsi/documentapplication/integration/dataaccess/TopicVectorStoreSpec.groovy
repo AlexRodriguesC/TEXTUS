@@ -49,7 +49,7 @@ class TopicVectorStoreSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, "Topic A", "Summary for embedding", ["label-a"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary for embedding", ["label-a"])
 
         when:
         Long topicId = storage.create(topic, pageId)

@@ -29,7 +29,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         def spaceId = databaseSpaceStorage.create(
                 new Space(user.getUsername(), "abc", "space1", "description1"))
         def documentId = storage.create(spaceId, jobId(), "abc")
-        def page = new Page(null, "title1", "summary1")
+        def page = new Page(null, 1, "title1", "summary1")
 
         when: "creating a page for that document"
         def pageId = storage.create(page, spaceId, documentId)
@@ -43,6 +43,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         pages[0].id == pageId
         pages[0].title == "title1"
         pages[0].summary == "summary1"
+        pages[0].pageNumber == 1
     }
 
     def "should throw if space does not exist for page creation"() {
@@ -51,7 +52,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         def spaceId = databaseSpaceStorage.create(
                 new Space(user.username, "def", "space2", "description2"))
         def documentId = storage.create(spaceId, jobId(), "abc")
-        def page = new Page(null, "title2", "summary2")
+        def page = new Page(null, 1, "title2", "summary2")
         def nonExistingSpaceId = -1L
 
         when: "creating a page with a non-existing space id"
@@ -66,7 +67,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         def user = databaseUserStorage.createUser(new User("user3", "pwd"))
         def spaceId = databaseSpaceStorage.create(
                 new Space(user.username, "abc", "space3", "description3"))
-        def page = new Page(null, "title3", "summary3")
+        def page = new Page(null, 1, "title3", "summary3")
         def nonExistingDocumentId = -1L
 
         when: "creating a page with a non-existing document id"
@@ -124,8 +125,8 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         def spaceId = databaseSpaceStorage.create(
                 new Space(user.username, "abc", "space5", "description5"))
         def documentId = storage.create(spaceId, jobId(), "abc")
-        def page1 = new Page(null, "title5a", "summary5a")
-        def page2 = new Page(null, "title5b", "summary5b")
+        def page1 = new Page(null, 1, "title5a", "summary5a")
+        def page2 = new Page(null, 1, "title5b", "summary5b")
         def pageId1 = storage.create(page1, spaceId, documentId)
         def pageId2 = storage.create(page2, spaceId, documentId)
 
@@ -136,6 +137,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         pages.size() == 2
         pages*.id as Set == [pageId1, pageId2] as Set
         pages*.title as Set == ["title5a", "title5b"] as Set
+        pages*.pageNumber as Set == [1] as Set
     }
 
     def "should return empty list if document doesnt exist"() {

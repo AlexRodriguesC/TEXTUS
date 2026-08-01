@@ -17,7 +17,7 @@ class TopicServiceSpec extends Specification {
 
     def "should return topics for space owner"() {
         given:
-        def topics = [new Topic(1L, "a.pdf", 1, "title", "summary", [])]
+        def topics = [new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])]
 
         when:
         def result = service.getTopicsBySpace("alice", 10L)

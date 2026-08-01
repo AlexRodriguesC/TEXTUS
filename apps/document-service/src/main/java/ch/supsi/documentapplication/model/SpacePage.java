@@ -8,6 +8,7 @@ import lombok.Getter;
 public class SpacePage {
     private Long id;
     private Long documentId;
+    private Integer pageNumber;
     private String title;
     private String summary;
 }

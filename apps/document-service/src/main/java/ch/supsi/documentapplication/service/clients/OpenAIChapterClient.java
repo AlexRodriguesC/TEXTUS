@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.model.AiUsage;
 import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest;
 import ch.supsi.documentapplication.service.async.learningpipeline.Label;
 import ch.supsi.documentapplication.service.validator.ChapterValidator;
 import java.util.*;
@@ -17,9 +18,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Chapter>> {
+public class OpenAIChapterClient extends FeedbackLoopClient<ChapterGenerationRequest, List<Chapter>> {
 
     private static final String LABELS = "labels";
+    private static final String MAX_CHAPTERS = "max_chapters";
     private static final String CHAPTERS = "chapters";
     private static final String MISSING_LABEL_IDS = "missing_label_ids";
 
@@ -54,16 +56,18 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
     }
 
     @Override
-    protected ClientResult<List<Chapter>> call(List<Label> input) {
+    protected ClientResult<List<Chapter>> call(ChapterGenerationRequest input) {
+        List<Label> labels = input.labels();
         Map<String, Object> params = new HashMap<>();
-        params.put(LABELS, objectMapper.writeValueAsString(input));
+        params.put(LABELS, objectMapper.writeValueAsString(labels));
+        params.put(MAX_CHAPTERS, input.maxChapters());
         var prompt = getPrompt(params);
         var primaryResult = invoke(prompt, new ParameterizedTypeReference<List<Chapter>>() {});
 
         List<AiUsage> usages = new ArrayList<>(primaryResult.usages());
         List<Chapter> chapters = primaryResult.result();
 
-        var feedback = validator.extractFeedback(chapters, input);
+        var feedback = validator.extractFeedback(chapters, labels);
         if (!feedback.isValid() && chapters != null) {
             List<ChapterSkeleton> skeletons = chapters.stream()
                     .map(c -> new ChapterSkeleton(c.getIndex(), c.getTitle(), c.getDescription()))
@@ -95,14 +99,14 @@ public class OpenAIChapterClient extends FeedbackLoopClient<List<Label>, List<Ch
         }
 
         if (chapters != null) {
-            var postFeedback = validator.extractFeedback(chapters, input);
+            var postFeedback = validator.extractFeedback(chapters, labels);
             if (!postFeedback.duplicateLabelIds().isEmpty()
                     || !postFeedback.extraLabelIds().isEmpty()) {
-                chapters = sanitizeChapters(chapters, input);
+                chapters = sanitizeChapters(chapters, labels);
             }
         }
 
-        validator.validate(chapters, input);
+        validator.validate(chapters, labels);
         return withUsages(chapters, usages);
     }
 

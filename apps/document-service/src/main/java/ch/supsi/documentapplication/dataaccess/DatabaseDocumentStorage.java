@@ -19,6 +19,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     private static final String DOCUMENT_ID = "document_id";
     private static final String TITLE = "title";
     private static final String SUMMARY = "summary";
+    private static final String PAGE_NUMBER = "page_number";
     public static final String KEY = "key";
     public static final String JOB_ID = "job_id";
     public static final String DOCUMENT_NAME = "document_name";
@@ -32,9 +33,10 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public Long create(Page page, Long spaceId, Long documentId) {
         try {
             return jdbcClient
-                    .sql("SELECT documents.create_page(:space_id, :document_id, :title, :summary)")
+                    .sql("SELECT documents.create_page(:space_id, :document_id, :page_number, :title, :summary)")
                     .param(SPACE_ID, spaceId)
                     .param(DOCUMENT_ID, documentId)
+                    .param(PAGE_NUMBER, page.getPageNumber())
                     .param(TITLE, page.getTitle())
                     .param(SUMMARY, page.getSummary())
                     .query(Long.class)
@@ -85,7 +87,8 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbcClient
                 .sql("SELECT * FROM documents.read_pages(:document_id)")
                 .param(DOCUMENT_ID, documentId)
-                .query((rs, rowNum) -> new Page(rs.getLong(ID), rs.getString("title"), rs.getString("summary")))
+                .query((rs, rowNum) -> new Page(
+                        rs.getLong(ID), rs.getInt(PAGE_NUMBER), rs.getString("title"), rs.getString("summary")))
                 .list();
     }
 
@@ -95,7 +98,11 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                 .sql("SELECT * FROM documents.read_pages_by_space(:space_id)")
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new SpacePage(
-                        rs.getLong(ID), rs.getLong(DOCUMENT_ID), rs.getString("title"), rs.getString("summary")))
+                        rs.getLong(ID),
+                        rs.getLong(DOCUMENT_ID),
+                        rs.getInt(PAGE_NUMBER),
+                        rs.getString("title"),
+                        rs.getString("summary")))
                 .list();
     }
 

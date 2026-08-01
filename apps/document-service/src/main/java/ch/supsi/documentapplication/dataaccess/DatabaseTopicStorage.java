@@ -23,6 +23,7 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     public static final String KEY = "key";
     private static final String LABELS = "labels";
     private static final String PAGE_ID = "page_id";
+    private static final String PAGE_NUMBER = "page_number";
 
     @Autowired
     public DatabaseTopicStorage(JdbcClient jdbcClient) {
@@ -76,6 +77,7 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
                 rs.getLong(ID),
                 rs.getString("src_file_name"),
                 rs.getLong(PAGE_ID),
+                rs.getInt(PAGE_NUMBER),
                 rs.getString(TITLE),
                 rs.getString(SUMMARY),
                 labels);

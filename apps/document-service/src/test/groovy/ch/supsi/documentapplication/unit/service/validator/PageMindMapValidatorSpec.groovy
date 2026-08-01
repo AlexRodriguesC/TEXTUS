@@ -12,7 +12,7 @@ class PageMindMapValidatorSpec extends Specification {
     PageMindMapValidator validator = new PageMindMapValidator()
 
     static Page page(Long id) {
-        new Page(id, "Page $id", "Summary $id")
+        new Page(id, 1, "Page $id", "Summary $id")
     }
 
     def "should validate when all pages are present exactly once"() {

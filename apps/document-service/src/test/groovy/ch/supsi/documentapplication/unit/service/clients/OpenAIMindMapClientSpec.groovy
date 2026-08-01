@@ -70,11 +70,11 @@ class OpenAIMindMapClientSpec extends Specification {
     }
 
     static Page page(Long id) {
-        new Page(id, "Page $id", "Summary $id")
+        new Page(id, 1, "Page $id", "Summary $id")
     }
 
     static Topic topic(Long id, Long pageId) {
-        new Topic(id, "doc.pdf", pageId, "Title $id", "Summary $id", ["label"])
+        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"])
     }
 
     static PageMindMapRootSelection rootSelection(Long pageId) {

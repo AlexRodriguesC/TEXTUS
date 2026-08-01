@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.service.async.learningpipeline;
 
+import ch.supsi.documentapplication.configuration.properties.AppProperties;
 import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
@@ -29,16 +30,22 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
     private final IDatabasePathStorage databaseLearningStorage;
     private final OpenAIChapterClient openAIChapterClient;
     private final IDatabaseAiUsageStorage aiUsageStorage;
+    private final AppProperties appProperties;
+    private final ChapterConsolidator chapterConsolidator;
 
     public ChapterGenerationTasklet(
             IDatabaseTopicStorage databaseTopicStorage,
             IDatabasePathStorage databaseLearningStorage,
             OpenAIChapterClient chapterClient,
-            IDatabaseAiUsageStorage aiUsageStorage) {
+            IDatabaseAiUsageStorage aiUsageStorage,
+            AppProperties appProperties,
+            ChapterConsolidator chapterConsolidator) {
         this.databaseTopicStorage = databaseTopicStorage;
         this.databaseLearningStorage = databaseLearningStorage;
         this.openAIChapterClient = chapterClient;
         this.aiUsageStorage = aiUsageStorage;
+        this.appProperties = appProperties;
+        this.chapterConsolidator = chapterConsolidator;
     }
 
     @Override
@@ -51,6 +58,8 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                 (Long) chunkContext.getStepContext().getJobExecutionContext().get("PATH_ID");
 
         List<Topic> topics = databaseTopicStorage.getBySpaceId(spaceId);
+        int maxChapters = computeMaxChapters(topics.size());
+
         List<String> distinctLabels = topics.stream()
                 .flatMap(topic -> topic.getLabels().stream())
                 .distinct()
@@ -60,7 +69,7 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                 .mapToObj(i -> new Label((long) i, distinctLabels.get(i)))
                 .toList();
 
-        var chapterResult = openAIChapterClient.getResult(labels);
+        var chapterResult = openAIChapterClient.getResult(new ChapterGenerationRequest(labels, maxChapters));
         List<Chapter> chapters = chapterResult.result();
         persistChapterUsage(pathId, chapterResult);
 
@@ -97,23 +106,15 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
             topicsByChapterIndex.get(bestChapterIndex).add(topic.getId());
         }
 
-        List<Chapter> finalChapters = new ArrayList<>();
-        int nextIndex = 0;
+        List<Chapter> assignedChapters = new ArrayList<>();
         for (int i = 0; i < chapters.size(); i++) {
             List<Long> chapterTopics = topicsByChapterIndex.get(i);
-            if (chapterTopics.isEmpty()) {
-                log.debug(
-                        "Dropping chapter '{}' for space {} because it has no matching topics",
-                        chapters.get(i).getTitle(),
-                        spaceId);
-                continue;
-            }
-
             Chapter chapter = chapters.get(i);
-            finalChapters.add(new Chapter(
-                    nextIndex++, chapter.getTitle(), chapter.getDescription(), chapter.getLabels(), chapterTopics));
+            assignedChapters.add(
+                    new Chapter(i, chapter.getTitle(), chapter.getDescription(), chapter.getLabels(), chapterTopics));
         }
 
+        List<Chapter> finalChapters = chapterConsolidator.consolidate(assignedChapters, maxChapters);
         finalChapters.forEach(Chapter::buildLessons);
 
         for (Chapter chapter : finalChapters) {
@@ -122,6 +123,11 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
 
         log.debug("Finished chapter generation step for space with spaceId {}", spaceId);
         return RepeatStatus.FINISHED;
+    }
+
+    int computeMaxChapters(int topicCount) {
+        int topicDerivedCap = Math.max(1, topicCount / 3);
+        return Math.min(appProperties.getMaxChapters(), topicDerivedCap);
     }
 
     private void persistChapterUsage(Long pathId, ClientResult<List<Chapter>> result) {

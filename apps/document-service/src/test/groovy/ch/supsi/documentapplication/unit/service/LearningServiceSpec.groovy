@@ -114,7 +114,7 @@ class LearningServiceSpec extends Specification {
         setupSpace()
         def lesson = buildLesson()
         def path = buildPath(lesson)
-        def topic = new Topic(100L, "a.pdf", 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
         def generated = new Question()
         generated.setRequest("Q?")
         generated.setAnswer("A")
@@ -193,7 +193,7 @@ class LearningServiceSpec extends Specification {
         def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
         chapter.setLessons([lesson, checkpoint])
         def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
-        def topic = new Topic(100L, "a.pdf", 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
 
         when:
         service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))
@@ -224,7 +224,7 @@ class LearningServiceSpec extends Specification {
         def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
         chapter.setLessons([lesson, checkpoint])
         def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
-        def topic = new Topic(100L, "a.pdf", 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
 
         when:
         service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))

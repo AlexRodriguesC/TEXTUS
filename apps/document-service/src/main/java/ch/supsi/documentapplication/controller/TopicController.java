@@ -48,7 +48,7 @@ public class TopicController {
         String owner = authentication.getName();
 
         var topics = topicService.getTopicsBySpace(owner, spaceId);
-        var dtos = topics.stream().map(t -> new TopicResponseDTO(t.getId(), t.getSourceFileName(), t.getPage(), t.getTitle(), t.getSummary(), t.getLabels())).toList();
+        var dtos = topics.stream().map(t -> new TopicResponseDTO(t.getId(), t.getSourceFileName(), t.getPageNumber().longValue(), t.getTitle(), t.getSummary(), t.getLabels())).toList();
 
         return ResponseEntity.ok(new TopicsResponseDTO(dtos));
     }

@@ -55,7 +55,7 @@ class OpenAIExerciseFeedbackClientSpec extends Specification {
         exercise.setAnswer("4")
         exercise.setExplanation("Addition")
         exercise.setDistractor(["3", "5"])
-        def topic = new Topic(1L, "a.pdf", 1, "Math", "Math summary", ["addition"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Math", "Math summary", ["addition"])
         def attempt = Attempt.of(exercise, "3", topic)
         def feedback = objectMapper.readValue('{"feedback":"Review basic addition."}', Feedback)
 
