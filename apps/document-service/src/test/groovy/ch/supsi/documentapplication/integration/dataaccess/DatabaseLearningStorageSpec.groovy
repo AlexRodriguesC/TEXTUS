@@ -60,7 +60,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         saved.answer == "4"
         saved.distractor.sort() == ["3", "5"]
         saved.explanation == "Explain me"
-        saved.topicId == 1L
+        saved.topicId == topicId
         saved.index == 0
 
         when:

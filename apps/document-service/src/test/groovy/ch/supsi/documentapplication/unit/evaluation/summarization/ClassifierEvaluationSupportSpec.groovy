@@ -2,6 +2,12 @@ package ch.supsi.documentapplication.unit.evaluation.summarization
 
 import ch.supsi.documentapplication.evaluation.summarization.ClassifierEvaluationSupport
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import org.springframework.core.io.FileSystemResource
 import spock.lang.Specification
 import spock.lang.TempDir
 
@@ -15,133 +21,162 @@ class ClassifierEvaluationSupportSpec extends Specification {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
-    def "should parse and validate a well-formed multi-book corpus"() {
+    def "should load sidecar labels and extract PDF page text"() {
         given:
-        def json = """
+        def pdfPath = writePdf(tempDir.resolve("book-a.pdf"), ["Cover page", "Lesson body"])
+        def sidecarPath = writeSidecar(tempDir.resolve("book-a.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": [
-            {
-              "bookId": "book-a",
-              "title": "Book A",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "book-a-p1",
-                  "pageNumber": 1,
-                  "expectedLabel": "NON_CONTENT",
-                  "text": "Table of Contents",
-                  "note": "toc"
-                },
-                {
-                  "pageId": "book-a-p2",
-                  "pageNumber": 2,
-                  "expectedLabel": "CONTENT",
-                  "text": "Photosynthesis converts light into chemical energy."
-                }
-              ]
-            }
+          "pdf": "book-a.pdf",
+          "bookId": "book-a",
+          "title": "Book A",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": false, "note": "cover" },
+            { "pageNumber": 2, "content": true }
           ]
         }
-        """
+        """)
 
         when:
-        def corpus = ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        def book = ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+        def corpus = ClassifierEvaluationSupport.corpusOf([book])
         ClassifierEvaluationSupport.validateCorpus(corpus)
 
         then:
-        corpus.corpusVersion == "1.0.0"
-        corpus.books.size() == 1
-        corpus.allPages().size() == 2
-        corpus.allPages()*.expectedLabel == ["NON_CONTENT", "CONTENT"]
+        book.pdfFileName == "book-a.pdf"
+        book.pages.size() == 2
+        !book.pages[0].expectedContent
+        book.pages[0].expectedLabel == ClassifierEvaluationSupport.LABEL_NON_CONTENT
+        book.pages[0].text.contains("Cover page")
+        !book.pages[0].blank
+        book.pages[1].expectedContent
+        book.pages[1].text.contains("Lesson body")
+        corpus.labelPolicy == ClassifierEvaluationSupport.LABEL_POLICY
     }
 
-    def "should reject blank page text before any model call"() {
+    def "should mark blank extracted pages without requiring stored text"() {
         given:
-        def json = """
+        def pdfPath = writePdf(tempDir.resolve("blank-book.pdf"), ["", "Body text"])
+        def sidecarPath = writeSidecar(tempDir.resolve("blank-book.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": [
-            {
-              "bookId": "book-a",
-              "title": "Book A",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "book-a-p1",
-                  "pageNumber": 1,
-                  "expectedLabel": "CONTENT",
-                  "text": "   "
-                },
-                {
-                  "pageId": "book-a-p2",
-                  "pageNumber": 2,
-                  "expectedLabel": "NON_CONTENT",
-                  "text": "Index"
-                }
-              ]
-            }
+          "pdf": "blank-book.pdf",
+          "bookId": "blank-book",
+          "title": "Blank Book",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": false },
+            { "pageNumber": 2, "content": true }
           ]
         }
-        """
+        """)
 
         when:
-        ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        def book = ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+
+        then:
+        book.pages[0].blank
+        book.pages[0].text.isBlank()
+        !book.pages[1].blank
+    }
+
+    def "should reject incomplete page coverage"() {
+        given:
+        def pdfPath = writePdf(tempDir.resolve("short.pdf"), ["One", "Two"])
+        def sidecarPath = writeSidecar(tempDir.resolve("short.labels.json"), """
+        {
+          "pdf": "short.pdf",
+          "bookId": "short",
+          "title": "Short",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": true }
+          ]
+        }
+        """)
+
+        when:
+        ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
 
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message.contains("text")
+        ex.message.contains("every physical page must be labeled exactly once")
     }
 
-    def "should reject empty books corpus"() {
+    def "should reject duplicate page numbers"() {
         given:
-        def json = """
+        def pdfPath = writePdf(tempDir.resolve("dup.pdf"), ["One", "Two"])
+        def sidecarPath = writeSidecar(tempDir.resolve("dup.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": []
+          "pdf": "dup.pdf",
+          "bookId": "dup",
+          "title": "Dup",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": true },
+            { "pageNumber": 1, "content": false }
+          ]
         }
-        """
-        def corpus = ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        """)
+
+        when:
+        ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+
+        then:
+        def ex = thrown(IllegalArgumentException)
+        ex.message.contains("duplicate label")
+    }
+
+    def "should reject out-of-range page numbers"() {
+        given:
+        def pdfPath = writePdf(tempDir.resolve("range.pdf"), ["Only page"])
+        def sidecarPath = writeSidecar(tempDir.resolve("range.labels.json"), """
+        {
+          "pdf": "range.pdf",
+          "bookId": "range",
+          "title": "Range",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 2, "content": true }
+          ]
+        }
+        """)
+
+        when:
+        ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+
+        then:
+        def ex = thrown(IllegalArgumentException)
+        ex.message.contains("exceeds PDF page count") || ex.message.contains("every physical page")
+    }
+
+    def "should reject empty corpus"() {
+        given:
+        def corpus = ClassifierEvaluationSupport.corpusOf([])
 
         when:
         ClassifierEvaluationSupport.validateCorpus(corpus)
 
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message.contains("at least one book")
+        ex.message.contains("at least one PDF sidecar")
     }
 
     def "should reject corpus missing a label class"() {
         given:
-        def json = """
+        def pdfPath = writePdf(tempDir.resolve("only-content.pdf"), ["Body"])
+        def sidecarPath = writeSidecar(tempDir.resolve("only-content.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": [
-            {
-              "bookId": "book-a",
-              "title": "Book A",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "book-a-p1",
-                  "pageNumber": 1,
-                  "expectedLabel": "CONTENT",
-                  "text": "Body text"
-                }
-              ]
-            }
+          "pdf": "only-content.pdf",
+          "bookId": "only-content",
+          "title": "Only Content",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": true }
           ]
         }
-        """
-        def corpus = ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        """)
+        def book = ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+        def corpus = ClassifierEvaluationSupport.corpusOf([book])
 
         when:
         ClassifierEvaluationSupport.validateCorpus(corpus)
@@ -151,44 +186,26 @@ class ClassifierEvaluationSupportSpec extends Specification {
         ex.message.contains("at least one CONTENT and one NON_CONTENT")
     }
 
-    def "should reject duplicate page ids"() {
+    def "should reject missing adjacent PDF when loading sidecar resource"() {
         given:
-        def json = """
+        def sidecarPath = writeSidecar(tempDir.resolve("orphan.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": [
-            {
-              "bookId": "book-a",
-              "title": "Book A",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "dup",
-                  "pageNumber": 1,
-                  "expectedLabel": "CONTENT",
-                  "text": "Body"
-                },
-                {
-                  "pageId": "dup",
-                  "pageNumber": 2,
-                  "expectedLabel": "NON_CONTENT",
-                  "text": "Index"
-                }
-              ]
-            }
+          "pdf": "missing.pdf",
+          "bookId": "orphan",
+          "title": "Orphan",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": true }
           ]
         }
-        """
-        def corpus = ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        """)
 
         when:
-        ClassifierEvaluationSupport.validateCorpus(corpus)
+        ClassifierEvaluationSupport.loadBookFromSidecar(new FileSystemResource(sidecarPath.toFile()))
 
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message.contains("Duplicate pageId")
+        ex.message.contains("not found")
     }
 
     def "should compute confusion counts and zero-denominator metrics"() {
@@ -213,12 +230,12 @@ class ClassifierEvaluationSupportSpec extends Specification {
         metrics.f1 == 0.5d
     }
 
-    def "should aggregate per-book metrics, misclassifications, and invocation errors"() {
+    def "should aggregate metrics, blank skips, misclassifications, and invocation errors"() {
         given:
         def corpus = sampleCorpus()
         def pages = corpus.allPages()
         def predictions = [
-                ClassifierEvaluationSupport.PagePrediction.success(pages[0], false, "", ""),
+                ClassifierEvaluationSupport.PagePrediction.blankSkipped(pages[0]),
                 ClassifierEvaluationSupport.PagePrediction.success(pages[1], false, "", ""),
                 ClassifierEvaluationSupport.PagePrediction.success(pages[2], true, "Title", "Summary"),
                 ClassifierEvaluationSupport.PagePrediction.failure(pages[3], "timeout")
@@ -231,89 +248,115 @@ class ClassifierEvaluationSupportSpec extends Specification {
         def summary = ClassifierEvaluationSupport.formatSummary(report)
 
         then:
+        report.blankSkippedPages == 1
+        report.evaluatedPages == 2
+        report.erroredPages == 1
         report.counts.truePositives == 0
         report.counts.falsePositives == 1
-        report.counts.trueNegatives == 1
+        report.counts.trueNegatives == 0
         report.counts.falseNegatives == 1
-        report.metrics.precision == 0.0d
-        report.metrics.recall == 0.0d
-        report.falsePositives*.pageId == ["book-b-p1"]
-        report.falseNegatives*.pageId == ["book-a-p2"]
-        report.invocationErrors*.pageId == ["book-b-p2"]
-        report.bookReports.size() == 2
-        report.evaluatedPages == 3
-        report.erroredPages == 1
+        report.falsePositives*.pageNumber == [1]
+        report.falseNegatives*.pageNumber == [2]
+        report.invocationErrors*.pageNumber == [2]
+        report.blankPages.size() == 1
+        !report.blankPages[0].labelMismatch
+        report.blankLabelMismatches.isEmpty()
         written.modelName == "test-model"
-        written.counts.falsePositives == 1
-        summary.contains("falsePositives=[book-b-p1]")
-        summary.contains("falseNegatives=[book-a-p2]")
-        summary.contains("invocationErrors=[book-b-p2]")
+        written.blankSkippedPages == 1
+        summary.contains("blankSkipped=1")
+        summary.contains("falsePositives=[book-b.pdf:1]")
+        summary.contains("falseNegatives=[book-a.pdf:2]")
     }
 
-    def "should load and validate the checked-in curated corpus from classpath"() {
-        when:
-        def corpus = ClassifierEvaluationSupport.loadCorpusFromClasspath()
-        ClassifierEvaluationSupport.validateCorpus(corpus)
-
-        then:
-        corpus.labelPolicy == "model-invoked-pages-only"
-        corpus.books.size() >= 3
-        corpus.allPages().size() >= 100
-        corpus.allPages().count { it.expectedLabel == ClassifierEvaluationSupport.LABEL_CONTENT } >= 1
-        corpus.allPages().count { it.expectedLabel == ClassifierEvaluationSupport.LABEL_NON_CONTENT } >= 1
-        corpus.allPages().every { !it.text.isBlank() }
-    }
-
-    private static ClassifierEvaluationSupport.Corpus sampleCorpus() {
-        def json = """
+    def "should flag blank pages labeled as content"() {
+        given:
+        def pdfPath = writePdf(tempDir.resolve("mismatch.pdf"), ["", "Body"])
+        def sidecarPath = writeSidecar(tempDir.resolve("mismatch.labels.json"), """
         {
-          "corpusVersion": "1.0.0",
-          "createdAt": "2026-08-01",
-          "labelPolicy": "model-invoked-pages-only",
-          "books": [
-            {
-              "bookId": "book-a",
-              "title": "Book A",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "book-a-p1",
-                  "pageNumber": 1,
-                  "expectedLabel": "NON_CONTENT",
-                  "text": "Copyright"
-                },
-                {
-                  "pageId": "book-a-p2",
-                  "pageNumber": 2,
-                  "expectedLabel": "CONTENT",
-                  "text": "Lesson body"
-                }
-              ]
-            },
-            {
-              "bookId": "book-b",
-              "title": "Book B",
-              "source": "test",
-              "pages": [
-                {
-                  "pageId": "book-b-p1",
-                  "pageNumber": 1,
-                  "expectedLabel": "NON_CONTENT",
-                  "text": "Index"
-                },
-                {
-                  "pageId": "book-b-p2",
-                  "pageNumber": 2,
-                  "expectedLabel": "CONTENT",
-                  "text": "Another lesson"
-                }
-              ]
-            }
+          "pdf": "mismatch.pdf",
+          "bookId": "mismatch",
+          "title": "Mismatch",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": true },
+            { "pageNumber": 2, "content": false }
           ]
         }
-        """
-        def corpus = ClassifierEvaluationSupport.loadCorpus(new ByteArrayInputStream(json.bytes))
+        """)
+        def book = ClassifierEvaluationSupport.loadBookFromFiles(sidecarPath, pdfPath)
+        def corpus = ClassifierEvaluationSupport.corpusOf([book])
+        def predictions = [
+                ClassifierEvaluationSupport.PagePrediction.blankSkipped(book.pages[0]),
+                ClassifierEvaluationSupport.PagePrediction.success(book.pages[1], false, "", "")
+        ]
+
+        when:
+        def report = ClassifierEvaluationSupport.buildReport(corpus, "test-model", predictions)
+
+        then:
+        report.blankLabelMismatches.size() == 1
+        report.blankLabelMismatches[0].pageNumber == 1
+        report.blankLabelMismatches[0].labelMismatch
+    }
+
+    private ClassifierEvaluationSupport.Corpus sampleCorpus() {
+        def bookAPdf = writePdf(tempDir.resolve("book-a.pdf"), ["", "Lesson body"])
+        def bookASidecar = writeSidecar(tempDir.resolve("book-a.labels.json"), """
+        {
+          "pdf": "book-a.pdf",
+          "bookId": "book-a",
+          "title": "Book A",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": false },
+            { "pageNumber": 2, "content": true }
+          ]
+        }
+        """)
+        def bookBPdf = writePdf(tempDir.resolve("book-b.pdf"), ["Index", "Another lesson"])
+        def bookBSidecar = writeSidecar(tempDir.resolve("book-b.labels.json"), """
+        {
+          "pdf": "book-b.pdf",
+          "bookId": "book-b",
+          "title": "Book B",
+          "source": "test",
+          "pages": [
+            { "pageNumber": 1, "content": false },
+            { "pageNumber": 2, "content": true }
+          ]
+        }
+        """)
+        def books = [
+                ClassifierEvaluationSupport.loadBookFromFiles(bookASidecar, bookAPdf),
+                ClassifierEvaluationSupport.loadBookFromFiles(bookBSidecar, bookBPdf)
+        ]
+        def corpus = ClassifierEvaluationSupport.corpusOf(books)
         ClassifierEvaluationSupport.validateCorpus(corpus)
         return corpus
+    }
+
+    private static Path writeSidecar(Path path, String json) {
+        Files.writeString(path, json.stripIndent().trim())
+        return path
+    }
+
+    private static Path writePdf(Path path, List<String> pageTexts) {
+        def document = new PDDocument()
+        pageTexts.each { text ->
+            def page = new PDPage()
+            document.addPage(page)
+            if (text != null && !text.isBlank()) {
+                def content = new PDPageContentStream(document, page)
+                content.beginText()
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12)
+                content.newLineAtOffset(100, 700)
+                content.showText(text)
+                content.endText()
+                content.close()
+            }
+        }
+        document.save(path.toFile())
+        document.close()
+        return path
     }
 }

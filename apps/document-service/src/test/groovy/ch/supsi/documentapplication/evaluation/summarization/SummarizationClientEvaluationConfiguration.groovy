@@ -84,6 +84,11 @@ final class SummarizationClientEvaluationConfiguration {
     }
 
     private static ChatClient createChatClient(String apiKey, String baseUrl, Duration timeout) {
+        // OpenAiSetup expects primitive boolean/int args; Groovy null for maxRetries breaks resolution.
+        boolean microsoftFoundry = false
+        boolean gitHubModels = false
+        int maxRetries = 2
+
         OpenAIClient openAiClient = OpenAiSetup.setupSyncClient(
                 baseUrl,
                 apiKey,
@@ -91,11 +96,11 @@ final class SummarizationClientEvaluationConfiguration {
                 null,
                 null,
                 null,
-                false,
-                false,
+                microsoftFoundry,
+                gitHubModels,
                 null,
                 timeout,
-                null,
+                maxRetries,
                 null,
                 null)
         OpenAIClientAsync openAiClientAsync = OpenAiSetup.setupAsyncClient(
@@ -105,11 +110,11 @@ final class SummarizationClientEvaluationConfiguration {
                 null,
                 null,
                 null,
-                false,
-                false,
+                microsoftFoundry,
+                gitHubModels,
                 null,
                 timeout,
-                null,
+                maxRetries,
                 null,
                 null)
 

@@ -193,7 +193,7 @@ tasks.register('jacocoIntegrationTestReport', JacocoReport) {
 }
 
 tasks.register('classifierEvaluationTest', Test) {
-	description = 'Runs the opted-in live content-page classifier evaluation against the curated corpus.'
+	description = 'Runs the opted-in live content-page classifier evaluation against PDF sidecar ground truth.'
 	group = 'verification'
 	useJUnitPlatform()
 	failOnNoDiscoveredTests = false
