@@ -13,7 +13,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import TitleSummarySection from "@/components/TitleSummarySection.tsx";
-import { useLayoutEffect, useRef, useState, type MouseEvent } from "react";
+import { useTheme } from "@/hooks/context/useTheme.ts";
+import { cn } from "@/lib/utils.ts";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 
 interface MapNodeData {
   id: number;
@@ -32,15 +40,18 @@ function TruncatedTitlePill({
   entityId,
   isPage,
   onClick,
+  button,
 }: {
   title: string;
   completed: boolean;
   entityId: number;
   isPage: boolean;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+  button?: ReactNode;
 }) {
   const textRef = useRef<HTMLSpanElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
+  const { theme } = useTheme();
 
   useLayoutEffect(() => {
     const el = textRef.current;
@@ -60,18 +71,35 @@ function TruncatedTitlePill({
 
   return (
     <Tooltip open={isTruncated ? undefined : false}>
-      <TooltipTrigger asChild>
-        <MotionPillButton
-          completed={completed}
-          entityId={entityId}
-          isPage={isPage}
-          className="w-[154px]"
-          textRef={textRef}
-          onClick={onClick}
-        >
-          {title}
-        </MotionPillButton>
-      </TooltipTrigger>
+      <MotionPillButton
+        completed={completed}
+        entityId={entityId}
+        isPage={isPage}
+        className="w-[154px]"
+        button={button}
+      >
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="flex h-full min-w-0 flex-1 items-center justify-center"
+              onClick={onClick}
+            >
+              <span
+                ref={textRef}
+                className={cn(
+                  "block w-full truncate text-center",
+                  theme === "dark"
+                    ? "text-primary-foreground"
+                    : "text-secondary-foreground",
+                )}
+              >
+                {title}
+              </span>
+            </button>
+          </DialogTrigger>
+        </TooltipTrigger>
+      </MotionPillButton>
       {isTruncated && (
         <TooltipContent side="top">{title}</TooltipContent>
       )}
@@ -90,37 +118,36 @@ function MapNode({ data }: NodeProps) {
   };
 
   return (
-    <div className="relative flex w-43 items-center gap-1">
-      <Handle type="target" position={Position.Top} style={hideHandle} />
-      {nodeData.hasChildren ? (
-        <button
-          type="button"
-          className="flex size-3.5 shrink-0 items-center justify-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            nodeData.onToggleExpand?.();
-          }}
-        >
-          {nodeData.isExpanded ? (
-            <ChevronDown className="size-3.5 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="size-3.5 text-muted-foreground" />
-          )}
-        </button>
-      ) : (
-        <span className="flex size-3.5 shrink-0 items-center justify-center" />
-      )}
+    <div className="relative flex items-center">
+      <Handle type="target" position={Position.Left} style={hideHandle} />
 
       <Dialog>
-        <DialogTrigger asChild>
-          <TruncatedTitlePill
-            title={nodeData.title}
-            completed={nodeData.completed}
-            entityId={nodeData.id}
-            isPage={nodeData.isPage}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </DialogTrigger>
+        <TruncatedTitlePill
+          title={nodeData.title}
+          completed={nodeData.completed}
+          entityId={nodeData.id}
+          isPage={nodeData.isPage}
+          onClick={(e) => e.stopPropagation()}
+          button={
+            nodeData.hasChildren ? (
+              <button
+                type="button"
+                aria-label={nodeData.isExpanded ? "Collapse" : "Expand"}
+                className="flex shrink-0 items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nodeData.onToggleExpand?.();
+                }}
+              >
+                {nodeData.isExpanded ? (
+                  <ChevronDown className="size-3.5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="size-3.5 text-muted-foreground" />
+                )}
+              </button>
+            ) : undefined
+          }
+        />
         <DialogContent>
           <DialogHeader>
             <TitleSummarySection
@@ -130,7 +157,7 @@ function MapNode({ data }: NodeProps) {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-      <Handle type="source" position={Position.Bottom} style={hideHandle} />
+      <Handle type="source" position={Position.Right} style={hideHandle} />
     </div>
   );
 }

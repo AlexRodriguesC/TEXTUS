@@ -4,7 +4,7 @@ import type Page from "@/classes/Page.ts";
 import type Topic from "@/classes/Topic.ts";
 import { resolveNodeContent } from "@/hooks/mindmap/resolveNodeContent.ts";
 import dagre from "dagre";
-import type { Edge as RFEdge, Node as RFNode } from "@xyflow/react";
+import { Position, type Edge as RFEdge, type Node as RFNode } from "@xyflow/react";
 
 export const NODE_WIDTH = 172;
 export const NODE_HEIGHT = 36;
@@ -121,6 +121,7 @@ export function getLayoutedElements(
 
   dagre.layout(g);
 
+  const isHorizontal = direction === "LR";
   const rfNodes: RFNode[] = [];
   const rfEdges: RFEdge[] = [];
 
@@ -133,9 +134,11 @@ export function getLayoutedElements(
     rfNodes.push({
       id: nodeKey,
       type: "mapNode",
+      targetPosition: isHorizontal ? Position.Left : Position.Top,
+      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
       position: {
-        x: nodeWithPosition.x,
-        y: nodeWithPosition.y,
+        x: nodeWithPosition.x - NODE_WIDTH / 2,
+        y: nodeWithPosition.y - NODE_HEIGHT / 2,
       },
       data: {
         id: n.entityId,

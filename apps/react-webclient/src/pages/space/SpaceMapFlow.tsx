@@ -21,6 +21,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 const nodeTypes = { mapNode: MapNode };
+const LAYOUT_DIRECTION = "LR" as const;
 
 interface SpaceMapFlowProps {
   mindMapNodes: Node[];
@@ -47,7 +48,7 @@ function SpaceMapFlow({ mindMapNodes, topics, pages }: SpaceMapFlowProps) {
     () =>
       getLayoutedElements(
         visibleNodes,
-        "TB",
+        LAYOUT_DIRECTION,
         topics,
         pages,
         childrenMap,
@@ -85,7 +86,7 @@ function SpaceMapFlow({ mindMapNodes, topics, pages }: SpaceMapFlowProps) {
               );
               const { nodes: nextLayoutedNodes } = getLayoutedElements(
                 nextVisibleNodes,
-                "TB",
+                LAYOUT_DIRECTION,
                 topics,
                 pages,
                 childrenMap,
