@@ -90,7 +90,7 @@ function MapNode({ data }: NodeProps) {
   };
 
   return (
-    <div className="relative flex w-[172px] items-center gap-1">
+    <div className="relative flex w-43 items-center gap-1">
       <Handle type="target" position={Position.Top} style={hideHandle} />
       {nodeData.hasChildren ? (
         <button

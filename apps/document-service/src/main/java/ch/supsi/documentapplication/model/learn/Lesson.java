@@ -12,7 +12,7 @@ public class Lesson {
 
     private static final double P_T = 0.03;
     private static final double P_S = 0.10;
-    private static final int MAX_ATTEMPTS = 5;
+    private static final int MAX_ATTEMPTS = 3;
     public static final double INITIAL_MASTERY = 0.10;
 
     private Long id;

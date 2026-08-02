@@ -13,7 +13,6 @@ import SidebarSpaces from "@/components/left-sidebar/SidebarSpaces.tsx";
 import SidebarHome from "@/components/left-sidebar/SidebarHome.tsx";
 import { useTranslation } from "react-i18next";
 import SidebarSettings from "@/components/left-sidebar/SidebarSettings.tsx";
-import SidebarAddSpace from "@/components/left-sidebar/SidebarAddSpace.tsx";
 import HoverResponseIcon from "@/components/HoverResponseIcon.tsx";
 import { PanelLeftIcon } from "lucide-react";
 
@@ -28,7 +27,6 @@ export function AppSidebar() {
         />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarAddSpace />
         <SidebarGroup>
           <SidebarGroupLabel>{t("sidebar.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>

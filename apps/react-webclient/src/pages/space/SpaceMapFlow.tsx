@@ -3,6 +3,8 @@ import type Page from "@/classes/Page.ts";
 import type Topic from "@/classes/Topic.ts";
 import { useTheme } from "@/hooks/context/useTheme.ts";
 import {
+  NODE_HEIGHT,
+  NODE_WIDTH,
   buildChildrenMap,
   getLayoutedElements,
   getVisibleNodes,
@@ -28,7 +30,7 @@ interface SpaceMapFlowProps {
 
 function SpaceMapFlow({ mindMapNodes, topics, pages }: SpaceMapFlowProps) {
   const { theme } = useTheme();
-  const { fitView } = useReactFlow();
+  const { getZoom, setCenter } = useReactFlow();
   const [expandedIds, setExpandedIds] = useState<Set<NodeKey>>(() => new Set());
 
   const childrenMap = useMemo(
@@ -65,17 +67,57 @@ function SpaceMapFlow({ mindMapNodes, topics, pages }: SpaceMapFlowProps) {
           data: {
             ...node.data,
             onToggleExpand: () => {
-              setExpandedIds((prev) =>
-                toggleExpanded(node.id, prev, childrenMap),
+              if (expandedIds.has(node.id)) {
+                setExpandedIds((prev) =>
+                  toggleExpanded(node.id, prev, childrenMap),
+                );
+                return;
+              }
+
+              const nextExpandedIds = toggleExpanded(
+                node.id,
+                expandedIds,
+                childrenMap,
               );
-              requestAnimationFrame(() => {
-                fitView({ padding: 0.2, duration: 200 });
-              });
+              const nextVisibleNodes = getVisibleNodes(
+                mindMapNodes,
+                nextExpandedIds,
+              );
+              const { nodes: nextLayoutedNodes } = getLayoutedElements(
+                nextVisibleNodes,
+                "TB",
+                topics,
+                pages,
+                childrenMap,
+                nextExpandedIds,
+              );
+              const layoutedNode = nextLayoutedNodes.find(
+                (n) => n.id === node.id,
+              );
+
+              setExpandedIds(nextExpandedIds);
+
+              if (layoutedNode) {
+                void setCenter(
+                  layoutedNode.position.x + NODE_WIDTH / 2,
+                  layoutedNode.position.y + NODE_HEIGHT / 2,
+                  { zoom: getZoom(), duration: 200 },
+                );
+              }
             },
           },
         };
       }),
-    [layoutedNodes, childrenMap, fitView],
+    [
+      layoutedNodes,
+      childrenMap,
+      expandedIds,
+      mindMapNodes,
+      topics,
+      pages,
+      getZoom,
+      setCenter,
+    ],
   );
 
   return (
@@ -89,6 +131,7 @@ function SpaceMapFlow({ mindMapNodes, topics, pages }: SpaceMapFlowProps) {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={true}
+        attributionPosition="bottom-left"
         fitView
       >
         <Controls showInteractive={false} />
