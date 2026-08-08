@@ -3,10 +3,12 @@ package ch.supsi.documentapplication.integration.dataaccess
 import ch.supsi.documentapplication.dataaccess.DatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseUserStorage
+import ch.supsi.documentapplication.exception.InvalidInputException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.Space
 import ch.supsi.documentapplication.model.User
+import org.springframework.dao.DataAccessException
 import spock.lang.Subject
 
 class DatabaseDocumentStorageSpec extends DatabaseSpec {
@@ -88,7 +90,7 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         thrown(NotFoundException)
     }
 
-    def "should return documents for spaceId"() {
+    def "should append and return documents in order"() {
         given: "an existing space with two documents"
         def user = databaseUserStorage.createUser(new User("user4", "pwd"))
         def spaceId = databaseSpaceStorage.create(
@@ -101,11 +103,86 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
         when: "retrieving documents for that space"
         def documents = storage.getDocuments(spaceId)
 
-        then: "both documents are returned"
+        then: "both documents are returned in append order"
         documents.size() == 2
-        documents*.id as Set == [documentId1, documentId2] as Set
-        documents*.jobId as Set == [jobId1, jobId2] as Set
-        documents*.name as Set == ["abc", "def"] as Set
+        documents*.id == [documentId1, documentId2]
+        documents*.jobId == [jobId1, jobId2]
+        documents*.name == ["abc", "def"]
+        documents*.orderIndex == [0, 1]
+    }
+
+    def "should move document and normalize sibling order"() {
+        given: "an existing space with three documents"
+        def user = databaseUserStorage.createUser(new User("user-order", "pwd"))
+        def spaceId = databaseSpaceStorage.create(
+                new Space(user.username, "abc", "ordered-space", "description"))
+        def firstId = storage.create(spaceId, jobId(), "first")
+        def secondId = storage.create(spaceId, jobId(), "second")
+        def thirdId = storage.create(spaceId, jobId(), "third")
+
+        when: "the last document is moved between the first two"
+        storage.move(spaceId, thirdId, 1)
+
+        then: "all documents have contiguous zero-based indices"
+        def documents = storage.getDocuments(spaceId)
+        documents*.id == [firstId, thirdId, secondId]
+        documents*.orderIndex == [0, 1, 2]
+    }
+
+    def "should translate database wrong-space move to not found"() {
+        given:
+        def user = databaseUserStorage.createUser(new User("move-wrong-space", "pwd"))
+        def sourceSpaceId = databaseSpaceStorage.create(
+                new Space(user.username, "abc", "source-space", "description"))
+        def targetSpaceId = databaseSpaceStorage.create(
+                new Space(user.username, "abc", "target-space", "description"))
+        def documentId = storage.create(sourceSpaceId, jobId(), "document")
+
+        when:
+        storage.move(targetSpaceId, documentId, 0)
+
+        then:
+        thrown(NotFoundException)
+    }
+
+    def "should translate database out-of-range move to invalid input"() {
+        given:
+        def user = databaseUserStorage.createUser(new User("move-out-of-range", "pwd"))
+        def spaceId = databaseSpaceStorage.create(
+                new Space(user.username, "abc", "bounded-space", "description"))
+        def documentId = storage.create(spaceId, jobId(), "document")
+
+        when:
+        storage.move(spaceId, documentId, 1)
+
+        then:
+        thrown(InvalidInputException)
+    }
+
+    def "should expose stable SQLSTATE for database move validation"() {
+        given:
+        def user = databaseUserStorage.createUser(new User("move-sqlstate-${expectedSqlState}", "pwd"))
+        def spaceId = databaseSpaceStorage.create(
+                new Space(user.username, "abc", "sqlstate-space-${expectedSqlState}", "description"))
+        def documentId = storage.create(spaceId, jobId(), "document")
+
+        when:
+        jdbcClient
+                .sql("SELECT documents.move_document(:space_id, :document_id, :order_index)")
+                .param("space_id", spaceId)
+                .param("document_id", requestedDocumentId(documentId, wrongSpace))
+                .param("order_index", requestedOrderIndex(wrongSpace))
+                .query()
+                .singleValue()
+
+        then:
+        def exception = thrown(DataAccessException)
+        sqlState(exception) == expectedSqlState
+
+        where:
+        wrongSpace || expectedSqlState
+        true       || "P0002"
+        false      || "22023"
     }
 
     def "should return empty list if space does not exist"() {
@@ -168,5 +245,24 @@ class DatabaseDocumentStorageSpec extends DatabaseSpec {
                 .update()
 
         jobInstanceId
+    }
+
+    private static Long requestedDocumentId(Long documentId, boolean wrongSpace) {
+        wrongSpace ? documentId + 1_000_000L : documentId
+    }
+
+    private static int requestedOrderIndex(boolean wrongSpace) {
+        wrongSpace ? 0 : 1
+    }
+
+    private static String sqlState(Throwable throwable) {
+        Throwable current = throwable
+        while (current != null) {
+            if (current instanceof java.sql.SQLException) {
+                return ((java.sql.SQLException) current).getSQLState()
+            }
+            current = current.cause
+        }
+        null
     }
 }

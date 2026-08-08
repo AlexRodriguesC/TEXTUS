@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.model.PathSettings
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
+import org.springframework.dao.DataAccessException
 import spock.lang.Subject
 
 class DatabasePathStorageSpec extends DatabaseSpec {
@@ -40,9 +41,28 @@ class DatabasePathStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pathId = storage.createLearningPath(spaceId, jobId)
-        Long topicId = createTopic(spaceId, jobId)
+        Long documentId = createDocument(spaceId, jobId)
+        Long pageId = jdbcClient
+                .sql("""
+                INSERT INTO documents.page (space_id, document_id, page_number, title, summary)
+                VALUES (:spaceId, :documentId, 1, 'title', 'summary')
+                RETURNING id
+                """)
+                .param("spaceId", spaceId)
+                .param("documentId", documentId)
+                .query(Long.class)
+                .single()
+        Long topicId = jdbcClient
+                .sql("""
+                INSERT INTO documents.topic (page_id, title, summary)
+                VALUES (:pageId, 'topic', 'summary')
+                RETURNING id
+                """)
+                .param("pageId", pageId)
+                .query(Long.class)
+                .single()
         def lesson = new Lesson(LessonType.LESSON, 0, [topicId])
-        def chapter = new Chapter(0, "Chapter 1", "First chapter", List.of())
+        def chapter = new Chapter(0, "Chapter 1", "First chapter", List.of(), documentId)
         chapter.setLessons([lesson])
 
         when:
@@ -53,8 +73,43 @@ class DatabasePathStorageSpec extends DatabaseSpec {
         learningPath.chapters.size() == 1
         learningPath.chapters[0].title == "Chapter 1"
         learningPath.chapters[0].description == "First chapter"
+        learningPath.chapters[0].documentId == documentId
         learningPath.chapters[0].lessons.size() == 1
         learningPath.chapters[0].lessons[0].topics == [topicId]
+    }
+
+    def "should reject chapter when path belongs to another space"() {
+        given:
+        createUser()
+        Long firstSpaceId = createSpace("owner", "icon", "first", "desc")
+        Long secondSpaceId = createSpace("owner", "icon", "second", "desc")
+        Long pathId = storage.createLearningPath(firstSpaceId, createBatchJobInstance("first-path"))
+        Long documentId = createDocument(secondSpaceId, createBatchJobInstance("second-document"))
+        def chapter = new Chapter(0, "Chapter", "Description", List.of(), documentId)
+        chapter.setLessons([])
+
+        when:
+        storage.create(pathId, chapter, secondSpaceId)
+
+        then:
+        thrown(DataAccessException)
+    }
+
+    def "should reject chapter when document belongs to another space"() {
+        given:
+        createUser()
+        Long firstSpaceId = createSpace("owner", "icon", "first", "desc")
+        Long secondSpaceId = createSpace("owner", "icon", "second", "desc")
+        Long pathId = storage.createLearningPath(firstSpaceId, createBatchJobInstance("first-path"))
+        Long documentId = createDocument(secondSpaceId, createBatchJobInstance("second-document"))
+        def chapter = new Chapter(0, "Chapter", "Description", List.of(), documentId)
+        chapter.setLessons([])
+
+        when:
+        storage.create(pathId, chapter, firstSpaceId)
+
+        then:
+        thrown(DataAccessException)
     }
 
     def "should update settings and read them back"() {

@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.controller;
 
 import ch.supsi.documentapplication.controller.DTO.mapper.DocumentTaskMapper;
+import ch.supsi.documentapplication.controller.DTO.request.MoveDocumentRequestDTO;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.DocumentsResponseDTO;
 import ch.supsi.documentapplication.controller.DTO.response.ErrorResponseDTO;
@@ -63,9 +64,28 @@ public class DocumentController {
                 .map(document -> new DocumentResponseDTO(
                         document.getName(),
                         document.getId(),
+                        document.getOrderIndex(),
                         documentTaskMapper.toDtoList(document.getTasks())))
                 .toList();
         return ResponseEntity.ok(new DocumentsResponseDTO(documentsDto));
+    }
+
+    @PatchMapping(value = "/{documentId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Move a document within its space")
+    @ApiResponses(
+            {
+                    @ApiResponse(responseCode = "204", description = "Document moved successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid document order index", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "401", description = "User is not the owner of the specified space", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class))),
+                    @ApiResponse(responseCode = "404", description = "Document or space not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ErrorResponseDTO.class)))
+            })
+    public ResponseEntity<Void> moveDocument(
+            @Parameter(description = "The ID of the space containing the document", required = true) @NotNull @PathVariable("spaceId") Long spaceId,
+            @Parameter(description = "Unique identifier of the document to move", required = true) @PathVariable("documentId") Long documentId,
+            @Parameter(hidden = true) Authentication authentication,
+            @jakarta.validation.Valid @RequestBody @NotNull MoveDocumentRequestDTO request) {
+        documentService.moveDocument(authentication.getName(), spaceId, documentId, request.orderIndex());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{documentId}/retry")

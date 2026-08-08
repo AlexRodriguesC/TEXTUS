@@ -8,10 +8,10 @@ import type { DocumentsResponseDTO, ErrorResponseDTO } from "@/client/model";
 import Document from "@/classes/Document.ts";
 import { mapDocument } from "@/hooks/dtoMappers.ts";
 import { CREATE_DOCUMENT_MUTATION_KEY } from "@/hooks/useDocumentUpload.tsx";
+import { useReorderDocument } from "@/hooks/useReorderDocumentsMutation.ts";
 import { shouldPollDocuments } from "@/lib/documentTaskUtils.ts";
 import { failureToast, successToast } from "@/lib/toasts.tsx";
 import { useMutationState, useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export { isDone, isFailed, isInProgress } from "@/lib/documentTaskUtils.ts";
@@ -27,7 +27,7 @@ type UploadMutationState = {
 function useDocuments(spaceId: number) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const awaitingServerUploadRef = useRef(false);
+  const { reorderDocument, isReordering } = useReorderDocument(spaceId);
 
   const uploadMutations = useMutationState({
     filters: { mutationKey: CREATE_DOCUMENT_MUTATION_KEY },
@@ -47,7 +47,15 @@ function useDocuments(spaceId: number) {
           queryData && isDocumentsResponseDTO(queryData)
             ? queryData.documents.map(mapDocument)
             : [];
-        return shouldPollDocuments(documents, awaitingServerUploadRef.current);
+        const awaitingServerUpload = uploadMutations.some(
+          (mutation) =>
+            mutation.spaceId === spaceId &&
+            mutation.fileName != null &&
+            (mutation.status === "pending" ||
+              (mutation.status === "success" &&
+                !documents.some((document) => document.name === mutation.fileName))),
+        );
+        return shouldPollDocuments(documents, awaitingServerUpload);
       },
       refetchIntervalInBackground: true,
       enabled: spaceId != undefined,
@@ -83,7 +91,7 @@ function useDocuments(spaceId: number) {
           await queryClient.invalidateQueries({
             queryKey: getGetDocumentsQueryKey(spaceId),
           });
-          successToast(t("documents.delete.success", {fileName}));
+          successToast(t("documents.delete.success", { fileName }));
         },
       },
     );
@@ -98,14 +106,6 @@ function useDocuments(spaceId: number) {
   }
 
   const serverDocumentNames = new Set(documents.map((doc) => doc.name));
-  awaitingServerUploadRef.current = uploadMutations.some(
-    (mutation) =>
-      mutation.spaceId === spaceId &&
-      mutation.fileName != null &&
-      (mutation.status === "pending" ||
-        (mutation.status === "success" &&
-          !serverDocumentNames.has(mutation.fileName))),
-  );
   const optimisticDocuments = uploadMutations
     .filter(
       (mutation) =>
@@ -118,7 +118,7 @@ function useDocuments(spaceId: number) {
     .filter((mutation) => !serverDocumentNames.has(mutation.fileName!))
     .map(
       (mutation) =>
-        new Document(mutation.fileName!, mutation.tempId, []),
+        new Document(mutation.fileName!, mutation.tempId, [], documents.length),
     );
 
   return {
@@ -126,6 +126,8 @@ function useDocuments(spaceId: number) {
     deleteDocument,
     retryDocument: (documentId: number) =>
       retryMutation.mutate({ spaceId, documentId }),
+    reorderDocument,
+    isReordering,
     isRetrying: retryMutation.isPending,
     isLoading,
   };

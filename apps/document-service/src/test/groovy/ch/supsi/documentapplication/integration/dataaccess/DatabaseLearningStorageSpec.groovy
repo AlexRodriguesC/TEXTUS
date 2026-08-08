@@ -239,7 +239,18 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
         Long jobId = createBatchJobInstance()
         Long pathId = pathStorage.createLearningPath(spaceId, jobId)
         Long checkpointTopicId = createTopic(spaceId, jobId)
-        Chapter chapter = new Chapter(0, "Chapter", "desc", [checkpointTopicId], [checkpointTopicId])
+        Long documentId = jdbcClient
+                .sql("""
+                SELECT page.document_id
+                FROM documents.topic topic
+                JOIN documents.page page ON page.id = topic.page_id
+                WHERE topic.id = :topicId
+                """)
+                .param("topicId", checkpointTopicId)
+                .query(Long.class)
+                .single()
+        Chapter chapter =
+                new Chapter(0, "Chapter", "desc", [checkpointTopicId], [checkpointTopicId], documentId)
         chapter.buildLessons()
         pathStorage.create(pathId, chapter, spaceId)
         Long checkpointId = jdbcClient

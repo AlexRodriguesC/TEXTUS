@@ -21,6 +21,10 @@ public class Chapter {
     @ToString.Exclude
     private Long id;
 
+    @JsonIgnore
+    @ToString.Exclude
+    private final Long documentId;
+
     @JsonPropertyDescription(
             "Zero-based position of this chapter in the overall sequence. Must be strictly increasing by 1 across all chapters, with no gaps, reflecting learning progression from foundational to advanced.")
     private final Integer index;
@@ -57,19 +61,35 @@ public class Chapter {
         this.labels = labels;
         this.topics = null;
         this.lessons = null;
+        this.documentId = null;
     }
 
     public Chapter(Integer index, String title, String description, List<Long> labels, List<Long> topics) {
+        this(index, title, description, labels, topics, null);
+    }
+
+    public Chapter(Integer index, String title, String description, List<Long> topics, Long documentId) {
+        this(index, title, description, null, topics, documentId);
+    }
+
+    public Chapter(
+            Integer index, String title, String description, List<Long> labels, List<Long> topics, Long documentId) {
         this.index = index;
         this.title = title;
         this.description = description;
         this.labels = labels;
         this.topics = topics;
         this.lessons = null;
+        this.documentId = documentId;
     }
 
     public Chapter(Long id, Integer index, String title, String description, List<Long> topics) {
+        this(id, null, index, title, description, topics);
+    }
+
+    public Chapter(Long id, Long documentId, Integer index, String title, String description, List<Long> topics) {
         this.id = id;
+        this.documentId = documentId;
         this.index = index;
         this.title = title;
         this.description = description;
@@ -77,23 +97,23 @@ public class Chapter {
     }
 
     /**
-     * Constructs and populates the node list for this chapter based on its topics.
+     * Constructs and populates the lesson list for this chapter based on its topics.
      * <p>
      * Every chapter must have at least one topic; a chapter with zero topics indicates
      * an upstream bug and results in an exception rather than an empty lesson list.
      * <p>
-     * Topics are split into lesson groups of at least 3 topics each (subject to the
-     * total topic count), followed by a single checkpoint lesson that is not
+     * Callers must supply {@code topics} in pedagogical order (typically by ascending
+     * page number). Topics are then split into contiguous lesson groups that preserve
+     * that order—no interleaving—followed by a single checkpoint lesson that is not
      * associated with any topics. A chapter therefore always has at least 2 lessons:
      * one content lesson and the trailing checkpoint.
      * <p>
      * The number of content lessons is {@code floor(topicCount / 3)}, with a minimum
-     * of 1. Remaining topics beyond an exact multiple of 3 are distributed round-robin
-     * across the lesson groups, so no group differs from another by more than one topic,
-     * and every group is guaranteed to have at least 3 topics whenever
-     * {@code topicCount >= 3}. If the chapter has fewer than 3 topics in total, the
-     * single content lesson simply contains all of them, since no valid grouping of
-     * size 3 or more exists in that case.
+     * of 1. Group sizes are balanced so no group differs from another by more than one
+     * topic (earlier groups absorb any remainder), and every group is guaranteed to have
+     * at least 3 topics whenever {@code topicCount >= 3}. If the chapter has fewer than
+     * 3 topics in total, the single content lesson simply contains all of them, since no
+     * valid grouping of size 3 or more exists in that case.
      */
     public void buildLessons() {
         if (this.topics == null || this.topics.isEmpty()) {
@@ -117,12 +137,16 @@ public class Chapter {
     }
 
     private static List<List<Long>> distributeTopics(List<Long> topics, int lessonCount) {
+        int topicCount = topics.size();
+        int baseSize = topicCount / lessonCount;
+        int remainder = topicCount % lessonCount;
+
         List<List<Long>> groups = new ArrayList<>(lessonCount);
+        int offset = 0;
         for (int i = 0; i < lessonCount; i++) {
-            groups.add(new ArrayList<>());
-        }
-        for (int i = 0; i < topics.size(); i++) {
-            groups.get(i % lessonCount).add(topics.get(i));
+            int size = baseSize + (i < remainder ? 1 : 0);
+            groups.add(new ArrayList<>(topics.subList(offset, offset + size)));
+            offset += size;
         }
         return groups;
     }

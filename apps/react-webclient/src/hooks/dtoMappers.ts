@@ -56,7 +56,7 @@ export function mapTask(dto: TaskDto): Task {
 }
 
 export function mapDocument(dto: DocumentResponseDTO): Document {
-  return new Document(dto.name, dto.id, dto.tasks.map(mapTask));
+  return new Document(dto.name, dto.id, dto.tasks.map(mapTask), dto.orderIndex);
 }
 
 export function mapLesson(dto: LessonResponseDTO): Lesson {

@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
 import ch.supsi.documentapplication.dataaccess.DatabasePathStorage
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
 import ch.supsi.documentapplication.exception.ApplicationException
+import ch.supsi.documentapplication.exception.InvalidInputException
 import ch.supsi.documentapplication.exception.JobFailedToStartException
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.StateConflictException
@@ -115,8 +116,8 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         Optional<Space> space = buildOptSpace(spaceId, owner)
         List<Document> documents = [
-                new Document("abc", 1, 2),
-                new Document("abc", 2, 3)
+                new Document("abc", 1, 2, 0),
+                new Document("abc", 2, 3, 1)
         ]
         def task = new DocumentTask("1:OCR", 1L, TaskType.OCR, 1, 1, TaskVariant.SUCCESS)
 
@@ -156,6 +157,58 @@ class DocumentServiceSpec extends Specification {
         0 * databaseDocumentStorage._
     }
 
+    def "should move document for owned space"() {
+        given:
+        def documents = [
+                new Document("first.pdf", 1L, 11L, 0),
+                new Document("second.pdf", 2L, 12L, 1)
+        ]
+
+        when:
+        service.moveDocument("alice", 10L, 2L, 0)
+
+        then:
+        1 * spaceStorage.read(10L) >> buildOptSpace(10L, "alice")
+        1 * databaseDocumentStorage.getDocuments(10L) >> documents
+        1 * databaseDocumentStorage.move(10L, 2L, 0)
+    }
+
+    def "should reject move when document is not in space"() {
+        when:
+        service.moveDocument("alice", 10L, 42L, 0)
+
+        then:
+        1 * spaceStorage.read(10L) >> buildOptSpace(10L, "alice")
+        1 * databaseDocumentStorage.getDocuments(10L) >> [
+                new Document("first.pdf", 1L, 11L, 0)
+        ]
+        thrown(NotFoundException)
+        0 * databaseDocumentStorage.move(_, _, _)
+    }
+
+    def "should reject move outside document bounds"() {
+        when:
+        service.moveDocument("alice", 10L, 1L, 1)
+
+        then:
+        1 * spaceStorage.read(10L) >> buildOptSpace(10L, "alice")
+        1 * databaseDocumentStorage.getDocuments(10L) >> [
+                new Document("first.pdf", 1L, 11L, 0)
+        ]
+        thrown(InvalidInputException)
+        0 * databaseDocumentStorage.move(_, _, _)
+    }
+
+    def "should reject move when requester is not owner"() {
+        when:
+        service.moveDocument("alice", 10L, 1L, 0)
+
+        then:
+        1 * spaceStorage.read(10L) >> buildOptSpace(10L, "bob")
+        thrown(UnauthorizedException)
+        0 * databaseDocumentStorage._
+    }
+
     def "should restart failed document job"() {
         given:
         String owner = "alice"
@@ -163,7 +216,7 @@ class DocumentServiceSpec extends Specification {
         Long documentId = 1L
         Long jobId = 99L
         Optional<Space> space = buildOptSpace(spaceId, owner)
-        Document document = new Document("doc.pdf", documentId, jobId)
+        Document document = new Document("doc.pdf", documentId, jobId, 0)
         JobInstance jobInstance = Mock()
         JobExecution jobExecution = Mock()
 
@@ -202,7 +255,7 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         Long documentId = 1L
         Optional<Space> space = buildOptSpace(spaceId, owner)
-        Document document = new Document("doc.pdf", documentId, 99L)
+        Document document = new Document("doc.pdf", documentId, 99L, 0)
         JobInstance jobInstance = Mock()
         JobExecution jobExecution = Mock()
 
@@ -225,7 +278,7 @@ class DocumentServiceSpec extends Specification {
         Long spaceId = 10L
         Long documentId = 1L
         Optional<Space> space = buildOptSpace(spaceId, owner)
-        Document document = new Document("doc.pdf", documentId, 99L)
+        Document document = new Document("doc.pdf", documentId, 99L, 0)
         JobInstance jobInstance = Mock()
         JobExecution jobExecution = Mock()
 

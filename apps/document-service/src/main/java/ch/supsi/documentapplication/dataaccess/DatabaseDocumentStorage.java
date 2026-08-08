@@ -1,7 +1,9 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import ch.supsi.documentapplication.exception.InvalidInputException;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.*;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
@@ -23,6 +25,7 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
     public static final String KEY = "key";
     public static final String JOB_ID = "job_id";
     public static final String DOCUMENT_NAME = "document_name";
+    public static final String ORDER_INDEX = "order_index";
 
     @Autowired
     public DatabaseDocumentStorage(JdbcClient jdbcClient) {
@@ -78,8 +81,31 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
         return jdbcClient
                 .sql("SELECT * FROM documents.read_documents(:space_id)")
                 .param(SPACE_ID, spaceId)
-                .query((rs, rowNum) -> new Document(rs.getString("name"), rs.getLong(ID), rs.getLong(JOB_ID)))
+                .query((rs, rowNum) ->
+                        new Document(rs.getString("name"), rs.getLong(ID), rs.getLong(JOB_ID), rs.getInt(ORDER_INDEX)))
                 .list();
+    }
+
+    @Override
+    public void move(Long spaceId, Long documentId, int orderIndex) {
+        try {
+            jdbcClient
+                    .sql("SELECT documents.move_document(:space_id, :document_id, :order_index)")
+                    .param(SPACE_ID, spaceId)
+                    .param(DOCUMENT_ID, documentId)
+                    .param(ORDER_INDEX, orderIndex)
+                    .query()
+                    .singleValue();
+        } catch (DataAccessException e) {
+            String sqlState = findSqlState(e);
+            if ("P0002".equals(sqlState)) {
+                throw NotFoundException.spaceOrDocumentNotFoundException(spaceId, documentId);
+            }
+            if ("22023".equals(sqlState)) {
+                throw InvalidInputException.invalidDocumentOrderIndex(orderIndex);
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -114,5 +140,16 @@ public class DatabaseDocumentStorage extends DatabaseStorage implements IDatabas
                 .param(DOCUMENT_ID, documentId)
                 .query()
                 .singleValue();
+    }
+
+    private static String findSqlState(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof SQLException sqlException) {
+                return sqlException.getSQLState();
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 }

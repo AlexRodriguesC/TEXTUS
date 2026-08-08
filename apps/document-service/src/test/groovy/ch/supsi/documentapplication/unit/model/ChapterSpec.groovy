@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.model
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.LessonType
 import spock.lang.Specification
+import tools.jackson.databind.ObjectMapper
 
 class ChapterSpec extends Specification {
 
@@ -20,7 +21,7 @@ class ChapterSpec extends Specification {
         chapter.lessons[1].type == LessonType.CHECKPOINT
     }
 
-    def "should distribute six topics across two lesson groups"() {
+    def "should distribute six topics across two contiguous lesson groups"() {
         given:
         def chapter = new Chapter(0, "Intro", "desc", [1L, 2L, 3L, 4L, 5L, 6L], [1L, 2L, 3L, 4L, 5L, 6L])
 
@@ -29,9 +30,29 @@ class ChapterSpec extends Specification {
 
         then:
         chapter.lessons.size() == 3
-        chapter.lessons[0].topics.size() == 3
-        chapter.lessons[1].topics.size() == 3
+        chapter.lessons[0].topics == [1L, 2L, 3L]
+        chapter.lessons[1].topics == [4L, 5L, 6L]
         chapter.lessons[2].type == LessonType.CHECKPOINT
+    }
+
+    def "should keep ten topics contiguous with remainder on earlier lessons"() {
+        given:
+        def chapter = new Chapter(
+                0,
+                "Intro",
+                "desc",
+                [1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L],
+                [1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L])
+
+        when:
+        chapter.buildLessons()
+
+        then:
+        chapter.lessons.size() == 4
+        chapter.lessons[0].topics == [1L, 2L, 3L, 4L]
+        chapter.lessons[1].topics == [5L, 6L, 7L]
+        chapter.lessons[2].topics == [8L, 9L, 10L]
+        chapter.lessons[3].type == LessonType.CHECKPOINT
     }
 
     def "should throw when chapter has no topics"() {
@@ -43,5 +64,18 @@ class ChapterSpec extends Specification {
 
         then:
         thrown(IllegalStateException)
+    }
+
+    def "should exclude document provenance from LLM JSON"() {
+        given:
+        def chapter = new Chapter(0, "Intro", "desc", [1L], [10L], 99L)
+
+        when:
+        def json = new ObjectMapper().writeValueAsString(chapter)
+
+        then:
+        !json.contains("documentId")
+        json.contains('"index":0')
+        json.contains('"labels":[1]')
     }
 }

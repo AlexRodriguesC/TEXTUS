@@ -61,6 +61,15 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     }
 
     @Override
+    public List<Topic> getByDocumentId(Long documentId) {
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_topics_by_document(:document_id)")
+                .param(DOCUMENT_ID, documentId)
+                .query((rs, rowNum) -> mapToTopic(rs))
+                .list();
+    }
+
+    @Override
     public List<Topic> findRandomTopicsBySpace(Long spaceId, int limit) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_random_topics_by_space(:space_id, :limit)")

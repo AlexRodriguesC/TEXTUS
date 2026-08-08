@@ -4,6 +4,8 @@ import TaskType from "@/classes/TaskType.ts";
 import TaskVariant from "@/classes/TaskVariant.ts";
 import DocumentRowStatus from "@/pages/space/menu/DocumentRowStatus.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { DndContext } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -30,19 +32,27 @@ vi.mock("@/hooks/shadcn/useIsMobile.ts", () => ({
 }));
 
 function buildDocument(tasks: Task[]): Document {
-  return new Document("sample-document.pdf", 1, tasks);
+  return new Document("sample-document.pdf", 1, tasks, 0);
 }
 
-function renderRow(document: Document) {
+function renderRow(document: Document, sortable = false) {
   return render(
     <TooltipProvider>
-      <DocumentRowStatus
-        document={document}
-        onDelete={vi.fn()}
-        onRetry={vi.fn()}
-        isRetrying={false}
-        actionsDisabled={false}
-      />
+      <DndContext>
+        <SortableContext
+          items={[document.id]}
+          strategy={verticalListSortingStrategy}
+        >
+          <DocumentRowStatus
+            document={document}
+            onDelete={vi.fn()}
+            onRetry={vi.fn()}
+            isRetrying={false}
+            actionsDisabled={false}
+            sortable={sortable}
+          />
+        </SortableContext>
+      </DndContext>
     </TooltipProvider>,
   );
 }
@@ -60,8 +70,10 @@ describe("DocumentRowStatus", () => {
     );
 
     expect(screen.getByTestId("spinner")).toBeInTheDocument();
-    expect(screen.getAllByRole("status")).toHaveLength(1);
-    expect(screen.getByRole("status")).toHaveClass("text-primary");
+    const status = screen
+      .getAllByRole("status")
+      .find((element) => element.className.includes("text-primary"));
+    expect(status).toBeTruthy();
     expect(screen.getByText("sample-document.pdf")).toHaveAttribute(
       "data-slot",
       "tooltip-trigger",
@@ -81,8 +93,10 @@ describe("DocumentRowStatus", () => {
 
     expect(screen.queryByTestId("spinner")).not.toBeInTheDocument();
     expect(screen.queryByTestId("processing-status")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("status")).toHaveLength(1);
-    expect(screen.getByRole("status")).toHaveClass("text-(--success)");
+    const status = screen
+      .getAllByRole("status")
+      .find((element) => element.className.includes("text-(--success)"));
+    expect(status).toBeTruthy();
   });
 
   it("should show retry action without processing tooltip when failed", () => {
@@ -94,7 +108,25 @@ describe("DocumentRowStatus", () => {
 
     expect(screen.getByTitle("documents.retry.action")).toBeInTheDocument();
     expect(screen.queryByTestId("processing-status")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("status")).toHaveLength(1);
-    expect(screen.getByRole("status")).toHaveClass("text-destructive");
+    const status = screen
+      .getAllByRole("status")
+      .find((element) => element.className.includes("text-destructive"));
+    expect(status).toBeTruthy();
+  });
+
+  it("should render a drag handle when sortable", () => {
+    renderRow(
+      buildDocument([
+        new Task("1:OCR", TaskType.OCR, 1, 1, TaskVariant.SUCCESS),
+        new Task("1:SEG", TaskType.SEGMENTATION, 1, 1, TaskVariant.SUCCESS),
+        new Task("1:SUM", TaskType.SUMMARIZATION, 1, 1, TaskVariant.SUCCESS),
+        new Task("1:TOP", TaskType.TOPIC, 1, 1, TaskVariant.SUCCESS),
+      ]),
+      true,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Reorder sample-document.pdf" }),
+    ).toBeInTheDocument();
   });
 });

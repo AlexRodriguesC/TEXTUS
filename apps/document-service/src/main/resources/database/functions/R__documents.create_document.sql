@@ -5,15 +5,24 @@ AS
 $$
     DECLARE
         v_document_id BIGINT;
+        v_order_index INTEGER;
     BEGIN
-        -- Validate space exists
-        IF NOT EXISTS (
-            SELECT 1 FROM documents.space WHERE id = p_space_id
-        ) THEN
+        PERFORM 1
+        FROM documents.space
+        WHERE id = p_space_id;
+
+        IF NOT FOUND THEN
             RAISE EXCEPTION 'Space with id % not found', p_space_id;
         END IF;
 
-        INSERT INTO documents.document(space_id, job_id, name) VALUES (p_space_id, p_job_id, p_name) RETURNING id INTO v_document_id;
+        SELECT COALESCE(MAX(d.order_index), -1) + 1
+        INTO v_order_index
+        FROM documents.document d
+        WHERE d.space_id = p_space_id;
+
+        INSERT INTO documents.document(space_id, job_id, name, order_index)
+        VALUES (p_space_id, p_job_id, p_name, v_order_index)
+        RETURNING id INTO v_document_id;
 
         RETURN v_document_id;
     END;

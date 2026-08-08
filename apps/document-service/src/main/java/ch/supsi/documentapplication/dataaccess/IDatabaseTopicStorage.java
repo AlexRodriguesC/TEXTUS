@@ -9,6 +9,8 @@ public interface IDatabaseTopicStorage {
 
     List<Topic> getBySpaceId(Long spaceId);
 
+    List<Topic> getByDocumentId(Long documentId);
+
     List<Topic> findRandomTopicsBySpace(Long spaceId, int limit);
 
     Long create(Topic topic, Long pageId);

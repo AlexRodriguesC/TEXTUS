@@ -79,11 +79,7 @@ trait IntegrationFixture {
 
     Long createDocument(Long spaceId, Long jobId, String name = "test-document") {
         jdbcClient
-                .sql("""
-                INSERT INTO documents.document (name, job_id, space_id)
-                VALUES (:name, :jobId, :spaceId)
-                RETURNING id
-                """)
+                .sql("SELECT documents.create_document(:spaceId, :jobId, :name)")
                 .param("name", name)
                 .param("jobId", jobId)
                 .param("spaceId", spaceId)
@@ -143,8 +139,18 @@ trait IntegrationFixture {
         DatabasePathStorage pathStorage = new DatabasePathStorage(jdbcClient)
         Long pathId = pathStorage.createLearningPath(spaceId, jobId)
         Long topicId = createTopic(spaceId, jobId)
+        Long documentId = jdbcClient
+                .sql("""
+                SELECT page.document_id
+                FROM documents.topic topic
+                JOIN documents.page page ON page.id = topic.page_id
+                WHERE topic.id = :topicId
+                """)
+                .param("topicId", topicId)
+                .query(Long.class)
+                .single()
         Lesson lesson = new Lesson(LessonType.LESSON, 0, [topicId])
-        Chapter chapter = new Chapter(0, "Chapter 1", "desc", List.of())
+        Chapter chapter = new Chapter(0, "Chapter 1", "desc", List.of(), documentId)
         chapter.setLessons([lesson])
         pathStorage.create(pathId, chapter, spaceId)
         Long lessonId = jdbcClient

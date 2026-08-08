@@ -31,10 +31,11 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
         Long chapterId = jdbcClient
                 .sql(
                         """
-            SELECT documents.create_chapter(:spaceId, :pathId, :index, :title, :description)
+            SELECT documents.create_chapter(:spaceId, :pathId, :documentId, :index, :title, :description)
             """)
                 .param(SPACE_ID, spaceId)
                 .param("pathId", pathId)
+                .param("documentId", chapter.getDocumentId())
                 .param(INDEX, chapter.getIndex())
                 .param(TITLE, chapter.getTitle())
                 .param(DESCRIPTION, chapter.getDescription())
@@ -102,7 +103,12 @@ public class DatabasePathStorage extends DatabaseStorage implements IDatabasePat
                 """)
                 .param(SPACE_ID, spaceId)
                 .query((rs, rowNum) -> new Chapter(
-                        rs.getLong("id"), rs.getInt(INDEX), rs.getString(TITLE), rs.getString(DESCRIPTION), null))
+                        rs.getLong("id"),
+                        rs.getLong("document_id"),
+                        rs.getInt(INDEX),
+                        rs.getString(TITLE),
+                        rs.getString(DESCRIPTION),
+                        null))
                 .list();
 
         for (Chapter chapter : chapters) {

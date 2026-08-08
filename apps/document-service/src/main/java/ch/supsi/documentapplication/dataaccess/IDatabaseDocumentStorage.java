@@ -14,6 +14,8 @@ public interface IDatabaseDocumentStorage {
 
     List<Document> getDocuments(Long spaceId);
 
+    void move(Long spaceId, Long documentId, int orderIndex);
+
     List<Page> getPages(Long documentId);
 
     List<SpacePage> getPagesBySpaceId(Long spaceId);

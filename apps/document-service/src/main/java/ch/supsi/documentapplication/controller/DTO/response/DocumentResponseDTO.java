@@ -18,5 +18,9 @@ public record DocumentResponseDTO(
                 Long id,
 
         @NotNull
+                @Schema(description = "Zero-based position of the document within its space", example = "0")
+                Integer orderIndex,
+
+        @NotNull
                 @Schema(description = "Pipeline processing tasks with per-stage progress")
                 List<TaskDto> tasks) {}

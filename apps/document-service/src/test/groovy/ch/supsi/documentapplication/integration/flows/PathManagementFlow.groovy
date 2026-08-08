@@ -98,8 +98,18 @@ class PathManagementFlow extends BaseFlowSpec implements FlowTestSupport, Integr
         DatabasePathStorage pathStorage = new DatabasePathStorage(jdbcClient)
         Long pathId = pathStorage.createLearningPath(spaceId, jobId)
         Long topicId = createTopic(spaceId, jobId)
+        Long documentId = jdbcClient
+                .sql("""
+                SELECT page.document_id
+                FROM documents.topic topic
+                JOIN documents.page page ON page.id = topic.page_id
+                WHERE topic.id = :topicId
+                """)
+                .param("topicId", topicId)
+                .query(Long.class)
+                .single()
         Lesson lesson = new Lesson(LessonType.LESSON, 0, [topicId])
-        Chapter chapter = new Chapter(0, "Chapter 1", "desc", List.of())
+        Chapter chapter = new Chapter(0, "Chapter 1", "desc", List.of(), documentId)
         chapter.setLessons([lesson])
         pathStorage.create(pathId, chapter, spaceId)
     }

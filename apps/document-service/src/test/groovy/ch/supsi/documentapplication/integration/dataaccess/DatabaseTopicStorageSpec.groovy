@@ -54,6 +54,40 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         topics.find { it.title == "Topic B" }.labels == ["space-label"]
     }
 
+    def "should read only topics from one document ordered by page then topic id"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long firstJobId = createBatchJobInstance("first-document")
+        Long secondJobId = createBatchJobInstance("second-document")
+        Long firstDocumentId = createDocument(spaceId, firstJobId, "first.pdf")
+        Long secondDocumentId = createDocument(spaceId, secondJobId, "second.pdf")
+        Long firstPageTwo = createPageForDocument(spaceId, firstDocumentId, 2)
+        Long firstPageOne = createPageForDocument(spaceId, firstDocumentId, 1)
+        Long secondPage = createPageForDocument(spaceId, secondDocumentId, 1)
+
+        Long pageTwoTopic = storage.create(
+                new Topic(null, "first.pdf", firstPageTwo, 2, "page-two", "summary", ["first"]),
+                firstPageTwo)
+        Long pageOneFirstTopic = storage.create(
+                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-first", "summary", ["first"]),
+                firstPageOne)
+        Long pageOneSecondTopic = storage.create(
+                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-second", "summary", ["first"]),
+                firstPageOne)
+        storage.create(
+                new Topic(null, "second.pdf", secondPage, 1, "other-document", "summary", ["second"]),
+                secondPage)
+
+        when:
+        def topics = storage.getByDocumentId(firstDocumentId)
+
+        then:
+        topics*.id == [pageOneFirstTopic, pageOneSecondTopic, pageTwoTopic]
+        topics*.title == ["page-one-first", "page-one-second", "page-two"]
+        topics*.pageNumber == [1, 1, 2]
+    }
+
     def "should return generated id from createAndReturnId"() {
         given:
         createUser()
@@ -103,5 +137,19 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
 
         then:
         topics.isEmpty()
+    }
+
+    private Long createPageForDocument(Long spaceId, Long documentId, int pageNumber) {
+        jdbcClient
+                .sql("""
+                INSERT INTO documents.page (space_id, document_id, page_number, title, summary)
+                VALUES (:spaceId, :documentId, :pageNumber, 'title', 'summary')
+                RETURNING id
+                """)
+                .param("spaceId", spaceId)
+                .param("documentId", documentId)
+                .param("pageNumber", pageNumber)
+                .query(Long.class)
+                .single()
     }
 }

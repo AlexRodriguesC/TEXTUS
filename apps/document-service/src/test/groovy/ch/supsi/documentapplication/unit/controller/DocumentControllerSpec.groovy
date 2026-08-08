@@ -27,6 +27,7 @@ import ch.supsi.documentapplication.model.TaskVariant
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -110,7 +111,7 @@ class DocumentControllerSpec extends Specification {
     def "should return documents for space"() {
         given:
         documentService.getDocuments("pippo", 1L) >> {
-            def doc = new Document("doc.pdf", 1L, 2L)
+            def doc = new Document("doc.pdf", 1L, 2L, 3)
             doc.tasks = [new DocumentTask("1:OCR", 1L, TaskType.OCR, 1, 1, TaskVariant.SUCCESS)]
             [doc]
         }
@@ -121,8 +122,38 @@ class DocumentControllerSpec extends Specification {
         then:
         result.andExpect(status().isOk())
         result.andExpect(jsonPath('$.documents[0].id').value(1))
+        result.andExpect(jsonPath('$.documents[0].orderIndex').value(3))
         result.andExpect(jsonPath('$.documents[0].tasks[0].type').value("OCR"))
         result.andExpect(jsonPath('$.documents[0].tasks[0].variant').value("SUCCESS"))
+    }
+
+    def "should move document"() {
+        when:
+        def result = mockMvc.perform(
+                patch("/api/v1/spaces/1/documents/42")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content('{"orderIndex":0}'))
+
+        then:
+        1 * documentService.moveDocument("pippo", 1L, 42L, 0)
+        result.andExpect(status().isNoContent())
+    }
+
+    def "should reject missing or negative document order index"() {
+        when:
+        def result = mockMvc.perform(
+                patch("/api/v1/spaces/1/documents/42")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+
+        then:
+        result.andExpect(status().isBadRequest())
+        0 * documentService.moveDocument(_, _, _, _)
+
+        where:
+        body << ['{}', '{"orderIndex":-1}']
     }
 
     def "should delete document"() {

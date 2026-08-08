@@ -43,6 +43,7 @@ export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
         const optimisticDocument: DocumentResponseDTO = {
           id: -Date.now(),
           name: file.name,
+          orderIndex: Number.MAX_SAFE_INTEGER,
           tasks: [],
         };
 
@@ -87,7 +88,7 @@ export function useDocumentUpload({ spaceId }: UseDocumentUploadOptions) {
       try {
         await uploadDocument.mutateAsync({ spaceId, data: { document: file } });
         return { status: "success", result: file };
-      } catch (err) {
+      } catch {
         return { status: "error", error: t("spaces.upload.error") };
       }
     },

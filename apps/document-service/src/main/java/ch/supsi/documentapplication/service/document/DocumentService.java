@@ -98,6 +98,21 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
     }
 
     @Override
+    public void moveDocument(String owner, Long spaceId, Long documentId, int orderIndex) {
+        var space = getSpaceOrThrow(owner, spaceId);
+        var documents = databaseDocumentStorage.getDocuments(space.getId());
+
+        if (documents.stream().noneMatch(document -> document.getId().equals(documentId))) {
+            throw NotFoundException.documentNotFoundException(documentId);
+        }
+        if (orderIndex < 0 || orderIndex >= documents.size()) {
+            throw InvalidInputException.invalidDocumentOrderIndex(orderIndex, documents.size());
+        }
+
+        databaseDocumentStorage.move(space.getId(), documentId, orderIndex);
+    }
+
+    @Override
     public void retryDocument(String owner, Long spaceId, Long documentId) {
         getSpaceOrThrow(owner, spaceId);
 
