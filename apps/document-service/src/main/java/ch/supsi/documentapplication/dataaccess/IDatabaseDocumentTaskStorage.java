@@ -14,5 +14,7 @@ public interface IDatabaseDocumentTaskStorage {
 
     void fail(Long documentId, TaskType type);
 
+    void resume(Long documentId, TaskType type);
+
     List<DocumentTask> getByDocumentId(Long documentId);
 }

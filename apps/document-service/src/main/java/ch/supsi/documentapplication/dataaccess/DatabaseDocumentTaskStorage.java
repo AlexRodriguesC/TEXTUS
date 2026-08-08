@@ -64,6 +64,16 @@ public class DatabaseDocumentTaskStorage extends DatabaseStorage implements IDat
     }
 
     @Override
+    public void resume(Long documentId, TaskType type) {
+        jdbcClient
+                .sql("SELECT documents.resume_document_task(:document_id, :type)")
+                .param(DOCUMENT_ID, documentId)
+                .param(TYPE, type.name())
+                .query()
+                .singleValue();
+    }
+
+    @Override
     public List<DocumentTask> getByDocumentId(Long documentId) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_document_tasks(:document_id)")

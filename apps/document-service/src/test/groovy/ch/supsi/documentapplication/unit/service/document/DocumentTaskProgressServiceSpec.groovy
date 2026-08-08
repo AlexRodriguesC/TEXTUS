@@ -41,4 +41,12 @@ class DocumentTaskProgressServiceSpec extends Specification {
         then:
         1 * documentTaskStorage.fail(4L, TaskType.TOPIC)
     }
+
+    def "should resume task"() {
+        when:
+        service.resumeTask(5L, TaskType.OCR)
+
+        then:
+        1 * documentTaskStorage.resume(5L, TaskType.OCR)
+    }
 }

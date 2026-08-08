@@ -22,15 +22,23 @@ public class DocumentTaskStepListener implements StepExecutionListener {
     }
 
     @Override
-    public ExitStatus afterStep(@NotNull StepExecution stepExecution) {
+    public void beforeStep(@NotNull StepExecution stepExecution) {
         TaskType taskType = resolveTaskType(stepExecution.getStepName());
-        if (taskType == null) {
-            return stepExecution.getExitStatus();
+        Long documentId = resolveDocumentId(stepExecution);
+        if (taskType == null || documentId == null) {
+            return;
         }
 
-        Long documentId =
-                (Long) stepExecution.getJobExecution().getExecutionContext().get(SetupTasklet.DATABASE_DOCUMENT_ID);
-        if (documentId == null) {
+        // On job restart the step execution context still has *_TASK_STARTED, so tasklets skip
+        // startTask (which would clear ERROR). Clear the failed variant here without resetting progress.
+        documentTaskProgressService.resumeTask(documentId, taskType);
+    }
+
+    @Override
+    public ExitStatus afterStep(@NotNull StepExecution stepExecution) {
+        TaskType taskType = resolveTaskType(stepExecution.getStepName());
+        Long documentId = resolveDocumentId(stepExecution);
+        if (taskType == null || documentId == null) {
             return stepExecution.getExitStatus();
         }
 
@@ -39,6 +47,10 @@ public class DocumentTaskStepListener implements StepExecutionListener {
         }
 
         return stepExecution.getExitStatus();
+    }
+
+    private Long resolveDocumentId(StepExecution stepExecution) {
+        return (Long) stepExecution.getJobExecution().getExecutionContext().get(SetupTasklet.DATABASE_DOCUMENT_ID);
     }
 
     private TaskType resolveTaskType(String stepName) {

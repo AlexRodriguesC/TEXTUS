@@ -30,4 +30,8 @@ public class DocumentTaskProgressService {
     public void failTask(Long documentId, TaskType type) {
         documentTaskStorage.fail(documentId, type);
     }
+
+    public void resumeTask(Long documentId, TaskType type) {
+        documentTaskStorage.resume(documentId, type);
+    }
 }

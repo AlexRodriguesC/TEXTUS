@@ -14,8 +14,8 @@ public class BatchTaskExecutorConfiguration {
     public ThreadPoolTaskExecutor batchTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("batch-job-");
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
+        executor.setCorePoolSize(8);
+        executor.setMaxPoolSize(8);
         executor.setQueueCapacity(50);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds((int) Duration.ofHours(2).getSeconds());

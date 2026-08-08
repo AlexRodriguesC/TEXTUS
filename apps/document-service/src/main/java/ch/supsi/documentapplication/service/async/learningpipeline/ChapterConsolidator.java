@@ -25,9 +25,10 @@ public class ChapterConsolidator {
             return List.of();
         }
 
-        int totalTopics = working.stream().mapToInt(c -> topicCount(c)).sum();
+        int totalTopics =
+                working.stream().mapToInt(ChapterConsolidator::topicCount).sum();
         int effectiveMinTopics = totalTopics < MIN_TOPICS_PER_CHAPTER ? 1 : MIN_TOPICS_PER_CHAPTER;
-        int effectiveMaxChapters = Math.min(maxChapters, Math.max(1, totalTopics / effectiveMinTopics));
+        int effectiveMaxChapters = Math.clamp(totalTopics / effectiveMinTopics, 1, maxChapters);
 
         while (needsMerge(working, effectiveMinTopics, effectiveMaxChapters)) {
             int sourceIndex = selectSourceIndex(working, effectiveMinTopics, effectiveMaxChapters);
