@@ -10,7 +10,6 @@ import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient;
 import ch.supsi.documentapplication.service.clients.exercise.*;
 import ch.supsi.documentapplication.service.mindmap.IncrementalPageMindMapBuilder;
 import ch.supsi.documentapplication.service.mindmap.MindMapAssembler;
-import ch.supsi.documentapplication.service.validator.ChapterValidator;
 import ch.supsi.documentapplication.service.validator.MindMapValidator;
 import ch.supsi.documentapplication.service.validator.PageMindMapValidator;
 import com.openai.client.OpenAIClient;
@@ -121,30 +120,8 @@ public class OpenAIClientsConfiguration {
         var systemPromptResource = resourceLoader.getResource(promptProperties.getChapterExtractionSystem());
         String systemPromptText = copyToString(systemPromptResource);
 
-        var feedbackUserPromptResource =
-                resourceLoader.getResource(promptProperties.getChapterExtractionFeedbackUser());
-        String feedbackUserPromptText = copyToString(feedbackUserPromptResource);
-        PromptTemplate feedbackPromptTemplate = PromptTemplate.builder()
-                .renderer(templateRenderer)
-                .template(feedbackUserPromptText)
-                .build();
-
-        var feedbackSystemPromptResource =
-                resourceLoader.getResource(promptProperties.getChapterExtractionFeedbackSystem());
-        String feedbackSystemPromptText = copyToString(feedbackSystemPromptResource);
-
-        var chapterValidator = new ChapterValidator();
-
         return new OpenAIChapterClient(
-                objectMapper,
-                chatClient,
-                retryTemplateWrapper,
-                systemPromptText,
-                promptTemplate,
-                feedbackSystemPromptText,
-                feedbackPromptTemplate,
-                chapterValidator,
-                aiContext);
+                objectMapper, chatClient, retryTemplateWrapper, systemPromptText, promptTemplate, aiContext);
     }
 
     @Bean

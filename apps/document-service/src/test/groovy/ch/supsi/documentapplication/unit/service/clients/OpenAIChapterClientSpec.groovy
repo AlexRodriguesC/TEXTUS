@@ -1,16 +1,16 @@
 package ch.supsi.documentapplication.unit.service.clients
 
+import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.AiUsage
-import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterBoundary
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest
-import ch.supsi.documentapplication.service.async.learningpipeline.Label
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterTopic
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient
-import ch.supsi.documentapplication.service.validator.ChapterValidator
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.chat.prompt.PromptTemplate
-import org.springframework.core.ParameterizedTypeReference
+import org.springframework.ai.retry.TransientAiException
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import spock.lang.Specification
@@ -29,14 +29,13 @@ class OpenAIChapterClientSpec extends Specification {
     ChatClient.CallResponseSpec callResponseSpec = Mock()
     RetryTemplateWrapper retryTemplate
     PromptTemplate promptTemplate = Mock()
-    PromptTemplate feedbackPromptTemplate = Mock()
     ObjectMapper objectMapper = new ObjectMapper()
-    ChapterValidator chapterValidator = new ChapterValidator()
     Map capturedPromptParams
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
                 .maxRetries(2)
+                .includes(TransientAiException.class)
                 .delay(Duration.ofMillis(10))
                 .build()
         retryTemplate = new RetryTemplateWrapper(new RetryTemplate(retryPolicy))
@@ -54,171 +53,103 @@ class OpenAIChapterClientSpec extends Specification {
                 retryTemplate,
                 "",
                 promptTemplate,
-                "",
-                feedbackPromptTemplate,
-                chapterValidator,
                 ClientTestSupport.TEST_AI_CONTEXT)
     }
 
-    def "should return valid chapters matching all label ids when chatClient produces a complete assignment"() {
+    def "should return a validated chapter boundary and pass topics into the prompt"() {
         given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics"),
-                new Label(3L, "advanced")
+        def topics = [
+                new ChapterTopic(1, "home cooking chicken"),
+                new ChapterTopic(2, "kitchen safety basics"),
+                new ChapterTopic(3, "advanced plating techniques")
         ]
-        def request = new ChapterGenerationRequest(labels, 5)
-        def expectedChapters = [
-                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L, 3L])
-        ]
+        def request = new ChapterGenerationRequest(topics)
+        def expected = new ChapterBoundary("Home Cooking", "Covers home cooking foundations", 2)
 
         chatClient.prompt(_ as Prompt) >> requestSpec
         requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedChapters)
+        callResponseSpec.responseEntity(ChapterBoundary.class) >> ClientTestSupport.responseEntityFor(expected)
 
         when:
         def result = client.getResult(request)
 
         then:
-        result.result()*.index == [0]
-        result.result()*.labels == [[1L, 2L, 3L]]
+        result.result().title == "Home Cooking"
+        result.result().description == "Covers home cooking foundations"
+        result.result().cuttingPoint == 2
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
-        capturedPromptParams.max_chapters == 5
-        capturedPromptParams.labels == objectMapper.writeValueAsString(labels)
-        0 * feedbackPromptTemplate._
+        capturedPromptParams.topics == objectMapper.writeValueAsString(topics)
     }
 
-    def "should pass the computed chapter cap into the prompt template"() {
+    def "should retry once for invalid cutting points and succeed on the second attempt"(Integer invalidCut) {
         given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics"),
-                new Label(3L, "advanced"),
-                new Label(4L, "practice")
-        ]
-        def request = new ChapterGenerationRequest(labels, 2)
-        def expectedChapters = [
-                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L]),
-                new Chapter(1, "Application", "Applied practice overview", [3L, 4L])
-        ]
+        def topics = (1..12).collect { int i -> new ChapterTopic(i, "label$i") }
+        def request = new ChapterGenerationRequest(topics)
+        def invalid = new ChapterBoundary("Bad Cut", "Invalid cutting point description", invalidCut)
+        def valid = new ChapterBoundary("Good Cut", "Valid cutting point description", 12)
+        int attempt = 0
 
         chatClient.prompt(_ as Prompt) >> requestSpec
-        requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(expectedChapters)
+        requestSpec.call() >> {
+            attempt++
+            return callResponseSpec
+        }
+        callResponseSpec.responseEntity(ChapterBoundary.class) >> {
+            ClientTestSupport.responseEntityFor(attempt == 1 ? invalid : valid)
+        }
 
         when:
         def result = client.getResult(request)
 
         then:
-        result.result()*.index == [0, 1]
-        capturedPromptParams.max_chapters == 2
-        capturedPromptParams.containsKey("labels")
-        0 * feedbackPromptTemplate._
+        result.result().cuttingPoint == 12
+        attempt == 2
+
+        where:
+        invalidCut << [null, 0, 13]
     }
 
-    def "should deduplicate label ids and skip feedback loop when only duplicates are present"() {
+    def "should fail after retries are exhausted when cutting point stays invalid"() {
         given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics"),
-                new Label(3L, "advanced")
-        ]
-        def request = new ChapterGenerationRequest(labels, 3)
-        def chaptersWithDuplicates = [
-                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L]),
-                new Chapter(1, "Deep Dive", "Advanced topics overview", [2L, 3L])
-        ]
+        def topics = (1..5).collect { int i -> new ChapterTopic(i, "label$i") }
+        def request = new ChapterGenerationRequest(topics)
+        def invalid = new ChapterBoundary("Bad Cut", "Invalid cutting point description", 99)
+        int attempt = 0
 
         chatClient.prompt(_ as Prompt) >> requestSpec
-        requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
+        requestSpec.call() >> {
+            attempt++
+            return callResponseSpec
+        }
+        callResponseSpec.responseEntity(ChapterBoundary.class) >> ClientTestSupport.responseEntityFor(invalid)
 
         when:
-        def result = client.getResult(request)
+        client.getResult(request)
 
         then:
-        result.result()*.index == [0, 1]
-        result.result()[0].labels == [1L, 2L]
-        result.result()[1].labels == [3L]
-        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
-        0 * feedbackPromptTemplate._
+        thrown(RetriesFailedException)
+        attempt == 3
     }
 
-    def "should drop extra label ids and skip feedback loop when only extras are present"() {
+    def "should fail validation when title or description is blank"() {
         given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics")
-        ]
-        def request = new ChapterGenerationRequest(labels, 2)
-        def chaptersWithExtras = [
-                new Chapter(0, "Foundations", "Core concepts overview", [1L, 2L, 99L])
-        ]
+        def topics = [new ChapterTopic(1, "solo topic")]
+        def request = new ChapterGenerationRequest(topics)
+        def invalid = new ChapterBoundary("", "Missing title description text", 1)
+        int attempt = 0
 
         chatClient.prompt(_ as Prompt) >> requestSpec
-        requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
+        requestSpec.call() >> {
+            attempt++
+            return callResponseSpec
+        }
+        callResponseSpec.responseEntity(ChapterBoundary.class) >> ClientTestSupport.responseEntityFor(invalid)
 
         when:
-        def result = client.getResult(request)
+        client.getResult(request)
 
         then:
-        result.result()*.index == [0]
-        result.result()[0].labels == [1L, 2L]
-        result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
-        0 * feedbackPromptTemplate._
-    }
-
-    def "should remove empty chapters and reindex when dropping extra labels"() {
-        given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics")
-        ]
-        def request = new ChapterGenerationRequest(labels, 2)
-        def chaptersWithExtras = [
-                new Chapter(0, "Extras Only", "Only extra labels here", [99L]),
-                new Chapter(1, "Foundations", "Core concepts overview", [1L, 2L])
-        ]
-
-        chatClient.prompt(_ as Prompt) >> requestSpec
-        requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithExtras)
-
-        when:
-        def result = client.getResult(request)
-
-        then:
-        result.result()*.index == [0]
-        result.result()[0].title == "Foundations"
-        result.result()[0].labels == [1L, 2L]
-        0 * feedbackPromptTemplate._
-    }
-
-    def "should remove empty chapters and reindex when deduplicating label ids"() {
-        given:
-        def labels = [
-                new Label(1L, "intro"),
-                new Label(2L, "basics")
-        ]
-        def request = new ChapterGenerationRequest(labels, 2)
-        def chaptersWithDuplicates = [
-                new Chapter(0, "Part One", "First part overview", [1L]),
-                new Chapter(1, "Part Two", "Second part overview", [2L]),
-                new Chapter(2, "Duplicate", "Duplicate label only", [1L])
-        ]
-
-        chatClient.prompt(_ as Prompt) >> requestSpec
-        requestSpec.call() >> callResponseSpec
-        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor(chaptersWithDuplicates)
-
-        when:
-        def result = client.getResult(request)
-
-        then:
-        result.result()*.index == [0, 1]
-        result.result()[0].labels == [1L]
-        result.result()[1].labels == [2L]
-        0 * feedbackPromptTemplate._
+        thrown(RetriesFailedException)
+        attempt == 3
     }
 }

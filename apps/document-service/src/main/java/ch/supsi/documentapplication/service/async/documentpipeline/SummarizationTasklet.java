@@ -210,8 +210,10 @@ public class SummarizationTasklet extends ProcessingTasklet {
             return maxPage;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            documentTaskProgressService.failTask(databaseDocumentId, TaskType.SUMMARIZATION);
             throw new RuntimeException("Parallel summarization interrupted", e);
         } catch (ExecutionException e) {
+            documentTaskProgressService.failTask(databaseDocumentId, TaskType.SUMMARIZATION);
             throw new RuntimeException("Parallel summarization failed", e.getCause());
         }
     }

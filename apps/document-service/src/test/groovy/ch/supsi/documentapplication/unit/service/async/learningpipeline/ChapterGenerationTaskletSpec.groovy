@@ -1,6 +1,5 @@
 package ch.supsi.documentapplication.unit.service.async.learningpipeline
 
-import ch.supsi.documentapplication.configuration.properties.AppProperties
 import ch.supsi.documentapplication.dataaccess.IDatabaseAiUsageStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentStorage
 import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage
@@ -11,7 +10,7 @@ import ch.supsi.documentapplication.model.Document
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.LessonType
 import ch.supsi.documentapplication.model.learn.Topic
-import ch.supsi.documentapplication.service.async.learningpipeline.ChapterConsolidator
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterBoundary
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationTasklet
 import ch.supsi.documentapplication.service.clients.OpenAIChapterClient
@@ -29,8 +28,6 @@ class ChapterGenerationTaskletSpec extends Specification {
     IDatabasePathStorage databaseLearningStorage = Mock()
     OpenAIChapterClient openAIChapterClient = Mock()
     IDatabaseAiUsageStorage aiUsageStorage = Mock()
-    AppProperties appProperties = new AppProperties()
-    ChapterConsolidator chapterConsolidator = new ChapterConsolidator()
     StepContribution stepContribution = Mock()
 
     @Subject
@@ -39,73 +36,147 @@ class ChapterGenerationTaskletSpec extends Specification {
             databaseTopicStorage,
             databaseLearningStorage,
             openAIChapterClient,
-            aiUsageStorage,
-            appProperties,
-            chapterConsolidator)
+            aiUsageStorage)
 
     Long spaceId = 7L
     Long pathId = 42L
     List<Chapter> persisted = []
+    List<ChapterGenerationRequest> capturedRequests = []
 
     def setup() {
-        appProperties.maxChapters = 10
         ReflectionTestUtils.setField(tasklet, "spaceId", spaceId)
         persisted.clear()
+        capturedRequests.clear()
     }
 
-    def "should compute the dynamic chapter cap from topic count"() {
-        expect:
-        tasklet.computeMaxChapters(topicCount) == expected
-
-        where:
-        topicCount | expected
-        0          | 1
-        2          | 1
-        3          | 1
-        8          | 2
-        30         | 10
-        33         | 10
-    }
-
-    def "should pass the absolute ceiling when the topic-derived cap is higher"() {
+    def "should sort shuffled topics by page and topic id and join labels without summaries"() {
         given:
-        appProperties.maxChapters = 4
-
-        expect:
-        tasklet.computeMaxChapters(30) == 4
-    }
-
-    def "should generate chapters per document and persist them in document and page order"() {
-        given:
-        def firstDocumentTopics = [
-                topic(1L, 5, ["alpha"]),
-                topic(2L, 6, ["alpha"]),
-                topic(3L, 7, ["alpha"]),
-                topic(4L, 1, ["beta"]),
-                topic(5L, 2, ["beta"]),
-                topic(6L, 3, ["beta"])
+        def topics = [
+                topic(3L, 2, ["kitchen", "safety"]),
+                topic(1L, 1, ["home", "cooking", "chicken"]),
+                topic(2L, 1, ["basics"])
         ]
-        def secondDocumentTopics = [
-                topic(7L, 2, ["gamma"]),
-                topic(8L, 3, ["gamma"]),
-                topic(9L, 4, ["gamma"])
-        ]
-        def firstDocumentChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L]),
-                new Chapter(1, "Beta", "Beta chapter focus here", [1L])
-        ]
-        def secondDocumentChapters = [
-                new Chapter(0, "Gamma", "Gamma chapter focus here", [0L])
-        ]
-        def chunkContext = TaskletTestSupport.chunkContext(["PATH_ID": pathId])
-        def usages = [
-                new AiUsage(5, 7, "provider", "model"),
-                new AiUsage(3, 4, "provider", "model")
-        ]
-        List<ChapterGenerationRequest> capturedRequests = []
 
         when:
-        RepeatStatus status = tasklet.execute(stepContribution, chunkContext)
+        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
+
+        then:
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
+        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
+        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> { ChapterGenerationRequest request ->
+            capturedRequests << request
+            new ClientResult<>(new ChapterBoundary("Home Cooking", "Introduces home cooking basics", 3), [])
+        }
+        1 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
+            persisted << chapter
+        }
+        capturedRequests.size() == 1
+        capturedRequests[0].topics()*.position() == [1, 2, 3]
+        capturedRequests[0].topics()*.labels() == ["home cooking chicken", "basics", "kitchen safety"]
+        persisted[0].topics == [1L, 2L, 3L]
+        !capturedRequests[0].topics().any { it.labels().contains("summary") }
+    }
+
+    def "should process multi-window carry-over with exact once assignment and no gaps"() {
+        given:
+        def topics = (1..230).collect { int i ->
+            topic((long) i, i, ["topic$i"])
+        }
+        def usages = [
+                new AiUsage(1, 2, "provider", "model"),
+                new AiUsage(3, 4, "provider", "model"),
+                new AiUsage(5, 6, "provider", "model")
+        ]
+
+        when:
+        RepeatStatus status = tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
+
+        then:
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
+        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
+        3 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> { ChapterGenerationRequest request ->
+            capturedRequests << request
+            int callIndex = capturedRequests.size()
+            int cut = callIndex == 1 ? 40 : (callIndex == 2 ? 100 : 90)
+            new ClientResult<>(
+                    new ChapterBoundary("Chapter $callIndex", "Chapter focus number $callIndex here", cut),
+                    [usages[callIndex - 1]])
+        }
+        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[0])
+        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[1])
+        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[2])
+        3 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
+            persisted << chapter
+        }
+        status == RepeatStatus.FINISHED
+        capturedRequests*.topics()*.size() == [100, 100, 90]
+        capturedRequests[0].topics()*.position() == (1..100).toList()
+        capturedRequests[1].topics()*.position() == (1..100).toList()
+        capturedRequests[1].topics().first().labels() == "topic41"
+        capturedRequests[2].topics().first().labels() == "topic141"
+        persisted*.index == [0, 1, 2]
+        persisted*.topics*.size() == [40, 100, 90]
+        persisted[0].topics == (1L..40L).toList()
+        persisted[1].topics == (41L..140L).toList()
+        persisted[2].topics == (141L..230L).toList()
+        def allAssigned = persisted.collectMany { it.topics }
+        allAssigned == (1L..230L).toList()
+        allAssigned.toSet().size() == 230
+    }
+
+    def "should use a single window when fewer than 100 topics exist"() {
+        given:
+        def topics = (1..12).collect { int i -> topic((long) i, i, ["label$i"]) }
+
+        when:
+        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
+
+        then:
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
+        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
+        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> { ChapterGenerationRequest request ->
+            capturedRequests << request
+            new ClientResult<>(new ChapterBoundary("Single Window", "Covers the entire document topics", 12), [])
+        }
+        1 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
+            persisted << chapter
+        }
+        capturedRequests.size() == 1
+        capturedRequests[0].topics().size() == 12
+        persisted.size() == 1
+        persisted[0].topics == (1L..12L).toList()
+    }
+
+    def "should accept a final partial window smaller than the minimum without retrying"() {
+        given:
+        def topics = (1..105).collect { int i -> topic((long) i, i, ["label$i"]) }
+
+        when:
+        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
+
+        then:
+        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
+        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
+        2 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> { ChapterGenerationRequest request ->
+            capturedRequests << request
+            int cut = capturedRequests.size() == 1 ? 100 : 5
+            new ClientResult<>(new ChapterBoundary("Part ${capturedRequests.size()}", "Partial chapter description text", cut), [])
+        }
+        2 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
+            persisted << chapter
+        }
+        capturedRequests*.topics()*.size() == [100, 5]
+        persisted*.topics*.size() == [100, 5]
+        persisted[1].topics == (101L..105L).toList()
+    }
+
+    def "should keep global chapter indexes across documents and preserve lesson order"() {
+        given:
+        def firstDocumentTopics = (1..12).collect { int i -> topic((long) i, i, ["first$i"]) }
+        def secondDocumentTopics = (13..18).collect { int i -> topic((long) i, i - 12, ["second$i"]) }
+
+        when:
+        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
 
         then:
         1 * databaseDocumentStorage.getDocuments(spaceId) >> [
@@ -116,127 +187,24 @@ class ChapterGenerationTaskletSpec extends Specification {
         1 * databaseTopicStorage.getByDocumentId(22L) >> secondDocumentTopics
         2 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> { ChapterGenerationRequest request ->
             capturedRequests << request
-            capturedRequests.size() == 1
-                    ? new ClientResult<>(firstDocumentChapters, [usages[0]])
-                    : new ClientResult<>(secondDocumentChapters, [usages[1]])
+            int cut = capturedRequests.size() == 1 ? 12 : 6
+            new ClientResult<>(new ChapterBoundary("Doc Chapter", "Document chapter focus summary", cut), [])
         }
-        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[0])
-        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[1])
-        3 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
-            persisted << chapter
-        }
-        status == RepeatStatus.FINISHED
-        capturedRequests*.labels*.name == [["alpha", "beta"], ["gamma"]]
-        persisted*.title == ["Beta", "Alpha", "Gamma"]
-        persisted*.index == [0, 1, 2]
-        persisted*.documentId == [11L, 11L, 22L]
-        persisted.every { it.topics.size() >= 3 }
-        persisted.every { it.lessons != null && !it.lessons.isEmpty() }
-        persisted[0].topics == [4L, 5L, 6L]
-        persisted[1].topics == [1L, 2L, 3L]
-        persisted[2].topics == [7L, 8L, 9L]
-    }
-
-    def "should order consolidated chapters by their earliest assigned page"() {
-        given:
-        def topics = [
-                topic(1L, 9, ["alpha"]),
-                topic(2L, 10, ["alpha"]),
-                topic(3L, 11, ["alpha"]),
-                topic(4L, 8, ["beta"]),
-                topic(5L, 12, ["beta"]),
-                topic(6L, 1, ["gamma"]),
-                topic(7L, 2, ["gamma"]),
-                topic(8L, 3, ["gamma"])
-        ]
-        def aiChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L]),
-                new Chapter(1, "Beta", "Beta chapter focus here", [1L]),
-                new Chapter(2, "Gamma", "Gamma chapter focus here", [2L])
-        ]
-
-        when:
-        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
-
-        then:
-        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
-        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
-        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> new ClientResult<>(aiChapters, [])
         2 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
             persisted << chapter
         }
-        persisted*.title == ["Gamma", "Alpha"]
-        persisted*.topics == [[6L, 7L, 8L], [4L, 1L, 2L, 3L, 5L]]
         persisted*.index == [0, 1]
-    }
-
-    def "should build contiguous lessons that follow page order after consolidation"() {
-        given:
-        def topics = [
-                topic(1L, 10, ["alpha"]),
-                topic(2L, 11, ["alpha"]),
-                topic(3L, 12, ["alpha"]),
-                topic(4L, 13, ["alpha"]),
-                topic(5L, 9, ["beta"]),
-                topic(6L, 14, ["beta"]),
-                topic(7L, 1, ["gamma"]),
-                topic(8L, 2, ["gamma"]),
-                topic(9L, 3, ["gamma"]),
-                topic(10L, 4, ["gamma"]),
-                topic(11L, 5, ["gamma"])
-        ]
-        def aiChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L]),
-                new Chapter(1, "Beta", "Beta chapter focus here", [1L]),
-                new Chapter(2, "Gamma", "Gamma chapter focus here", [2L])
-        ]
-
-        when:
-        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
-
-        then:
-        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
-        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
-        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> new ClientResult<>(aiChapters, [])
-        2 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
-            persisted << chapter
-        }
-        persisted*.title == ["Gamma", "Alpha"]
-        persisted[0].topics == [7L, 8L, 9L, 10L, 11L]
-        persisted[0].lessons[0].topics == [7L, 8L, 9L, 10L, 11L]
-        persisted[1].topics == [5L, 1L, 2L, 3L, 4L, 6L]
-        persisted[1].lessons[0].topics == [5L, 1L, 2L]
-        persisted[1].lessons[1].topics == [3L, 4L, 6L]
+        persisted*.documentId == [11L, 22L]
+        persisted[0].topics == (1L..12L).toList()
+        persisted[0].lessons[0].topics == (1L..3L).toList()
+        persisted[0].lessons[1].topics == (4L..6L).toList()
+        persisted[0].lessons[2].topics == (7L..9L).toList()
+        persisted[0].lessons[3].topics == (10L..12L).toList()
+        persisted[0].lessons[4].type == LessonType.CHECKPOINT
+        persisted[1].topics == (13L..18L).toList()
+        persisted[1].lessons[0].topics == (13L..15L).toList()
+        persisted[1].lessons[1].topics == (16L..18L).toList()
         persisted[1].lessons[2].type == LessonType.CHECKPOINT
-    }
-
-    def "should use consolidated chapter index to break equal earliest page ties"() {
-        given:
-        def topics = [
-                topic(1L, 1, ["alpha"]),
-                topic(2L, 2, ["alpha"]),
-                topic(3L, 3, ["alpha"]),
-                topic(4L, 1, ["beta"]),
-                topic(5L, 4, ["beta"]),
-                topic(6L, 5, ["beta"])
-        ]
-        def aiChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L]),
-                new Chapter(1, "Beta", "Beta chapter focus here", [1L])
-        ]
-
-        when:
-        tasklet.execute(stepContribution, TaskletTestSupport.chunkContext(["PATH_ID": pathId]))
-
-        then:
-        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
-        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
-        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> new ClientResult<>(aiChapters, [])
-        2 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
-            persisted << chapter
-        }
-        persisted*.title == ["Alpha", "Beta"]
-        persisted*.index == [0, 1]
     }
 
     def "should fail before calling the LLM when a document has no topics"() {
@@ -250,70 +218,6 @@ class ChapterGenerationTaskletSpec extends Specification {
         0 * databaseLearningStorage._
         def exception = thrown(IllegalStateException)
         exception.message == "Document with id 11 has no topics; chapter generation cannot continue."
-    }
-
-    def "should keep a single chapter when fewer than three topics exist"() {
-        given:
-        def topics = [
-                topic(1L, ["alpha"]),
-                topic(2L, ["beta"])
-        ]
-        def aiChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L]),
-                new Chapter(1, "Beta", "Beta chapter focus here", [1L])
-        ]
-        def chunkContext = TaskletTestSupport.chunkContext(["PATH_ID": pathId])
-
-        when:
-        RepeatStatus status = tasklet.execute(stepContribution, chunkContext)
-
-        then:
-        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
-        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
-        1 * openAIChapterClient.getResult({ ChapterGenerationRequest request ->
-            request.maxChapters == 1
-        }) >> new ClientResult<>(aiChapters, [])
-        1 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId) >> { Long p, Chapter chapter, Long s ->
-            persisted << chapter
-        }
-        status == RepeatStatus.FINISHED
-        persisted.size() == 1
-        persisted[0].index == 0
-        persisted[0].documentId == 11L
-        persisted[0].topics == [1L, 2L]
-        persisted[0].lessons != null
-    }
-
-    def "should persist chapter usage for generate and feedback operations"() {
-        given:
-        def topics = [
-                topic(1L, ["alpha"]),
-                topic(2L, ["alpha"]),
-                topic(3L, ["alpha"])
-        ]
-        def aiChapters = [
-                new Chapter(0, "Alpha", "Alpha chapter focus here", [0L])
-        ]
-        def chunkContext = TaskletTestSupport.chunkContext(["PATH_ID": pathId])
-        def usages = [
-                new AiUsage(1, 2, "provider", "model"),
-                new AiUsage(3, 4, "provider", "model")
-        ]
-
-        when:
-        tasklet.execute(stepContribution, chunkContext)
-
-        then:
-        1 * databaseDocumentStorage.getDocuments(spaceId) >> [new Document("one.pdf", 11L, 101L, 0)]
-        1 * databaseTopicStorage.getByDocumentId(11L) >> topics
-        1 * openAIChapterClient.getResult(_ as ChapterGenerationRequest) >> new ClientResult<>(aiChapters, usages)
-        1 * aiUsageStorage.create("learning_path", pathId, "chapter_generate", usages[0])
-        1 * aiUsageStorage.create("learning_path", pathId, "chapter_feedback", usages[1])
-        1 * databaseLearningStorage.create(pathId, _ as Chapter, spaceId)
-    }
-
-    private static Topic topic(Long id, List<String> labels) {
-        topic(id, 1, labels)
     }
 
     private static Topic topic(Long id, int pageNumber, List<String> labels) {

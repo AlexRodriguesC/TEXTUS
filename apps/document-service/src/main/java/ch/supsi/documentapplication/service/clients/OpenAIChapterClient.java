@@ -1,36 +1,26 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.exception.AIOutputMappingFailedException;
 import ch.supsi.documentapplication.model.AiContext;
-import ch.supsi.documentapplication.model.AiUsage;
 import ch.supsi.documentapplication.model.ClientResult;
-import ch.supsi.documentapplication.model.learn.Chapter;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
+import ch.supsi.documentapplication.service.async.learningpipeline.ChapterBoundary;
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest;
-import ch.supsi.documentapplication.service.async.learningpipeline.Label;
-import ch.supsi.documentapplication.service.validator.ChapterValidator;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-public class OpenAIChapterClient extends FeedbackLoopClient<ChapterGenerationRequest, List<Chapter>> {
+public class OpenAIChapterClient extends Client<ChapterGenerationRequest, ChapterBoundary> {
 
-    private static final String LABELS = "labels";
-    private static final String MAX_CHAPTERS = "max_chapters";
-    private static final String CHAPTERS = "chapters";
-    private static final String MISSING_LABEL_IDS = "missing_label_ids";
+    private static final String TOPICS = "topics";
 
     private final ObjectMapper objectMapper;
-    private final ChapterValidator validator;
-
-    private record ChapterAssignment(int index, List<Long> labelIds) {}
-
-    private record ChapterSkeleton(int index, String title, String description) {}
 
     public OpenAIChapterClient(
             ObjectMapper objectMapper,
@@ -38,101 +28,40 @@ public class OpenAIChapterClient extends FeedbackLoopClient<ChapterGenerationReq
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate,
-            String feedbackSystemPrompt,
-            PromptTemplate feedbackPromptTemplate,
-            ChapterValidator validator,
             AiContext aiContext) {
         super(
                 chatClient,
-                new BeanOutputConverter<>(new ParameterizedTypeReference<>() {}),
+                new BeanOutputConverter<>(ChapterBoundary.class),
                 retryTemplate,
                 systemPrompt,
                 promptTemplate,
-                feedbackSystemPrompt,
-                feedbackPromptTemplate,
                 aiContext);
         this.objectMapper = objectMapper;
-        this.validator = validator;
     }
 
     @Override
-    protected ClientResult<List<Chapter>> call(ChapterGenerationRequest input) {
-        List<Label> labels = input.labels();
+    protected ClientResult<ChapterBoundary> call(ChapterGenerationRequest input) {
         Map<String, Object> params = new HashMap<>();
-        params.put(LABELS, objectMapper.writeValueAsString(labels));
-        params.put(MAX_CHAPTERS, input.maxChapters());
-        var prompt = getPrompt(params);
-        var primaryResult = invoke(prompt, new ParameterizedTypeReference<List<Chapter>>() {});
-
-        List<AiUsage> usages = new ArrayList<>(primaryResult.usages());
-        List<Chapter> chapters = primaryResult.result();
-
-        var feedback = validator.extractFeedback(chapters, labels);
-        if (!feedback.isValid() && chapters != null) {
-            List<ChapterSkeleton> skeletons = chapters.stream()
-                    .map(c -> new ChapterSkeleton(c.getIndex(), c.getTitle(), c.getDescription()))
-                    .toList();
-
-            Map<String, Object> feedbackParams = new HashMap<>();
-            feedbackParams.put(CHAPTERS, objectMapper.writeValueAsString(skeletons));
-            feedbackParams.put(MISSING_LABEL_IDS, objectMapper.writeValueAsString(feedback.missingLabelIds()));
-            var feedbackPrompt = getFeedbackPrompt(feedbackParams);
-
-            var feedbackResult = invoke(feedbackPrompt, new ParameterizedTypeReference<List<ChapterAssignment>>() {});
-            usages.addAll(feedbackResult.usages());
-
-            List<ChapterAssignment> assignments = feedbackResult.result();
-            Map<Integer, List<Long>> assignmentByIndex = assignments.stream()
-                    .collect(Collectors.toMap(ChapterAssignment::index, ChapterAssignment::labelIds));
-
-            chapters = chapters.stream()
-                    .map(c -> {
-                        List<Long> toAdd = assignmentByIndex.getOrDefault(c.getIndex(), new ArrayList<>());
-                        if (toAdd.isEmpty()) return c;
-                        List<Long> mergedLabelIds = new ArrayList<>(
-                                Optional.ofNullable(c.getLabels()).orElse(new ArrayList<>()));
-                        mergedLabelIds.addAll(toAdd);
-                        return new Chapter(
-                                c.getIndex(), c.getTitle(), c.getDescription(), mergedLabelIds, c.getTopics());
-                    })
-                    .toList();
-        }
-
-        if (chapters != null) {
-            var postFeedback = validator.extractFeedback(chapters, labels);
-            if (!postFeedback.duplicateLabelIds().isEmpty()
-                    || !postFeedback.extraLabelIds().isEmpty()) {
-                chapters = sanitizeChapters(chapters, labels);
-            }
-        }
-
-        validator.validate(chapters, labels);
-        return withUsages(chapters, usages);
+        params.put(TOPICS, objectMapper.writeValueAsString(input.topics()));
+        ClientResult<ChapterBoundary> result = invoke(getPrompt(params), ChapterBoundary.class);
+        validate(result.result(), input.topics().size());
+        return result;
     }
 
-    private static List<Chapter> sanitizeChapters(List<Chapter> chapters, List<Label> expectedLabels) {
-        Set<Long> expectedIds = expectedLabels.stream().map(Label::id).collect(Collectors.toSet());
-        Set<Long> seen = new HashSet<>();
-        List<Chapter> result = new ArrayList<>();
-        int index = 0;
-        for (Chapter chapter : chapters) {
-            List<Long> sanitized = new ArrayList<>();
-            for (Long labelId : chapter.getLabels()) {
-                if (!expectedIds.contains(labelId)) {
-                    continue;
-                }
-                if (!seen.add(labelId)) {
-                    continue;
-                }
-                sanitized.add(labelId);
-            }
-            if (sanitized.isEmpty()) {
-                continue;
-            }
-            result.add(
-                    new Chapter(index, chapter.getTitle(), chapter.getDescription(), sanitized, chapter.getTopics()));
-            index++;
+    private static void validate(ChapterBoundary boundary, int windowSize) {
+        if (boundary == null) {
+            throw AIOutputMappingFailedException.create("chapter", "boundary result is null");
         }
-        return result;
+        if (!StringUtils.hasText(boundary.getTitle()) || !StringUtils.hasText(boundary.getDescription())) {
+            throw AIOutputMappingFailedException.create("chapter", "title and description must be non-empty");
+        }
+        Integer cuttingPoint = boundary.getCuttingPoint();
+        if (cuttingPoint == null) {
+            throw AIOutputMappingFailedException.create("chapter", "cutting point is missing");
+        }
+        if (cuttingPoint < 1 || cuttingPoint > windowSize) {
+            throw AIOutputMappingFailedException.create(
+                    "chapter", "cutting point " + cuttingPoint + " is outside window of size " + windowSize);
+        }
     }
 }

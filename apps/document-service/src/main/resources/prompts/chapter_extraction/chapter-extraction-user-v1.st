@@ -1,88 +1,61 @@
-You transform a list of labels into an ordered list of learning chapters.
+You detect a single chapter boundary inside an ordered window of topics.
 
 Task:
-Given INPUT_LABELS, return exactly one JSON array of chapter objects that uses every input labelId exactly once.
+Given INPUT_TOPICS, return exactly one JSON object with a chapter title, description, and inclusive cutting point.
 
-Primary evidence for grouping:
-1. Semantic similarity between label text
-2. Topic proximity and shared terminology
+Input format:
+Each entry is an ordered topic in the current window with:
+- "position": 1-based index within this window
+- "labels": space-separated short labels for that topic
 
-Secondary evidence:
-3. Implied conceptual dependency between labels
+Primary evidence:
+1. Thematic continuity across consecutive topics
+2. Shared terminology in the label strings
+3. A clear shift to a new theme at the cutting point
 
 Goal:
-Build a pedagogically coherent, ordered sequence of chapters.
-Each chapter groups labels that belong to the same coherent unit of learning.
-The sequence must reflect natural learning progression: chapter n depends on chapter n-1 as a prerequisite.
-Return a flat ordered list, not a tree or graph.
+Choose the latest coherent prefix of the window that forms one learning chapter.
+Topics from position 1 through cuttingPoint inclusive belong to this chapter.
+Topics after cuttingPoint remain for later processing.
 
 Hard constraints:
-- Use every input labelId exactly once.
-- Do not omit any labelId.
-- Do not repeat any labelId.
-- Do not invent any labelId.
-- Do not invent any extra chapter beyond what the grouping requires.
-- Produce at most <max_chapters> chapters; never exceed this ceiling.
-- Every chapter must contain at least 3 labelIds; never produce a chapter with fewer than 3.
-- If the total number of input labelIds is fewer than 3, produce exactly one chapter containing all of them.
-- Each chapter object must have this exact shape:
+- Return exactly one JSON object with this shape:
 {
-"index": number,
 "title": string,
 "description": string,
-"labelIds": [ number, ... ]
+"cuttingPoint": number
 }
-- "index" starts at 0 and increases sequentially with no gaps.
 - "title" must be 2 to 3 words.
 - "description" must be 6 to 7 words and summarize the chapter's focus.
-- "labelIds" must contain 3 or more numbers, unless the fewer-than-3-total-input exception applies.
-- No keys other than "index", "title", "description", "labelIds" are allowed.
+- "cuttingPoint" must be an integer between 1 and the window size inclusive.
+- Prefer chapters of at least 10 to 15 topics when the window is large enough.
+- Do not cut earlier than position 10 unless the window itself has fewer than 10 topics.
+- If the window has fewer than 10 topics, set cuttingPoint to the window size.
+- If no earlier meaningful thematic shift exists, set cuttingPoint to the window size.
+- No keys other than "title", "description", and "cuttingPoint" are allowed.
 - Output ONLY valid JSON.
 - Output no prose, no markdown, no code fences.
 
-How to choose structure:
-- Treat label text as the main signal for grouping; shared or overlapping terminology indicates the labels belong in the same chapter.
-- Estimate topic proximity using vocabulary overlap and conceptual closeness.
-- Order chapters from foundational or introductory topics to specific, advanced, or applied topics.
-- If two labels are related but ambiguous in order, place the more general one in the earlier chapter.
-- Keep each chapter focused on one coherent theme; avoid mixing unrelated concepts in the same chapter.
-- Prefer 4 to 10 labels per chapter where possible, never fewer than 3.
-- Prefer fewer chapters over more chapters when the grouping is ambiguous, as long as each chapter remains coherent.
-- If a coherent cluster naturally has fewer than 3 labels, merge it into the most semantically related neighboring chapter rather than keeping it undersized.
-- If splitting a large chapter would leave any resulting sub-chapter with fewer than 3 labels, do not split it; keep it as one chapter instead.
-- If clustering would produce more than <max_chapters> chapters, merge neighboring clusters until the chapter count is at most <max_chapters>.
-
 Required internal procedure:
-1. Read all labels.
-2. Build a private coverage set containing every input labelId.
-3. Cluster labelIds into coherent thematic groups.
-4. Merge any cluster with fewer than 3 labelIds into its most semantically related neighboring cluster until every cluster has at least 3 labelIds.
-5. Order groups by conceptual prerequisite progression.
-6. Assign sequential index values, a short title, and a short description to each group.
-7. Before answering, verify all of the following privately:
-- every input labelId appears exactly once
-- no labelId appears more than once
-- no labelId is missing
-- no labelId outside INPUT_LABELS appears
-- every chapter has at least 3 labelIds, unless the fewer-than-3-total-input exception applies
-- the total number of chapters is at most <max_chapters>
-- indices are sequential starting at 0 with no gaps
-- every chapter has title, description, and labelIds
+1. Read all INPUT_TOPICS in order.
+2. Locate the first meaningful thematic shift after a coherent chapter has formed.
+3. Prefer a cutting point around positions 10 to 15 or later when the window allows it.
+4. Assign title and description for the selected prefix.
+5. Before answering, verify privately:
+- cuttingPoint is between 1 and the window size inclusive
+- title is 2 to 3 words
+- description is 6 to 7 words
 - no extra keys are present
-8. If any check fails, revise internally until all checks pass, prioritizing merging undersized chapters over any other adjustment.
-9. Return only the final JSON array.
+6. If any check fails, revise internally until all checks pass.
+7. Return only the final JSON object.
 
 Important:
 Do not describe your reasoning.
 Do not output the checklist.
 Do not output intermediate work.
-Return only the final JSON array.
+Return only the final JSON object.
 When writing string values, never use double quotes (") inside the text.
 Use single quotes or rewrite the sentence to avoid quoting words entirely.
-Example: instead of `the vowel "a" is pronounced...`, write `the vowel a is pronounced...`
 
-MAX_CHAPTERS:
-<max_chapters>
-
-INPUT_LABELS:
-<labels>
+INPUT_TOPICS:
+<topics>

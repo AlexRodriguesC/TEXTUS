@@ -250,7 +250,7 @@ class DatabaseLearningStorageSpec extends DatabaseSpec {
                 .query(Long.class)
                 .single()
         Chapter chapter =
-                new Chapter(0, "Chapter", "desc", [checkpointTopicId], [checkpointTopicId], documentId)
+                new Chapter(0, "Chapter", "desc", [checkpointTopicId], documentId)
         chapter.buildLessons()
         pathStorage.create(pathId, chapter, spaceId)
         Long checkpointId = jdbcClient
