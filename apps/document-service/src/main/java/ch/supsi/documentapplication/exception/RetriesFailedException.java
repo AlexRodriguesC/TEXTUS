@@ -8,7 +8,7 @@ public class RetriesFailedException extends ApplicationException {
         super(HttpStatus.SERVICE_UNAVAILABLE, message, cause);
     }
 
-    public static RetriesFailedException failedToMapLLMOutput(Throwable cause) {
-        return new RetriesFailedException("Exhausted retries to map LLM output.", cause);
+    public static RetriesFailedException exhausted(Throwable cause) {
+        return new RetriesFailedException("Exhausted retries for LLM operation.", cause);
     }
 }

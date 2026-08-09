@@ -101,7 +101,8 @@ class OpenAISummarizationClientSpec extends Specification {
 
         then:
         thrown(RetriesFailedException)
-        attempt == 3
+        // 3 models per outer attempt × 3 outer attempts (maxRetries=2)
+        attempt == 9
     }
 
     def "should wrap mapping validation failures in RetriesFailedException after retries are exhausted"() {

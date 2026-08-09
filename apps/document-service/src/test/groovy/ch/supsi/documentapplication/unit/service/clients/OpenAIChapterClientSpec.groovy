@@ -128,7 +128,8 @@ class OpenAIChapterClientSpec extends Specification {
 
         then:
         thrown(RetriesFailedException)
-        attempt == 3
+        // 3 models per outer attempt × 3 outer attempts (maxRetries=2)
+        attempt == 9
     }
 
     def "should fail validation when title or description is blank"() {
@@ -150,6 +151,32 @@ class OpenAIChapterClientSpec extends Specification {
 
         then:
         thrown(RetriesFailedException)
-        attempt == 3
+        // 3 models per outer attempt × 3 outer attempts (maxRetries=2)
+        attempt == 9
+    }
+
+    def "should fallback to next model within same attempt when cutting point is invalid"() {
+        given:
+        def topics = (1..12).collect { int i -> new ChapterTopic(i, "label$i") }
+        def request = new ChapterGenerationRequest(topics)
+        def invalid = new ChapterBoundary("Bad Cut", "Invalid cutting point description", 99)
+        def valid = new ChapterBoundary("Good Cut", "Valid cutting point description", 12)
+        int attempt = 0
+
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> {
+            attempt++
+            return callResponseSpec
+        }
+        callResponseSpec.responseEntity(ChapterBoundary.class) >> {
+            ClientTestSupport.responseEntityFor(attempt == 1 ? invalid : valid)
+        }
+
+        when:
+        def result = client.getResult(request)
+
+        then:
+        result.result().cuttingPoint == 12
+        attempt == 2
     }
 }

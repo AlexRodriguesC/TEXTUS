@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.service.clients;
 
+import ch.supsi.documentapplication.exception.ModelFallbackExhaustedException;
 import ch.supsi.documentapplication.exception.RetriesFailedException;
 import ch.supsi.documentapplication.model.AiContext;
 import ch.supsi.documentapplication.model.AiUsage;
@@ -26,7 +27,7 @@ public abstract class Client<I, O> {
 
     protected static final String FORMAT = "format";
 
-    private static final ThreadLocal<Integer> MODEL_INDEX = new ThreadLocal<>();
+    private static final ThreadLocal<String> ACTIVE_MODEL = new ThreadLocal<>();
 
     protected ChatClient chatClient;
     protected BeanOutputConverter<O> converter;
@@ -60,59 +61,49 @@ public abstract class Client<I, O> {
 
     public ClientResult<O> getResult(I input) throws RetriesFailedException {
         try {
-            return retryTemplate.execute(() -> call(input));
+            return retryTemplate.execute(() -> callWithModelFallback(input));
         } finally {
-            MODEL_INDEX.remove();
+            ACTIVE_MODEL.remove();
         }
     }
 
-    protected abstract ClientResult<O> call(I input);
-
-    protected <T> ClientResult<T> invoke(Prompt prompt, Class<T> type) {
-        return invokeWithFallback(prompt, callSpec -> callSpec.responseEntity(type));
-    }
-
-    protected <T> ClientResult<T> invoke(Prompt prompt, ParameterizedTypeReference<T> type) {
-        return invokeWithFallback(prompt, callSpec -> callSpec.responseEntity(type));
-    }
-
-    private <T> ClientResult<T> invokeWithFallback(Prompt prompt, ResponseExtractor<T> responseExtractor) {
+    private ClientResult<O> callWithModelFallback(I input) {
         List<String> models = aiContext.models();
-        int startIndex = MODEL_INDEX.get() != null ? MODEL_INDEX.get() : 0;
         RuntimeException lastFailure = null;
 
-        for (int i = startIndex; i < models.size(); i++) {
+        for (int i = 0; i < models.size(); i++) {
             String model = models.get(i);
+            ACTIVE_MODEL.set(model);
             try {
-                var callSpec = chatClient
-                        .prompt(prompt)
-                        .options(OpenAiChatOptions.builder().model(model))
-                        .call();
-                ResponseEntity<ChatResponse, T> responseEntity = responseExtractor.extract(callSpec);
                 if (i > 0) {
                     log.info(
-                            "{}: succeeded with fallback model '{}' (attempt {}/{})",
+                            "{}: retrying whole operation with fallback model '{}' ({}/{})",
                             getClass().getSimpleName(),
                             model,
                             i + 1,
                             models.size());
                 }
-                MODEL_INDEX.set(i);
-                return new ClientResult<>(responseEntity.getEntity(), extractUsage(responseEntity.getResponse()));
+                return call(input);
             } catch (RuntimeException exception) {
                 lastFailure = exception;
-                if (!ModelFallbackClassifier.isFallbackEligible(exception) || i == models.size() - 1) {
-                    if (ModelFallbackClassifier.isFallbackEligible(exception)) {
-                        log.error(
-                                "{}: all {} configured models failed. Last model: '{}'. Last error: {}",
-                                getClass().getSimpleName(),
-                                models.size(),
-                                model,
-                                exception,
-                                exception);
-                    }
+                boolean eligible = ModelFallbackClassifier.isFallbackEligible(exception);
+                boolean lastModel = i == models.size() - 1;
+
+                if (!eligible) {
                     throw exception;
                 }
+
+                if (lastModel) {
+                    log.error(
+                            "{}: all {} configured models failed. Last model: '{}'. Last error: {}",
+                            getClass().getSimpleName(),
+                            models.size(),
+                            model,
+                            exception,
+                            exception);
+                    throw ModelFallbackExhaustedException.create(models.size(), model, exception);
+                }
+
                 log.warn(
                         "{}: model '{}' failed ({}: {}). Falling back to '{}'.",
                         getClass().getSimpleName(),
@@ -124,11 +115,32 @@ public abstract class Client<I, O> {
             }
         }
 
-        throw lastFailure;
+        throw ModelFallbackExhaustedException.create(
+                models.size(), models.isEmpty() ? "none" : models.getLast(), lastFailure);
     }
 
-    protected ClientResult<O> withUsages(O result, List<AiUsage> usages) {
-        return new ClientResult<>(result, usages);
+    protected abstract ClientResult<O> call(I input);
+
+    protected <T> ClientResult<T> invoke(Prompt prompt, Class<T> type) {
+        return invokeWithPinnedModel(prompt, callSpec -> callSpec.responseEntity(type));
+    }
+
+    protected <T> ClientResult<T> invoke(Prompt prompt, ParameterizedTypeReference<T> type) {
+        return invokeWithPinnedModel(prompt, callSpec -> callSpec.responseEntity(type));
+    }
+
+    private <T> ClientResult<T> invokeWithPinnedModel(Prompt prompt, ResponseExtractor<T> responseExtractor) {
+        String model = ACTIVE_MODEL.get();
+        if (!StringUtils.hasText(model)) {
+            model = aiContext.defaultModel();
+        }
+
+        var callSpec = chatClient
+                .prompt(prompt)
+                .options(OpenAiChatOptions.builder().model(model))
+                .call();
+        ResponseEntity<ChatResponse, T> responseEntity = responseExtractor.extract(callSpec);
+        return new ClientResult<>(responseEntity.getEntity(), extractUsage(responseEntity.getResponse()));
     }
 
     protected AiUsage extractUsage(ChatResponse chatResponse) {

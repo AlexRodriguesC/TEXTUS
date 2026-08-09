@@ -4,17 +4,18 @@ import ch.supsi.documentapplication.exception.AIOutputMappingFailedException;
 import com.openai.errors.RateLimitException;
 import java.util.Set;
 import org.springframework.ai.retry.NonTransientAiException;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.ai.retry.TransientAiException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-final class ModelFallbackClassifier {
+public final class ModelFallbackClassifier {
 
     private static final Set<Integer> FALLBACK_HTTP_STATUSES = Set.of(429, 502, 503);
 
     private ModelFallbackClassifier() {}
 
-    static boolean isFallbackEligible(Throwable throwable) {
+    public static boolean isFallbackEligible(Throwable throwable) {
         Throwable current = throwable;
         while (current != null) {
             if (isFallbackEligibleThrowable(current)) {
@@ -26,10 +27,10 @@ final class ModelFallbackClassifier {
     }
 
     private static boolean isFallbackEligibleThrowable(Throwable throwable) {
-        if (throwable instanceof AIOutputMappingFailedException) {
-            return false;
-        }
-        if (throwable instanceof RateLimitException) {
+        if (throwable instanceof TransientAiException
+                || throwable instanceof AIOutputMappingFailedException
+                || throwable instanceof RateLimitException
+                || throwable instanceof ResourceAccessException) {
             return true;
         }
         if (throwable instanceof NonTransientAiException nonTransientAiException) {
@@ -58,15 +59,6 @@ final class ModelFallbackClassifier {
         }
         if (throwable instanceof RestClientResponseException restClientResponseException) {
             return restClientResponseException.getStatusCode().value();
-        }
-        try {
-            var method = throwable.getClass().getMethod("getStatusCode");
-            Object statusCode = method.invoke(throwable);
-            if (statusCode instanceof HttpStatusCode httpStatusCode) {
-                return httpStatusCode.value();
-            }
-        } catch (ReflectiveOperationException ignored) {
-            // not an HTTP status-bearing exception
         }
         return null;
     }

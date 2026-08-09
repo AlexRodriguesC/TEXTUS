@@ -80,6 +80,7 @@ public class ChapterGenerationTasklet extends ProcessingTasklet {
                 ChapterBoundary boundary = boundaryResult.result();
                 int cuttingPoint = boundary.getCuttingPoint();
                 List<Long> chapterTopicIds = window.subList(0, cuttingPoint).stream()
+                        .sorted(Comparator.comparingInt(ChapterGenerationTasklet::pageNumberOf))
                         .map(Topic::getId)
                         .toList();
 
