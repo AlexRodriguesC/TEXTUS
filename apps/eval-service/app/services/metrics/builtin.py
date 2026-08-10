@@ -44,6 +44,7 @@ def build_textus_geval_metric(
     name=name,
     criteria=preset.criteria,
     evaluation_params=preset.evaluation_params,
+    rubric=preset.rubric,
     threshold=threshold,
     model=llm,
   )
