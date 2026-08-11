@@ -41,7 +41,7 @@ class Settings(BaseSettings):
   openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
   openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
   default_llm_model: str = Field(
-    default="claude-haiku-4-5-free",
+    default="runware/deepseek-v4-flash",
     alias="EVALUATION_LLM_MODEL",
   )
 

@@ -5,7 +5,6 @@ import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.LeftRight
 import ch.supsi.documentapplication.model.learn.exercise.PairExercise
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
-import ch.supsi.documentapplication.service.clients.EvaluationRestClient
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIPairClient
 import ch.supsi.documentapplication.unit.service.clients.ClientTestSupport
 import org.springframework.ai.chat.client.ChatClient
@@ -28,7 +27,6 @@ class OpenAIPairClientSpec extends Specification {
     ChatClient.CallResponseSpec callResponseSpec = Mock()
     RetryTemplateWrapper retryTemplate
     PromptTemplate promptTemplate = Mock()
-    EvaluationRestClient evaluationRestClient = Mock()
 
     def setup() {
         def retryPolicy = RetryPolicy.builder()
@@ -44,8 +42,7 @@ class OpenAIPairClientSpec extends Specification {
                 retryTemplate,
                 "",
                 promptTemplate,
-                ClientTestSupport.TEST_AI_CONTEXT,
-                evaluationRestClient)
+                ClientTestSupport.TEST_AI_CONTEXT)
     }
 
     def "should call chatClient and return the generated pair exercise when topic is provided"() {
@@ -67,6 +64,5 @@ class OpenAIPairClientSpec extends Specification {
         then:
         result.result() == expectedPair
         result.usages() == [new AiUsage(10, 20, "test-provider", "test-model")]
-        1 * evaluationRestClient.evaluateExercise(topic, expectedPair)
     }
 }

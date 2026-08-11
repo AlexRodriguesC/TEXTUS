@@ -14,7 +14,7 @@ import usePaginatedFilter from "@/hooks/usePaginatedFilter.ts";
 import type Topic from "@/classes/Topic.ts";
 
 const filterTopics = (topic: Topic, search: string) =>
-  topic.title.toLowerCase().includes(search.toLowerCase());
+  topic?.title?.toLowerCase()?.includes(search.toLowerCase());
 
 interface TopicsPaginatedContentProps {
   topics: Topic[];
@@ -46,7 +46,7 @@ function TopicsPaginatedContent({
     isLoading,
     filterFn: filterTopics,
     measureKey: topics.find((topic) =>
-      topic.title.toLowerCase().includes(search.toLowerCase()),
+      topic?.title?.toLowerCase()?.includes(search.toLowerCase()),
     )?.id,
     gapPx: 16,
   });

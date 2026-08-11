@@ -88,7 +88,7 @@ class OpenAITopicExtractionClientSpec extends Specification {
 
         and: "evaluations are submitted for the topic list and each topic"
         1 * evaluationRestClient.evaluateTopicList("page summary text", expectedTopics)
-        1 * evaluationRestClient.evaluateTopicHallucination("page summary text", expectedTopics[0])
+        1 * evaluationRestClient.evaluateTopicConsistency("page summary text", expectedTopics[0])
     }
 
     def "should retry and eventually throw RetriesFailedException when chatClient keeps failing transiently"() {

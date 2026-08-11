@@ -9,7 +9,6 @@ import ch.supsi.documentapplication.service.clients.EvaluationRestClient
 import org.springframework.web.client.RestClient
 import spock.lang.Specification
 import spock.lang.Subject
-import tools.jackson.databind.ObjectMapper
 
 class EvaluationRestClientSpec extends Specification {
 
@@ -18,14 +17,13 @@ class EvaluationRestClientSpec extends Specification {
     RestClient.RequestBodySpec bodySpec = Mock()
     RestClient.ResponseSpec responseSpec = Mock()
     EvalServiceProperties evalServiceProperties = new EvalServiceProperties()
-    ObjectMapper objectMapper = new ObjectMapper()
 
     @Subject
     EvaluationRestClient client
 
     def setup() {
         evalServiceProperties.evaluationsEndpoint = "/api/v1/evaluations"
-        client = new EvaluationRestClient(restClient, evalServiceProperties, objectMapper)
+        client = new EvaluationRestClient(restClient, evalServiceProperties)
 
         restClient.post() >> bodyUriSpec
         bodyUriSpec.uri(_ as String) >> bodySpec
@@ -40,7 +38,7 @@ class EvaluationRestClientSpec extends Specification {
                 "topic_list",
                 "summary text",
                 "1. Topic A",
-                [MetricConfig.of(EvalMetricName.TOPIC_COVERAGE)])
+                [MetricConfig.of(EvalMetricName.RELEVANCE)])
 
         when:
         client.submit(request)
@@ -53,7 +51,7 @@ class EvaluationRestClientSpec extends Specification {
                     body.input() == "summary text" &&
                     body.actualOutput() == "1. Topic A" &&
                     body.metrics().size() == 1 &&
-                    body.metrics()[0].name() == "topic_coverage"
+                    body.metrics()[0].name() == "relevance"
         }) >> bodySpec
         1 * bodySpec.retrieve() >> responseSpec
         1 * responseSpec.toBodilessEntity()
@@ -65,7 +63,7 @@ class EvaluationRestClientSpec extends Specification {
                 "topic",
                 "summary",
                 "topic text",
-                [MetricConfig.of(EvalMetricName.HALLUCINATION)])
+                [MetricConfig.of(EvalMetricName.CONSISTENCY)])
         responseSpec.toBodilessEntity() >> { throw new RuntimeException("connection refused") }
 
         when:
@@ -75,27 +73,27 @@ class EvaluationRestClientSpec extends Specification {
         noExceptionThrown()
     }
 
-    def "should submit topic list and hallucination evaluations"() {
+    def "should submit topic list and consistency evaluations"() {
         given:
         def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
         def clientSpy = Spy(client)
 
         when:
         clientSpy.evaluateTopicList("page summary", topics)
-        clientSpy.evaluateTopicHallucination("page summary", topics[0])
+        clientSpy.evaluateTopicConsistency("page summary", topics[0])
 
         then:
         1 * clientSpy.submitAsync({ CreateEvaluationRequest request ->
             request.contentType() == "topic_list" &&
                     request.input() == "page summary" &&
-                    request.actualOutput() == "1. Topic A" &&
-                    request.metrics()*.name() == ["topic_coverage", "topic_granularity"]
+                    request.actualOutput() == "1. Topic A\nSummary A" &&
+                    request.metrics()*.name() == ["relevance", "topic_granularity"]
         })
         1 * clientSpy.submitAsync({ CreateEvaluationRequest request ->
             request.contentType() == "topic" &&
                     request.input() == "page summary" &&
                     request.actualOutput() == "Topic A\nSummary A" &&
-                    request.metrics()*.name() == ["hallucination"]
+                    request.metrics()*.name() == ["consistency"]
         })
     }
 
@@ -105,7 +103,7 @@ class EvaluationRestClientSpec extends Specification {
                 "topic",
                 "summary",
                 "output",
-                [MetricConfig.of(EvalMetricName.HALLUCINATION)]))
+                [MetricConfig.of(EvalMetricName.CONSISTENCY)]))
 
         then:
         noExceptionThrown()

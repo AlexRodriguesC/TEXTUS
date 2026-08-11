@@ -235,16 +235,15 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader,
-            AiContext aiContext,
-            EvaluationRestClient evaluationRestClient) {
+            AiContext aiContext) {
         return createPromptClient(
                 chatBuilder,
                 templateRenderer,
                 resourceLoader,
                 promptProperties.getQuestionUser(),
                 promptProperties.getQuestionSystem(),
-                (client, systemPrompt, template) -> new OpenAIQuestionClient(
-                        client, retryTemplateWrapper, systemPrompt, template, aiContext, evaluationRestClient));
+                (client, systemPrompt, template) ->
+                        new OpenAIQuestionClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
 
     @Bean
@@ -254,16 +253,15 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader,
-            AiContext aiContext,
-            EvaluationRestClient evaluationRestClient) {
+            AiContext aiContext) {
         return createPromptClient(
                 chatBuilder,
                 templateRenderer,
                 resourceLoader,
                 promptProperties.getListUser(),
                 promptProperties.getListSystem(),
-                (client, systemPrompt, template) -> new OpenAIListClient(
-                        client, retryTemplateWrapper, systemPrompt, template, aiContext, evaluationRestClient));
+                (client, systemPrompt, template) ->
+                        new OpenAIListClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
 
     @Bean
@@ -273,16 +271,15 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader,
-            AiContext aiContext,
-            EvaluationRestClient evaluationRestClient) {
+            AiContext aiContext) {
         return createPromptClient(
                 chatBuilder,
                 templateRenderer,
                 resourceLoader,
                 promptProperties.getGroupUser(),
                 promptProperties.getGroupSystem(),
-                (client, systemPrompt, template) -> new OpenAIGroupClient(
-                        client, retryTemplateWrapper, systemPrompt, template, aiContext, evaluationRestClient));
+                (client, systemPrompt, template) ->
+                        new OpenAIGroupClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
 
     @Bean
@@ -292,16 +289,15 @@ public class OpenAIClientsConfiguration {
             PromptProperties promptProperties,
             StTemplateRenderer templateRenderer,
             ResourceLoader resourceLoader,
-            AiContext aiContext,
-            EvaluationRestClient evaluationRestClient) {
+            AiContext aiContext) {
         return createPromptClient(
                 chatBuilder,
                 templateRenderer,
                 resourceLoader,
                 promptProperties.getPairUser(),
                 promptProperties.getPairSystem(),
-                (client, systemPrompt, template) -> new OpenAIPairClient(
-                        client, retryTemplateWrapper, systemPrompt, template, aiContext, evaluationRestClient));
+                (client, systemPrompt, template) ->
+                        new OpenAIPairClient(client, retryTemplateWrapper, systemPrompt, template, aiContext));
     }
 
     @Bean

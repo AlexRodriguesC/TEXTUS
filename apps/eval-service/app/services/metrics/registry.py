@@ -3,44 +3,27 @@
 from app.models.domain import MetricDefinition
 
 METRIC_REGISTRY: dict[str, MetricDefinition] = {
-  "hallucination": MetricDefinition(
-    name="hallucination",
+  "consistency": MetricDefinition(
+    name="consistency",
     description=(
-      "DeepEval: whether the summary contradicts the source text "
-      "(input=text, actual_output=summary). "
-      "Score 0 = no hallucination, 1 = fully hallucinated."
+      "G-Eval SummEval Consistency: factual alignment between Actual Output "
+      "and Input (input=source, actual_output=generated content). Score 1-5."
     ),
     required_params=[],
   ),
-  "topic_coverage": MetricDefinition(
-    name="topic_coverage",
+  "relevance": MetricDefinition(
+    name="relevance",
     description=(
-      "G-Eval: whether the topic list covers all subjects in the summary "
-      "(input=summary, actual_output=topic list)."
+      "G-Eval SummEval Relevance: selection of important content from Input "
+      "(input=source, actual_output=topic list). Score 1-5."
     ),
     required_params=[],
   ),
   "topic_granularity": MetricDefinition(
     name="topic_granularity",
     description=(
-      "G-Eval: whether each topic is distinct, specific, and non-redundant "
-      "(actual_output=topic list)."
-    ),
-    required_params=[],
-  ),
-  "question_relevance": MetricDefinition(
-    name="question_relevance",
-    description=(
-      "G-Eval: whether the generated question is relevant and answerable from "
-      "the topic (input=topic, actual_output=question)."
-    ),
-    required_params=[],
-  ),
-  "answer_relevancy": MetricDefinition(
-    name="answer_relevancy",
-    description=(
-      "DeepEval: whether the generated question is relevant to the topic "
-      "(input=topic, actual_output=question)."
+      "Custom TEXTUS metric (not a SummEval dimension): whether each topic is "
+      "distinct, specific, and non-redundant (actual_output=topic list)."
     ),
     required_params=[],
   ),

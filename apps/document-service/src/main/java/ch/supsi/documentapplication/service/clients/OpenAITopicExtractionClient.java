@@ -60,7 +60,7 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
         List<Topic> topics = result.result();
         evaluationRestClient.evaluateTopicList(page.getSummary(), topics);
         for (Topic topic : topics) {
-            evaluationRestClient.evaluateTopicHallucination(page.getSummary(), topic);
+            evaluationRestClient.evaluateTopicConsistency(page.getSummary(), topic);
         }
         return result;
     }

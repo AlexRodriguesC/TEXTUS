@@ -4,29 +4,29 @@ GET http://localhost:8000/health
 ### List available metrics
 GET http://localhost:8000/api/v1/metrics
 
-### Create evaluation - summary hallucination check
+### Create evaluation - topic consistency check
 POST http://localhost:8000/api/v1/evaluations
 Content-Type: application/json
 
 {
-  "content_type": "summary",
+  "content_type": "topic",
   "input": "Osmosis is a diffusion process that occurs when two solutions of different concentrations are separated by a semipermeable membrane.",
-  "actual_output": "Osmosis moves water across a semipermeable membrane from low to high solute concentration.",
+  "actual_output": "Osmosis Process\nOsmosis moves water across a semipermeable membrane from low to high solute concentration.",
   "metrics": [
-    { "name": "hallucination" }
+    { "name": "consistency" }
   ]
 }
 
-### Create evaluation - topic list quality (page_id 196)
+### Create evaluation - topic list quality
 POST http://localhost:8000/api/v1/evaluations
 Content-Type: application/json
 
 {
   "content_type": "topic_list",
   "input": "Osmosis is a diffusion process that occurs when two solutions of different concentrations are separated by a semipermeable membrane. A semipermeable membrane allows water molecules to pass through but blocks larger solute molecules such as sugar. Water molecules move from the hypotonic solution (low solute concentration) toward the hypertonic solution (high solute concentration) to dilute the solute concentration. A hypertonic solution contains a high concentration of solute. A hypotonic solution contains a low concentration of solute. These solutions are classified by their relative solute concentrations when separated by a semipermeable membrane. Equilibrium is reached when both solutions achieve the same concentration of solute molecules and become isotonic. The initially hypertonic solution increases in volume as a result of water molecules moving into it during the osmotic process.",
-  "actual_output": "1. Osmosis Process and Semipermeable Membrane Function\n2. Classification of Solutions by Solute Concentration\n3. Osmotic Equilibrium and Volume Change",
+  "actual_output": "1. Osmosis Process and Semipermeable Membrane Function\nOsmosis moves water through a semipermeable membrane.\n2. Classification of Solutions by Solute Concentration\nHypertonic and hypotonic solutions differ by solute concentration.\n3. Osmotic Equilibrium and Volume Change\nEquilibrium is reached when solutions become isotonic and volume changes.",
   "metrics": [
-    { "name": "topic_coverage" },
+    { "name": "relevance" },
     { "name": "topic_granularity" }
   ]
 }
@@ -35,4 +35,4 @@ Content-Type: application/json
 GET http://localhost:8000/api/v1/evaluations/{{evaluation_id}}
 
 ### List evaluations
-GET http://localhost:8000/api/v1/evaluations?content_type=summary&limit=20&offset=0
+GET http://localhost:8000/api/v1/evaluations?content_type=topic_list&limit=20&offset=0

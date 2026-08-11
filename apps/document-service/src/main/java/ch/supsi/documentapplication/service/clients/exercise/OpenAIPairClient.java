@@ -6,7 +6,6 @@ import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.model.learn.exercise.PairExercise;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
 import ch.supsi.documentapplication.service.clients.Client;
-import ch.supsi.documentapplication.service.clients.EvaluationRestClient;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
@@ -17,15 +16,12 @@ public class OpenAIPairClient extends Client<Topic, PairExercise> {
 
     private static final String TOPIC = "topic";
 
-    private final EvaluationRestClient evaluationRestClient;
-
     public OpenAIPairClient(
             ChatClient chatClient,
             RetryTemplateWrapper retryTemplate,
             String systemPrompt,
             PromptTemplate promptTemplate,
-            AiContext aiContext,
-            EvaluationRestClient evaluationRestClient) {
+            AiContext aiContext) {
         super(
                 chatClient,
                 new BeanOutputConverter<>(PairExercise.class),
@@ -33,15 +29,12 @@ public class OpenAIPairClient extends Client<Topic, PairExercise> {
                 systemPrompt,
                 promptTemplate,
                 aiContext);
-        this.evaluationRestClient = evaluationRestClient;
     }
 
     @Override
     protected ClientResult<PairExercise> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
         params.put(TOPIC, input);
-        ClientResult<PairExercise> result = invoke(getPrompt(params), PairExercise.class);
-        evaluationRestClient.evaluateExercise(input, result.result());
-        return result;
+        return invoke(getPrompt(params), PairExercise.class);
     }
 }
