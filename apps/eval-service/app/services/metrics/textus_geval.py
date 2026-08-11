@@ -22,18 +22,29 @@ TEXTUS_GEVAL_PRESETS: dict[str, TextusGEvalPreset] = {
     criteria=(
       "Consistency (1-5) - the factual alignment between Actual Output and Input. "
       "A factually consistent Actual Output contains only statements that are "
-      "entailed by Input. Penalize Actual Output that contains hallucinated facts."
+      "entailed by Input. Penalize Actual Output that contains hallucinated, "
+      "unsupported, or contradicted facts. Do not penalize Actual Output for "
+      "omitting information present in Input; omissions affect relevance, not "
+      "consistency."
     ),
     evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
     evaluation_steps=[
       "Read Input carefully and identify the main facts and details it presents.",
       (
-        "Read Actual Output and compare it to Input. Check whether Actual Output "
-        "contains factual errors or statements not supported by Input."
+        "Read Actual Output and check each statement it makes against Input. "
+        "Flag any statement that is not entailed by Input, i.e. that is "
+        "contradicted by Input or has no support in it."
+      ),
+      (
+        "Ignore any facts or details present in Input but not mentioned in "
+        "Actual Output; missing information should not lower the score, since "
+        "consistency only concerns whether what is stated is accurate, not "
+        "whether everything has been covered."
       ),
       (
         "Assign a consistency score from 1 to 5 using the evaluation criteria "
-        "and rubric."
+        "and rubric, based solely on the unsupported or hallucinated statements "
+        "identified in the previous step."
       ),
     ],
     # Score-band wording is a TEXTUS adaptation; official SummEval prompts
@@ -42,31 +53,31 @@ TEXTUS_GEVAL_PRESETS: dict[str, TextusGEvalPreset] = {
       Rubric(
         score_range=(1, 1),
         expected_outcome=(
-          "largely inconsistent; many unsupported statements or major hallucinations."
+          "largely unsupported; most statements are hallucinated or contradict Input."
         ),
       ),
       Rubric(
         score_range=(2, 2),
         expected_outcome=(
-          "weak alignment; several unsupported or incorrect statements."
+          "weak alignment; several statements are unsupported or contradicted by Input."
         ),
       ),
       Rubric(
         score_range=(3, 3),
         expected_outcome=(
-          "mostly aligned, but at least one material unsupported or inaccurate statement."
+          "mostly accurate, but at least one statement is unsupported or contradicted by Input."
         ),
       ),
       Rubric(
         score_range=(4, 4),
         expected_outcome=(
-          "strong alignment with only minor imprecision and no major hallucination."
+          "accurate overall, with only minor imprecision and no unsupported claim or hallucination."
         ),
       ),
       Rubric(
         score_range=(5, 5),
         expected_outcome=(
-          "every statement is entailed by Input; no unsupported or hallucinated facts."
+          "every statement is entailed by Input; no unsupported, contradicted, or hallucinated facts."
         ),
       ),
     ],

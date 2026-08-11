@@ -18,6 +18,8 @@ def build_evaluation_llm(
     model=model,
     api_key=api_key,
     base_url=base_url,
+    temperature=0,
+    default_headers={"x-no-cache": "true"},
   )
 
 
