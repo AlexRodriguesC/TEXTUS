@@ -51,12 +51,12 @@ public class EvaluationRestClient {
                 "topic_list",
                 pageSummary,
                 formatTopicList(topics),
-                List.of(MetricConfig.of(EvalMetricName.RELEVANCE), MetricConfig.of(EvalMetricName.TOPIC_GRANULARITY))));
+                List.of(MetricConfig.of(EvalMetricName.RELEVANCE))));
     }
 
-    public void evaluateTopicConsistency(String pageSummary, Topic topic) {
+    public void evaluateTopicHallucination(String pageSummary, Topic topic) {
         submitAsync(CreateEvaluationRequest.of(
-                "topic", pageSummary, formatTopic(topic), List.of(MetricConfig.of(EvalMetricName.CONSISTENCY))));
+                "topic", pageSummary, formatTopic(topic), List.of(MetricConfig.of(EvalMetricName.HALLUCINATION))));
     }
 
     private static String formatTopicList(List<Topic> topics) {

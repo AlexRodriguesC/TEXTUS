@@ -1,9 +1,8 @@
 package ch.supsi.documentapplication.model.evaluation;
 
 public enum EvalMetricName {
-    CONSISTENCY("consistency"),
-    RELEVANCE("relevance"),
-    TOPIC_GRANULARITY("topic_granularity");
+    HALLUCINATION("hallucination"),
+    RELEVANCE("relevance");
 
     private final String value;
 

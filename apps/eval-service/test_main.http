@@ -4,7 +4,7 @@ GET http://localhost:8000/health
 ### List available metrics
 GET http://localhost:8000/api/v1/metrics
 
-### Create evaluation - topic consistency check
+### Create evaluation - topic hallucination check
 POST http://localhost:8000/api/v1/evaluations
 Content-Type: application/json
 
@@ -13,7 +13,7 @@ Content-Type: application/json
   "input": "Osmosis is a diffusion process that occurs when two solutions of different concentrations are separated by a semipermeable membrane.",
   "actual_output": "Osmosis Process\nOsmosis moves water across a semipermeable membrane from low to high solute concentration.",
   "metrics": [
-    { "name": "consistency" }
+    { "name": "hallucination" }
   ]
 }
 

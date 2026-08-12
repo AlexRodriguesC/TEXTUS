@@ -63,7 +63,7 @@ class EvaluationRestClientSpec extends Specification {
                 "topic",
                 "summary",
                 "topic text",
-                [MetricConfig.of(EvalMetricName.CONSISTENCY)])
+                [MetricConfig.of(EvalMetricName.HALLUCINATION)])
         responseSpec.toBodilessEntity() >> { throw new RuntimeException("connection refused") }
 
         when:
@@ -73,27 +73,27 @@ class EvaluationRestClientSpec extends Specification {
         noExceptionThrown()
     }
 
-    def "should submit topic list and consistency evaluations"() {
+    def "should submit topic list and hallucination evaluations"() {
         given:
         def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
         def clientSpy = Spy(client)
 
         when:
         clientSpy.evaluateTopicList("page summary", topics)
-        clientSpy.evaluateTopicConsistency("page summary", topics[0])
+        clientSpy.evaluateTopicHallucination("page summary", topics[0])
 
         then:
         1 * clientSpy.submitAsync({ CreateEvaluationRequest request ->
             request.contentType() == "topic_list" &&
                     request.input() == "page summary" &&
                     request.actualOutput() == "1. Topic A\nSummary A" &&
-                    request.metrics()*.name() == ["relevance", "topic_granularity"]
+                    request.metrics()*.name() == ["relevance"]
         })
         1 * clientSpy.submitAsync({ CreateEvaluationRequest request ->
             request.contentType() == "topic" &&
                     request.input() == "page summary" &&
                     request.actualOutput() == "Topic A\nSummary A" &&
-                    request.metrics()*.name() == ["consistency"]
+                    request.metrics()*.name() == ["hallucination"]
         })
     }
 
@@ -103,7 +103,7 @@ class EvaluationRestClientSpec extends Specification {
                 "topic",
                 "summary",
                 "output",
-                [MetricConfig.of(EvalMetricName.CONSISTENCY)]))
+                [MetricConfig.of(EvalMetricName.HALLUCINATION)]))
 
         then:
         noExceptionThrown()
