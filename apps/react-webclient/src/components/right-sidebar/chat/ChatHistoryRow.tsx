@@ -28,7 +28,7 @@ function ChatHistoryRow({
     >
       <Button
         variant="secondary"
-        className="flex-1 justify-start text-left truncate bg-transparent hover:bg-transparent px-1 normal-case font-normal"
+        className="flex-1 justify-start text-left truncate bg-transparent hover:bg-transparent px-1 text-sm normal-case font-normal tracking-normal"
         onClick={onSelect}
       >
         {title}
