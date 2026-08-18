@@ -235,6 +235,22 @@ class LearningServiceSpec extends Specification {
         first.get().is(second.get())
     }
 
+    def "should throw when attempts are exhausted on getNextExercise"() {
+        given:
+        setupSpace()
+        def lesson = buildLesson(1L, 0.10d, 0)
+        def path = buildPath(lesson)
+
+        when:
+        service.getNextExercise("alice", 10L, 1L)
+
+        then:
+        1 * learningStorage.readLesson(1L) >> lesson
+        1 * pathStorage.read(10L) >> path
+        thrown(LessonAttemptsExhaustedException)
+        0 * questionClient._
+    }
+
     def "should throw when attempts are exhausted on submit"() {
         given:
         setupSpace()

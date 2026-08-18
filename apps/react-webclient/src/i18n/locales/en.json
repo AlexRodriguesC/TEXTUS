@@ -148,9 +148,13 @@
     "help": {
       "button": "Get help",
       "title": "Exercise help",
-      "skipped": "Skipped",
-      "unknownTopic": "Unknown topic",
-      "message": "I need help understanding why I got this exercise wrong.\n\nTopic:\n{{topic}}\n\nExercise ({{exerciseType}}):\n{{prompt}}\n\nCorrect solution:\n{{correctSolution}}\n\nMy response:\n{{userResponse}}\n\nPlease help me understand why my answer was incorrect and what led to my mistake."
+      "message": {
+        "list": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy is the sequence {{sequence}} wrong?",
+        "group": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy are these items not associated to that label?\n{{assignments}}",
+        "pair": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy are these pairs not correct?\n{{pairs}}",
+        "question": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy is the answer to this question not {{answer}}?",
+        "skipped": "I skipped this exercise and need help working through it.\n\n{{request}}\n\nOptions:\n{{options}}\n\nCorrect solution:\n{{solution}}\n\nHelp me understand the solution."
+      }
     }
   },
   "button": {

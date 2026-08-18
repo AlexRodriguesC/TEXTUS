@@ -50,6 +50,7 @@ class Lesson {
 
   shouldFetchNextExercise(): boolean {
     if (this.completed) return false;
+    if (this.attemptsLeft === 0) return false;
     if (this.isCheckpoint()) return this.topics.length > 0;
     return true;
   }

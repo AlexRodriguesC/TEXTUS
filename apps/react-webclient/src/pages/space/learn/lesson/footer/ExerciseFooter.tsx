@@ -47,7 +47,6 @@ function ExerciseFooter({
         <ExerciseHelpButton
           exercise={nextExercise}
           userAnswer={answer}
-          topicId={nextExercise.topicId}
           onAdvanceExercise={onAdvanceExercise}
         />
       )}

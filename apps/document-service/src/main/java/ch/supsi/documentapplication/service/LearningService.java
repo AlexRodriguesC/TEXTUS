@@ -92,6 +92,10 @@ public class LearningService extends Service implements ILearningService {
             throw LessonPrerequisiteNotSatisfiedException.lessonAlreadyCompleted(lesson.getId());
         }
 
+        if (!lesson.hasAttemptsLeft()) {
+            throw LessonAttemptsExhaustedException.lessonAttemptsExhausted();
+        }
+
         if (lesson.hasExerciseInProgress()) {
             return lesson.getExerciseInProgress();
         }
@@ -189,16 +193,22 @@ public class LearningService extends Service implements ILearningService {
 
     @Override
     public void deleteExercises(String owner, Long spaceId, Long lessonId) {
-        getSpaceOrThrow(owner, spaceId);
-        var lesson = getLesson(owner, spaceId, lessonId);
+        ReentrantLock lock = lessonLocks.computeIfAbsent(lessonId, ignored -> new ReentrantLock());
+        lock.lock();
+        try {
+            getSpaceOrThrow(owner, spaceId);
+            var lesson = getLesson(owner, spaceId, lessonId);
 
-        if (lesson.hasAttemptsLeft()) {
-            throw InvalidInputException.attemptsNotExhausted();
+            if (lesson.hasAttemptsLeft()) {
+                throw InvalidInputException.attemptsNotExhausted();
+            }
+            lesson.reset();
+            databaseLearningStorage.update(lesson);
+
+            databaseLearningStorage.deleteExercises(lesson.getId());
+        } finally {
+            lock.unlock();
         }
-        lesson.reset();
-        databaseLearningStorage.update(lesson);
-
-        databaseLearningStorage.deleteExercises(lesson.getId());
     }
 
     private ExerciseType rollExerciseType(PathSettings settings) {

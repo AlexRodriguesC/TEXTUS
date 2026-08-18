@@ -1,4 +1,3 @@
-import type Topic from "@/classes/Topic.ts";
 import type { Exercise } from "@/classes/Exercise.ts";
 import type LeftRight from "@/classes/LeftRight.ts";
 import ExerciseType from "@/classes/ExerciseType.ts";
@@ -8,19 +7,62 @@ export function buildExerciseHelpMessage(
   t: TFunction,
   exercise: Exercise,
   userAnswer: unknown,
-  topic: Topic | undefined,
 ): string {
-  const topicSection = topic
-    ? `${topic.title}\n${topic.summary}\n${topic.labels.join(", ")}`
-    : t("exercise.help.unknownTopic");
+  const request = exercise.request;
 
-  return t("exercise.help.message", {
-    exerciseType: exercise.type,
-    topic: topicSection,
-    prompt: exercise.request,
-    correctSolution: formatCorrectSolution(exercise),
-    userResponse: formatUserResponse(userAnswer, t),
-  });
+  if (userAnswer === null || userAnswer === undefined) {
+    return t("exercise.help.message.skipped", {
+      request,
+      options: formatOptions(exercise),
+      solution: formatCorrectSolution(exercise),
+    });
+  }
+
+  switch (exercise.type) {
+    case ExerciseType.LIST:
+      return t("exercise.help.message.list", {
+        request,
+        sequence: formatListSequence(userAnswer),
+      });
+    case ExerciseType.GROUP:
+      return t("exercise.help.message.group", {
+        request,
+        assignments: formatMisplacedGroupAssignments(exercise.groups, userAnswer),
+      });
+    case ExerciseType.PAIR:
+      return t("exercise.help.message.pair", {
+        request,
+        pairs: formatIncorrectPairs(exercise.pairs, userAnswer),
+      });
+    case ExerciseType.QUESTION:
+      return t("exercise.help.message.question", {
+        request,
+        answer: typeof userAnswer === "string" ? userAnswer : String(userAnswer),
+      });
+  }
+}
+
+function formatOptions(exercise: Exercise): string {
+  switch (exercise.type) {
+    case ExerciseType.QUESTION:
+      return [exercise.answer, ...exercise.distractors].join("\n");
+    case ExerciseType.LIST:
+      return exercise.answer.join("\n");
+    case ExerciseType.GROUP: {
+      const labels = Object.keys(exercise.groups);
+      const items = Object.values(exercise.groups).flat();
+      return [`Labels: ${labels.join(", ")}`, `Items: ${items.join(", ")}`].join(
+        "\n",
+      );
+    }
+    case ExerciseType.PAIR: {
+      const lefts = exercise.pairs.map((pair) => pair.left);
+      const rights = exercise.pairs.map((pair) => pair.right);
+      return [`Left: ${lefts.join(", ")}`, `Right: ${rights.join(", ")}`].join(
+        "\n",
+      );
+    }
+  }
 }
 
 function formatCorrectSolution(exercise: Exercise): string {
@@ -40,31 +82,85 @@ function formatCorrectSolution(exercise: Exercise): string {
   }
 }
 
-function formatUserResponse(userAnswer: unknown, t: TFunction): string {
-  if (userAnswer === null || userAnswer === undefined) {
-    return t("exercise.help.skipped");
-  }
-
-  if (typeof userAnswer === "string") {
-    return userAnswer;
-  }
-
+function formatListSequence(userAnswer: unknown): string {
   if (Array.isArray(userAnswer)) {
-    if (userAnswer.length > 0 && isLeftRight(userAnswer[0])) {
-      return userAnswer
-        .map((pair) => `${pair.left} → ${pair.right}`)
-        .join("\n");
-    }
-    return userAnswer.join(" → ");
+    return userAnswer.map(String).join(" → ");
+  }
+  return String(userAnswer);
+}
+
+function formatMisplacedGroupAssignments(
+  correctGroups: Record<string, string[]>,
+  userAnswer: unknown,
+): string {
+  if (!isStringArrayRecord(userAnswer)) {
+    return formatFallbackGroupAnswer(userAnswer);
   }
 
-  if (typeof userAnswer === "object") {
-    return Object.entries(userAnswer as Record<string, string[]>)
+  const misplaced = Object.entries(userAnswer)
+    .map(([label, items]) => {
+      const correctItems = correctGroups[label] ?? [];
+      const wrongItems = items.filter((item) => !correctItems.includes(item));
+      return wrongItems.length > 0 ? `${label}: ${wrongItems.join(", ")}` : null;
+    })
+    .filter((line): line is string => line !== null);
+
+  if (misplaced.length === 0) {
+    return formatFallbackGroupAnswer(userAnswer);
+  }
+
+  return misplaced.join("\n");
+}
+
+function formatFallbackGroupAnswer(userAnswer: unknown): string {
+  if (isStringArrayRecord(userAnswer)) {
+    return Object.entries(userAnswer)
       .map(([label, keys]) => `${label}: ${keys.join(", ")}`)
       .join("\n");
   }
-
   return String(userAnswer);
+}
+
+function formatIncorrectPairs(
+  correctPairs: LeftRight[],
+  userAnswer: unknown,
+): string {
+  if (!Array.isArray(userAnswer) || !userAnswer.every(isLeftRight)) {
+    return formatFallbackPairs(userAnswer);
+  }
+
+  const correctRightByLeft = new Map(
+    correctPairs.map((pair) => [pair.left, pair.right]),
+  );
+
+  const incorrect = userAnswer.filter(
+    (pair) => correctRightByLeft.get(pair.left) !== pair.right,
+  );
+
+  if (incorrect.length === 0) {
+    return formatFallbackPairs(userAnswer);
+  }
+
+  return incorrect.map((pair) => `${pair.left} → ${pair.right}`).join("\n");
+}
+
+function formatFallbackPairs(userAnswer: unknown): string {
+  if (Array.isArray(userAnswer) && userAnswer.every(isLeftRight)) {
+    return userAnswer.map((pair) => `${pair.left} → ${pair.right}`).join("\n");
+  }
+  return String(userAnswer);
+}
+
+function isStringArrayRecord(
+  value: unknown,
+): value is Record<string, string[]> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.values(value).every(
+    (entry) =>
+      Array.isArray(entry) && entry.every((item) => typeof item === "string"),
+  );
 }
 
 function isLeftRight(value: unknown): value is LeftRight {

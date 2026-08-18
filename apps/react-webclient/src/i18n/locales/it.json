@@ -136,9 +136,13 @@
     "help": {
       "button": "Chiedi aiuto",
       "title": "Aiuto esercizio",
-      "skipped": "Saltato",
-      "unknownTopic": "Argomento sconosciuto",
-      "message": "Ho bisogno di aiuto per capire perché ho sbagliato questo esercizio.\n\nArgomento:\n{{topic}}\n\nEsercizio ({{exerciseType}}):\n{{prompt}}\n\nSoluzione corretta:\n{{correctSolution}}\n\nLa mia risposta:\n{{userResponse}}\n\nPer favore aiutami a capire perché la mia risposta era errata e quale errore ho commesso."
+      "message": {
+        "list": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché la sequenza {{sequence}} è sbagliata?",
+        "group": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché questi elementi non sono associati a quell'etichetta?\n{{assignments}}",
+        "pair": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché queste associazioni non sono corrette?\n{{pairs}}",
+        "question": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché la risposta a questa domanda non è {{answer}}?",
+        "skipped": "Ho saltato questo esercizio e ho bisogno di aiuto per risolverlo.\n\n{{request}}\n\nOpzioni:\n{{options}}\n\nSoluzione corretta:\n{{solution}}\n\nAiutami a capire la soluzione."
+      }
     }
   },
   "button": {

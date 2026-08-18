@@ -2,7 +2,6 @@ import {
   useGetLesson,
   useGetNextExercise,
   useDeleteExercises,
-  getGetNextExerciseQueryKey,
   getGetLessonQueryKey,
 } from "@/client/generated/lessons/lessons.ts";
 import useSpaceId from "@/hooks/useSpaceId.ts";
@@ -12,6 +11,7 @@ import { useCallback, useMemo } from "react";
 import type { Exercise } from "@/classes/Exercise.ts";
 import { isExerciseDto, mapExercise, mapLesson } from "@/hooks/dtoMappers.ts";
 import {
+  clearNextExerciseQuery,
   fetchNextExercise,
   resetNextExerciseQuery,
 } from "@/hooks/learning/fetchNextExercise.ts";
@@ -34,22 +34,12 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
     useDeleteExercises({
       mutation: {
         onMutate: async () => {
-          await queryClient.resetQueries({
-            queryKey: getGetNextExerciseQueryKey(
-              spaceId ?? ignored,
-              lessonId ?? ignored,
-            ),
-          });
+          if (spaceId === undefined || lessonId === undefined) return;
+          await clearNextExerciseQuery(queryClient, spaceId, lessonId);
         },
         onSuccess: async () => {
           await queryClient.invalidateQueries({
             queryKey: getGetLessonQueryKey(
-              spaceId ?? ignored,
-              lessonId ?? ignored,
-            ),
-          });
-          await queryClient.invalidateQueries({
-            queryKey: getGetNextExerciseQueryKey(
               spaceId ?? ignored,
               lessonId ?? ignored,
             ),

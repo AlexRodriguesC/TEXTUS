@@ -41,6 +41,17 @@ export function resetNextExerciseQuery(
   return queryClient.resetQueries({ queryKey });
 }
 
+export async function clearNextExerciseQuery(
+  queryClient: QueryClient,
+  spaceId: number,
+  lessonId: number,
+) {
+  const queryKey = getGetNextExerciseQueryKey(spaceId, lessonId);
+  await queryClient.cancelQueries({ queryKey });
+  queryClient.removeQueries({ queryKey });
+  inflight.delete(nextExerciseFlightKey(spaceId, lessonId));
+}
+
 export function clearNextExerciseFlights() {
   inflight.clear();
 }
