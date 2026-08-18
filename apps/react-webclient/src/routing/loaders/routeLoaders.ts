@@ -19,6 +19,7 @@ import { getGetTopicsQueryOptions } from "@/client/generated/topics/topics.ts";
 import type { MindMapsResponseDTO } from "@/client/model";
 import { ApiError } from "@/client/mutator.ts";
 import { mapLesson, mapLearningPath, isLearningPathDto } from "@/hooks/dtoMappers.ts";
+import { fetchNextExercise } from "@/hooks/learning/fetchNextExercise.ts";
 import LearningPathJobStatus from "@/classes/LearningPathJobStatus.ts";
 import { isLearningPathsResponseDto } from "@/hooks/learning/learningPathUtils.ts";
 import {
@@ -188,7 +189,11 @@ export async function ensureLessonData(
     const lesson = mapLesson(lessonResponse.data);
     if (lesson.shouldFetchNextExercise()) {
       await queryClient.ensureQueryData(
-        getGetNextExerciseQueryOptions(spaceId, lessonId),
+        getGetNextExerciseQueryOptions(spaceId, lessonId, {
+          query: {
+            queryFn: () => fetchNextExercise(spaceId, lessonId),
+          },
+        }),
       );
     }
   }

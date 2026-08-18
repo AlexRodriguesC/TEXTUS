@@ -19,7 +19,9 @@ import ch.supsi.documentapplication.service.clients.exercise.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +36,7 @@ public class LearningService extends Service implements ILearningService {
     private final OpenAIQuestionClient questionClient;
     private final DatabaseTopicStorage databaseTopicStorage;
     private final IDatabaseAiUsageStorage aiUsageStorage;
+    private final ConcurrentHashMap<Long, ReentrantLock> lessonLocks = new ConcurrentHashMap<>();
 
     @Autowired
     public LearningService(
@@ -64,6 +67,17 @@ public class LearningService extends Service implements ILearningService {
 
     @Override
     public BaseExercise<?> getNextExercise(String owner, Long spaceId, Long lessonId) throws ApplicationException {
+        ReentrantLock lock = lessonLocks.computeIfAbsent(lessonId, ignored -> new ReentrantLock());
+        lock.lock();
+        try {
+            return generateNextExercise(owner, spaceId, lessonId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private BaseExercise<?> generateNextExercise(String owner, Long spaceId, Long lessonId)
+            throws ApplicationException {
         var space = getSpaceOrThrow(owner, spaceId);
         var path = databasePathStorage.read(space.getId());
         var lesson = getLesson(owner, spaceId, lessonId);

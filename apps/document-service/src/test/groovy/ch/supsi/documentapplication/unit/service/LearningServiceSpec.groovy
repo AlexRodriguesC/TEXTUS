@@ -19,6 +19,7 @@ import ch.supsi.documentapplication.model.learn.LearningPath
 import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
 import ch.supsi.documentapplication.model.learn.Topic
+import ch.supsi.documentapplication.model.learn.exercise.BaseExercise
 import ch.supsi.documentapplication.model.learn.exercise.Question
 import ch.supsi.documentapplication.service.LearningService
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIGroupClient
@@ -26,6 +27,11 @@ import ch.supsi.documentapplication.service.clients.exercise.OpenAIListClient
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIPairClient
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIQuestionClient
 import spock.lang.Specification
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 class LearningServiceSpec extends Specification {
 
@@ -133,6 +139,100 @@ class LearningServiceSpec extends Specification {
         }
         1 * aiUsageStorage.create("exercise", 42L, "exercise_generate", _ as AiUsage)
         result.id == 42L
+    }
+
+    def "should generate only once when two requests overlap"() {
+        given:
+        def lesson = buildLesson()
+        def path = buildPath(lesson)
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
+        def generated = new Question()
+        generated.setRequest("Q?")
+        generated.setAnswer("A")
+
+        def generationStarted = new CountDownLatch(1)
+        def generationHold = new CountDownLatch(1)
+        def generateCalls = new AtomicInteger(0)
+        def createCalls = new AtomicInteger(0)
+
+        def localSpaceStorage = [
+                read: { Long ignored -> Optional.of(new Space(10L, "alice", "", "", "")) }
+        ] as IDatabaseSpaceStorage
+        def localPathStorage = new DatabasePathStorage(null) {
+            @Override
+            LearningPath read(Long spaceId) {
+                return path
+            }
+        }
+        def localLearningStorage = [
+                readLesson: { Long ignored -> lesson },
+                createExercise: { BaseExercise<?> exercise, Long ignored ->
+                    createCalls.incrementAndGet()
+                    exercise.setId(42L)
+                    return exercise
+                }
+        ] as IDatabaseLearningStorage
+        def localTopicStorage = new DatabaseTopicStorage(null) {
+            @Override
+            List<Topic> getBySpaceId(Long spaceId) {
+                return [topic]
+            }
+        }
+        def localQuestionClient = new OpenAIQuestionClient(null, null, "", null, null) {
+            @Override
+            ClientResult<Question> getResult(Topic input) {
+                generateCalls.incrementAndGet()
+                generationStarted.countDown()
+                assert generationHold.await(2, TimeUnit.SECONDS)
+                return new ClientResult<>(generated, [new AiUsage(1, 2, "p", "m")])
+            }
+        }
+        def localAiUsageStorage = [
+                create: { String type, Long entityId, String operation, AiUsage usage -> }
+        ] as IDatabaseAiUsageStorage
+        def overlappingService = new LearningService(
+                localSpaceStorage,
+                localPathStorage,
+                localLearningStorage,
+                Mock(OpenAIGroupClient),
+                Mock(OpenAIListClient),
+                Mock(OpenAIPairClient),
+                localQuestionClient,
+                localTopicStorage,
+                localAiUsageStorage)
+
+        def first = new AtomicReference()
+        def second = new AtomicReference()
+        def errors = new AtomicReference<Throwable>()
+
+        when:
+        def t1 = Thread.start {
+            try {
+                first.set(overlappingService.getNextExercise("alice", 10L, 1L))
+            } catch (Throwable t) {
+                errors.compareAndSet(null, t)
+            }
+        }
+        assert generationStarted.await(2, TimeUnit.SECONDS)
+        def t2 = Thread.start {
+            try {
+                second.set(overlappingService.getNextExercise("alice", 10L, 1L))
+            } catch (Throwable t) {
+                errors.compareAndSet(null, t)
+            }
+        }
+        Thread.sleep(50)
+        generationHold.countDown()
+        t1.join(2000)
+        t2.join(2000)
+
+        then:
+        errors.get() == null
+        generateCalls.get() == 1
+        createCalls.get() == 1
+        first.get().id == 42L
+        second.get().id == 42L
+        first.get().is(second.get())
     }
 
     def "should throw when attempts are exhausted on submit"() {

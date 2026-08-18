@@ -11,6 +11,10 @@ import { getGetLearningPathQueryKey } from "@/client/generated/paths/paths.ts";
 import { useCallback, useMemo } from "react";
 import type { Exercise } from "@/classes/Exercise.ts";
 import { isExerciseDto, mapExercise, mapLesson } from "@/hooks/dtoMappers.ts";
+import {
+  fetchNextExercise,
+  resetNextExerciseQuery,
+} from "@/hooks/learning/fetchNextExercise.ts";
 
 const ignored = -1;
 
@@ -77,6 +81,8 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
           !isLoading &&
           !!lesson &&
           lesson.shouldFetchNextExercise(),
+        queryFn: () =>
+          fetchNextExercise(spaceId ?? ignored, lessonId ?? ignored),
       },
     });
 
@@ -102,9 +108,7 @@ function useLesson({ lessonId }: { lessonId: number | undefined }) {
 
   const resetNextExercise = useCallback(() => {
     if (spaceId === undefined || lessonId === undefined) return;
-    return queryClient.resetQueries({
-      queryKey: getGetNextExerciseQueryKey(spaceId, lessonId),
-    });
+    return resetNextExerciseQuery(queryClient, spaceId, lessonId);
   }, [queryClient, spaceId, lessonId]);
 
   const invalidateLearningPath = useCallback(() => {
