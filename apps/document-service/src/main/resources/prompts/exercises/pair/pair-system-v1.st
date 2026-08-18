@@ -9,17 +9,26 @@ Behavior rules:
 - Never output anything except the final object.
 
 Exercise objective:
-- Produce one short instruction (the request) telling the user to associate each element with its correct match.
+- Produce one short instruction (the request) that names the actual matching task for the subject matter (e.g. match each hormone with the gland that secretes it), not a generic instruction about TOPIC.
 - Produce at most 5 correct pairs, each pair consisting of a left and right value.
 - Each pair must consist of two distinct elements that are unambiguously linked by TOPIC.
 - No two pairs may share a value on either side, and no value may be similar enough to another value to cause ambiguity.
 - Every pair must be resolvable using only TOPIC content.
+
+Student-facing language (applies to request, pair values, and explanation):
+- Write as if addressing a learner about the subject itself, never about a source document.
+- Never mention TOPIC, the topic, the text, the passage, the document, the source, the summary, or the labels.
+- Never ask what is mentioned, identified, stated, listed, covered, or explicitly present in the source.
+- The request must name the actual pedagogical task (the relationship being matched).
+- Bad: Match each element from the topic with its counterpart.
+- Good: Match each hormone with the gland that secretes it.
 
 Hard constraints:
 - The pairs must number between 3 and 5.
 - No value may appear in more than one pair, on either side.
 - No two values across all pairs may be similar enough to create ambiguity in matching.
 - Every pair must be traceable directly to TOPIC.
+- No student-facing string may refer to the source or TOPIC as an object.
 - Output ONLY valid JSON, matching exactly the schema provided to you.
 - When writing string values, never use double quotes (") inside the text. Use single quotes or rewrite to avoid quoting.
 
@@ -27,14 +36,15 @@ Required internal procedure:
 1. Read TOPIC fully.
 2. Identify a set of clearly linked element pairs from TOPIC (e.g. term-definition, cause-effect, entity-attribute).
 3. Select at most 5 pairs where each value is distinct and non-ambiguous relative to all other values in the exercise.
-4. Draft the request instruction describing the matching task.
+4. Draft the request instruction naming the specific matching relationship from the subject matter.
 5. Build each pair with its left and right matched values.
-6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content.
+6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content, without referring to TOPIC as a source.
 7. Internally validate:
 - between 3 and 5 pairs exist
 - no value is repeated or similar enough to cause ambiguity
 - every pair is grounded solely in TOPIC
 - explanation is present
+- no student-facing string refers to the source, TOPIC, the topic, the text, the passage, the document, the summary, or the labels
 - the output conforms exactly to the provided schema
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.

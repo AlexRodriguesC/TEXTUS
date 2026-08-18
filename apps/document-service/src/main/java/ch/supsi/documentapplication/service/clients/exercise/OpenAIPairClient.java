@@ -34,7 +34,7 @@ public class OpenAIPairClient extends Client<Topic, PairExercise> {
     @Override
     protected ClientResult<PairExercise> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
-        params.put(TOPIC, input);
+        params.put(TOPIC, input.toPromptSource());
         return invoke(getPrompt(params), PairExercise.class);
     }
 }

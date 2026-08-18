@@ -34,7 +34,7 @@ public class OpenAIListClient extends Client<Topic, List> {
     @Override
     protected ClientResult<List> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
-        params.put(TOPIC, input);
+        params.put(TOPIC, input.toPromptSource());
         return invoke(getPrompt(params), List.class);
     }
 }

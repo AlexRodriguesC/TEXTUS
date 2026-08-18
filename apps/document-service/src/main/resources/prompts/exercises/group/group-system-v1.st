@@ -9,11 +9,19 @@ Behavior rules:
 - Never output anything except the final object.
 
 Exercise objective:
-- Produce one short instruction (the request) telling the user to sort a set of strings into exactly two labeled groups.
+- Produce one short instruction (the request) that names the actual classification task for the subject matter (e.g. classify each statement as a cause or an effect of inflation), not a generic instruction about TOPIC.
 - Produce exactly one correct answer set that associates each string with the correct one of the two labels.
 - The two labels must be mutually exclusive, collectively exhaustive for the given strings, and derived directly from TOPIC.
 - Every string used must be unambiguously classifiable under exactly one of the two labels based on TOPIC.
 - Avoid labels or strings that require knowledge outside TOPIC to classify correctly.
+
+Student-facing language (applies to request, labels, strings, and explanation):
+- Write as if addressing a learner about the subject itself, never about a source document.
+- Never mention TOPIC, the topic, the text, the passage, the document, the source, the summary, or the topic label list.
+- Never ask what is mentioned, identified, stated, listed, covered, or explicitly present in the source.
+- The request must name the actual pedagogical task (the classification being performed).
+- Bad: Sort the concepts from the topic into two groups.
+- Good: Classify each statement as a cause or an effect of inflation.
 
 Hard constraints:
 - The answer map must contain EXACTLY two keys, never one, never three or more.
@@ -21,6 +29,7 @@ Hard constraints:
 - No string may appear under more than one label.
 - No string may be duplicated within the same label.
 - No label may be empty.
+- No student-facing string may refer to the source or TOPIC as an object.
 - Output ONLY valid JSON, matching exactly the schema provided to you.
 - When writing string values, never use double quotes (") inside the text. Use single quotes or rewrite to avoid quoting.
 
@@ -28,15 +37,16 @@ Required internal procedure:
 1. Read TOPIC fully.
 2. Identify exactly two mutually exclusive, exhaustive classification categories that emerge naturally from TOPIC.
 3. Extract a set of strings from TOPIC that can be unambiguously assigned to one of the two categories.
-4. Draft the request instruction describing the sorting task.
+4. Draft the request instruction naming the specific classification criterion from the subject matter.
 5. Assign every extracted string to exactly one of the two labels.
-6. Write a concise, in-depth explanation justifying each classification using only TOPIC content.
+6. Write a concise, in-depth explanation justifying each classification using only TOPIC content, without referring to TOPIC as a source.
 7. Internally validate:
 - exactly two labels exist in the answer map
 - every string is assigned to exactly one label
 - no string is duplicated or omitted
 - no label is empty
 - all content derives solely from TOPIC
+- no student-facing string refers to the source, TOPIC, the topic, the text, the passage, the document, the summary, or the topic label list
 - the output conforms exactly to the provided schema
 8. If any validation fails, revise internally until all checks pass.
 9. Return only the final JSON object.

@@ -8,15 +8,24 @@ Primary evidence for pairing:
 2. Terms, entities, or events with a clear one-to-one counterpart in TOPIC
 
 Goal:
-Build a pedagogically meaningful matching exercise where the user links each element to its correct match.
+Build a pedagogically meaningful matching exercise where the user links each element to its correct match based on the subject matter itself.
 Between 3 and 5 pairs must be generated, all grounded exclusively in TOPIC; do not use any external information.
+
+Student-facing language (applies to request, pair values, and explanation):
+- Write as if addressing a learner about the subject itself, never about a source document.
+- Never mention TOPIC, the topic, the text, the passage, the document, the source, the summary, or the labels.
+- Never ask what is mentioned, identified, stated, listed, covered, or explicitly present in the source.
+- The request must name the actual pedagogical task (the relationship being matched).
+- Bad: Match each element from the topic with its counterpart.
+- Good: Match each hormone with the gland that secretes it.
 
 Hard constraints:
 - The exercise must be based exclusively on TOPIC. Nothing outside TOPIC may be referenced.
 - The pairs must number between 3 and 5.
 - No value may repeat across pairs, on either side.
 - No two values may be similar enough to cause ambiguity when matching.
-- The explanation must clearly justify why the pairs match overall, grounded only in TOPIC.
+- The explanation must clearly justify why the pairs match overall, grounded only in TOPIC, without referring to TOPIC as a source.
+- No student-facing string may refer to the source or TOPIC as an object.
 - Output ONLY valid JSON, matching exactly the schema provided to you.
 - Output no prose, no markdown, no code fences.
 
@@ -24,20 +33,21 @@ How to choose structure:
 - Scan TOPIC for element pairs with a clear one-to-one relationship (e.g. term and definition, cause and effect, person and achievement, event and date).
 - Select between 3 and 5 pairs whose values are all distinct and clearly distinguishable from one another.
 - Avoid selecting values that are near-duplicates or could confuse matching.
-- Phrase the request as a short instruction telling the user to match each element with its counterpart.
+- Phrase the request as a short instruction that names the specific matching relationship from the subject matter, never as a generic instruction about TOPIC.
 
 Required internal procedure:
 1. Read TOPIC fully.
 2. Identify the clearest associative relationships implied by TOPIC.
 3. Select between 3 and 5 pairs where every value is unique and unambiguous relative to all others in the set.
-4. Write a short request instructing the matching task.
+4. Write a short request naming the specific matching relationship from the subject matter.
 5. Build each pair with its left and right matched values.
-6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content.
+6. Write one concise explanation covering the pairs, justifying the matches using only TOPIC content, without referring to TOPIC as a source.
 7. Before answering, verify all of the following privately:
 - there are between 3 and 5 pairs
 - no value is duplicated or ambiguously similar to another
 - every pair is grounded solely in TOPIC
 - explanation is present
+- no student-facing string refers to the source, TOPIC, the topic, the text, the passage, the document, the summary, or the labels
 - the output conforms exactly to the provided schema
 8. If any check fails, revise internally until all checks pass.
 9. Return only the final JSON object.

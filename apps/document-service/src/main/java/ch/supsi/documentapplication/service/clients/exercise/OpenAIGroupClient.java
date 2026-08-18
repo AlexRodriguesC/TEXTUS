@@ -34,7 +34,7 @@ public class OpenAIGroupClient extends Client<Topic, Group> {
     @Override
     protected ClientResult<Group> call(Topic input) {
         Map<String, Object> params = new HashMap<>();
-        params.put(TOPIC, input);
+        params.put(TOPIC, input.toPromptSource());
         return invoke(getPrompt(params), Group.class);
     }
 }

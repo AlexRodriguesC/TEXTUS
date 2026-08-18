@@ -49,6 +49,36 @@ public class Topic {
             "Maximally descriptive, information-dense, and granular labels identifying this topic's exact subject matter (e.g. named entities, precise concepts, specific mechanisms). Two topics should share a label only if they cover the exact same narrow subject. Reuse an existing label only if it matches precisely; otherwise create a new one.")
     private List<String> labels;
 
+    /**
+     * Plain-text source for exercise prompts: title, summary, and labels without meta headings.
+     * Prefer this over {@link #toString()}, which excludes title and summary for logging.
+     */
+    public String toPromptSource() {
+        StringBuilder builder = new StringBuilder();
+        if (title != null && !title.isBlank()) {
+            builder.append(title.trim());
+        }
+        if (summary != null && !summary.isBlank()) {
+            if (!builder.isEmpty()) {
+                builder.append('\n');
+            }
+            builder.append(summary.trim());
+        }
+        if (labels != null && !labels.isEmpty()) {
+            List<String> cleaned = labels.stream()
+                    .filter(label -> label != null && !label.isBlank())
+                    .map(String::trim)
+                    .toList();
+            if (!cleaned.isEmpty()) {
+                if (!builder.isEmpty()) {
+                    builder.append('\n');
+                }
+                builder.append(String.join(", ", cleaned));
+            }
+        }
+        return builder.toString();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
