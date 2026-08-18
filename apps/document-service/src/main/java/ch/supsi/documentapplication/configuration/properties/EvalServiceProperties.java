@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class EvalServiceProperties {
 
+    private boolean enabled = true;
+
     private String baseUrl = "http://localhost:8000";
 
     private String evaluationsEndpoint = "/api/v1/evaluations";

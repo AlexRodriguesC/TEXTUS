@@ -108,4 +108,24 @@ class EvaluationRestClientSpec extends Specification {
         then:
         noExceptionThrown()
     }
+
+    def "should not POST when evaluations are disabled"() {
+        given:
+        evalServiceProperties.enabled = false
+        def request = CreateEvaluationRequest.of(
+                "topic_list",
+                "summary text",
+                "1. Topic A",
+                [MetricConfig.of(EvalMetricName.RELEVANCE)])
+        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
+
+        when:
+        client.submit(request)
+        client.submitAsync(request)
+        client.evaluateTopicList("page summary", topics)
+
+        then:
+        0 * restClient.post()
+        noExceptionThrown()
+    }
 }

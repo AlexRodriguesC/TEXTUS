@@ -9,11 +9,12 @@ POST http://localhost:8000/api/v1/evaluations
 Content-Type: application/json
 
 {
-  "content_type": "topic",
-  "input": "Osmosis is a diffusion process that occurs when two solutions of different concentrations are separated by a semipermeable membrane.",
-  "actual_output": "Osmosis Process\nOsmosis moves water across a semipermeable membrane from low to high solute concentration.",
+  "content_type": "summary",
+  "input": "17 2 Meaningful Names by Tim Ottinger Introduction Names are everywhere in software. We name our variables, our functions, our arguments, classes, and packages. We name our source files and the directories that contain them. We name our jar files and war files and ear files. We name and name and name. Because we do",
+  "actual_output": "Names are used throughout software, including variables, functions, arguments, classes, packages, source files, directories, and archive files such as JAR, WAR, and EAR files.",
   "metrics": [
-    { "name": "hallucination" }
+    { "name": "hallucination" },
+    { "name": "relevance" }
   ]
 }
 

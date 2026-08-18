@@ -27,10 +27,18 @@ public class EvaluationRestClient {
     }
 
     public void submitAsync(CreateEvaluationRequest request) {
+        if (!evalServiceProperties.isEnabled()) {
+            log.debug("Skipping evaluation submit; app.eval-service.enabled=false");
+            return;
+        }
         CompletableFuture.runAsync(() -> submit(request));
     }
 
     void submit(CreateEvaluationRequest request) {
+        if (!evalServiceProperties.isEnabled()) {
+            log.debug("Skipping evaluation submit; app.eval-service.enabled=false");
+            return;
+        }
         try {
             evalServiceRestClient
                     .post()

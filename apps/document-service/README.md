@@ -74,6 +74,9 @@ TESSERACT_DATAPATH=/path/to/tessdata
 
 # Optional; defaults to http://localhost:8000
 EVAL_SERVICE_BASE_URL=http://localhost:8000
+
+# Optional; defaults to true. Set to false to skip evaluation requests to eval-service
+EVAL_SERVICE_ENABLED=true
 ```
 
 `OPENAI_BASE_URL` must point to an OpenAI-compatible API. The configured embedding model uses 1,536 dimensions, so replacing it requires compatible pgvector configuration. Docker provides `TESSERACT_DATAPATH` for the backend container automatically.
