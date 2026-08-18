@@ -51,7 +51,7 @@ function usePaginatedFilter<T>({
 
   const pageSize = useListPageSize(listRef, itemRef, {
     enabled: showList && filtered.length > 0,
-    measureKey,
+    measureKey: `${measureKey ?? "list"}:${page}`,
     gapPx,
   });
 

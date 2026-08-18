@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 type UseListPageSizeOptions = {
   gapPx?: number;
@@ -18,8 +18,10 @@ function useListPageSize(
   }: UseListPageSizeOptions = {},
 ) {
   const [pageSize, setPageSize] = useState(fallback);
+  const overflowCapRef = useRef<number | null>(null);
+  const lastContainerHeightRef = useRef(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!enabled) return;
 
     const container = containerRef.current;
@@ -33,11 +35,36 @@ function useListPageSize(
       const itemHeight = item.getBoundingClientRect().height;
       if (containerHeight <= 0 || itemHeight <= 0) return;
 
-      const nextPageSize = Math.max(
+      const heightChanged = containerHeight !== lastContainerHeightRef.current;
+      if (heightChanged) {
+        overflowCapRef.current = null;
+        lastContainerHeightRef.current = containerHeight;
+      }
+
+      if (container.scrollHeight > container.clientHeight) {
+        setPageSize((prev) => {
+          const next = Math.max(1, prev - 1);
+          if (next < prev) {
+            overflowCapRef.current = prev;
+          }
+          return next;
+        });
+        return;
+      }
+
+      const estimated = Math.max(
         1,
         Math.floor((containerHeight + gapPx) / (itemHeight + gapPx)),
       );
-      setPageSize(nextPageSize);
+      const capped =
+        overflowCapRef.current === null
+          ? estimated
+          : Math.min(estimated, overflowCapRef.current - 1);
+      const nextSize = Math.max(1, capped);
+
+      setPageSize((prev) =>
+        nextSize > prev && heightChanged ? nextSize : prev,
+      );
     };
 
     const observer = new ResizeObserver(measure);
@@ -49,7 +76,7 @@ function useListPageSize(
     measure();
 
     return () => observer.disconnect();
-  }, [containerRef, itemRef, gapPx, enabled, measureKey]);
+  }, [containerRef, itemRef, gapPx, enabled, measureKey, pageSize]);
 
   return pageSize;
 }

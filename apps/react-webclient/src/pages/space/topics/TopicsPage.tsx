@@ -74,19 +74,17 @@ function TopicsPaginatedContent({
   }
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col items-center overflow-hidden">
-      <div ref={listRef} className="flex flex-1 min-h-0 w-full flex-col px-4">
-        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto py-6">
-          <TopicEntryList topics={paginated} itemRef={itemRef} />
-        </div>
-
-        <PaginatedListControls
-          safePage={safePage}
-          totalPages={totalPages}
-          onPageChange={goToPage}
-          className="pb-6"
-        />
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden px-4 pt-6">
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <TopicEntryList topics={paginated} itemRef={itemRef} />
       </div>
+
+      <PaginatedListControls
+        safePage={safePage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+        className="pb-6"
+      />
     </div>
   );
 }

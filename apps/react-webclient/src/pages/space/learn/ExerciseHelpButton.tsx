@@ -15,12 +15,14 @@ interface ExerciseHelpButtonProps {
   exercise: Exercise;
   userAnswer: unknown;
   topicId: number;
+  onAdvanceExercise?: () => Promise<void> | void;
 }
 
 function ExerciseHelpButton({
   exercise,
   userAnswer,
   topicId,
+  onAdvanceExercise,
 }: ExerciseHelpButtonProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ function ExerciseHelpButton({
 
     setIsNavigating(true);
     try {
+      void onAdvanceExercise?.();
       const message = buildExerciseHelpMessage(t, exercise, userAnswer, topic);
       const chat = await createChat(t("exercise.help.title"));
       setSelectedChatId(chat.id);

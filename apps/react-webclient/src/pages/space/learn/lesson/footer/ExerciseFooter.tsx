@@ -14,6 +14,7 @@ interface ExerciseFooterProps {
   onConfirm: () => void;
   onSkip: () => void;
   onNext?: () => void;
+  onAdvanceExercise?: () => Promise<void> | void;
 }
 
 function ExerciseFooter({
@@ -27,6 +28,7 @@ function ExerciseFooter({
   onConfirm,
   onSkip,
   onNext,
+  onAdvanceExercise,
 }: ExerciseFooterProps) {
   const { t } = useTranslation();
 
@@ -46,6 +48,7 @@ function ExerciseFooter({
           exercise={nextExercise}
           userAnswer={answer}
           topicId={nextExercise.topicId}
+          onAdvanceExercise={onAdvanceExercise}
         />
       )}
       {submitted ? (

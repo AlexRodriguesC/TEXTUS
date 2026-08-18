@@ -38,6 +38,7 @@ function LessonFooter({
     deleteExercises,
     isDeletingExercises,
     invalidateLearningPath,
+    resetNextExercise,
   } = useLesson({ lessonId });
   const navigation = useLessonNavigation();
 
@@ -89,6 +90,7 @@ function LessonFooter({
         onConfirm={onConfirm}
         onSkip={onSkip}
         onNext={onNext}
+        onAdvanceExercise={resetNextExercise}
       />
     );
   })();
