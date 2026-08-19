@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.model.ClientResult
 import ch.supsi.documentapplication.model.Document
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.LessonType
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterBoundary
 import ch.supsi.documentapplication.service.async.learningpipeline.ChapterGenerationRequest
@@ -221,6 +222,6 @@ class ChapterGenerationTaskletSpec extends Specification {
     }
 
     private static Topic topic(Long id, int pageNumber, List<String> labels) {
-        new Topic(id, null, null, pageNumber, "topic-$id", "summary-$id", labels)
+        new Topic(id, null, null, pageNumber, "topic-$id", "summary-$id", labels, [ExerciseType.QUESTION])
     }
 }

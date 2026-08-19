@@ -20,6 +20,8 @@ import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.BaseExercise
+import ch.supsi.documentapplication.model.learn.exercise.List as ListExercise
+import ch.supsi.documentapplication.model.learn.exercise.PairExercise
 import ch.supsi.documentapplication.model.learn.exercise.Question
 import ch.supsi.documentapplication.service.LearningService
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIGroupClient
@@ -28,6 +30,7 @@ import ch.supsi.documentapplication.service.clients.exercise.OpenAIPairClient
 import ch.supsi.documentapplication.service.clients.exercise.OpenAIQuestionClient
 import spock.lang.Specification
 
+import java.util.LinkedHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -120,7 +123,7 @@ class LearningServiceSpec extends Specification {
         setupSpace()
         def lesson = buildLesson()
         def path = buildPath(lesson)
-        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def generated = new Question()
         generated.setRequest("Q?")
         generated.setAnswer("A")
@@ -141,11 +144,81 @@ class LearningServiceSpec extends Specification {
         result.id == 42L
     }
 
+    def "should generate list exercise when topic only supports LIST despite question preferences"() {
+        given:
+        setupSpace()
+        def lesson = buildLesson()
+        def path = buildPath(lesson)
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.LIST])
+        def generated = new ListExercise()
+        generated.setRequest("Order these")
+        generated.setAnswer(["a", "b"])
+
+        when:
+        def result = service.getNextExercise("alice", 10L, 1L)
+
+        then:
+        1 * learningStorage.readLesson(1L) >> lesson
+        1 * pathStorage.read(10L) >> path
+        1 * topicStorage.getBySpaceId(10L) >> [topic]
+        1 * listClient.getResult(topic) >> new ClientResult<>(generated, [new AiUsage(1, 2, "p", "m")])
+        1 * learningStorage.createExercise(_ as ListExercise, 1L) >> { ListExercise e, Long id ->
+            e.setId(42L)
+            return e
+        }
+        0 * questionClient._
+        result.id == 42L
+    }
+
+    def "should generate list or pair when topic excludes question and preferences are 100 percent question"() {
+        given:
+        setupSpace()
+        def lesson = buildLesson()
+        def path = buildPath(lesson)
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.LIST, ExerciseType.PAIR])
+        def listExercise = new ListExercise()
+        listExercise.setRequest("Order")
+        listExercise.setAnswer(["a"])
+        def pairExercise = new PairExercise()
+        pairExercise.setRequest("Match")
+        listClient.getResult(topic) >> new ClientResult<>(listExercise, [new AiUsage(1, 2, "p", "m")])
+        pairClient.getResult(topic) >> new ClientResult<>(pairExercise, [new AiUsage(1, 2, "p", "m")])
+
+        when:
+        def result = service.getNextExercise("alice", 10L, 1L)
+
+        then:
+        1 * learningStorage.readLesson(1L) >> lesson
+        1 * pathStorage.read(10L) >> path
+        1 * topicStorage.getBySpaceId(10L) >> [topic]
+        1 * learningStorage.createExercise(_ as BaseExercise, 1L) >> { BaseExercise e, Long id ->
+            e.setId(42L)
+            return e
+        }
+        0 * questionClient._
+        0 * groupClient._
+        result.id == 42L
+        result.type in [ExerciseType.LIST, ExerciseType.PAIR]
+    }
+
+    def "pickWeighted selects type by cumulative weight"() {
+        given:
+        def weights = new LinkedHashMap<ExerciseType, Integer>()
+        weights.put(ExerciseType.LIST, 10)
+        weights.put(ExerciseType.QUESTION, 70)
+
+        expect:
+        LearningService.pickWeighted(weights, 0) == ExerciseType.LIST
+        LearningService.pickWeighted(weights, 9) == ExerciseType.LIST
+        LearningService.pickWeighted(weights, 10) == ExerciseType.QUESTION
+        LearningService.pickWeighted(weights, 79) == ExerciseType.QUESTION
+    }
+
     def "should generate only once when two requests overlap"() {
         given:
         def lesson = buildLesson()
         def path = buildPath(lesson)
-        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def generated = new Question()
         generated.setRequest("Q?")
         generated.setAnswer("A")
@@ -309,7 +382,7 @@ class LearningServiceSpec extends Specification {
         def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
         chapter.setLessons([lesson, checkpoint])
         def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
-        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
 
         when:
         service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))
@@ -340,7 +413,7 @@ class LearningServiceSpec extends Specification {
         def chapter = new Chapter(1L, 0, "Chapter", "desc", null)
         chapter.setLessons([lesson, checkpoint])
         def path = new LearningPath(99L, new PathSettings(100, 0, 0, 0), [chapter])
-        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(100L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
 
         when:
         service.submitAttempt("alice", 10L, 1L, new AttemptRequestDTO(ExerciseType.QUESTION, "a1", 10L, "3"))

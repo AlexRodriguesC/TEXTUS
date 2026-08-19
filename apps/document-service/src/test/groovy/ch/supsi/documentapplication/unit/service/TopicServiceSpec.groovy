@@ -5,6 +5,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
 import ch.supsi.documentapplication.exception.NotFoundException
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Space
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.TopicService
 import spock.lang.Specification
@@ -17,7 +18,7 @@ class TopicServiceSpec extends Specification {
 
     def "should return topics for space owner"() {
         given:
-        def topics = [new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])]
+        def topics = [new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])]
 
         when:
         def result = service.getTopicsBySpace("alice", 10L)

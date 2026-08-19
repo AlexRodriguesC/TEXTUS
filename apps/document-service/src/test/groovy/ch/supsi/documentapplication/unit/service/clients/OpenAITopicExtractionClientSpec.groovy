@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.service.clients
 import ch.supsi.documentapplication.exception.RetriesFailedException
 import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.Page
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.EvaluationRestClient
@@ -53,8 +54,13 @@ class OpenAITopicExtractionClientSpec extends Specification {
                 ClientTestSupport.TEST_AI_CONTEXT)
     }
 
-    static Topic topic(Long id, String title, String summary, List<String> labels = List.of("abc")) {
-        return new Topic(id, "1", 1, 1, title, summary, labels)
+    static Topic topic(
+            Long id,
+            String title,
+            String summary,
+            List<String> labels = List.of("abc"),
+            List<ExerciseType> exerciseTypes = [ExerciseType.QUESTION]) {
+        return new Topic(id, "1", 1, 1, title, summary, labels, exerciseTypes)
     }
 
     def "should extract distinct labels from existing topics, build prompt and return extracted topics"() {
@@ -126,5 +132,44 @@ class OpenAITopicExtractionClientSpec extends Specification {
 
         and: "the extracted topics are returned"
         result.result() == expectedTopics
+    }
+
+    def "should coerce empty exerciseTypes to QUESTION without a second chat call"() {
+        given:
+        def page = new Page(1L, 1, "title1", "page summary text")
+        def input = Pair.of(page, [])
+        def rawTopic = topic(1L, "topic1", "summ", ["label1"], [])
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor([rawTopic])
+
+        when:
+        def result = client.getResult(input)
+
+        then:
+        1 * chatClient.prompt(_ as Prompt) >> requestSpec
+        result.result()[0].exerciseTypes == [ExerciseType.QUESTION]
+    }
+
+    def "should dedupe exerciseTypes while preserving order"() {
+        given:
+        def page = new Page(1L, 1, "title1", "page summary text")
+        def input = Pair.of(page, [])
+        def rawTopic = topic(1L, "topic1", "summ", ["label1"], [
+                ExerciseType.LIST, ExerciseType.LIST, ExerciseType.QUESTION
+        ])
+
+        promptTemplate.render(_ as Map) >> "rendered prompt"
+        chatClient.prompt(_ as Prompt) >> requestSpec
+        requestSpec.call() >> callResponseSpec
+        callResponseSpec.responseEntity(_ as ParameterizedTypeReference) >> ClientTestSupport.responseEntityFor([rawTopic])
+
+        when:
+        def result = client.getResult(input)
+
+        then:
+        result.result()[0].exerciseTypes == [ExerciseType.LIST, ExerciseType.QUESTION]
     }
 }

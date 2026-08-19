@@ -248,9 +248,9 @@
   "sidebar": {
     "settings": {
       "path": {
-        "changes": "Changes to learning path settings will only take effect on exercises generated after the change",
+        "changes": "Preferences apply only to exercises whose type matches your selected exercise types.",
         "title": "Path Settings",
-        "exerciseTypes": "Exercise Type Occurrence",
+        "exerciseTypes": "Exercise Type Preferences",
         "question": "Question",
         "list": "List",
         "group": "Group",

@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients.exercise
 
 import ch.supsi.documentapplication.model.AiUsage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.Group
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
@@ -46,7 +47,7 @@ class OpenAIGroupClientSpec extends Specification {
 
     def "should call chatClient and return the generated group exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, 1, "Biology", "Biology summary", ["taxonomy"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Biology", "Biology summary", ["taxonomy"], [ExerciseType.QUESTION])
         def expectedGroup = new Group()
         expectedGroup.setRequest("Group these items")
         expectedGroup.setAnswer([fruit: ["apple", "banana"], vegetable: ["carrot"]])

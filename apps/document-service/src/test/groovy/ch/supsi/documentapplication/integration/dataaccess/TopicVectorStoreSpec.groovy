@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.integration.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import org.springframework.ai.document.Document
 import org.springframework.ai.embedding.EmbeddingModel
@@ -49,7 +50,7 @@ class TopicVectorStoreSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary for embedding", ["label-a"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary for embedding", ["label-a"], [ExerciseType.QUESTION])
 
         when:
         Long topicId = storage.create(topic, pageId)

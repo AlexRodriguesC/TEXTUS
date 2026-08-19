@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.configuration.properties.EvalServiceProperti
 import ch.supsi.documentapplication.model.evaluation.CreateEvaluationRequest
 import ch.supsi.documentapplication.model.evaluation.EvalMetricName
 import ch.supsi.documentapplication.model.evaluation.MetricConfig
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.clients.EvaluationRestClient
 import org.springframework.web.client.RestClient
@@ -75,7 +76,7 @@ class EvaluationRestClientSpec extends Specification {
 
     def "should submit topic list and hallucination evaluations"() {
         given:
-        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
+        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"], [ExerciseType.QUESTION])]
         def clientSpy = Spy(client)
 
         when:
@@ -117,7 +118,7 @@ class EvaluationRestClientSpec extends Specification {
                 "summary text",
                 "1. Topic A",
                 [MetricConfig.of(EvalMetricName.RELEVANCE)])
-        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"])]
+        def topics = [new Topic(1L, "file", 1, 1, "Topic A", "Summary A", ["a"], [ExerciseType.QUESTION])]
 
         when:
         client.submit(request)

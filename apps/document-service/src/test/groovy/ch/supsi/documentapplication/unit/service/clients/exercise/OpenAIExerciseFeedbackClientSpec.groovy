@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.unit.service.clients.exercise
 import ch.supsi.documentapplication.model.AiUsage
 import ch.supsi.documentapplication.model.Attempt
 import ch.supsi.documentapplication.model.Feedback
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.Question
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
@@ -55,7 +56,7 @@ class OpenAIExerciseFeedbackClientSpec extends Specification {
         exercise.setAnswer("4")
         exercise.setExplanation("Addition")
         exercise.setDistractor(["3", "5"])
-        def topic = new Topic(1L, "a.pdf", 1, 1, "Math", "Math summary", ["addition"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Math", "Math summary", ["addition"], [ExerciseType.QUESTION])
         def attempt = Attempt.of(exercise, "3", topic)
         def feedback = objectMapper.readValue('{"feedback":"Review basic addition."}', Feedback)
 

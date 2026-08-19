@@ -4,6 +4,7 @@ import ch.supsi.documentapplication.model.MindMapNodeType
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.PageMindMap
 import ch.supsi.documentapplication.model.PageMindMapNode
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.mindmap.MindMapAssembler
 import spock.lang.Specification
@@ -13,7 +14,7 @@ class MindMapAssemblerSpec extends Specification {
     MindMapAssembler assembler = new MindMapAssembler()
 
     static Topic topic(Long id, Long pageId) {
-        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"])
+        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"], [ExerciseType.QUESTION])
     }
 
     def "should assemble a mixed page and topic tree from a page tree"() {

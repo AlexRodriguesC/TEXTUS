@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.unit.controller
 
 import ch.supsi.documentapplication.controller.TopicController
 import ch.supsi.documentapplication.configuration.properties.AppProperties
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.AuthService
 import ch.supsi.documentapplication.service.ITopicService
@@ -49,7 +50,7 @@ class TopicControllerSpec extends Specification {
     def "should return topics for space"() {
         given:
         topicService.getTopicsBySpace("alice", 1L) >> [
-                new Topic(10L, "doc.pdf", 1, 1, "Title", "Summary", ["label"])
+                new Topic(10L, "doc.pdf", 1, 1, "Title", "Summary", ["label"], [ExerciseType.QUESTION])
         ]
 
         when:

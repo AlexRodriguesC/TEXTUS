@@ -14,7 +14,7 @@ class AttemptSpec extends Specification {
         def exercise = new Question()
         exercise.setId(1L)
         exercise.setAnswer("4")
-        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def request = new AttemptRequestDTO(ExerciseType.QUESTION, "att-1", 1L, "4")
 
         when:
@@ -29,7 +29,7 @@ class AttemptSpec extends Specification {
         def exercise = new Question()
         exercise.setId(1L)
         exercise.setAnswer("4")
-        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def request = new AttemptRequestDTO(ExerciseType.QUESTION, "att-1", 1L, "3")
 
         when:
@@ -44,7 +44,7 @@ class AttemptSpec extends Specification {
         def exercise = new Question()
         exercise.setId(1L)
         exercise.setAnswer("4")
-        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def request = new AttemptRequestDTO(ExerciseType.QUESTION, "att-skip", 1L, null)
 
         when:
@@ -59,7 +59,7 @@ class AttemptSpec extends Specification {
         def exercise = new ch.supsi.documentapplication.model.learn.exercise.List()
         exercise.setId(2L)
         exercise.setAnswer(["a", "b"])
-        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def request = new AttemptRequestDTO(ExerciseType.LIST, "att-skip", 2L, null)
 
         when:
@@ -74,7 +74,7 @@ class AttemptSpec extends Specification {
         def exercise = new ch.supsi.documentapplication.model.learn.exercise.List()
         exercise.setId(2L)
         exercise.setAnswer(["a", "b"])
-        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "title", "summary", [], [ExerciseType.QUESTION])
         def request = new AttemptRequestDTO(ExerciseType.LIST, "att-2", 2L, ["a", "b"])
 
         when:

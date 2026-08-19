@@ -3,11 +3,15 @@ package ch.supsi.documentapplication.service.clients;
 import ch.supsi.documentapplication.model.AiContext;
 import ch.supsi.documentapplication.model.ClientResult;
 import ch.supsi.documentapplication.model.Page;
+import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.service.RetryTemplateWrapper;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.ai.chat.client.ChatClient;
@@ -58,10 +62,25 @@ public class OpenAITopicExtractionClient extends Client<Pair<Page, List<Topic>>,
         params.put(EXISTING_LABELS, objectMapper.writeValueAsString(distinctLabels));
         ClientResult<List<Topic>> result = invoke(getPrompt(params), new ParameterizedTypeReference<>() {});
         List<Topic> topics = result.result();
+        for (Topic topic : topics) {
+            topic.setExerciseTypes(normalizeExerciseTypes(topic.getExerciseTypes()));
+        }
         evaluationRestClient.evaluateTopicList(page.getSummary(), topics);
         for (Topic topic : topics) {
             evaluationRestClient.evaluateTopicHallucination(page.getSummary(), topic);
         }
         return result;
+    }
+
+    static List<ExerciseType> normalizeExerciseTypes(List<ExerciseType> exerciseTypes) {
+        if (exerciseTypes == null || exerciseTypes.isEmpty()) {
+            return List.of(ExerciseType.QUESTION);
+        }
+        List<ExerciseType> deduped = new ArrayList<>(new LinkedHashSet<>(
+                exerciseTypes.stream().filter(Objects::nonNull).toList()));
+        if (deduped.isEmpty()) {
+            return List.of(ExerciseType.QUESTION);
+        }
+        return List.copyOf(deduped);
     }
 }

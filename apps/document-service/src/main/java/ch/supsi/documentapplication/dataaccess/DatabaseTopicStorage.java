@@ -1,5 +1,6 @@
 package ch.supsi.documentapplication.dataaccess;
 
+import ch.supsi.documentapplication.model.learn.ExerciseType;
 import ch.supsi.documentapplication.model.learn.Topic;
 import java.sql.Array;
 import java.sql.ResultSet;
@@ -22,8 +23,10 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     private static final String SUMMARY = "summary";
     public static final String KEY = "key";
     private static final String LABELS = "labels";
+    private static final String EXERCISE_TYPES = "exercise_types";
     private static final String PAGE_ID = "page_id";
     private static final String PAGE_NUMBER = "page_number";
+    private static final String TYPES = "types";
 
     @Autowired
     public DatabaseTopicStorage(JdbcClient jdbcClient) {
@@ -32,12 +35,17 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
 
     @Override
     public Long create(Topic topic, Long pageId) {
+        List<ExerciseType> exerciseTypes = topic.getExerciseTypes();
+        if (exerciseTypes == null || exerciseTypes.isEmpty()) {
+            exerciseTypes = List.of(ExerciseType.QUESTION);
+        }
         return jdbcClient
-                .sql("SELECT documents.create_topic(:page_id, :title, :summary, :labels)")
+                .sql("SELECT documents.create_topic(:page_id, :title, :summary, :labels, :types)")
                 .param(PAGE_ID, pageId)
                 .param(TITLE, topic.getTitle())
                 .param(SUMMARY, topic.getSummary())
                 .param(LABELS, topic.getLabels().toArray(new String[0]))
+                .param(TYPES, exerciseTypes.stream().map(Enum::name).toArray(String[]::new))
                 .query(Long.class)
                 .single();
     }
@@ -82,6 +90,7 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     private Topic mapToTopic(ResultSet rs) throws SQLException {
         Array sqlLabels = rs.getArray(LABELS);
         List<String> labels = sqlLabels != null ? Arrays.asList((String[]) sqlLabels.getArray()) : List.of();
+        List<ExerciseType> exerciseTypes = mapExerciseTypes(rs.getArray(EXERCISE_TYPES));
         return new Topic(
                 rs.getLong(ID),
                 rs.getString("src_file_name"),
@@ -89,6 +98,18 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
                 rs.getInt(PAGE_NUMBER),
                 rs.getString(TITLE),
                 rs.getString(SUMMARY),
-                labels);
+                labels,
+                exerciseTypes);
+    }
+
+    private static List<ExerciseType> mapExerciseTypes(Array sqlTypes) throws SQLException {
+        if (sqlTypes == null) {
+            return List.of(ExerciseType.QUESTION);
+        }
+        String[] values = (String[]) sqlTypes.getArray();
+        if (values == null || values.length == 0) {
+            return List.of(ExerciseType.QUESTION);
+        }
+        return Arrays.stream(values).map(ExerciseType::valueOf).toList();
     }
 }

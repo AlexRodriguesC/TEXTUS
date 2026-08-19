@@ -6,6 +6,7 @@ import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.PageMindMapAssignment
 import ch.supsi.documentapplication.model.PageMindMapChildSelection
 import ch.supsi.documentapplication.model.PageMindMapRootSelection
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
 import ch.supsi.documentapplication.service.clients.OpenAIMindMapClient
@@ -74,7 +75,7 @@ class OpenAIMindMapClientSpec extends Specification {
     }
 
     static Topic topic(Long id, Long pageId) {
-        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"])
+        new Topic(id, "doc.pdf", pageId, 1, "Title $id", "Summary $id", ["label"], [ExerciseType.QUESTION])
     }
 
     static PageMindMapRootSelection rootSelection(Long pageId) {

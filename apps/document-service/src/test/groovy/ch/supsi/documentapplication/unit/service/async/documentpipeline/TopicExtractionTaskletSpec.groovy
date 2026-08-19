@@ -7,6 +7,7 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
 import ch.supsi.documentapplication.model.ClientResult
 import ch.supsi.documentapplication.model.Page
 import ch.supsi.documentapplication.model.TaskType
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.async.documentpipeline.SetupTasklet
 import ch.supsi.documentapplication.service.async.documentpipeline.TopicExtractionTasklet
@@ -219,7 +220,7 @@ class TopicExtractionTaskletSpec extends Specification {
         def processedPageIds = [] as Set<Long>
         def withSummary = topic(null, null, null, "useful summary")
         def blankSummary = topic(null, null, null, "  ")
-        def nullSummary = new Topic(null, null, null, null, "empty", null, ["label"])
+        def nullSummary = new Topic(null, null, null, null, "empty", null, ["label"], [ExerciseType.QUESTION])
 
         when:
         RepeatStatus status = topicExtractionTasklet.execute(stepContribution, chunkContext)
@@ -261,6 +262,6 @@ class TopicExtractionTaskletSpec extends Specification {
     }
 
     private static Topic topic(Long id, Long pageId, Integer pageNumber, String summary) {
-        new Topic(id, null, pageId, pageNumber, "topic", summary, ["label"])
+        new Topic(id, null, pageId, pageNumber, "topic", summary, ["label"], [ExerciseType.QUESTION])
     }
 }

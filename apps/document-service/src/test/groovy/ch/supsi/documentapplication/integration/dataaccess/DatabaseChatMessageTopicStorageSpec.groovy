@@ -3,6 +3,7 @@ package ch.supsi.documentapplication.integration.dataaccess
 import ch.supsi.documentapplication.dataaccess.DatabaseChatMessageTopicStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseChatStorage
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import spock.lang.Subject
 
@@ -27,8 +28,8 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         UUID chatId = chatStorage.create(spaceId, "grounding-owner", "Grounding chat")
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", []), pageId)
-        Long topicB = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", []), pageId)
+        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", [], [ExerciseType.QUESTION]), pageId)
+        Long topicB = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", [], [ExerciseType.QUESTION]), pageId)
 
         when:
         storage.save(chatId, 1L, [topicB, topicA])
@@ -62,7 +63,7 @@ class DatabaseChatMessageTopicStorageSpec extends DatabaseSpec {
         UUID chatId = chatStorage.create(spaceId, "grounding-owner-3", "Multi-turn chat")
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", []), pageId)
+        Long topicA = topicStorage.create(new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", [], [ExerciseType.QUESTION]), pageId)
 
         when:
         storage.save(chatId, 1L, [topicA])

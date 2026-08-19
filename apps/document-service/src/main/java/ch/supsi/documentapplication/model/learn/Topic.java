@@ -14,7 +14,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @JsonClassDescription(
-        "A distinct topic extracted from a document, identified by descriptive labels, a concise title, and a factual summary.")
+        "A distinct topic extracted from a document, identified by descriptive labels, a concise title, a factual summary, and the exercise shapes it supports.")
 public class Topic {
 
     @JsonIgnore
@@ -48,6 +48,12 @@ public class Topic {
     @JsonPropertyDescription(
             "Maximally descriptive, information-dense, and granular labels identifying this topic's exact subject matter (e.g. named entities, precise concepts, specific mechanisms). Two topics should share a label only if they cover the exact same narrow subject. Reuse an existing label only if it matches precisely; otherwise create a new one.")
     private List<String> labels;
+
+    @Setter
+    @JsonPropertyDescription("Exercise shapes this topic genuinely supports. "
+            + "Allowed values: LIST, GROUP, PAIR, QUESTION. Include every valid shape. "
+            + "Use QUESTION when the content is not structurally decomposable.")
+    private List<ExerciseType> exerciseTypes;
 
     /**
      * Plain-text source for exercise prompts: title, summary, and labels without meta headings.
@@ -86,11 +92,12 @@ public class Topic {
         return Objects.equals(getId(), topic.getId())
                 && Objects.equals(getTitle(), topic.getTitle())
                 && Objects.equals(getSummary(), topic.getSummary())
-                && Objects.equals(getLabels(), topic.getLabels());
+                && Objects.equals(getLabels(), topic.getLabels())
+                && Objects.equals(getExerciseTypes(), topic.getExerciseTypes());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getTitle(), getSummary(), getLabels());
+        return Objects.hash(getId(), getTitle(), getSummary(), getLabels(), getExerciseTypes());
     }
 }

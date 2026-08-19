@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients.exercise
 
 import ch.supsi.documentapplication.model.AiUsage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.Question
 import ch.supsi.documentapplication.service.RetryTemplateWrapper
@@ -46,7 +47,7 @@ class OpenAIQuestionClientSpec extends Specification {
 
     def "should call chatClient and return the generated question exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, 1, "Algebra", "Basic algebra summary", ["equations"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Algebra", "Basic algebra summary", ["equations"], [ExerciseType.QUESTION])
         def expectedQuestion = new Question()
         expectedQuestion.setRequest("What is 2+2?")
         expectedQuestion.setAnswer("4")

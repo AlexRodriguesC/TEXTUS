@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.rag
 
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.service.rag.FallbackTopicDocumentPostProcessor
 import org.springframework.ai.document.Document
@@ -31,8 +32,8 @@ class FallbackTopicDocumentPostProcessorSpec extends Specification {
         given:
         def query = Query.builder().text("question").build()
         def topics = [
-                new Topic(1L, null, 10L, 1, "Topic One", "Summary one", []),
-                new Topic(2L, null, 11L, 1, "Topic Two", null, []),
+                new Topic(1L, null, 10L, 1, "Topic One", "Summary one", [], [ExerciseType.QUESTION]),
+                new Topic(2L, null, 11L, 1, "Topic Two", null, [], [ExerciseType.QUESTION]),
         ]
 
         when:

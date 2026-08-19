@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.unit.service.clients.exercise
 
 import ch.supsi.documentapplication.model.AiUsage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.model.learn.exercise.LeftRight
 import ch.supsi.documentapplication.model.learn.exercise.PairExercise
@@ -47,7 +48,7 @@ class OpenAIPairClientSpec extends Specification {
 
     def "should call chatClient and return the generated pair exercise when topic is provided"() {
         given:
-        def topic = new Topic(1L, "a.pdf", 1, 1, "Animals", "Animal sounds summary", ["sounds"])
+        def topic = new Topic(1L, "a.pdf", 1, 1, "Animals", "Animal sounds summary", ["sounds"], [ExerciseType.QUESTION])
         def expectedPair = new PairExercise()
         expectedPair.setRequest("Match animal to sound")
         expectedPair.setAnswer([new LeftRight("cat", "meow"), new LeftRight("dog", "bark")])

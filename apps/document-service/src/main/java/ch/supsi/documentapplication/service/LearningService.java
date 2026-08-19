@@ -101,8 +101,8 @@ public class LearningService extends Service implements ILearningService {
         }
 
         var settings = path.getSettings();
-        var type = rollExerciseType(settings);
         var topic = findCurrentTopic(space.getId(), lesson);
+        var type = rollExerciseType(settings, topic.getExerciseTypes());
 
         ClientResult<? extends BaseExercise<?>> exerciseResult =
                 switch (type) {
@@ -211,22 +211,39 @@ public class LearningService extends Service implements ILearningService {
         }
     }
 
-    private ExerciseType rollExerciseType(PathSettings settings) {
-        var weights = new LinkedHashMap<ExerciseType, Integer>();
-        weights.put(ExerciseType.QUESTION, settings.getQuestionPercentage());
-        weights.put(ExerciseType.LIST, settings.getListPercentage());
-        weights.put(ExerciseType.GROUP, settings.getGroupPercentage());
-        weights.put(ExerciseType.PAIR, settings.getPairPercentage());
+    private ExerciseType rollExerciseType(PathSettings settings, List<ExerciseType> topicTypes) {
+        List<ExerciseType> pool = topicTypes == null || topicTypes.isEmpty()
+                ? List.of(ExerciseType.QUESTION)
+                : topicTypes.stream().filter(Objects::nonNull).distinct().toList();
 
-        int total = weights.values().stream().mapToInt(v -> v == null ? 0 : v).sum();
-
-        if (total <= 0) {
-            throw new IllegalStateException("PathSettings percentages must sum to a positive value");
+        if (pool.isEmpty()) {
+            pool = List.of(ExerciseType.QUESTION);
         }
 
-        int roll = ThreadLocalRandom.current().nextInt(total);
-        int cumulative = 0;
+        var weights = new LinkedHashMap<ExerciseType, Integer>();
+        for (ExerciseType type : pool) {
+            weights.put(type, percentageFor(settings, type));
+        }
 
+        int total = weights.values().stream().mapToInt(v -> v == null ? 0 : v).sum();
+        if (total <= 0) {
+            return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+        }
+
+        return pickWeighted(weights, ThreadLocalRandom.current().nextInt(total));
+    }
+
+    private static Integer percentageFor(PathSettings settings, ExerciseType type) {
+        return switch (type) {
+            case QUESTION -> settings.getQuestionPercentage();
+            case LIST -> settings.getListPercentage();
+            case GROUP -> settings.getGroupPercentage();
+            case PAIR -> settings.getPairPercentage();
+        };
+    }
+
+    public static ExerciseType pickWeighted(LinkedHashMap<ExerciseType, Integer> weights, int roll) {
+        int cumulative = 0;
         for (var entry : weights.entrySet()) {
             int weight = entry.getValue() == null ? 0 : entry.getValue();
             cumulative += weight;
@@ -234,7 +251,6 @@ public class LearningService extends Service implements ILearningService {
                 return entry.getKey();
             }
         }
-
         throw new IllegalStateException("Unreachable: roll did not match any exercise type");
     }
 }

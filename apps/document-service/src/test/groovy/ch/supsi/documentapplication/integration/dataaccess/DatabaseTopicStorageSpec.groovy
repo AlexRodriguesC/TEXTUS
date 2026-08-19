@@ -1,6 +1,7 @@
 package ch.supsi.documentapplication.integration.dataaccess
 
 import ch.supsi.documentapplication.dataaccess.DatabaseTopicStorage
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import spock.lang.Subject
 
@@ -19,7 +20,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", ["label-a", "label-b"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic A", "Summary A", ["label-a", "label-b"], [ExerciseType.QUESTION])
 
         when:
         Long topicId = storage.create(topic, pageId)
@@ -32,8 +33,29 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         topics[0].title == "Topic A"
         topics[0].summary == "Summary A"
         topics[0].labels.sort() == ["label-a", "label-b"]
+        topics[0].exerciseTypes == [ExerciseType.QUESTION]
         topics[0].page == pageId
         topics[0].pageNumber == 1
+    }
+
+    def "should create topic with multiple exercise types and read them back"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+        Long jobId = createBatchJobInstance()
+        Long pageId = createPage(spaceId, jobId)
+        def topic = new Topic(
+                null, "notes.pdf", 1, 1, "Water cycle", "Stages of the water cycle",
+                ["hydrology"], [ExerciseType.LIST, ExerciseType.GROUP])
+
+        when:
+        Long topicId = storage.create(topic, pageId)
+        def topics = storage.getByPageId(pageId)
+
+        then:
+        topicId != null
+        topics.size() == 1
+        topics[0].exerciseTypes.sort() == [ExerciseType.GROUP, ExerciseType.LIST]
     }
 
     def "should create topic and read it back by space id"() {
@@ -42,7 +64,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", ["space-label"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic B", "Summary B", ["space-label"], [ExerciseType.QUESTION])
 
         when:
         storage.create(topic, pageId)
@@ -67,16 +89,16 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long secondPage = createPageForDocument(spaceId, secondDocumentId, 1)
 
         Long pageTwoTopic = storage.create(
-                new Topic(null, "first.pdf", firstPageTwo, 2, "page-two", "summary", ["first"]),
+                new Topic(null, "first.pdf", firstPageTwo, 2, "page-two", "summary", ["first"], [ExerciseType.QUESTION]),
                 firstPageTwo)
         Long pageOneFirstTopic = storage.create(
-                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-first", "summary", ["first"]),
+                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-first", "summary", ["first"], [ExerciseType.QUESTION]),
                 firstPageOne)
         Long pageOneSecondTopic = storage.create(
-                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-second", "summary", ["first"]),
+                new Topic(null, "first.pdf", firstPageOne, 1, "page-one-second", "summary", ["first"], [ExerciseType.QUESTION]),
                 firstPageOne)
         storage.create(
-                new Topic(null, "second.pdf", secondPage, 1, "other-document", "summary", ["second"]),
+                new Topic(null, "second.pdf", secondPage, 1, "other-document", "summary", ["second"], [ExerciseType.QUESTION]),
                 secondPage)
 
         when:
@@ -94,12 +116,12 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long spaceId = createSpace()
         Long jobId = createBatchJobInstance()
         Long pageId = createPage(spaceId, jobId)
-        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic C", "Summary C", ["id-label"])
+        def topic = new Topic(null, "notes.pdf", 1, 1, "Topic C", "Summary C", ["id-label"], [ExerciseType.QUESTION])
 
         when:
         Long firstId = storage.create(topic, pageId)
         Long secondId = storage.create(
-                new Topic(null, "notes.pdf", 1, 1, "Topic D", "Summary D", ["id-label"]), pageId)
+                new Topic(null, "notes.pdf", 1, 1, "Topic D", "Summary D", ["id-label"], [ExerciseType.QUESTION]), pageId)
 
         then:
         firstId != null
@@ -115,7 +137,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         Long pageId = createPage(spaceId, jobId)
         (1..4).each { idx ->
             storage.create(
-                    new Topic(null, "notes.pdf", 1, 1, "Topic $idx", "Summary $idx", ["label"]),
+                    new Topic(null, "notes.pdf", 1, 1, "Topic $idx", "Summary $idx", ["label"], [ExerciseType.QUESTION]),
                     pageId)
         }
 

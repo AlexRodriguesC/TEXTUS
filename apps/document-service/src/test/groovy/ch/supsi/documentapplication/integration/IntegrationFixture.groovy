@@ -9,6 +9,7 @@ import ch.supsi.documentapplication.model.User
 import ch.supsi.documentapplication.model.learn.Chapter
 import ch.supsi.documentapplication.model.learn.Lesson
 import ch.supsi.documentapplication.model.learn.LessonType
+import ch.supsi.documentapplication.model.learn.ExerciseType
 import ch.supsi.documentapplication.model.learn.Topic
 import org.springframework.batch.core.repository.dao.DefaultExecutionContextSerializer
 import org.springframework.jdbc.core.simple.JdbcClient
@@ -123,7 +124,7 @@ trait IntegrationFixture {
 
     Long createTopic(Long spaceId, Long jobId, String title = "Topic title") {
         Long pageId = createPage(spaceId, jobId)
-        Topic topic = new Topic(null, "a.pdf", 1, 1, title, "Topic summary", ["label1", "label2"])
+        Topic topic = new Topic(null, "a.pdf", 1, 1, title, "Topic summary", ["label1", "label2"], [ExerciseType.QUESTION])
         new DatabaseTopicStorage(jdbcClient).create(topic, pageId)
         jdbcClient
                 .sql("SELECT id FROM documents.topic WHERE page_id = :pageId")

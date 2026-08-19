@@ -236,9 +236,9 @@
   "sidebar": {
     "settings": {
       "path": {
-        "changes": "Le modifiche alle impostazioni del percorso di apprendimento influenzeranno solo gli esercizi generati dopo le modifiche",
+        "changes": "Le preferenze vengono applicate solo agli esercizi il cui tipo corrisponde ai tipi di esercizio selezionati.",
         "title": "Impostazioni percorso",
-        "exerciseTypes": "Occorrenza tipi di esercizio",
+        "exerciseTypes": "Preferenze tipi di esercizio",
         "question": "Domanda",
         "list": "Elenco",
         "group": "Gruppo",
