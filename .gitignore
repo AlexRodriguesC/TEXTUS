@@ -5,3 +5,6 @@ documents/**/*
 lib/
 __pycache__/
 *.py[cod]
+/apps/react-webclient/.vite/deps/package.json
+/apps/react-webclient/.vite/deps/_metadata.json
+/apps/document-service/documents/9e575bf4-6f9c-4dd4-aba6-55ade25a336c
