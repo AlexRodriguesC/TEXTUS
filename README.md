@@ -12,18 +12,19 @@
     <a href="https://fly.io/"><img src="https://img.shields.io/badge/Fly.io-Deployment-7B3FE4?style=for-the-badge&logo=flydotio&logoColor=white" alt="Fly.io"></a>
   </p>
 
-  <a href="#getting-started">Get started</a>
-  ·
-  <a href="#architecture">Architecture</a>
-  ·
-  <a href="#services">Services</a>
-  ·
-  <a href="#deployment">Deployment</a>
+<a href="#getting-started">Get started</a>
+·
+<a href="#architecture">Architecture</a>
+·
+<a href="#services">Services</a>
+·
+<a href="#deployment">Deployment</a>
 </div>
 
 ## Table of Contents
 
 - [About the Project](#about-the-project)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Services](#services)
 - [Getting Started](#getting-started)
@@ -36,11 +37,35 @@ TEXTUS is a learning platform that transforms uploaded PDF material into reusabl
 
 The Spring document service owns authentication, document processing, and the primary API. The React web client provides the learning interface, while the FastAPI evaluation service assesses generated content asynchronously with G-Eval metrics and meta-evaluation workflows.
 
+## Screenshots
+
+<div align="center">
+
+### Home
+
+<img src="apps/react-webclient/screenshots/home.png" alt="TEXTUS home page" width="3840">
+
+### Learning Path
+
+<img src="apps/react-webclient/screenshots/path.png" alt="Learning path view" width="3840">
+
+### Lesson & Exercises
+
+<img src="apps/react-webclient/screenshots/exercise.png" alt="Exercise and lesson view" width="3840">
+
+### Document-Grounded Chat
+
+<img src="apps/react-webclient/screenshots/chat.png" alt="Chat view with references to original source content" width="3840">
+
+### Mind Map
+
+<img src="apps/react-webclient/screenshots/mind_map.png" alt="Mind map view" width="3840">
+
+</div>
+
 ## Architecture
 
 The end-to-end flow starts with a learner uploading a PDF through the web client. The document service processes the file, stores structured learning material and embeddings, and exposes it through its REST API and server-sent events. It also submits generated content to the evaluation service without blocking document ingestion.
-
-For the complete system design, see the [architecture chapter](docs/thesis/11-architecture.md).
 
 ## Services
 
