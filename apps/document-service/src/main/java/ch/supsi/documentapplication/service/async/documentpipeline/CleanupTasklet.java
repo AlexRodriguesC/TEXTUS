@@ -1,13 +1,7 @@
-<<<<<<<< HEAD:apps/document-service/src/main/java/ch/supsi/documentapplication/service/processingpipeline/CleanupTasklet.java
-package ch.supsi.documentapplication.service.processingpipeline;
-
-import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
-========
 package ch.supsi.documentapplication.service.async.documentpipeline;
 
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage;
 import ch.supsi.documentapplication.service.async.ProcessingTasklet;
->>>>>>>> origin/feature/testing_service:apps/document-service/src/main/java/ch/supsi/documentapplication/service/async/documentpipeline/CleanupTasklet.java
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;

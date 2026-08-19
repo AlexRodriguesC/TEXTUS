@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:apps/document-service/src/main/java/ch/supsi/documentapplication/properties/AppProperties.java
-package ch.supsi.documentapplication.properties;
-========
 package ch.supsi.documentapplication.configuration.properties;
->>>>>>>> origin/feature/testing_service:apps/document-service/src/main/java/ch/supsi/documentapplication/configuration/properties/AppProperties.java
 
 import lombok.Getter;
 import lombok.Setter;

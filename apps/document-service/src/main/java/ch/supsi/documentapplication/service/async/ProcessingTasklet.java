@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:apps/document-service/src/main/java/ch/supsi/documentapplication/service/processingpipeline/ProcessingTasklet.java
-package ch.supsi.documentapplication.service.processingpipeline;
-========
 package ch.supsi.documentapplication.service.async;
->>>>>>>> origin/feature/testing_service:apps/document-service/src/main/java/ch/supsi/documentapplication/service/async/ProcessingTasklet.java
 
 import ch.supsi.documentapplication.service.async.documentpipeline.SetupTasklet;
 import java.util.UUID;
