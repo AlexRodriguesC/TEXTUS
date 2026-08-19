@@ -122,23 +122,33 @@ export async function streamChatMessage(
     }
 
     buffer += decoder.decode(value, { stream: true });
-    buffer = await processSseBuffer(buffer, onToken);
+    const parsed = parseSseBuffer(buffer);
+    buffer = parsed.remainder;
+    for (const token of parsed.tokens) {
+      onToken(token);
+    }
   }
 
-  await processSseBuffer(buffer, onToken, true);
+  const flushed = parseSseBuffer(buffer, true);
+  for (const token of flushed.tokens) {
+    onToken(token);
+  }
 }
 
-function nextFrame(): Promise<void> {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-}
+export type ParsedSseBuffer = {
+  tokens: string[];
+  remainder: string;
+};
 
-async function processSseBuffer(
+/**
+ * Parse SSE events from a buffer.
+ * Spring SseEmitter writes `data:` immediately followed by the chunk (no
+ * delimiter space). Do not trim — model tokens often start with a leading space.
+ */
+export function parseSseBuffer(
   buffer: string,
-  onToken: (token: string) => void,
   flush = false,
-): Promise<string> {
+): ParsedSseBuffer {
   const normalized = buffer.replace(/\r\n/g, "\n");
   const events = normalized.split("\n\n");
   const remainder = flush ? "" : (events.pop() ?? "");
@@ -148,24 +158,12 @@ async function processSseBuffer(
     const dataLines = event
       .split("\n")
       .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trimStart());
+      .map((line) => line.slice("data:".length));
 
     if (dataLines.length > 0) {
       tokens.push(dataLines.join("\n"));
-      continue;
-    }
-
-    if (event.trim()) {
-      tokens.push(event);
     }
   }
 
-  for (let index = 0; index < tokens.length; index++) {
-    onToken(tokens[index]);
-    if (index < tokens.length - 1) {
-      await nextFrame();
-    }
-  }
-
-  return remainder;
+  return { tokens, remainder };
 }

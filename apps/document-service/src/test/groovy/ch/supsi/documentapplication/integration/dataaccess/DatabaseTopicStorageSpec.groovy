@@ -55,7 +55,7 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         then:
         topicId != null
         topics.size() == 1
-        topics[0].exerciseTypes.sort() == [ExerciseType.GROUP, ExerciseType.LIST]
+        topics[0].exerciseTypes == [ExerciseType.GROUP, ExerciseType.LIST]
     }
 
     def "should create topic and read it back by space id"() {
