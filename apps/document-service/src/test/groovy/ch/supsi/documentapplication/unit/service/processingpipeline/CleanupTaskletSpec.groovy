@@ -1,7 +1,8 @@
 package ch.supsi.documentapplication.unit.service.processingpipeline
 
+
 import ch.supsi.documentapplication.dataaccess.IFileSystemDocumentStorage
-import ch.supsi.documentapplication.service.processingpipeline.CleanupTasklet
+import ch.supsi.documentapplication.service.async.documentpipeline.CleanupTasklet
 import org.springframework.batch.core.scope.context.ChunkContext
 import org.springframework.batch.core.step.StepContribution
 import org.springframework.batch.infrastructure.repeat.RepeatStatus

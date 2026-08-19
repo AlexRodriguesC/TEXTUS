@@ -2,3 +2,6 @@
 *.env
 documents/*
 documents/**/*
+lib/
+__pycache__/
+*.py[cod]

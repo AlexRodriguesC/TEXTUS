@@ -1,0 +1,129 @@
+package ch.supsi.documentapplication.service;
+
+import ch.supsi.documentapplication.dataaccess.IDatabasePathStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
+import ch.supsi.documentapplication.exception.JobFailedToStartException;
+import ch.supsi.documentapplication.exception.NotFoundException;
+import ch.supsi.documentapplication.model.PathSettings;
+import ch.supsi.documentapplication.model.learn.LearningPath;
+import ch.supsi.documentapplication.model.learn.LearningPathStatus;
+import ch.supsi.documentapplication.service.batch.JobExecutionResolver;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Log4j2
+@Service
+public class PathService extends ch.supsi.documentapplication.service.Service implements IPathService {
+
+    private final IDatabasePathStorage pathStorage;
+    private final JobOperator jobOperator;
+    private final JobRepository jobRepository;
+    private final Job chapterJob;
+
+    @Autowired
+    public PathService(
+            IDatabasePathStorage pathStorage,
+            IDatabaseSpaceStorage spaceStorage,
+            JobOperator jobOperator,
+            JobRepository jobRepository,
+            Job chapterJob) {
+        super(spaceStorage);
+        this.pathStorage = pathStorage;
+        this.jobOperator = jobOperator;
+        this.jobRepository = jobRepository;
+        this.chapterJob = chapterJob;
+    }
+
+    @Override
+    public void createLearningPath(String owner, Long spaceId) {
+        var space = getSpaceOrThrow(owner, spaceId);
+
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("SPACE_ID", space.getId().toString())
+                .addLong("TRIGGERED_AT", System.currentTimeMillis())
+                .toJobParameters();
+
+        try {
+            jobOperator.start(chapterJob, jobParameters);
+        } catch (Exception e) {
+            String message = String.format("Failed to start job %s", chapterJob.getName());
+            log.error(message, e);
+            throw new JobFailedToStartException(message);
+        }
+    }
+
+    @Override
+    public LearningPath getLearningPath(String owner, Long spaceId) {
+        var space = getSpaceOrThrow(owner, spaceId);
+        return pathStorage.read(space.getId());
+    }
+
+    @Override
+    public LearningPathStatus getLearningPathStatus(String owner, Long spaceId) {
+        var learningPath = getLearningPath(owner, spaceId);
+
+        if (learningPath == null) {
+            return LearningPathStatus.NOT_CREATED;
+        }
+
+        var jobId = learningPath.getJobId();
+        var jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, jobId);
+        if (jobExecution == null) {
+            return LearningPathStatus.NOT_CREATED;
+        }
+
+        var status = jobExecution.getStatus();
+
+        return status.isRunning()
+                ? LearningPathStatus.GENERATING
+                : status.isUnsuccessful() ? LearningPathStatus.FAILED : LearningPathStatus.DONE;
+    }
+
+    @Override
+    public void deleteLearningPath(String owner, Long spaceId) {
+        var learningPath = getLearningPathOrThrow(owner, spaceId);
+
+        JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, learningPath.getJobId());
+        if (jobExecution != null && jobExecution.isRunning()) {
+            try {
+                jobOperator.stop(jobExecution);
+            } catch (Exception e) {
+                String message = String.format("Failed to stop job %s", learningPath.getJobId());
+                log.error(message, e);
+            }
+            log.info("Stopped job {} for learning path in space with id {}", learningPath.getJobId(), spaceId);
+        }
+
+        pathStorage.delete(spaceId);
+    }
+
+    @Override
+    public void updateSettings(String owner, Long spaceId, PathSettings settings) {
+        settings.validate();
+        var space = getSpaceOrThrow(owner, spaceId);
+        var learningPath = getLearningPathOrThrow(space.getOwner(), space.getId());
+
+        if (learningPath.getSettings() == settings) {
+            return;
+        }
+
+        pathStorage.updateSettings(space.getId(), settings);
+    }
+
+    private LearningPath getLearningPathOrThrow(String owner, Long spaceId) {
+        var learningPath = getLearningPath(owner, spaceId);
+
+        if (learningPath == null) {
+            throw NotFoundException.learningPathNotFound(spaceId);
+        }
+
+        return learningPath;
+    }
+}

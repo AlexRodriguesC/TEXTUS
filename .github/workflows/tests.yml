@@ -22,6 +22,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Change wrapper perms
+        working-directory: apps/document-service
+        run: chmod +x ./gradlew
+
       - name: Run unit tests
         working-directory: apps/document-service
         run: ./gradlew clean test jacocoTestReport
@@ -40,6 +44,12 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     needs: unit-tests
+    env:
+      OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TESSERACT_DATAPATH: "/"
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      SPRING_DATASOURCE_URL: ${{ vars.SPRING_DATASOURCE_URL }}
 
     steps:
       - name: Checkout
@@ -53,6 +63,10 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Change wrapper perms
+        working-directory: apps/document-service
+        run: chmod +x ./gradlew
 
       - name: Run integration tests
         working-directory: apps/document-service

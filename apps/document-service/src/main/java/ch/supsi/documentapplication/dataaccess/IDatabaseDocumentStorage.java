@@ -1,10 +1,24 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chunk;
+import ch.supsi.documentapplication.model.*;
+import java.util.List;
+import java.util.Optional;
 
 public interface IDatabaseDocumentStorage {
 
-    Long create(Chunk chunk);
+    Long create(Page page, Long spaceId, Long documentId);
 
-    Chunk read(Long chunkId);
+    Long create(Long spaceId, Long jobId, String documentName);
+
+    Optional<Long> findIdByJobId(Long jobId);
+
+    List<Document> getDocuments(Long spaceId);
+
+    void move(Long spaceId, Long documentId, int orderIndex);
+
+    List<Page> getPages(Long documentId);
+
+    List<SpacePage> getPagesBySpaceId(Long spaceId);
+
+    void deleteDocument(Long spaceId, Long documentId);
 }

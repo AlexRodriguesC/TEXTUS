@@ -1,0 +1,375 @@
+{
+  "textus": {
+    "disclaimer": "TEXTUS can be inaccurate; please double-check its responses"
+  },
+  "notfound": "Looks like there's nothing here. Lost your way?",
+  "errorBoundary": {
+    "message": "Oops! Something unexpected happened. Don't worry, you can head back home and try again.",
+    "cause": "Cause"
+  },
+  "tutorial": {
+    "show": "Click to show the tutorial. It will be shown on spaces that have no documents in them."
+  },
+  "intro": {
+    "title": "Welcome to TEXTUS",
+    "description": "TEXTUS turns any document into a <bold>personalised learning experience</bold>. <bold>Upload it and learn it, your way.</bold>"
+  },
+  "upload": {
+    "title": "Upload files",
+    "description": "Time to upload some documents. You can upload any document in PDF format. Uploaded the wrong document? No worries, you can delete it at the end of this tutorial."
+  },
+  "start": {
+    "title": "Ready, set, go!",
+    "description": "You're ready to start your journey. Happy learning! Psst, if you haven't uploaded any documents yet, go back and do that first."
+  },
+  "profile": {
+    "logged-as": "Logged in as {{username}}",
+    "not-logged-in": "Not logged in"
+  },
+  "general": {
+    "thinking": "Thinking",
+    "title": "Title",
+    "summary": "Summary",
+    "wrong": "Something went wrong",
+    "logout": "You were logged out of your account. Please log in again",
+    "user-already-exists": "The specified username is already taken",
+    "try-another-username": "Try with another username",
+    "go-home": "Home",
+    "learn": "Learn"
+  },
+  "language": {
+    "combobox": {
+      "placeholder": "Change language",
+      "notfound": "No languages available"
+    }
+  },
+  "login": {
+    "wrong": "Something went wrong",
+    "register": "Register",
+    "try-with-other": "Try with different credentials",
+    "wrong-credentials": "Invalid username or password",
+    "login": "Login",
+    "loading": "Logging in...",
+    "success": "Login successful",
+    "info": "Login to your account",
+    "sub": "Enter your email below to login to your account",
+    "sign-up": "Sign up"
+  },
+  "registration": {
+    "register": "Register",
+    "loading": "Registering...",
+    "success": "Registration successful",
+    "info": "Create your account",
+    "sub": "Enter your details below to create your account",
+    "sign-in": "Sign in"
+  },
+  "home": {
+    "tagline": "Knowledge, made <bold>personal</bold>",
+    "start": "Start",
+    "account": "I already have an account"
+  },
+  "space": {
+    "stepper": {
+      "prerequisite": "Please upload at least one document before continuing",
+      "introduction": {
+        "title": "Introduction",
+        "description": "Spaces 101"
+      },
+      "upload": {
+        "title": "Upload",
+        "description": ""
+      },
+      "start": {
+        "title": "Start",
+        "description": ""
+      }
+    },
+    "icon": "Icon",
+    "name": "Name",
+    "description": "Description"
+  },
+  "spaces": {
+    "search": "Search spaces",
+    "reset-search": "Reset search",
+    "not-found": "No spaces match your search criteria",
+    "add-spaces": "Looks like there’s nothing here yet. Click \"Add space\" in the top left corner to get started.",
+    "add": {
+      "success": "Space created successfully.",
+      "error": "Something went wrong.",
+      "message": "Add Space",
+      "title": "Create a new space",
+      "field": {
+        "name": "Name",
+        "description": "Description"
+      },
+      "description": "Give your space a name and an optional description.",
+      "defaultName": "My space",
+      "defaultDescription": "A cool description"
+    },
+    "update": {
+      "title": "Edit space",
+      "description": "Update the name and description of your space.",
+      "success": "Space updated successfully.",
+      "error": "Something went wrong when updating a space."
+    },
+    "upload": {
+      "success": "Document {{fileName}} uploaded successfully to your space.",
+      "error": "An error occurred while uploading the following document: {{fileName}}.",
+      "none": "Tried to upload documents, but none were found."
+    },
+    "delete": {
+      "title": "Delete space?",
+      "success": "Space deleted successfully."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "descriptionRequired": "Description is required."
+    }
+  },
+  "exercise": {
+    "checkpoint": {
+      "description": {
+        "exercises": "You conquered every topic you'd missed!",
+        "no-exercises": "Perfect run, no mistakes to fix!"
+      }
+    },
+    "completed": {
+      "title": "Congratulations!",
+      "description": "You've completed the lesson. Keep up the good work!"
+    },
+    "exhausted": {
+      "title": "You've used up your attempts for now",
+      "description": "No worries! Take a moment to review the topics you've covered, and come back later to try again. Every attempt helps you learn."
+    },
+    "guide": {
+      "tooltip": "Click to show the guide",
+      "title": "The current exercise is based on the following topic"
+    },
+    "help": {
+      "button": "Get help",
+      "title": "Exercise help",
+      "message": {
+        "list": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy is the sequence {{sequence}} wrong?",
+        "group": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy are these items not associated to that label?\n{{assignments}}",
+        "pair": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy are these pairs not correct?\n{{pairs}}",
+        "question": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy is the answer to this question not {{answer}}?",
+        "skipped": "I skipped this exercise and need help working through it.\n\n{{request}}\n\nOptions:\n{{options}}\n\nCorrect solution:\n{{solution}}\n\nHelp me understand the solution."
+      }
+    }
+  },
+  "button": {
+    "back-to-top": "Back to top",
+    "continue": "Continue",
+    "review-topics": "Review Topics",
+    "submit": "Submit",
+    "skip": "Skip",
+    "apply": "Apply",
+    "start": "Let's go!",
+    "next": "Next",
+    "back": "Back",
+    "add": "Add",
+    "retry": "Retry",
+    "update": "Update",
+    "upload": "Upload",
+    "cancel": "Cancel"
+  },
+  "action": {
+    "destructive": {
+      "title": "Delete item?",
+      "description": "This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "document": {
+    "delete": "Delete document {{documentName}}?",
+    "status": {
+      "tooltip": {
+        "received": "These documents were received successfully and are now waiting to be processed",
+        "done": "These documents have been fully processed",
+        "loading": "These documents are currently being processed"
+      }
+    }
+  },
+  "documents": {
+    "upload": {
+      "title": "Start by uploading documents",
+      "description": "Documents represent the knowledge on which the learning path will be based. For best results, upload coherent documents on the same subject; otherwise, the path may not be coherent.",
+      "helper": "Select up to 20 documents",
+      "dropzoneTitle": "Upload documents",
+      "dropzoneDescription": "Click here or drag and drop to upload",
+      "cta": "Upload",
+      "success": "Document {{fileName}} uploaded successfully."
+    },
+    "delete": {
+      "success": "Document {{fileName}} removed successfully.",
+      "information": "Documents cannot be deleted once a mind map or learning path has been generated. Delete them first if you want to delete a document."
+    },
+    "status": {
+      "overview": "Documents status"
+    },
+    "retry": {
+      "action": "Retry processing",
+      "success": "Document processing restarted.",
+      "error": "Failed to restart document processing."
+    },
+    "tasks": {
+      "OCR": "OCR",
+      "SEGMENTATION": "Segmentation",
+      "SUMMARIZATION": "Summarization",
+      "TOPIC": "Topic extraction"
+    }
+  },
+  "mindmap": {
+    "button": "Generate mindmap",
+    "creation": {
+      "success": "Mindmap creation scheduled successfully",
+      "error": "Something went wrong while scheduling the generation of the mind map"
+    },
+    "empty": {
+      "title": "Visual topic maps",
+      "description": "A mind map connects your topics so you can see how ideas relate and understand them more deeply. Generate one from your uploaded sources.",
+      "cta": "Generate mind map",
+      "cta-add": "Add documents",
+      "cta-regenerate": "Regenerate mind map",
+      "generating": "Generating mind map"
+    }
+  },
+  "topics": {
+    "search": "Search topics",
+    "reset-search": "Reset search",
+    "not-found": "No topics match your search",
+    "empty": {
+      "title": "No topics yet",
+      "description": "Upload documents in the menu to extract topics from your sources.",
+      "cta": "Add documents"
+    }
+  },
+  "sidebar": {
+    "settings": {
+      "path": {
+        "changes": "Preferences apply only to exercises whose type matches your selected exercise types.",
+        "title": "Path Settings",
+        "exerciseTypes": "Exercise Type Preferences",
+        "question": "Question",
+        "list": "List",
+        "group": "Group",
+        "pair": "Pair"
+      }
+    },
+    "actions": {
+      "map": {
+        "label": "Mind Map",
+        "tooltip": "Generate a mind map based on the provided sources"
+      },
+      "learn": {
+        "label": "Learn",
+        "tooltip": "Generate a learning path based on the provided sources"
+      },
+      "chat": {
+        "label": "Chat",
+        "tooltip": "Open a chat to interact with an AI based on your documents"
+      },
+      "topics": {
+        "label": "Topics",
+        "tooltip": "Browse topics extracted from your uploaded sources"
+      },
+      "menu": {
+        "label": "Menu",
+        "tooltip": "Go to the menu to manage your documents"
+      }
+    },
+    "add-space": "Add space",
+    "space": "Space {{spaceId}}",
+    "navigation": "Navigation",
+    "home": "Home",
+    "spaces": "Spaces",
+    "mind-map": {
+      "generate": "Generate Mind Map",
+      "generating": "Generating Mind Map",
+      "re-generate": "Regenerate Mind Map"
+    }
+  },
+  "learning-path": {
+    "delete": {
+      "title": "Delete learning path?",
+      "description": "All exercises and their progress will be lost. This action cannot be undone."
+    },
+    "popover": {
+      "loading": "Preparing lesson"
+    },
+    "settings": {
+      "success": "Learning path settings updated successfully",
+      "error": "Something went wrong while updating the learning path settings"
+    },
+    "creation": {
+      "success": "Learning path creation scheduled successfully",
+      "error": "Something went wrong while scheduling the generation of the learning path"
+    },
+    "empty": {
+      "generating": "Generating learning path",
+      "title": "Personalized learning paths",
+      "description": "Turn your uploaded sources into a learning path tailored to what you actually study.",
+      "cta": "Generate learning path",
+      "cta-add": "Add documents",
+      "cta-regenerate": "Regenerate learning path"
+    },
+    "end": "You've reached the end of the path"
+  },
+  "chapter": {
+    "guide": {
+      "location": "This topic can be found on page {{page}} of the document {{documentName}}"
+    },
+    "header": {
+      "guide": "Guide",
+      "lessons-left": "{{count}} lessons left to master!",
+      "mastered": "All lessons mastered!"
+    }
+  },
+  "loading": {
+    "title": "Loading brilliance",
+    "description": "Great minds take a second. So do we."
+  },
+  "chat": {
+    "create": {
+      "title": "Create a new chat",
+      "placeholder": "An amazing conversation",
+      "confirm": "Create"
+    },
+    "cancel": "Cancel",
+    "new": "New chat",
+    "history": "History",
+    "empty": {
+      "list": "No conversations yet.",
+      "messages": "Start a conversation in \"{{title}}\".",
+      "suggestions": {
+        "askAbout": "Ask about {{title}}",
+        "tellMeMore": "Tell me more about {{title}}",
+        "helpUnderstand": "Help me understand {{title}}",
+        "explore": "What should I know about {{title}}?"
+      },
+      "page": {
+        "title": "No conversations yet",
+        "description": "Create a chat from the sidebar history panel, or use the button below to get started.",
+        "cta": "Create chat"
+      }
+    },
+    "delete": {
+      "title": "Delete chat?",
+      "description": "This conversation and its messages will be permanently deleted."
+    },
+    "sources": {
+      "basedOn_one": "Based on {{count}} source",
+      "basedOn_other": "Based on {{count}} sources"
+    },
+    "source" : {
+      "based-on": "Based on {{title}}"
+    }
+  },
+  "mind-map": {
+    "delete": {
+      "title": "Delete mind map?",
+      "description": "All the contents will be permamently lost. This action cannot be undone."
+    }
+  }
+}

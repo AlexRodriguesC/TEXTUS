@@ -1,24 +1,24 @@
 package ch.supsi.documentapplication.model;
 
-import java.util.UUID;
+import java.util.List;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class Document {
 
-    private final UUID documentId;
-    private final byte[] bytes;
+    private final String name;
+    private final Long id;
+    private final Long jobId;
+    private final int orderIndex;
 
-    private Document(UUID documentId, byte[] bytes) {
-        this.documentId = documentId;
-        this.bytes = bytes;
-    }
+    @Setter
+    private List<DocumentTask> tasks;
 
-    public static Document create(byte[] bytes) {
-        return new Document(UUID.randomUUID(), bytes);
-    }
-
-    public static Document create(UUID uuid, byte[] bytes) {
-        return new Document(uuid, bytes);
+    public Document(String name, Long id, Long jobId, int orderIndex) {
+        this.name = name;
+        this.id = id;
+        this.jobId = jobId;
+        this.orderIndex = orderIndex;
     }
 }

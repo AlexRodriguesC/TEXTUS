@@ -16,6 +16,7 @@ description = 'TEXTUS-backend'
 spotless {
 	java {
 		target 'src/**/*.java'
+		targetExclude 'src/main/java/ch/supsi/documentapplication/controller/**/*.java'
 		palantirJavaFormat('2.50.0')
 		removeUnusedImports()
 		trimTrailingWhitespace()
@@ -64,9 +65,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-batch-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation("org.springframework.boot:spring-boot-data-jpa-test:4.1.0")
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation "org.springframework.boot:spring-boot-starter-log4j2"
 	implementation 'org.springframework.boot:spring-boot-autoconfigure:4.1.0'
+	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation("org.springframework.security:spring-security-test:7.1.0")
+	implementation("org.springframework.ai:spring-ai-retry:2.0.0")
 
 	// Database
 	implementation 'org.springframework.boot:spring-boot-starter-flyway:4.1.0'
@@ -83,7 +91,11 @@ dependencies {
 
 	// Spring AI
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector:2.0.0-M8'
+	implementation 'org.springframework.ai:spring-ai-rag:2.0.0-M8'
 	implementation 'org.springframework.ai:spring-ai-client-chat'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	// API docs
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
@@ -113,8 +125,8 @@ dependencies {
 
 test {
 	useJUnitPlatform()
-	include 'ch/supsi/textusbackend/unit/**'
-	exclude 'ch/supsi/textusbackend/integration/**'
+	include 'ch/supsi/documentapplication/unit/**'
+	exclude 'ch/supsi/documentapplication/integration/**'
 	finalizedBy jacocoTestReport
 }
 
@@ -144,10 +156,24 @@ tasks.register('integrationTest', Test) {
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
 
-	include 'ch/supsi/textusbackend/integration/**'
+	include 'ch/supsi/documentapplication/integration/**'
 	shouldRunAfter test
 
 	finalizedBy tasks.named('jacocoIntegrationTestReport')
+}
+
+tasks.named('integrationTest') {
+	def envFile = file('../../.env')
+	if (envFile.exists()) {
+		envFile.eachLine { line ->
+			if (line && !line.startsWith('#') && line.contains('=')) {
+				def idx = line.indexOf('=')
+				def key = line.substring(0, idx).trim()
+				def value = line.substring(idx + 1).trim()
+				environment(key, value)
+			}
+		}
+	}
 }
 
 tasks.register('jacocoIntegrationTestReport', JacocoReport) {
@@ -163,5 +189,45 @@ tasks.register('jacocoIntegrationTestReport', JacocoReport) {
 	reports {
 		xml.required = true
 		html.required = true
+	}
+}
+
+tasks.register('classifierEvaluationTest', Test) {
+	description = 'Runs the opted-in live content-page classifier evaluation against PDF sidecar ground truth.'
+	group = 'verification'
+	useJUnitPlatform()
+	failOnNoDiscoveredTests = false
+
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+
+	include 'ch/supsi/documentapplication/evaluation/**'
+	exclude 'ch/supsi/documentapplication/unit/**'
+	exclude 'ch/supsi/documentapplication/integration/**'
+	shouldRunAfter test
+
+	def envFile = file('../../.env')
+	if (envFile.exists()) {
+		envFile.eachLine { line ->
+			if (line && !line.startsWith('#') && line.contains('=')) {
+				def idx = line.indexOf('=')
+				def key = line.substring(0, idx).trim()
+				def value = line.substring(idx + 1).trim()
+				environment(key, value)
+			}
+		}
+	}
+
+	doFirst {
+		def apiKey = environment.get('OPENAI_API_KEY') ?: System.getenv('OPENAI_API_KEY')
+		def baseUrl = environment.get('OPENAI_BASE_URL') ?: System.getenv('OPENAI_BASE_URL')
+		if (!apiKey) {
+			throw new GradleException(
+			'OPENAI_API_KEY is required for classifierEvaluationTest. Set it in the environment or ../../.env')
+		}
+		if (!baseUrl) {
+			throw new GradleException(
+			'OPENAI_BASE_URL is required for classifierEvaluationTest. Set it in the environment or ../../.env')
+		}
 	}
 }

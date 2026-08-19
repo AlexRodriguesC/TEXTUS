@@ -1,27 +1,30 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import ch.supsi.documentapplication.model.Chunk;
-import ch.supsi.documentapplication.model.Document;
+import ch.supsi.documentapplication.model.FsDocument;
+import ch.supsi.documentapplication.model.PageChunk;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IFileSystemDocumentStorage {
 
-    void create(Document document);
+    void create(FsDocument fsDocument);
 
     String createChunk(Integer page, String content, UUID documentId);
 
-    void createChunkJSON(List<Chunk> chunks, UUID documentId);
+    boolean chunkExists(UUID documentId, int pageNumber);
 
-    String readNextChunk(UUID documentId);
+    List<PageChunk> listChunks(UUID documentId, int limit);
+
+    Optional<PageChunk> readNextChunk(UUID documentId);
+
+    String readNextPage(UUID documentId);
 
     void deleteChunk(UUID documentId, String chunkId);
 
-    Document read(UUID documentId);
+    FsDocument read(UUID documentId);
 
-    void update(Document document);
+    void update(FsDocument fsDocument);
 
     void delete(UUID documentId);
-
-    void deleteAll();
 }

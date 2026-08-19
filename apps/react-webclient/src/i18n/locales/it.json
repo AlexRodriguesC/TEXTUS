@@ -1,0 +1,361 @@
+{
+  "textus": {
+    "disclaimer": "TEXTUS può essere impreciso; si prega di ricontrollare le sue risposte."
+  },
+  "notfound": "Sembra che non ci sia niente qui. Ti sei perso?",
+  "errorBoundary": {
+    "message": "Ops! È successo qualcosa di inaspettato. Non preoccuparti, puoi tornare alla home e riprovare.",
+    "cause": "Causa"
+  },
+  "tutorial": {
+    "show": "Clicca per mostrare il tutorial. Verrà mostrato negli spazi che non contengono documenti."
+  },
+  "intro": {
+    "title": "Benvenuto in TEXTUS",
+    "description": "TEXTUS trasforma qualsiasi documento in un'<bold>esperienza di apprendimento personalizzata</bold>. <bold>Caricalo e imparalo, a modo tuo.</bold>"
+  },
+  "upload": {
+    "title": "Carica i file",
+    "description": "È il momento di caricare qualche documento. Puoi caricare qualsiasi documento in formato PDF. Hai caricato il documento sbagliato? Nessun problema: potrai eliminarlo alla fine di questo tutorial."
+  },
+  "start": {
+    "title": "Pronti, partenza, via!",
+    "description": "Sei pronto per iniziare il tuo percorso. Buono studio! Psst, se non hai ancora caricato nessun documento, torna indietro e caricalo prima di continuare."
+  },
+  "profile": {
+    "logged-as": "Accesso effettuato come {{username}}",
+    "not-logged-in": "Non hai effettuato l'accesso"
+  },
+  "general": {
+    "thinking": "Sto pensando",
+    "title": "Titolo",
+    "summary": "Riassunto",
+    "wrong": "Qualcosa è andato storto",
+    "logout": "Sei stato disconnesso dal tuo account. Accedi di nuovo.",
+    "user-already-exists": "Il nome utente specificato è già in uso",
+    "try-another-username": "Prova con un altro nome utente",
+    "go-home": "Home",
+    "learn": "Impara"
+  },
+  "language": {
+    "combobox": {
+      "placeholder": "Cambia Lingua",
+      "notfound": "Nessuna lingua disponibile"
+    }
+  },
+  "login": {
+    "wrong": "Qualcosa è andato storto",
+    "register": "Registrati",
+    "try-with-other": "Prova con altre credenziali",
+    "wrong-credentials": "Username o password non validi",
+    "login": "Accedi",
+    "loading": "Accesso in corso...",
+    "success": "Accesso effettuato con successo",
+    "info": "Accedi al tuo account",
+    "sub": "Inserisci qui sotto la tua email per accedere al tuo account",
+    "sign-up": "Registrati"
+  },
+  "registration": {
+    "register": "Registrati",
+    "loading": "Registrazione in corso...",
+    "success": "Registrazione effettuata con successo",
+    "info": "Crea il tuo account",
+    "sub": "Inserisci i tuoi dati qui sotto per creare il tuo account",
+    "sign-in": "Accedi"
+  },
+  "home": {
+    "tagline": "La conoscenza, pensata <bold>per te</bold>",
+    "start": "Inizia",
+    "account": "Ho già un account"
+  },
+  "space": {
+    "stepper": {
+      "prerequisite": "Carica almeno un documento prima di continuare"
+    },
+    "icon": "Icona",
+    "name": "Nome",
+    "description": "Descrizione"
+  },
+  "spaces": {
+    "reset-search": "Cancella ricerca",
+    "not-found": "Nessuno spazio corrisponde ai criteri di ricerca",
+    "search": "Cerca spazi",
+    "add-spaces": "Sembra che qui non ci sia ancora nulla. Clicca su \"Aggiungi spazio\" in alto a sinistra per iniziare.",
+    "add": {
+      "success": "Spazio creato con successo.",
+      "error": "Si è verificato un errore.",
+      "message": "Aggiungi spazio",
+      "title": "Crea un nuovo spazio",
+      "field": {
+        "name": "Nome",
+        "description": "Descrizione"
+      },
+      "description": "Assegna un nome al tuo spazio e, se vuoi, una descrizione.",
+      "defaultName": "Il mio spazio",
+      "defaultDescription": "Una bella descrizione"
+    },
+    "update": {
+      "title": "Modifica spazio",
+      "description": "Aggiorna il nome e la descrizione del tuo spazio.",
+      "success": "Spazio aggiornato con successo.",
+      "error": "Si è verificato un errore durante l'aggiornamento dello spazio."
+    },
+    "upload": {
+      "success": "Il documento {{fileName}} è stato caricato correttamente nel tuo spazio.",
+      "error": "Si è verificato un errore durante il caricamento del seguente documento: {{fileName}}.",
+      "none": "È stato tentato il caricamento dei documenti, ma non ne è stato trovato nessuno."
+    },
+    "validation": {
+      "nameRequired": "Il nome è obbligatorio.",
+      "descriptionRequired": "La descrizione è obbligatoria."
+    },
+    "delete": {
+      "title": "Eliminare spazio?",
+      "success": "Spazio eliminato con successo."
+    }
+  },
+  "exercise": {
+    "checkpoint": {
+      "description": {
+        "exercises": "Hai imparato tutti gli argomenti che avevi sbagliato!",
+        "no-exercises": "Percorso perfetto, nessun errore da correggere!"
+      }
+    },
+    "completed": {
+      "title": "Congratulazioni!",
+      "description": "Hai completato la lezione. Continua così!"
+    },
+    "exhausted": {
+      "title": "Hai esaurito i tentativi per ora",
+      "description": "Nessun problema! Approfitta di questo momento per rivedere gli argomenti trattati, e torna più tardi per riprovare. Ogni tentativo ti aiuta a imparare."
+    },
+    "guide": {
+      "tooltip": "Clicca per mostrare la guida",
+      "title": "L'esercizio corrente si basa sul seguente argomento"
+    },
+    "help": {
+      "button": "Chiedi aiuto",
+      "title": "Aiuto esercizio",
+      "message": {
+        "list": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché la sequenza {{sequence}} è sbagliata?",
+        "group": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché questi elementi non sono associati a quell'etichetta?\n{{assignments}}",
+        "pair": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché queste associazioni non sono corrette?\n{{pairs}}",
+        "question": "Ho bisogno di aiuto per capire perché ho sbagliato.\n\n{{request}}\n\nPerché la risposta a questa domanda non è {{answer}}?",
+        "skipped": "Ho saltato questo esercizio e ho bisogno di aiuto per risolverlo.\n\n{{request}}\n\nOpzioni:\n{{options}}\n\nSoluzione corretta:\n{{solution}}\n\nAiutami a capire la soluzione."
+      }
+    }
+  },
+  "button": {
+    "back-to-top": "Torna su",
+    "continue": "Continua",
+    "review-topics": "Ripassa Argomenti",
+    "submit": "Invia",
+    "skip": "Salta",
+    "apply": "Modifica",
+    "start": "Iniziamo!",
+    "next": "Avanti",
+    "back": "Indietro",
+    "add": "Aggiungi",
+    "retry": "Riprova",
+    "update": "Aggiorna",
+    "upload": "Carica",
+    "cancel": "Annulla"
+  },
+  "action": {
+    "destructive": {
+      "title": "Eliminare elemento?",
+      "description": "Questa azione non può essere annullata.",
+      "confirm": "Elimina",
+      "cancel": "Annulla"
+    }
+  },
+  "document": {
+    "delete": "Eliminare il documento {{documentName}}?",
+    "status": {
+      "tooltip": {
+        "received": "Questi documenti sono stati ricevuti correttamente e sono ora in attesa di essere elaborati",
+        "done": "Questi documenti sono stati elaborati completamente.",
+        "loading": "Questi documenti sono attualmente in fase di elaborazione."
+      }
+    }
+  },
+  "documents": {
+    "upload": {
+      "title": "Inizia caricando i documenti",
+      "description": "I documenti rappresentano la base di conoscenza su cui verrà costruito il percorso di apprendimento. Per risultati migliori, carica documenti coerenti sullo stesso argomento; altrimenti il percorso potrebbe non essere coerente.",
+      "helper": "Seleziona fino a 20 documenti",
+      "dropzoneTitle": "Carica documenti",
+      "dropzoneDescription": "Clicca qui oppure trascina i file per caricarli",
+      "cta": "Seleziona",
+      "success": "Documento {{fileName}} caricato con successo."
+    },
+    "delete": {
+      "success": "Documento {{fileName}} eliminato con successo.",
+      "information": "I documenti non possono essere eliminati una volta generata una mappa mentale o un percorso di apprendimento. Eliminali prima se desideri eliminare un documento."
+    },
+    "status": {
+      "overview": "Stati dei documenti"
+    },
+    "retry": {
+      "action": "Riprova elaborazione",
+      "success": "Elaborazione del documento riavviata.",
+      "error": "Impossibile riavviare l'elaborazione del documento."
+    },
+    "tasks": {
+      "OCR": "OCR",
+      "SEGMENTATION": "Segmentazione",
+      "SUMMARIZATION": "Sintesi",
+      "TOPIC": "Estrazione argomenti"
+    }
+  },
+  "mindmap": {
+    "button": "Genera mindmap",
+    "creation": {
+      "success": "Creazione della mind map programmata con successo",
+      "error": "Si è verificato un errore durante la creazione della mind map"
+    },
+    "empty": {
+      "title": "Mappe visive degli argomenti",
+      "description": "Una mind map collega i tuoi argomenti così puoi vedere come le idee si relazionano e comprenderle più a fondo. Generane una dalle tue fonti caricate.",
+      "cta": "Genera mind map",
+      "cta-add": "Aggiungi documenti",
+      "cta-regenerate": "Rigenera mind map",
+      "generating": "Generazione mappa mentale in corso"
+    }
+  },
+  "topics": {
+    "search": "Cerca argomenti",
+    "reset-search": "Reimposta ricerca",
+    "not-found": "Nessun argomento corrisponde alla ricerca",
+    "empty": {
+      "title": "Nessun argomento ancora",
+      "description": "Carica documenti dal menu per estrarre argomenti dalle tue fonti.",
+      "cta": "Aggiungi documenti"
+    }
+  },
+  "sidebar": {
+    "settings": {
+      "path": {
+        "changes": "Le preferenze vengono applicate solo agli esercizi il cui tipo corrisponde ai tipi di esercizio selezionati.",
+        "title": "Impostazioni percorso",
+        "exerciseTypes": "Preferenze tipi di esercizio",
+        "question": "Domanda",
+        "list": "Elenco",
+        "group": "Gruppo",
+        "pair": "Coppia"
+      }
+    },
+    "actions": {
+      "map": {
+        "label": "Mappa Mentale",
+        "tooltip": "Genera una mappa mentale basata sulle fonti fornite"
+      },
+      "learn": {
+        "label": "Apprendi",
+        "tooltip": "Genera un percorso di apprendimento basato sulle fonti fornite"
+      },
+      "chat": {
+        "label": "Chat",
+        "tooltip": "Apri una chat per interagire con un'IA basata sui tuoi documenti"
+      },
+      "topics": {
+        "label": "Argomenti",
+        "tooltip": "Sfoglia gli argomenti estratti dalle tue fonti caricate"
+      },
+      "menu": {
+        "label": "Menu",
+        "tooltip": "Vai al menu per gestire i tuoi documenti"
+      }
+    },
+    "add-space": "Aggiungi spazio",
+    "navigation": "Navigazione",
+    "home": "Home",
+    "spaces": "Spazi",
+    "mind-map": {
+      "generate": "Genera mappa mentale",
+      "generating": "Generazione mappa mentale in corso",
+      "re-generate": "Rigenera mappa mentale"
+    }
+  },
+  "learning-path": {
+    "delete": {
+      "title": "Eliminare percorso di apprendimento?",
+      "description": "Tutti gli esercizi e il loro relativo progresso verranno eliminati. Quest'azione non può essere annullata."
+    },
+    "popover": {
+      "loading": "Preparazione lezione"
+    },
+    "settings": {
+      "success": "Impostazioni del percorso di apprendimento aggiornate con successo",
+      "error": "Si è verificato un errore durante l'aggiornamento delle impostazioni del percorso di apprendimento"
+    },
+    "creation": {
+      "success": "Creazione percorso di apprendimento programmata con successo",
+      "error": "Si è verificato un errore durante la creazione del percorso di apprendimento"
+    },
+    "empty": {
+      "generating": "Generazione percorso di apprendimento in corso",
+      "title": "Percorsi di apprendimento personalizzati",
+      "description": "Trasforma i tuoi documenti in un percorso di apprendimento su misura.",
+      "cta": "Genera percorso di apprendimento",
+      "cta-add": "Aggiungi documenti",
+      "cta-regenerate": "Rigenera percorso di apprendimento"
+    },
+    "end": "Hai raggiunto la fine del percorso di apprendimento"
+  },
+  "chapter": {
+    "guide": {
+      "location": "Questo argomento si trova alla pagina {{page}} del documento {{documentName}}"
+    },
+    "header": {
+      "guide": "Guida",
+      "lessons-left": "{{count}} lezioni rimanenti da completare!",
+      "mastered": "Tutte le lezioni sono state completate!"
+    }
+  },
+  "loading": {
+    "title": "Genio in caricamento",
+    "description": "Anche i cervelloni ci mettono un attimo. Pure noi."
+  },
+  "chat": {
+    "create": {
+      "title": "Crea una nuova chat",
+      "placeholder": "Una conversazione epica",
+      "confirm": "Crea"
+    },
+    "new": "Nuova chat",
+    "history": "Cronologia",
+    "empty": {
+      "list": "Nessuna conversazione.",
+      "messages": "Inizia una conversazione in \"{{title}}\".",
+      "suggestions": {
+        "askAbout": "Chiedi informazioni su {{title}}",
+        "tellMeMore": "Dimmi di più su {{title}}",
+        "helpUnderstand": "Aiutami a capire {{title}}",
+        "explore": "Cosa dovrei sapere su {{title}}?"
+      },
+      "page": {
+        "title": "Nessuna conversazione",
+        "description": "Crea una chat dal pannello cronologia nella barra laterale, oppure usa il pulsante qui sotto per iniziare.",
+        "cta": "Crea chat"
+      }
+    },
+    "delete": {
+      "title": "Eliminare la chat?",
+      "description": "Questa conversazione e i suoi messaggi verranno eliminati definitivamente."
+    },
+    "sources": {
+      "basedOn_one": "Basato su {{count}} fonte",
+      "basedOn_other": "Basato su {{count}} fonti"
+    },
+    "source" : {
+      "based-on": "Basato su {{title}}"
+    }
+  },
+  "mind-map": {
+    "delete": {
+      "title": "Eliminare mappa mentale?",
+      "description": "Tutti i contenuti verranno eliminati definitivamente. Quest'azione non può essere annullata."
+    }
+  }
+}

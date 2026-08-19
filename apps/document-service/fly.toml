@@ -1,0 +1,37 @@
+app = 'document-service-shimmering-cherry-7591'
+primary_region = 'fra'
+
+[build]
+  dockerfile = "spring.Dockerfile"
+
+[env]
+  SPRING_DATASOURCE_URL = "jdbc:postgresql://database-billowing-dew-1309.internal:5432/documents?autoReconnect=true"
+  TESSERACT_DATAPATH = "/usr/share/tesseract-ocr/5/tessdata"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "15s"
+  method = "GET"
+  timeout = "10s"
+  path = "/actuator/health"
+
+[[services.ports]]
+  port = 8080
+
+[[mounts]]
+  source = "documentdata"
+  destination = "/app/documents"
+
+[[vm]]
+  memory = '4gb'
+  cpu_kind = 'shared'
+  cpus = 4
+  memory_mb = 4096

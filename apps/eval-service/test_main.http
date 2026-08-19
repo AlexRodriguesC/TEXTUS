@@ -1,0 +1,39 @@
+### Health check
+GET http://localhost:8000/health
+
+### List available metrics
+GET http://localhost:8000/api/v1/metrics
+
+### Create evaluation - topic hallucination check
+POST http://localhost:8000/api/v1/evaluations
+Content-Type: application/json
+
+{
+  "content_type": "summary",
+  "input": "17 2 Meaningful Names by Tim Ottinger Introduction Names are everywhere in software. We name our variables, our functions, our arguments, classes, and packages. We name our source files and the directories that contain them. We name our jar files and war files and ear files. We name and name and name. Because we do",
+  "actual_output": "Names are used throughout software, including variables, functions, arguments, classes, packages, source files, directories, and archive files such as JAR, WAR, and EAR files.",
+  "metrics": [
+    { "name": "hallucination" },
+    { "name": "relevance" }
+  ]
+}
+
+### Create evaluation - topic list quality
+POST http://localhost:8000/api/v1/evaluations
+Content-Type: application/json
+
+{
+  "content_type": "topic_list",
+  "input": "Osmosis is a diffusion process that occurs when two solutions of different concentrations are separated by a semipermeable membrane. A semipermeable membrane allows water molecules to pass through but blocks larger solute molecules such as sugar. Water molecules move from the hypotonic solution (low solute concentration) toward the hypertonic solution (high solute concentration) to dilute the solute concentration. A hypertonic solution contains a high concentration of solute. A hypotonic solution contains a low concentration of solute. These solutions are classified by their relative solute concentrations when separated by a semipermeable membrane. Equilibrium is reached when both solutions achieve the same concentration of solute molecules and become isotonic. The initially hypertonic solution increases in volume as a result of water molecules moving into it during the osmotic process.",
+  "actual_output": "1. Osmosis Process and Semipermeable Membrane Function\nOsmosis moves water through a semipermeable membrane.\n2. Classification of Solutions by Solute Concentration\nHypertonic and hypotonic solutions differ by solute concentration.\n3. Osmotic Equilibrium and Volume Change\nEquilibrium is reached when solutions become isotonic and volume changes.",
+  "metrics": [
+    { "name": "relevance" },
+    { "name": "topic_granularity" }
+  ]
+}
+
+### Get evaluation by ID
+GET http://localhost:8000/api/v1/evaluations/{{evaluation_id}}
+
+### List evaluations
+GET http://localhost:8000/api/v1/evaluations?content_type=topic_list&limit=20&offset=0

@@ -1,16 +1,57 @@
 services:
   db:
-    image: pgvector/pgvector:pg16
+    build:
+      context: .
+      dockerfile: database/database.Dockerfile
     container_name: postgresql
-    environment:
-      - POSTGRES_USER=appuser
-      - POSTGRES_PASSWORD=appsecret
-      - POSTGRES_DB=textus
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data # textus_demo_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d documents"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  spring-backend:
+    env_file:
+      - path: ../../.env
+        required: true
+    build:
+      context: .
+      dockerfile: spring.Dockerfile
+    container_name: spring-backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/documents
+      - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata
+      - EVAL_SERVICE_BASE_URL=http://eval-service:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  eval-service:
+    env_file:
+      - path: ../../.env
+        required: true
+    build:
+      context: ../eval-service
+      dockerfile: fastapi.Dockerfile
+    container_name: eval-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/documents
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  pgdata: #textus_demo_db
+   # external: true
+  springdata:

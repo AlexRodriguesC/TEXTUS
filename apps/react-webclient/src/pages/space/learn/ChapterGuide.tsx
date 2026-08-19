@@ -1,0 +1,64 @@
+import useLearningPath from "@/hooks/learning/useLearningPath.ts";
+import useTopics from "@/hooks/useTopics.tsx";
+import { useMemo } from "react";
+import useChapterId from "@/hooks/useChapterId.ts";
+import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import ChapterGuideBreadcrumbs from "@/pages/space/learn/ChapterGuideBreadcrumbs.tsx";
+import InformationQuestionMark from "@/components/InformationQuestionMark.tsx";
+import { useTranslation } from "react-i18next";
+import ChapterGuideSkeleton from "@/pages/space/learn/ChapterGuideSkeleton.tsx";
+
+function ChapterGuide() {
+  const { t: tr } = useTranslation();
+  const { chapterId } = useChapterId();
+  const { path, isPathLoading } = useLearningPath();
+  const { topics } = useTopics();
+
+  const chapter = path?.chapters?.find((c) => c.index === chapterId);
+  const chapterTopics = chapter?.lessons.flatMap((n) => n.topics) ?? [];
+
+  const tops = useMemo(
+    () => topics.filter((t) => chapterTopics.includes(t.id)),
+    [topics, chapterTopics],
+  );
+
+  const isLoading = isPathLoading || !chapter;
+
+  if (isLoading) {
+    return <ChapterGuideSkeleton />;
+  }
+
+  return (
+    <div className="flex h-full w-full justify-center overflow-hidden">
+      <ScrollArea className="h-full w-full">
+        <div className="flex flex-col gap-6 px-4 py-6">
+          <ChapterGuideBreadcrumbs chapter={chapter!} />
+          <div className="flex flex-col gap-4">
+            {tops.map((t) => (
+              <div
+                key={t.id}
+                className="border p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex justify-between items-center text-foreground/40">
+                  <h2 className="font-semibold text-foreground">{t.title}</h2>
+                  <InformationQuestionMark
+                    className="hover:cursor-pointer hover:text-foreground transition-colors"
+                    tooltip={tr("chapter.guide.location", {
+                      page: t.page,
+                      documentName: t.sourceFileName,
+                    })}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t.summary}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+export default ChapterGuide;

@@ -1,14 +1,14 @@
 package ch.supsi.documentapplication.dataaccess;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public abstract class DatabaseStorage {
 
-    protected final JdbcTemplate jdbc;
+    protected final JdbcClient jdbcClient;
 
-    public DatabaseStorage(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public DatabaseStorage(JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 }
