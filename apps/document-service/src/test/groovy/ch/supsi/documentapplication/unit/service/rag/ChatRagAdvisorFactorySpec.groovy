@@ -36,4 +36,13 @@ class ChatRagAdvisorFactorySpec extends Specification {
         advisor != null
         advisor.name == "RetrievalAugmentationAdvisor"
     }
+
+    def "createForSpace with pinned topic ids returns a retrieval augmentation advisor"() {
+        when:
+        Advisor advisor = factory.createForSpace(99L, [12L, 45L])
+
+        then:
+        advisor != null
+        advisor.name == "RetrievalAugmentationAdvisor"
+    }
 }

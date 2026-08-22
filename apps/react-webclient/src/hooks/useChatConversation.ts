@@ -49,7 +49,7 @@ function useChatConversation({
     displayedMessages.length === 0 && !isHistoryLoading && !isStreaming;
 
   const handleSubmit = useCallback(
-    async (message: string, model?: string) => {
+    async (message: string, model?: string, topicIds?: number[]) => {
       if (isStreaming || submittingRef.current) {
         return;
       }
@@ -83,23 +83,29 @@ function useChatConversation({
       ]);
 
       try {
-        await sendMessage(chatId, message, model, (token) => {
-          setDraftMessages((current) =>
-            current.map((draft) =>
-              draft.id === assistantId
-                ? Object.assign(
-                    new ChatMessageClass(
-                      "assistant",
-                      draft.content + token,
-                      draft.timestamp,
-                      draft.topics,
-                    ),
-                    { id: assistantId },
-                  )
-                : draft,
-            ),
-          );
-        });
+        await sendMessage(
+          chatId,
+          message,
+          model,
+          (token) => {
+            setDraftMessages((current) =>
+              current.map((draft) =>
+                draft.id === assistantId
+                  ? Object.assign(
+                      new ChatMessageClass(
+                        "assistant",
+                        draft.content + token,
+                        draft.timestamp,
+                        draft.topics,
+                      ),
+                      { id: assistantId },
+                    )
+                  : draft,
+              ),
+            );
+          },
+          topicIds,
+        );
 
         const result = await refetch();
         invalidateChats();
@@ -154,9 +160,9 @@ function useChatConversation({
       return;
     }
 
-    const message = consumePendingMessage(chatId);
-    if (message) {
-      void handleSubmit(message);
+    const pending = consumePendingMessage(chatId);
+    if (pending) {
+      void handleSubmit(pending.message, undefined, pending.topicIds);
     }
   }, [chatId, consumePendingMessage, handleSubmit, isStreaming]);
 

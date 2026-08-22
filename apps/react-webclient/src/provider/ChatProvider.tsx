@@ -7,6 +7,7 @@ import {
 } from "react";
 import {
   ChatContext,
+  type ConsumedPendingMessage,
   type PendingChatMessage,
 } from "@/context/ChatContext.tsx";
 import useChats from "@/hooks/useChats.ts";
@@ -26,15 +27,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const consumePendingMessage = useCallback((chatId: string): string | null => {
-    const pending = pendingRef.current;
-    if (!pending || pending.chatId !== chatId) {
-      return null;
-    }
-    pendingRef.current = null;
-    setPendingMessageState(null);
-    return pending.message;
-  }, []);
+  const consumePendingMessage = useCallback(
+    (chatId: string): ConsumedPendingMessage | null => {
+      const pending = pendingRef.current;
+      if (!pending || pending.chatId !== chatId) {
+        return null;
+      }
+      pendingRef.current = null;
+      setPendingMessageState(null);
+      return {
+        message: pending.message,
+        topicIds: pending.topicIds,
+      };
+    },
+    [],
+  );
 
   const selectedChatId = useMemo(() => {
     if (preferredChatId) {

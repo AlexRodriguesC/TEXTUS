@@ -129,6 +129,39 @@ class DatabaseTopicStorageSpec extends DatabaseSpec {
         firstId != secondId
     }
 
+    def "getByIds returns only requested topics that belong to the space"() {
+        given:
+        createUser()
+        Long spaceA = createSpace()
+        Long spaceB = createSpace()
+        Long jobId = createBatchJobInstance()
+        Long pageA = createPage(spaceA, jobId)
+        Long pageB = createPage(spaceB, jobId)
+        Long topicA1 = storage.create(
+                new Topic(null, "a.pdf", 1, 1, "A1", "Summary A1", ["a"], [ExerciseType.QUESTION]), pageA)
+        Long topicA2 = storage.create(
+                new Topic(null, "a.pdf", 1, 1, "A2", "Summary A2", ["a"], [ExerciseType.QUESTION]), pageA)
+        Long topicB = storage.create(
+                new Topic(null, "b.pdf", 1, 1, "B1", "Summary B1", ["b"], [ExerciseType.QUESTION]), pageB)
+
+        when:
+        def topics = storage.getByIds(spaceA, [topicA2, topicB, topicA1, 999999L])
+
+        then:
+        topics*.id as Set == [topicA1, topicA2] as Set
+        topics*.title as Set == ["A1", "A2"] as Set
+    }
+
+    def "getByIds returns empty list when ids are null or empty"() {
+        given:
+        createUser()
+        Long spaceId = createSpace()
+
+        expect:
+        storage.getByIds(spaceId, null).isEmpty()
+        storage.getByIds(spaceId, []).isEmpty()
+    }
+
     def "findRandomTopicsBySpace returns at most the requested limit"() {
         given:
         createUser()

@@ -37,7 +37,11 @@ function ExerciseHelpButton({
       const message = buildExerciseHelpMessage(t, exercise, userAnswer);
       const chat = await createChat(t("exercise.help.title"));
       setSelectedChatId(chat.id);
-      setPendingMessage({ chatId: chat.id, message });
+      setPendingMessage({
+        chatId: chat.id,
+        message,
+        topicIds: [exercise.topicId],
+      });
       navigate({
         to: PathConstants.SPACE_CHAT,
         params: { spaceId: strSpaceId },

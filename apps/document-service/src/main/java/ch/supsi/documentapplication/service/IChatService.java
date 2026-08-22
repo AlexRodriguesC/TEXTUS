@@ -16,5 +16,6 @@ public interface IChatService {
 
     void deleteChat(String username, Long spaceId, UUID chatId);
 
-    Flux<String> streamMessage(String username, Long spaceId, UUID chatId, String message, String model);
+    Flux<String> streamMessage(
+            String username, Long spaceId, UUID chatId, String message, String model, List<Long> topicIds);
 }

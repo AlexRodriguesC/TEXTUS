@@ -2,6 +2,7 @@ package ch.supsi.documentapplication.service.rag;
 
 import ch.supsi.documentapplication.configuration.properties.ChatRagProperties;
 import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
+import java.util.List;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
@@ -11,6 +12,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQuery
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Component
 public class ChatRagAdvisorFactory {
@@ -38,6 +40,10 @@ public class ChatRagAdvisorFactory {
     }
 
     public Advisor createForSpace(Long spaceId) {
+        return createForSpace(spaceId, List.of());
+    }
+
+    public Advisor createForSpace(Long spaceId, List<Long> pinnedTopicIds) {
         var documentRetriever = VectorStoreDocumentRetriever.builder()
                 .vectorStore(vectorStore)
                 .similarityThreshold(ragProperties.getSimilarityThreshold())
@@ -48,11 +54,18 @@ public class ChatRagAdvisorFactory {
         var fallbackProcessor =
                 new FallbackTopicDocumentPostProcessor(topicStorage, spaceId, ragProperties.getFallbackTopicLimit());
 
-        return RetrievalAugmentationAdvisor.builder()
+        var builder = RetrievalAugmentationAdvisor.builder()
                 .queryTransformers(compressionQueryTransformer, rewriteQueryTransformer)
                 .documentRetriever(documentRetriever)
-                .documentPostProcessors(fallbackProcessor)
-                .queryAugmenter(queryAugmenter)
-                .build();
+                .queryAugmenter(queryAugmenter);
+
+        if (!CollectionUtils.isEmpty(pinnedTopicIds)) {
+            var pinnedProcessor = new PinnedTopicDocumentPostProcessor(topicStorage, spaceId, pinnedTopicIds);
+            builder.documentPostProcessors(pinnedProcessor, fallbackProcessor);
+        } else {
+            builder.documentPostProcessors(fallbackProcessor);
+        }
+
+        return builder.build();
     }
 }

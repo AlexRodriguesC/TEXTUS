@@ -69,6 +69,19 @@ public class DatabaseTopicStorage extends DatabaseStorage implements IDatabaseTo
     }
 
     @Override
+    public List<Topic> getByIds(Long spaceId, List<Long> topicIds) {
+        if (topicIds == null || topicIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbcClient
+                .sql("SELECT * FROM documents.read_topics_by_ids(:space_id, :topic_ids)")
+                .param(SPACE_ID, spaceId)
+                .param("topic_ids", topicIds.toArray(new Long[0]))
+                .query((rs, rowNum) -> mapToTopic(rs))
+                .list();
+    }
+
+    @Override
     public List<Topic> getByDocumentId(Long documentId) {
         return jdbcClient
                 .sql("SELECT * FROM documents.read_topics_by_document(:document_id)")

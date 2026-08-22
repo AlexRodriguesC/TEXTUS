@@ -3,6 +3,12 @@ import { createContext } from "react";
 export type PendingChatMessage = {
   chatId: string;
   message: string;
+  topicIds?: number[];
+};
+
+export type ConsumedPendingMessage = {
+  message: string;
+  topicIds?: number[];
 };
 
 export type ChatContextValue = {
@@ -10,7 +16,7 @@ export type ChatContextValue = {
   setSelectedChatId: (chatId: string | null) => void;
   pendingMessage: PendingChatMessage | null;
   setPendingMessage: (message: PendingChatMessage | null) => void;
-  consumePendingMessage: (chatId: string) => string | null;
+  consumePendingMessage: (chatId: string) => ConsumedPendingMessage | null;
 };
 
 export const ChatContext = createContext<ChatContextValue | null>(null);

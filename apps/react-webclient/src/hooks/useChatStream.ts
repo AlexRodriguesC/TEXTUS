@@ -15,6 +15,7 @@ function useChatStream() {
       message: string,
       model: string | undefined,
       onToken: (token: string) => void,
+      topicIds?: number[],
     ) => {
       abortRef.current?.abort();
       revealRef.current?.cancel();
@@ -29,7 +30,7 @@ function useChatStream() {
         await streamChatMessage(
           spaceId,
           chatId,
-          { message, model },
+          { message, model, topicIds },
           (token) => reveal.push(token),
           controller.signal,
         );

@@ -30,6 +30,7 @@ type ModelsTransport = {
 type SendMessageTransport = {
   message: string;
   model?: string;
+  topicIds?: number[];
 };
 
 export async function listChats(spaceId: number): Promise<ChatTransport[]> {

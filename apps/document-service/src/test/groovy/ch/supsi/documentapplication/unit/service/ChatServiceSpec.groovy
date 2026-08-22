@@ -4,10 +4,13 @@ import ch.supsi.documentapplication.controller.DTO.response.ChatMessageResponseD
 import ch.supsi.documentapplication.dataaccess.IDatabaseChatMessageTopicStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage
+import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage
 import ch.supsi.documentapplication.exception.UnauthorizedException
 import ch.supsi.documentapplication.model.Chat
 import ch.supsi.documentapplication.model.SequencedChatMessage
 import ch.supsi.documentapplication.model.Space
+import ch.supsi.documentapplication.model.learn.ExerciseType
+import ch.supsi.documentapplication.model.learn.Topic
 import ch.supsi.documentapplication.repository.ISequencedChatMessageRepository
 import ch.supsi.documentapplication.service.ChatService
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory
@@ -36,6 +39,7 @@ class ChatServiceSpec extends Specification {
     IDatabaseSpaceStorage spaceStorage = Mock()
     IDatabaseChatStorage chatStorage = Mock()
     IDatabaseChatMessageTopicStorage chatMessageTopicStorage = Mock()
+    IDatabaseTopicStorage topicStorage = Mock()
     ISequencedChatMessageRepository sequencedChatMessageRepository = Mock()
     ChatClient chatClient = Mock()
     ChatMemory chatMemory = Mock()
@@ -46,6 +50,7 @@ class ChatServiceSpec extends Specification {
             spaceStorage,
             chatStorage,
             chatMessageTopicStorage,
+            topicStorage,
             sequencedChatMessageRepository,
             chatClient,
             chatMemory,
@@ -154,10 +159,11 @@ class ChatServiceSpec extends Specification {
                 .build()
 
         when:
-        def result = service.streamMessage("pippo", 1L, chatId, "Follow up", null).collectList().block()
+        def result = service.streamMessage("pippo", 1L, chatId, "Follow up", null, null).collectList().block()
 
         then:
-        1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
+        1 * chatRagAdvisorFactory.createForSpace(1L, []) >> ragAdvisor
+        0 * topicStorage._
         1 * chatClient.prompt() >> requestSpec
         1 * requestSpec.messages(_) >> requestSpec
         1 * requestSpec.user("Follow up") >> requestSpec
@@ -173,6 +179,42 @@ class ChatServiceSpec extends Specification {
         1 * chatStorage.touchUpdatedAt(chatId)
         0 * chatMessageTopicStorage._
         result == ["answer"]
+    }
+
+    def "streamMessage pins validated topic ids on the RAG advisor"() {
+        given:
+        def chatId = UUID.randomUUID()
+        def now = Instant.now()
+        def chat = new Chat(chatId, 1L, "pippo", "Title", now, now)
+        spaceStorage.read(1L) >> Optional.of(new Space(1L, "pippo", "icon", "Space", "desc"))
+        chatStorage.findById(chatId, 1L, "pippo") >> Optional.of(chat)
+        chatMemory.get(chatId.toString()) >> []
+        def pinnedTopic = new Topic(12L, null, 1L, 1, "Pinned", "Summary", [], [ExerciseType.QUESTION])
+
+        def requestSpec = Mock(ChatClient.ChatClientRequestSpec)
+        def streamSpec = Mock(ChatClient.StreamResponseSpec)
+        def clientResponse = ChatClientResponse.builder()
+                .chatResponse(ChatResponse.builder()
+                        .generations([new Generation(new AssistantMessage("answer"))])
+                        .build())
+                .context([:])
+                .build()
+
+        when:
+        service.streamMessage("pippo", 1L, chatId, "Help me", null, [12L, 12L, 999L, null]).collectList().block()
+
+        then:
+        1 * topicStorage.getByIds(1L, [12L, 999L]) >> [pinnedTopic]
+        1 * chatRagAdvisorFactory.createForSpace(1L, [12L]) >> ragAdvisor
+        1 * chatClient.prompt() >> requestSpec
+        1 * requestSpec.messages(_) >> requestSpec
+        1 * requestSpec.user("Help me") >> requestSpec
+        1 * requestSpec.advisors(ragAdvisor) >> requestSpec
+        1 * requestSpec.advisors(_) >> requestSpec
+        1 * requestSpec.options(_ as ChatOptions.Builder) >> requestSpec
+        1 * requestSpec.stream() >> streamSpec
+        1 * streamSpec.chatClientResponse() >> Flux.just(clientResponse)
+        1 * chatStorage.touchUpdatedAt(chatId)
     }
 
     def "streamMessage persists grounded topic ids for assistant reply after stream completes"() {
@@ -199,10 +241,10 @@ class ChatServiceSpec extends Specification {
                 .build()
 
         when:
-        service.streamMessage("pippo", 1L, chatId, "Follow up", null).blockLast()
+        service.streamMessage("pippo", 1L, chatId, "Follow up", null, null).blockLast()
 
         then:
-        1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
+        1 * chatRagAdvisorFactory.createForSpace(1L, []) >> ragAdvisor
         1 * chatClient.prompt() >> requestSpec
         1 * requestSpec.messages(_) >> requestSpec
         1 * requestSpec.user("Follow up") >> requestSpec
@@ -242,10 +284,10 @@ class ChatServiceSpec extends Specification {
                 .build()
 
         when:
-        service.streamMessage("pippo", 1L, chatId, "Follow up", null).blockLast()
+        service.streamMessage("pippo", 1L, chatId, "Follow up", null, null).blockLast()
 
         then:
-        1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
+        1 * chatRagAdvisorFactory.createForSpace(1L, []) >> ragAdvisor
         1 * chatClient.prompt() >> requestSpec
         1 * requestSpec.messages(_) >> requestSpec
         1 * requestSpec.user("Follow up") >> requestSpec
@@ -288,10 +330,10 @@ class ChatServiceSpec extends Specification {
                 .build()
 
         when:
-        service.streamMessage("pippo", 1L, chatId, "Follow up", null).blockLast()
+        service.streamMessage("pippo", 1L, chatId, "Follow up", null, null).blockLast()
 
         then:
-        1 * chatRagAdvisorFactory.createForSpace(1L) >> ragAdvisor
+        1 * chatRagAdvisorFactory.createForSpace(1L, []) >> ragAdvisor
         1 * chatClient.prompt() >> requestSpec
         1 * requestSpec.messages(_) >> requestSpec
         1 * requestSpec.user("Follow up") >> requestSpec

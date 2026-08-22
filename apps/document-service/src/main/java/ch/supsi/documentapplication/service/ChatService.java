@@ -4,14 +4,17 @@ import ch.supsi.documentapplication.controller.DTO.response.ChatMessageResponseD
 import ch.supsi.documentapplication.dataaccess.IDatabaseChatMessageTopicStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseChatStorage;
 import ch.supsi.documentapplication.dataaccess.IDatabaseSpaceStorage;
+import ch.supsi.documentapplication.dataaccess.IDatabaseTopicStorage;
 import ch.supsi.documentapplication.exception.NotFoundException;
 import ch.supsi.documentapplication.model.Chat;
 import ch.supsi.documentapplication.model.SequencedChatMessage;
 import ch.supsi.documentapplication.model.Space;
+import ch.supsi.documentapplication.model.learn.Topic;
 import ch.supsi.documentapplication.repository.ISequencedChatMessageRepository;
 import ch.supsi.documentapplication.service.rag.ChatRagAdvisorFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -24,6 +27,7 @@ import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
@@ -32,6 +36,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
 
     private final IDatabaseChatStorage chatStorage;
     private final IDatabaseChatMessageTopicStorage chatMessageTopicStorage;
+    private final IDatabaseTopicStorage topicStorage;
     private final ISequencedChatMessageRepository sequencedChatMessageRepository;
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
@@ -42,6 +47,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
             IDatabaseSpaceStorage spaceStorage,
             IDatabaseChatStorage chatStorage,
             IDatabaseChatMessageTopicStorage chatMessageTopicStorage,
+            IDatabaseTopicStorage topicStorage,
             ISequencedChatMessageRepository sequencedChatMessageRepository,
             @Qualifier("interactiveChatClient") ChatClient chatClient,
             ChatMemory chatMemory,
@@ -50,6 +56,7 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
         super(spaceStorage);
         this.chatStorage = chatStorage;
         this.chatMessageTopicStorage = chatMessageTopicStorage;
+        this.topicStorage = topicStorage;
         this.sequencedChatMessageRepository = sequencedChatMessageRepository;
         this.chatClient = chatClient;
         this.chatMemory = chatMemory;
@@ -88,14 +95,16 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
     }
 
     @Override
-    public Flux<String> streamMessage(String username, Long spaceId, UUID chatId, String message, String model) {
+    public Flux<String> streamMessage(
+            String username, Long spaceId, UUID chatId, String message, String model, List<Long> topicIds) {
         Space space = getSpaceOrThrow(username, spaceId);
         Chat chat = getChatOrThrow(username, spaceId, chatId);
         var stringChatId = chat.id().toString();
 
         List<Message> history = chatMemory.get(stringChatId);
 
-        Advisor ragAdvisor = chatRagAdvisorFactory.createForSpace(space.getId());
+        List<Long> pinnedTopicIds = resolvePinnedTopicIds(space.getId(), topicIds);
+        Advisor ragAdvisor = chatRagAdvisorFactory.createForSpace(space.getId(), pinnedTopicIds);
 
         var promptSpec = chatClient
                 .prompt()
@@ -124,6 +133,29 @@ public class ChatService extends ch.supsi.documentapplication.service.Service im
                     chatStorage.touchUpdatedAt(chatId);
                 })
                 .mapNotNull(this::extractStreamChunk);
+    }
+
+    /**
+     * Keeps only topic IDs that belong to the space, deduplicated and in request order.
+     * Missing or foreign IDs are dropped so a deleted topic does not break the help flow.
+     */
+    private List<Long> resolvePinnedTopicIds(Long spaceId, List<Long> requestedTopicIds) {
+        if (CollectionUtils.isEmpty(requestedTopicIds)) {
+            return List.of();
+        }
+        LinkedHashSet<Long> uniqueRequested = new LinkedHashSet<>();
+        for (Long id : requestedTopicIds) {
+            if (id != null) {
+                uniqueRequested.add(id);
+            }
+        }
+        if (uniqueRequested.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> belongingToSpace = topicStorage.getByIds(spaceId, new ArrayList<>(uniqueRequested)).stream()
+                .map(Topic::getId)
+                .collect(Collectors.toSet());
+        return uniqueRequested.stream().filter(belongingToSpace::contains).toList();
     }
 
     private List<Long> extractTopicIds(ChatClientResponse response) {

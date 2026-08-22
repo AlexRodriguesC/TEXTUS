@@ -139,7 +139,8 @@ public class ChatController {
     private Flux<String> streamChatMessages(
             Authentication authentication, Long spaceId, UUID chatId, SendMessageRequestDTO request) {
         String username = authentication.getName();
-        return chatService.streamMessage(username, spaceId, chatId, request.message(), request.model());
+        return chatService.streamMessage(
+                username, spaceId, chatId, request.message(), request.model(), request.topicIds());
     }
 
     private SseEmitter createSseEmitterForStream(Flux<String> flux) {
