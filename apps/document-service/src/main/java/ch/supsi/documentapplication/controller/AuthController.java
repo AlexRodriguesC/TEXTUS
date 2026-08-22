@@ -66,6 +66,11 @@ public class AuthController {
                     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
             })
     public ResponseEntity<@NotNull TokenResponseDTO> register(@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "User registration payload", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = User.class))) @RequestBody User user) {
+        // This is ugly, but it's there just for the deployed demo as a cheap way to avoid abuse / misuse by random people
+        if (user.getUsername() == null || user.getUsername().isBlank() || !user.getUsername().contains("demo")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         return ResponseEntity.ok(new TokenResponseDTO(authService.register(user)));
     }
 }

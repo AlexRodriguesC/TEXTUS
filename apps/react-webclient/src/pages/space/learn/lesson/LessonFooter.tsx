@@ -17,6 +17,7 @@ interface LessonFooterProps {
   wasCorrect?: boolean | null;
   answer?: unknown | null;
   submitted: boolean;
+  persistPending?: boolean;
 }
 
 function LessonFooter({
@@ -28,6 +29,7 @@ function LessonFooter({
   wasCorrect,
   answer,
   submitted,
+  persistPending = false,
 }: LessonFooterProps) {
   const { lessonId } = useLessonId();
   const { strSpaceId } = useSpaceId();
@@ -82,6 +84,7 @@ function LessonFooter({
       <ExerciseFooter
         submitted={submitted}
         exerciseLoading={exerciseLoading}
+        persistPending={persistPending}
         skipEnabled={skipEnabled}
         confirmationEnabled={confirmationEnabled}
         wasCorrect={wasCorrect}

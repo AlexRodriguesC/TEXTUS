@@ -41,6 +41,7 @@ function LessonExerciseSession({
     submitted,
     wasCorrect,
     isAttemptLoading,
+    persistSucceeded,
     handleNext,
     handleSkip,
     handleConfirm,
@@ -75,6 +76,7 @@ function LessonExerciseSession({
           wasCorrect={wasCorrect}
           answer={answer}
           skipEnabled={!isAttemptLoading}
+          persistPending={!persistSucceeded}
         />
       </div>
     </>

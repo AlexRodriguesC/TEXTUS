@@ -8,7 +8,7 @@ function EmptySpaces() {
     <div className="flex flex-col items-center">
       <div className={"flex flex-col items-center gap-4"}>
         <ResponsiveLottie src="/animations/think.lottie" loop autoplay />
-        <p className={"text-center"}>{t("spaces.add-spaces")}</p>
+        <p className={"text-center select-none"}>{t("spaces.add-spaces")}</p>
       </div>
     </div>
   );

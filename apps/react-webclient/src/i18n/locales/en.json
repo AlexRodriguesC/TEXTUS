@@ -155,6 +155,9 @@
         "question": "I need help understanding why I got this wrong.\n\n{{request}}\n\nWhy is the answer to this question not {{answer}}?",
         "skipped": "I skipped this exercise and need help working through it.\n\n{{request}}\n\nOptions:\n{{options}}\n\nCorrect solution:\n{{solution}}\n\nHelp me understand the solution."
       }
+    },
+    "submit": {
+      "error": "Could not save your attempt. Please try again."
     }
   },
   "button": {

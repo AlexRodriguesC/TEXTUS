@@ -6,6 +6,7 @@ import ExerciseHelpButton from "@/pages/space/learn/ExerciseHelpButton.tsx";
 interface ExerciseFooterProps {
   submitted: boolean;
   exerciseLoading: boolean;
+  persistPending: boolean;
   skipEnabled: boolean;
   confirmationEnabled: boolean;
   wasCorrect?: boolean | null;
@@ -20,6 +21,7 @@ interface ExerciseFooterProps {
 function ExerciseFooter({
   submitted,
   exerciseLoading,
+  persistPending,
   skipEnabled,
   confirmationEnabled,
   wasCorrect,
@@ -52,7 +54,7 @@ function ExerciseFooter({
       )}
       {submitted ? (
         <Button
-          disabled={exerciseLoading}
+          disabled={exerciseLoading || persistPending}
           onClick={onNext}
           className="ml-auto"
         >
