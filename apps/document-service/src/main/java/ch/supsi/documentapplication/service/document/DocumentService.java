@@ -3,16 +3,20 @@ package ch.supsi.documentapplication.service.document;
 import ch.supsi.documentapplication.dataaccess.*;
 import ch.supsi.documentapplication.exception.*;
 import ch.supsi.documentapplication.model.*;
+import ch.supsi.documentapplication.service.async.documentpipeline.DocumentPipelineTaskType;
 import ch.supsi.documentapplication.service.batch.BatchJobRecoveryService;
 import ch.supsi.documentapplication.service.batch.JobExecutionResolver;
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,9 +27,13 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
 
     public static final String SPACE_ID = "SPACE_ID";
 
+    private static final List<TaskType> PIPELINE_TASK_TYPES =
+            Arrays.asList(TaskType.SEGMENTATION, TaskType.OCR, TaskType.SUMMARIZATION, TaskType.TOPIC);
+
     private final IFileSystemDocumentStorage documentFsStorage;
     private final IDatabaseDocumentStorage databaseDocumentStorage;
     private final IDatabaseDocumentTaskStorage documentTaskStorage;
+    private final DocumentTaskProgressService documentTaskProgressService;
     private final JobOperator jobOperator;
     private final Job documentJob;
     private final JobRepository jobRepository;
@@ -37,6 +45,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
             IFileSystemDocumentStorage documentFsStorage,
             IDatabaseDocumentStorage databaseDocumentStorage,
             IDatabaseDocumentTaskStorage documentTaskStorage,
+            DocumentTaskProgressService documentTaskProgressService,
             IDatabaseSpaceStorage spaceStorage,
             JobOperator asyncJobOperator,
             Job documentJob,
@@ -47,6 +56,7 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         this.documentFsStorage = documentFsStorage;
         this.databaseDocumentStorage = databaseDocumentStorage;
         this.documentTaskStorage = documentTaskStorage;
+        this.documentTaskProgressService = documentTaskProgressService;
         this.jobOperator = asyncJobOperator;
         this.documentJob = documentJob;
         this.jobRepository = jobRepository;
@@ -92,9 +102,75 @@ public class DocumentService extends ch.supsi.documentapplication.service.Servic
         var space = getSpaceOrThrow(owner, spaceId);
         var documents = databaseDocumentStorage.getDocuments(space.getId());
 
-        documents.forEach(document -> document.setTasks(documentTaskStorage.getByDocumentId(document.getId())));
+        documents.forEach(document -> {
+            List<DocumentTask> tasks = documentTaskStorage.getByDocumentId(document.getId());
+            tasks = reconcileFailedDocumentTasks(document, tasks);
+            document.setTasks(tasks);
+        });
 
         return documents;
+    }
+
+    /**
+     * When the Batch job has already failed but no task row has {@code ERROR}
+     * (e.g. startTask was rolled back with the failing chunk), persist ERROR so
+     * the UI stops showing in-progress.
+     */
+    private List<DocumentTask> reconcileFailedDocumentTasks(Document document, List<DocumentTask> tasks) {
+        if (!isUnsettled(tasks)) {
+            return tasks;
+        }
+
+        JobExecution jobExecution = JobExecutionResolver.getLatestJobExecution(jobRepository, document.getJobId());
+        if (jobExecution == null
+                || jobExecution.isRunning()
+                || !jobExecution.getStatus().isUnsuccessful()) {
+            return tasks;
+        }
+
+        TaskType failedType = resolveFailedPipelineTaskType(jobExecution);
+        if (failedType == null) {
+            return tasks;
+        }
+
+        log.warn(
+                "Reconciling stuck document tasks with Batch failure: documentId={}, taskType={}, jobStatus={}",
+                document.getId(),
+                failedType,
+                jobExecution.getStatus());
+        documentTaskProgressService.failTask(document.getId(), failedType);
+        return documentTaskStorage.getByDocumentId(document.getId());
+    }
+
+    private static boolean isUnsettled(List<DocumentTask> tasks) {
+        return !isFailed(tasks) && !isDone(tasks);
+    }
+
+    private static boolean isFailed(List<DocumentTask> tasks) {
+        return tasks.stream().anyMatch(task -> task.getVariant() == TaskVariant.ERROR);
+    }
+
+    private static boolean isDone(List<DocumentTask> tasks) {
+        return PIPELINE_TASK_TYPES.stream().allMatch(type -> tasks.stream()
+                .anyMatch(task -> task.getType() == type && task.getVariant() == TaskVariant.SUCCESS));
+    }
+
+    private static TaskType resolveFailedPipelineTaskType(JobExecution jobExecution) {
+        return jobExecution.getStepExecutions().stream()
+                .filter(DocumentService::isFailedStep)
+                .map(StepExecution::getStepName)
+                .map(DocumentPipelineTaskType::fromStepName)
+                .filter(type -> type != null)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static boolean isFailedStep(StepExecution stepExecution) {
+        if (stepExecution.getStatus().isUnsuccessful()) {
+            return true;
+        }
+        ExitStatus exitStatus = stepExecution.getExitStatus();
+        return exitStatus != null && ExitStatus.FAILED.getExitCode().equals(exitStatus.getExitCode());
     }
 
     @Override

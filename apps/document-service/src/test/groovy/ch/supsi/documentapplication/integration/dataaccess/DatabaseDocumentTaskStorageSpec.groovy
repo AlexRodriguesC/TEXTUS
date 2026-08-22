@@ -109,6 +109,25 @@ class DatabaseDocumentTaskStorageSpec extends DatabaseSpec {
         }
     }
 
+    def "should create ERROR row when failing a task that was never started"() {
+        given:
+        Long documentId = createDocument()
+
+        when:
+        storage.fail(documentId, TaskType.TOPIC)
+
+        then:
+        def tasks = storage.getByDocumentId(documentId)
+        tasks.size() == 1
+        with(tasks[0]) {
+            id == "${documentId}:TOPIC"
+            type == TaskType.TOPIC
+            progress == 0
+            maxProgress == 1
+            variant == TaskVariant.ERROR
+        }
+    }
+
     def "should return empty list for document without tasks"() {
         given:
         Long documentId = createDocument()

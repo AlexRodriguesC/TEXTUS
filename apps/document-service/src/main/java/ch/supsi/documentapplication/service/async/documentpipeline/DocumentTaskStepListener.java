@@ -23,7 +23,7 @@ public class DocumentTaskStepListener implements StepExecutionListener {
 
     @Override
     public void beforeStep(@NotNull StepExecution stepExecution) {
-        TaskType taskType = resolveTaskType(stepExecution.getStepName());
+        TaskType taskType = DocumentPipelineTaskType.fromStepName(stepExecution.getStepName());
         Long documentId = resolveDocumentId(stepExecution);
         if (taskType == null || documentId == null) {
             return;
@@ -36,13 +36,18 @@ public class DocumentTaskStepListener implements StepExecutionListener {
 
     @Override
     public ExitStatus afterStep(@NotNull StepExecution stepExecution) {
-        TaskType taskType = resolveTaskType(stepExecution.getStepName());
+        TaskType taskType = DocumentPipelineTaskType.fromStepName(stepExecution.getStepName());
         Long documentId = resolveDocumentId(stepExecution);
         if (taskType == null || documentId == null) {
             return stepExecution.getExitStatus();
         }
 
         if (stepExecution.getExitStatus().getExitCode().equals(ExitStatus.FAILED.getExitCode())) {
+            log.warn(
+                    "Marking document task as ERROR: documentId={}, taskType={}, step={}",
+                    documentId,
+                    taskType,
+                    stepExecution.getStepName());
             documentTaskProgressService.failTask(documentId, taskType);
         }
 
@@ -51,21 +56,5 @@ public class DocumentTaskStepListener implements StepExecutionListener {
 
     private Long resolveDocumentId(StepExecution stepExecution) {
         return (Long) stepExecution.getJobExecution().getExecutionContext().get(SetupTasklet.DATABASE_DOCUMENT_ID);
-    }
-
-    private TaskType resolveTaskType(String stepName) {
-        if (stepName.contains("OCRTasklet")) {
-            return TaskType.OCR;
-        }
-        if (stepName.contains("SegmentationTasklet")) {
-            return TaskType.SEGMENTATION;
-        }
-        if (stepName.contains("SummarizationTasklet")) {
-            return TaskType.SUMMARIZATION;
-        }
-        if (stepName.contains("TopicExtractionTasklet")) {
-            return TaskType.TOPIC;
-        }
-        return null;
     }
 }

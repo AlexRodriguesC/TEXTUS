@@ -51,6 +51,19 @@ class DocumentTaskStepListenerSpec extends Specification {
         0 * documentTaskProgressService._
     }
 
+    def "afterStep marks TOPIC failed for CGLIB-enhanced step name"() {
+        given:
+        def stepExecution = stepExecution("TopicExtractionTasklet\$\$SpringCGLIB\$\$0", 9L, ExitStatus.FAILED)
+
+        when:
+        def exitStatus = listener.afterStep(stepExecution)
+
+        then:
+        exitStatus == ExitStatus.FAILED
+        1 * documentTaskProgressService.failTask(9L, TaskType.TOPIC)
+        0 * documentTaskProgressService._
+    }
+
     def "afterStep does not fail task on success"() {
         given:
         def stepExecution = stepExecution("TopicExtractionTasklet", 7L, ExitStatus.COMPLETED)

@@ -7,10 +7,10 @@ CREATE OR REPLACE FUNCTION documents.fail_document_task(
 AS
 $$
 BEGIN
-    UPDATE documents.document_task
-    SET variant    = 'ERROR',
-        updated_at = NOW()
-    WHERE document_id = p_document_id
-      AND type = p_type;
+    INSERT INTO documents.document_task (id, document_id, type, progress, max_progress, variant, created_at, updated_at)
+    VALUES (p_document_id || ':' || p_type, p_document_id, p_type, 0, 1, 'ERROR', NOW(), NOW())
+    ON CONFLICT (document_id, type) DO UPDATE
+        SET variant    = 'ERROR',
+            updated_at = NOW();
 END;
 $$;

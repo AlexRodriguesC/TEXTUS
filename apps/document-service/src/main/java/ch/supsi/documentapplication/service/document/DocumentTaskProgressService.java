@@ -4,6 +4,8 @@ import ch.supsi.documentapplication.dataaccess.IDatabaseDocumentTaskStorage;
 import ch.supsi.documentapplication.model.TaskType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DocumentTaskProgressService {
@@ -27,6 +29,11 @@ public class DocumentTaskProgressService {
         documentTaskStorage.complete(documentId, type);
     }
 
+    /**
+     * Persists ERROR outside any ambient batch chunk transaction so the status
+     * survives rollback of the failing step.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void failTask(Long documentId, TaskType type) {
         documentTaskStorage.fail(documentId, type);
     }
