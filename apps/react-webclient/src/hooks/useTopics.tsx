@@ -1,4 +1,5 @@
 import {
+  getGetTopicsQueryKey,
   getGetTopicsQueryOptions,
   useGetTopics,
 } from "@/client/generated/topics/topics.ts";
@@ -6,7 +7,8 @@ import useSpaceId from "@/hooks/useSpaceId.ts";
 import type { ErrorResponseDTO, TopicsResponseDTO } from "@/client/model";
 import Topic from "@/classes/Topic.ts";
 import { mapTopic } from "@/hooks/dtoMappers.ts";
-import {useQueryClient} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 function useTopics() {
   const { spaceId } = useSpaceId();
@@ -24,6 +26,18 @@ function useTopics() {
     await queryClient.prefetchQuery(getGetTopicsQueryOptions(id));
   };
 
+  const invalidateTopics = useCallback(
+    async (targetSpaceId?: number) => {
+      const id = targetSpaceId ?? spaceId;
+      if (id === undefined) return;
+      await queryClient.invalidateQueries({
+        queryKey: getGetTopicsQueryKey(id),
+      });
+      await queryClient.fetchQuery(getGetTopicsQueryOptions(id));
+    },
+    [queryClient, spaceId],
+  );
+
   let topics: Topic[] = [];
 
   if (topicsData?.data && isTopicsResponse(topicsData.data)) {
@@ -33,6 +47,7 @@ function useTopics() {
   return {
     topics,
     prefetchTopics,
+    invalidateTopics,
     isLoading,
   };
 }

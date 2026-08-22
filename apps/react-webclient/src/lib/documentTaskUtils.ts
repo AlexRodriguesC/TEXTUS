@@ -39,3 +39,18 @@ export function shouldPollDocuments(
   );
   return hasUnsettled ? DOCUMENTS_POLL_INTERVAL_MS : false;
 }
+
+/** Persisted documents that newly reached done since the previous snapshot. */
+export function getNewlyCompletedDocumentIds(
+  previousDoneIds: ReadonlySet<number>,
+  documents: Document[],
+): number[] {
+  return documents
+    .filter(
+      (document) =>
+        document.id >= 0 &&
+        isDone(document.tasks) &&
+        !previousDoneIds.has(document.id),
+    )
+    .map((document) => document.id);
+}

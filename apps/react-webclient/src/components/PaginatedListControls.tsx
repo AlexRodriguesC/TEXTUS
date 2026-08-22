@@ -18,6 +18,39 @@ interface PaginatedListControlsProps {
   className?: string;
 }
 
+function renderPageItems(
+  range: (number | "ellipsis")[],
+  safePage: number,
+  onPageChange: (page: number) => void,
+  keyPrefix: string,
+  itemClassName: string,
+) {
+  return range.map((pageNumber, index) =>
+    pageNumber === "ellipsis" ? (
+      <PaginationItem
+        key={`${keyPrefix}-ellipsis-${index}`}
+        className={itemClassName}
+      >
+        <PaginationEllipsis />
+      </PaginationItem>
+    ) : (
+      <PaginationItem key={`${keyPrefix}-${pageNumber}`} className={itemClassName}>
+        <PaginationLink
+          href="#"
+          isActive={safePage === pageNumber}
+          className="size-9 sm:size-10"
+          onClick={(event) => {
+            event.preventDefault();
+            onPageChange(pageNumber);
+          }}
+        >
+          {pageNumber}
+        </PaginationLink>
+      </PaginationItem>
+    ),
+  );
+}
+
 function PaginatedListControls({
   safePage,
   totalPages,
@@ -30,9 +63,12 @@ function PaginatedListControls({
     return null;
   }
 
+  const compactRange = getPaginationRange(safePage, totalPages, 0);
+  const fullRange = getPaginationRange(safePage, totalPages);
+
   return (
     <Pagination className={cn("mt-4 shrink-0", className)}>
-      <PaginationContent>
+      <PaginationContent className="max-w-full gap-0.5 sm:gap-1">
         <PaginationItem>
           <PaginationPrevious
             href="#"
@@ -47,25 +83,19 @@ function PaginatedListControls({
           />
         </PaginationItem>
 
-        {getPaginationRange(safePage, totalPages).map((pageNumber, index) =>
-          pageNumber === "ellipsis" ? (
-            <PaginationItem key={`ellipsis-${index}`}>
-              <PaginationEllipsis />
-            </PaginationItem>
-          ) : (
-            <PaginationItem key={pageNumber}>
-              <PaginationLink
-                href="#"
-                isActive={safePage === pageNumber}
-                onClick={(event) => {
-                  event.preventDefault();
-                  onPageChange(pageNumber);
-                }}
-              >
-                {pageNumber}
-              </PaginationLink>
-            </PaginationItem>
-          ),
+        {renderPageItems(
+          compactRange,
+          safePage,
+          onPageChange,
+          "mobile",
+          "sm:hidden",
+        )}
+        {renderPageItems(
+          fullRange,
+          safePage,
+          onPageChange,
+          "desktop",
+          "hidden sm:list-item",
         )}
 
         <PaginationItem>

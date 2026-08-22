@@ -12,14 +12,44 @@ import { useTranslation } from "react-i18next";
 import IllustratedAside from "@/components/IllustratedAside.tsx";
 import useDocuments from "@/hooks/useDocuments.ts";
 import SpaceMenuSkeleton from "@/pages/space/menu/SpaceMenuSkeleton.tsx";
+import useTopics from "@/hooks/useTopics.tsx";
+import {
+  getNewlyCompletedDocumentIds,
+  isDone,
+} from "@/lib/documentTaskUtils.ts";
+import { useEffect, useRef } from "react";
 
 function SpaceMenu() {
   const { spaceId } = useSpaceId();
   const { spaces, isLoading: isSpacesLoading } = useSpaces();
-  const { isLoading: isDocumentsLoading } = useDocuments(spaceId);
+  const { documents, isLoading: isDocumentsLoading } = useDocuments(spaceId);
+  const { invalidateTopics } = useTopics();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { tutorialEnabled, enableTutorial, disableTutorial } = useTutorial();
+  const previousDoneIdsRef = useRef<Set<number> | null>(null);
+
+  useEffect(() => {
+    if (previousDoneIdsRef.current === null) {
+      previousDoneIdsRef.current = new Set(
+        documents
+          .filter((document) => document.id >= 0 && isDone(document.tasks))
+          .map((document) => document.id),
+      );
+      return;
+    }
+
+    const newlyCompleted = getNewlyCompletedDocumentIds(
+      previousDoneIdsRef.current,
+      documents,
+    );
+    for (const id of newlyCompleted) {
+      previousDoneIdsRef.current.add(id);
+    }
+    if (newlyCompleted.length > 0) {
+      void invalidateTopics();
+    }
+  }, [documents, invalidateTopics]);
 
   const isLoading = isSpacesLoading || isDocumentsLoading;
 
