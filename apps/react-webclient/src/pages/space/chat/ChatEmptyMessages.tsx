@@ -5,6 +5,7 @@ import useTopics from "@/hooks/useTopics.tsx";
 import {
   buildTopicSuggestion,
   pickSuggestedTopics,
+  type TopicSuggestion,
 } from "@/pages/space/chat/chatTopicSuggestions.ts";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +14,7 @@ import {useIsMobile} from "@/hooks/shadcn/useIsMobile.ts";
 interface ChatEmptyMessagesProps {
   title: string;
   asScrollerItem?: boolean;
-  onSuggestionClick?: (message: string) => void;
+  onSuggestionClick?: (suggestion: TopicSuggestion) => void;
   disabled?: boolean;
 }
 
@@ -43,16 +44,16 @@ function ChatEmptyMessages({
       {showSuggestions && (
         <BubbleGroup className="flex flex-col w-full gap-8">
           {suggestedTopics.map((topic, index) => {
-            const message = buildTopicSuggestion(t, topic, index);
+            const suggestion = buildTopicSuggestion(t, topic, index);
             return (
               <Bubble key={topic.id} variant="default" align={index % 2 === 0 ? "start" : "end"}>
                 <BubbleContent className={"rounded-xl"} asChild>
                   <button
                     type="button"
                     disabled={disabled}
-                    onClick={() => onSuggestionClick(message)}
+                    onClick={() => onSuggestionClick(suggestion)}
                   >
-                    {message}
+                    {suggestion.message}
                   </button>
                 </BubbleContent>
               </Bubble>

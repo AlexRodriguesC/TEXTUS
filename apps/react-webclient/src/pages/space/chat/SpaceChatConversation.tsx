@@ -52,7 +52,9 @@ function SpaceChatConversation({
                   <ChatEmptyMessages
                     title={chatTitle ?? t("chat.new")}
                     asScrollerItem
-                    onSuggestionClick={(message) => void handleSubmit(message)}
+                    onSuggestionClick={({ message, topicIds }) =>
+                      void handleSubmit(message, undefined, topicIds)
+                    }
                     disabled={isStreaming}
                   />
                 )}

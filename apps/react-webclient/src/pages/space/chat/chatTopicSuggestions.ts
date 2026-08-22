@@ -10,6 +10,11 @@ const SUGGESTION_KEYS = [
 
 const MAX_SUGGESTIONS = 4;
 
+export type TopicSuggestion = {
+  message: string;
+  topicIds: number[];
+};
+
 export function pickSuggestedTopics({topics, maxSuggestions = MAX_SUGGESTIONS} : {topics: Topic[], maxSuggestions?: number}) {
   const shuffled = [...topics];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -23,7 +28,10 @@ export function buildTopicSuggestion(
   t: TFunction,
   topic: Topic,
   index: number,
-): string {
+): TopicSuggestion {
   const key = SUGGESTION_KEYS[index % SUGGESTION_KEYS.length];
-  return t(key, { title: topic.title });
+  return {
+    message: t(key, { title: topic.title }),
+    topicIds: [topic.id],
+  };
 }
