@@ -26,15 +26,15 @@ function TutorialStep({
     <StepperContent
       key={index}
       value={index + 1}
-      className="flex w-full items-center justify-center"
+      className="flex min-w-0 w-full items-center justify-center"
     >
       <IllustratedAside
         lottieSrc={lottieSrc}
         lottieSide={lottieSide}
         aside={aside}
-        contentClassName="flex-1 min-w-0 justify-center gap-8"
+        contentClassName="min-w-0 flex-1 justify-center gap-4 md:gap-8"
       >
-        <div className="flex flex-col items-center md:items-start justify-center gap-8 min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 md:items-start md:gap-8">
           <h2 className="text-2xl font-semibold mb-2">{t(titleKey)}</h2>
           <p className="wrap-break-word">
             <Trans

@@ -28,8 +28,8 @@ function IllustratedAside({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2 md:flex-row md:items-stretch",
-        lottieSide === "right" && "md:flex-row-reverse",
+        "flex min-w-0 max-w-full flex-col items-center gap-2 lg:flex-row lg:items-stretch",
+        lottieSide === "right" && "lg:flex-row-reverse",
         className,
       )}
     >
@@ -42,7 +42,7 @@ function IllustratedAside({
       )}
       <div
         className={cn(
-          "flex w-full md:w-md flex-col justify-between gap-4",
+          "flex w-full min-w-0 flex-col justify-between gap-4 lg:max-w-md lg:flex-1",
           contentClassName,
         )}
       >

@@ -20,7 +20,10 @@ function ResponsiveLottie({
 }: ResponsiveLottieProps & DotLottieReactProps) {
   const [dotLottie, setDotLottie] = useState<DotLottie | null>(null);
 
-  const wrapperClass = cn("aspect-square w-40 md:w-64 xl:w-80", className);
+  const wrapperClass = cn(
+    "aspect-square w-40 max-w-full md:w-64 xl:w-80",
+    className,
+  );
 
   if (!autoplay) {
     return (

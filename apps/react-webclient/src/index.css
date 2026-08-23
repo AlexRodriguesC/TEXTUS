@@ -171,7 +171,7 @@ h6 {
 
 @theme inline {
   --max-width-page-mobile: 90%;
-  --max-width-page-desktop: 40%;
+  --max-width-page-desktop: min(56rem, 90%);
   --font-heading: var(--font-sans);
   --font-sans: "Roboto Variable", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);

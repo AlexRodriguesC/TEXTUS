@@ -78,7 +78,7 @@ function EmptySpace({ onCompleted }: EmptySpace) {
         completed: <CheckIcon className="size-3.5" />,
         loading: <LoaderCircleIcon className="size-3.5 animate-spin" />,
       }}
-      className="w-full h-125 space-y-8 flex flex-col overflow-hidden"
+      className="flex h-full min-h-0 w-full flex-col space-y-8"
     >
       <StepperNav className="shrink-0">
         {steps.map((step, index) => (
@@ -99,15 +99,13 @@ function EmptySpace({ onCompleted }: EmptySpace) {
       </StepperNav>
 
       <StepperPanel className="text-sm flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
-        <div className="relative flex-1 min-h-0 overflow-auto">
+        <div className="relative flex min-h-0 flex-1 flex-col">
           {steps.map((step, index) => (
             <div
               key={index}
               className={cn(
-                "absolute inset-0 flex items-center justify-center",
-                currentIndex === index + 1
-                  ? "opacity-100 z-10"
-                  : "opacity-0 z-0 pointer-events-none",
+                "flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-4",
+                currentIndex === index + 1 ? "flex" : "hidden",
               )}
             >
               {step.component}

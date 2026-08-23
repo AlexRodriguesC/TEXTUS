@@ -10,7 +10,7 @@ function HomePage() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="flex flex-col min-h-screen min-w-100 justify-center items-center gap-6 md:flex-row md:gap-8 place-self-center">
+    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-6 overflow-y-auto py-6 place-self-center">
       <div>
         <div className={"flex place-content-center"}>
           <ResponsiveLottie src="/animations/home.lottie" />

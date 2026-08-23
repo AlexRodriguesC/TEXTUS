@@ -18,7 +18,8 @@ function PageContainer({
     <div
       className={cn(
         "flex h-full w-full min-h-0 min-w-0 flex-col",
-        variant === "default" && "mx-auto max-w-page-mobile lg:max-w-page-desktop",
+        variant === "default" &&
+          "mx-auto max-w-page-mobile px-4 lg:max-w-page-desktop",
         className,
       )}
     >
