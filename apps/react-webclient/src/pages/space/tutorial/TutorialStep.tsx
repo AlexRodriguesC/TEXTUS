@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { StepperContent } from "@/components/reui/stepper.tsx";
 import { Trans, useTranslation } from "react-i18next";
 import IllustratedAside from "@/components/IllustratedAside.tsx";
 
@@ -13,7 +12,6 @@ interface TutorialStepProps {
 }
 
 function TutorialStep({
-  index,
   titleKey,
   descriptionKey,
   lottieSrc,
@@ -23,11 +21,7 @@ function TutorialStep({
   const { t } = useTranslation();
 
   return (
-    <StepperContent
-      key={index}
-      value={index + 1}
-      className="flex min-w-0 w-full items-center justify-center"
-    >
+    <div className="flex min-w-0 w-full items-center justify-center">
       <IllustratedAside
         lottieSrc={lottieSrc}
         lottieSide={lottieSide}
@@ -44,7 +38,7 @@ function TutorialStep({
           </p>
         </div>
       </IllustratedAside>
-    </StepperContent>
+    </div>
   );
 }
 
