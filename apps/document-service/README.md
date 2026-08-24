@@ -36,7 +36,7 @@ The document service is the core backend of TEXTUS. It exposes a JWT-protected R
 
 When a document is uploaded, a Spring Batch pipeline extracts text, applies OCR where needed, summarizes pages, extracts topics, and stores embeddings in PostgreSQL with pgvector. The service then supports mind-map generation, adaptive learning paths and exercises, and retrieval-augmented chat over the uploaded material.
 
-The service also sends generated-content evaluation requests asynchronously to the repository's `eval-service`. The broader system design is documented in [the thesis architecture chapter](../../docs/thesis/11-architecture.md).
+The service also sends generated-content evaluation requests asynchronously to the repository's `eval-service`.
 
 ### Built With
 

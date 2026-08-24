@@ -30,9 +30,9 @@
 
 The evaluation service is the LLM-quality sidecar for TEXTUS. It receives generated learning content from the document service and evaluates it asynchronously, so evaluation latency or failures do not block document ingestion.
 
-It persists evaluation records in PostgreSQL and provides configurable built-in and TEXTUS-specific G-Eval metrics. Its meta-evaluation endpoints support human ratings, rubric refinement, inter-rater-reliability thresholds, calibration, and escalation decisions.
+It persists evaluation records in PostgreSQL and provides configurable built-in and TEXTUS-specific G-Eval metrics.
 
-The document service calls this API at `/api/v1/evaluations`. See [the thesis architecture chapter](../../docs/thesis/11-architecture.md) for the wider service topology and [the validation chapter](../../docs/thesis/10-validation.md) for the evaluation approach.
+The document service calls this API at `/api/v1/evaluations`.
 
 ### Built With
 
@@ -105,13 +105,6 @@ The service verifies the database connection during startup. Check [http://local
 ## Usage
 
 The document service submits generated content to `POST /api/v1/evaluations`. Evaluation records can then be retrieved or listed, and `GET /api/v1/metrics` exposes the registered metric definitions.
-
-Meta-evaluation routes under `/api/v1/meta-evaluation` support the quality-control workflow:
-
-1. Review the sample manifest and its summary.
-2. Record human ratings for sampled outputs.
-3. Diagnose metric agreement and retrieve refined rubrics.
-4. Use escalation decisions to determine when human review is required.
 
 ## API Reference
 
